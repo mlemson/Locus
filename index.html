@@ -421,7 +421,7 @@
 
 		.zone.zoom-focus {
 			position: fixed;
-			top: 28%;
+			top: 25%;
 			left: 50%;
 			transform: translate(-50%, -50%) scale(1.25);
 			z-index: var(--z-zoom);
@@ -432,7 +432,7 @@
 		@media (max-width: 900px) {
 			.zone.zoom-focus {
 				position: fixed;
-				top: 31%;
+				top: 28%;
 				left: 50%;
 				transform: translate(-50%, -50%) scale(0.95);
 				z-index: var(--z-zoom);
@@ -453,7 +453,7 @@
 		@media (max-width: 650px) {
 			body.zoomed-in #yellow-zone.zoom-focus,
 			body.zoomed-in #blue-zone.zoom-focus {
-				top: calc(28% + 50px);
+				top: calc(25% + 50px);
 			}
 		}
 		
@@ -829,7 +829,7 @@
 
 	@media (max-width: 650px) {
 		:root {
-			--bottom-bar-height: 165px;
+			--bottom-bar-height: 170px;
 			--bottom-bar-gap: 6px;
 			--bottom-bar-bottom-offset: -16px;
 			--card-hand-lift: 46px;
@@ -935,7 +935,7 @@
 
 	@media (max-width: 520px) {
 	  :root {
-		--bottom-bar-height: 150px;
+		--bottom-bar-height: 155px;
 		--bottom-bar-gap: 6px;
 		--card-hand-lift: 32px;
 		--hand-card-width: 76px;
@@ -951,7 +951,7 @@
 
 	  #bottom-bar-cards {
 		margin-top: -10px;
-		height: 90px;
+		height: 93px;
 	  }
 
 	  #bottom-bar #card-options {
@@ -1160,7 +1160,7 @@
 	}
 
 	@media (max-width: 600px) {
-			:root { --bottom-bar-height: 205px; }
+			:root { --bottom-bar-height: 211px; }
 		.board {
 			gap: 3px;
 			transform-origin: top left;
@@ -1230,7 +1230,7 @@
 	}
 	
 	@media (max-width: 550px) {
-			:root { --bottom-bar-height: 190px; }
+			:root { --bottom-bar-height: 196px; }
 		.board {
 			gap: 3px;
 			transform-origin: top left;
@@ -1287,7 +1287,7 @@
 	@media (max-width: 490px) {
 	
 		:root {
-			--bottom-bar-height: 170px;
+			--bottom-bar-height: 175px;
 		}
 	
 		.board {
@@ -1326,7 +1326,7 @@
 	@media (max-width: 450px) {
 	
 		:root {
-			--bottom-bar-height: 170px;
+			--bottom-bar-height: 175px;
 		}
 	
 		.board {
@@ -1364,7 +1364,7 @@
 	@media (max-width: 430px) {
 	
 		:root {
-			--bottom-bar-height: 170px;
+			--bottom-bar-height: 175px;
 		}
 	
 		.board {
@@ -1406,7 +1406,7 @@
 	@media (max-width: 410px) {
 	
 		:root {
-			--bottom-bar-height: 170px;
+			--bottom-bar-height: 175px;
 		}
 	
 		.board {
@@ -1428,7 +1428,7 @@
 	@media (max-width: 390px) {
 	
 		:root {
-			--bottom-bar-height: 170px;
+			--bottom-bar-height: 175px;
 		}
 	
 		.board {
@@ -5929,8 +5929,8 @@
 			background: transparent;
 			border: none;
 			flex: 0 0 auto;
-			height: 120px;
-			min-height: 90px;
+			height: 124px;
+			min-height: 93px;
 			position: relative;
 			z-index: 10;
 			clip-path: none;
@@ -6703,10 +6703,10 @@
 			border-radius: 10px;
 			box-shadow: 0 8px 16px rgba(0,0,0,0.26);
 			display: flex;
-			flex-direction: column;
+			flex-direction: row;
 			align-items: center;
 			justify-content: center;
-			gap: 4px;
+			gap: 8px;
 			color: #f5f6ff;
 			height: auto;
 		}
@@ -6819,14 +6819,17 @@
 			display: none;
 		}
 
-		/* Mobile: put coin counter UNDER the buy button for extra space. */
+		/* Mobile: keep coin counter next to the buy button. */
 		#bottom-bar #gold-zone::before {
 			display: none;
 			content: none;
 		}
 		#bottom-bar #gold-zone::after {
 			content: '\1FA99  ' attr(data-coin-text);
-			display: block;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			order: 1;
 			text-align: center;
 			font-size: 0.82rem;
 			font-weight: 800;
@@ -6964,6 +6967,7 @@
 				display: flex;
 				align-items: center;
 				justify-content: center;
+				order: 2;
 				margin: 0;
 				padding: 0;
 			}
@@ -9706,7 +9710,7 @@
 			margin: 0 !important;
 
 			/* Center position matches existing yellow-ish placement; JS clamps to avoid objective/bottom-bar overlap. */
-			top: var(--mobile-zoom-center, calc(28% + 50px)) !important;
+			top: var(--mobile-zoom-center, calc(25% + 50px)) !important;
 			height: var(--mobile-zoom-height, 57svh) !important;
 			transform: translateY(-50%) !important;
 			z-index: var(--z-zoom) !important;
