@@ -421,7 +421,7 @@
 
 		.zone.zoom-focus {
 			position: fixed;
-			top: 32%;
+			top: 28%;
 			left: 50%;
 			transform: translate(-50%, -50%) scale(1.25);
 			z-index: var(--z-zoom);
@@ -432,7 +432,7 @@
 		@media (max-width: 900px) {
 			.zone.zoom-focus {
 				position: fixed;
-				top: 35%;
+				top: 31%;
 				left: 50%;
 				transform: translate(-50%, -50%) scale(0.95);
 				z-index: var(--z-zoom);
@@ -453,7 +453,7 @@
 		@media (max-width: 650px) {
 			body.zoomed-in #yellow-zone.zoom-focus,
 			body.zoomed-in #blue-zone.zoom-focus {
-				top: calc(32% + 50px);
+				top: calc(28% + 50px);
 			}
 		}
 		
@@ -5923,6 +5923,7 @@
 			-ms-overflow-style: none; /* IE/Edge legacy */
 			padding: 0 0 0;
 			margin-top: -18px;
+			transform: translateY(10%);
 			scroll-snap-type: x mandatory;
 			border-radius: 0;
 			background: transparent;
@@ -9705,7 +9706,7 @@
 			margin: 0 !important;
 
 			/* Center position matches existing yellow-ish placement; JS clamps to avoid objective/bottom-bar overlap. */
-			top: var(--mobile-zoom-center, calc(32% + 50px)) !important;
+			top: var(--mobile-zoom-center, calc(28% + 50px)) !important;
 			height: var(--mobile-zoom-height, 57svh) !important;
 			transform: translateY(-50%) !important;
 			z-index: var(--z-zoom) !important;
