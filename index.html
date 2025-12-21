@@ -22869,13 +22869,27 @@ function showFloatingPreview(shape, color, options = {}) {
 		preview.style.display = 'flex';
 
 		const isBonusPreview = !!(activeBonusPlacement || options.useDefaultPosition);
-		const baseTransform = isBonusPreview ? 'translate(-50%, 0)' : 'none';
+		const shouldPinAboveBottomBar = (window.innerWidth <= 650) || document.body.classList.contains('zoomed-in');
+		const baseTransform = (isBonusPreview || shouldPinAboveBottomBar) ? 'translate(-50%, 0)' : 'none';
 		const targetScale = isBonusPreview ? 0.55 : 1;
 		const startScale = isBonusPreview ? 0.48 : 0.85;
 		preview.dataset.baseTransform = baseTransform;
 
-		// Positioneer preview: op kaart positie (tenzij bonus placement)
-		if (isBonusPreview) {
+		const rootStyle = getComputedStyle(document.documentElement);
+		const bottomBarHeight = parseFloat(rootStyle.getPropertyValue('--bottom-bar-height'));
+		const fallbackBottomBarHeight = parseFloat(rootStyle.getPropertyValue('--bottom-height'));
+		const effectiveBottomBarHeight = Number.isFinite(bottomBarHeight)
+			? bottomBarHeight
+			: (Number.isFinite(fallbackBottomBarHeight) ? fallbackBottomBarHeight : 150);
+
+		// Positioneer preview: boven de bottom bar (mobiel/zoom), anders op kaart positie (tenzij bonus placement)
+		if (shouldPinAboveBottomBar) {
+			// Zet de preview net boven de bottom bar zodat rotate/mirror/cancel niet over de zoomed zone vallen.
+			preview.style.top = 'auto';
+			preview.style.left = '50%';
+			preview.style.right = 'auto';
+			preview.style.bottom = `${Math.round(effectiveBottomBarHeight + 14)}px`;
+		} else if (isBonusPreview) {
 			// Bonus: klein en onderin, gecentreerd
 			preview.style.top = 'auto';
 			preview.style.left = '50%';
