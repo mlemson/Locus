@@ -9695,7 +9695,8 @@
 		body.zoomed-in #yellow-zone.zoom-focus,
 		body.zoomed-in #green-zone.zoom-focus,
 		body.zoomed-in #blue-zone.zoom-focus,
-		body.zoomed-in #purple-zone.zoom-focus {
+		body.zoomed-in #purple-zone.zoom-focus,
+		body.zoomed-in #red-zone.zoom-focus {
 			position: fixed !important;
 			left: 0 !important;
 			right: 0 !important;
@@ -9705,7 +9706,7 @@
 
 			/* Center position matches existing yellow-ish placement; JS clamps to avoid objective/bottom-bar overlap. */
 			top: var(--mobile-zoom-center, calc(32% + 50px)) !important;
-			height: var(--mobile-zoom-height, 50svh) !important;
+			height: var(--mobile-zoom-height, 57svh) !important;
 			transform: translateY(-50%) !important;
 			z-index: var(--z-zoom) !important;
 			box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
@@ -9714,6 +9715,12 @@
 		/* Keep green/blue scrollable while zoomed. */
 		body.zoomed-in #green-zone.zoom-focus,
 		body.zoomed-in #blue-zone.zoom-focus {
+			overflow: auto !important;
+			-webkit-overflow-scrolling: touch;
+		}
+
+		/* Red can be bigger than the viewport; allow scrolling in the fixed-height zoom container. */
+		body.zoomed-in #red-zone.zoom-focus {
 			overflow: auto !important;
 			-webkit-overflow-scrolling: touch;
 		}
@@ -11866,10 +11873,13 @@
 			},
 			{
 				id: 'level-24-bonus-rush',
-				description: 'Level 24: Verzamel 80+ bonuspunten.',
+				description: 'Level 24: Verzamel 80 bonussen.',
 				short: 'Level 24 - Bonus rush',
-				check: scores => scores.bonus >= 80,
-				progress: scores => (scores.bonus >= 80 ? '⭐✔' : `⭐${Math.max(0, scores.bonus)}/80`)
+				check: scores => (scores?.bonusesCollected || 0) >= 80,
+				progress: scores => {
+					const collected = Math.max(0, Math.min(80, (scores?.bonusesCollected || 0)));
+					return `${collected}/80`;
+				}
 			},
 			{
 				id: 'level-24-blue-depths',
@@ -12446,6 +12456,30 @@
 			}, 2400);
 		}
 
+		function stripObjectiveSymbols(text) {
+			if (text == null) return '';
+			let t = String(text);
+			// Remove common emoji/symbol ranges + variation selectors.
+			try {
+				t = t.replace(/[\uFE0E\uFE0F]/g, '');
+				t = t.replace(/[\u200D]/g, '');
+				t = t.replace(/[\u2600-\u27BF]/g, '');
+				t = t.replace(/[\u{1F000}-\u{1FAFF}]/gu, '');
+			} catch {
+				t = t.replace(/[\uFE0E\uFE0F\u200D\u2600-\u27BF]/g, '');
+			}
+			return t.replace(/\s{2,}/g, ' ').trim();
+		}
+
+		function normalizeObjectiveProgress(progressText) {
+			let p = stripObjectiveSymbols(progressText);
+			if (!p) return '';
+			// If progress starts with "n/m ...", keep only "n/m".
+			const m = p.match(/^\s*(\d+)\s*\/\s*(\d+)(?:\s+.*)?$/);
+			if (m) return `${m[1]}/${m[2]}`;
+			return p;
+		}
+
 		function renderObjectivePanel(snapshot = latestScoreSnapshot) {
 			const currentEl = document.getElementById('objective-current');
 			const historyEl = document.getElementById('objective-history');
@@ -12466,7 +12500,7 @@
 					titleEl.style.webkitBackgroundClip = 'text';
 					titleEl.style.webkitTextFillColor = 'transparent';
 				} else if (world === 3) {
-					titleEl.textContent = `🔥 Wereld ${world} - Level ${world}.${subLevel}`;
+					titleEl.textContent = `Wereld ${world} - Level ${world}.${subLevel}`;
 					titleEl.style.background = 'linear-gradient(135deg, #ff6b35, #f7931e, #ffcc02)';
 					titleEl.style.webkitBackgroundClip = 'text';
 					titleEl.style.webkitTextFillColor = 'transparent';
@@ -12505,12 +12539,14 @@
 				if (isDone) {
 					// Voeg vinkje toe voor voltooide doelen, verwijder "Level X:" uit description
 					let desc = objective.description.replace(/^Level\s+\d+:\s*/i, '');
-					currentEl.innerHTML = `<span style="color: #2c9a4b; font-weight: bold;">✔</span> <strong>Doel:</strong> ${desc}`;
+					desc = stripObjectiveSymbols(desc);
+					currentEl.innerHTML = `<strong>Doel:</strong> ${desc} <span style="opacity: 0.85;">(voltooid)</span>`;
 				} else {
 					let description = objective.description.replace(/^Level\s+\d+:\s*/i, '');
+					description = stripObjectiveSymbols(description);
 					if (typeof objective.progress === 'function') {
 						try {
-							const progressText = objective.progress(progressSource);
+							const progressText = normalizeObjectiveProgress(objective.progress(progressSource));
 							if (progressText) description = `${description} (${progressText})`;
 						} catch (error) {
 							console.warn('Objective progress failed', objective.id, error);
@@ -12527,7 +12563,8 @@
 			} else {
 				completedObjectives.forEach(obj => {
 					const item = document.createElement('li');
-					item.textContent = obj.short || obj.description;
+					const raw = obj.short || obj.description;
+					item.textContent = stripObjectiveSymbols(String(raw || '').replace(/^Level\s+\d+:\s*/i, ''));
 					historyEl.appendChild(item);
 				});
 			}
@@ -13842,7 +13879,7 @@
 	function applyMobileZoomSizing(zone) {
 		if (!zone) return;
 		if (!isMobileViewport()) return;
-		if (!['yellow-zone', 'green-zone', 'blue-zone', 'purple-zone'].includes(zone.id)) return;
+		if (!['yellow-zone', 'green-zone', 'blue-zone', 'purple-zone', 'red-zone'].includes(zone.id)) return;
 
 		const viewportH = Math.round((window.visualViewport && window.visualViewport.height) ? window.visualViewport.height : window.innerHeight);
 		const objectiveBanner = document.getElementById('mobile-objective-banner');
@@ -13851,7 +13888,8 @@
 		const bottomTop = bottomBar ? bottomBar.getBoundingClientRect().top : viewportH;
 		const margin = 10;
 		const available = Math.max(120, Math.floor(bottomTop - objectiveBottom - margin * 2));
-		const desired = Math.floor(viewportH * 0.5);
+		// User request: +3.5% above +3.5% below compared to 50% baseline.
+		const desired = Math.floor(viewportH * 0.57);
 		const height = Math.max(120, Math.min(desired, available));
 
 		const minCenter = objectiveBottom + margin + height / 2;
