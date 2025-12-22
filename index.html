@@ -24071,7 +24071,8 @@ function showFloatingPreview(shape, color, options = {}) {
 		if (!cardControls || !cardOptions || !actionButtons) return;
 
 		const cards = cardOptions.querySelectorAll('.card-option');
-		if (cards.length !== 5) {
+		const cardCount = cards.length;
+		if (cardCount < 1) {
 			bottomBar.style.removeProperty('--hand-card-width');
 			return;
 		}
@@ -24090,9 +24091,9 @@ function showFloatingPreview(shape, color, options = {}) {
 			- paddingRight;
 		if (!(available > 0)) return;
 
-		const targetWidth = Math.floor((available - (cardGap * 4)) / 5);
+		const targetWidth = Math.floor((available - (cardGap * Math.max(0, cardCount - 1))) / cardCount);
 		// Clamp so cards remain tappable on narrow screens.
-		const clamped = Math.max(56, Math.min(targetWidth, 110));
+		const clamped = Math.max(56, Math.min(targetWidth, 132));
 		bottomBar.style.setProperty('--hand-card-width', `${clamped}px`);
 	}
 
