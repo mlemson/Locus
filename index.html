@@ -1056,6 +1056,9 @@
 	@media (max-width: 650px) {
 		:root {
 			--board-scale: 0.58;
+			/* Keep board + card preview cells the same size on mobile. */
+			--cell-size: clamp(16px, 5.2vw, 22px);
+			--card-cell-size: var(--cell-size);
 		}
 
 		/* Classic mode (mobile): show ONLY the board + hamburger menu. */
@@ -3264,8 +3267,8 @@
 	}
 
 	.card-option .card-cell {
-		width: 22px;
-		height: 22px;
+		width: var(--card-cell-size, 22px);
+		height: var(--card-cell-size, 22px);
 		border-radius: 4px;
 		border: 1px solid rgba(12,16,30,0.12);
 		box-shadow: inset 0 0 4px rgba(0,0,0,0.18);
@@ -5693,7 +5696,7 @@
 			height: 100svh;
 			margin: 0;
 			padding: 16px 8px calc(var(--bottom-bar-clearance) + 24px);
-			padding-top: 88px;
+			padding-top: 76px;
 			box-sizing: border-box;
 			background: linear-gradient(180deg, #171822 0%, #101018 55%, #0a0b12 100%);
 			color: #f5f6ff;
@@ -5713,9 +5716,9 @@
 		#mobile-objective-banner {
 			display: flex;
 			position: fixed;
-			top: 14px;
-			left: 12px;
-			right: 12px;
+			top: 8px;
+			left: 10px;
+			right: 10px;
 			z-index: calc(var(--z-blur) + 20);
 			justify-content: center;
 			pointer-events: none;
@@ -5727,9 +5730,9 @@
 
 		#mobile-objective-banner #objective-zone {
 			pointer-events: none;
-			width: min(100%, 340px);
-			padding: 14px 14px 10px;
-			gap: 6px;
+			width: min(100%, 328px);
+			padding: 10px 12px 8px;
+			gap: 4px;
 			border-radius: 14px;
 			box-shadow: 0 12px 26px rgba(10,18,35,0.28);
 		}
@@ -5753,7 +5756,7 @@
 
 		#mobile-objective-banner #objective-zone h2 {
 			margin: 0;
-			font-size: 0.72rem;
+			font-size: 0.66rem;
 			letter-spacing: 0.08em;
 			text-transform: uppercase;
 			color: rgba(20,24,36,0.72);
@@ -9779,6 +9782,11 @@
 		/* Red zone: center the 2×2 subgrids vertically within the fixed zoom container. */
 		body.zoomed-in #red-zone.zoom-focus.red-group {
 			align-content: center !important;
+		}
+
+		/* Red zone: ignore legacy min-height so it matches other zoomed zones. */
+		body.zoomed-in #red-zone.zoom-focus {
+			min-height: 0 !important;
 		}
 
 		/* Keep green/blue scrollable while zoomed. */
