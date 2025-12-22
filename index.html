@@ -1170,6 +1170,14 @@
 		#blue-zone,
 		#blue-zone--placeholder { 
 			width: 165px;
+			height: 270px;
+			max-height: 270px;
+		}
+
+		/* Mobile: blue is vertically long by design; keep it scrollable but not a giant strip. */
+		body:not(.zoomed-in) #blue-zone,
+		#blue-zone--placeholder {
+			overflow: auto;
 		}
 
 		/* World 2: verberg de (witte) scrollbar in de blauwe zone (blijft wel scrollbaar) */
@@ -5995,7 +6003,7 @@
 			box-shadow: 0 -18px 40px rgba(0,0,0,0.42);
 			backdrop-filter: blur(12px);
 			-webkit-backdrop-filter: blur(12px);
-			overflow-x: hidden;
+			overflow-x: visible;
 			overflow-y: hidden;
 			overscroll-behavior-y: contain;
 			clip-path: none;
@@ -6012,7 +6020,7 @@
 			align-items: center;
 			justify-content: flex-start;
 			gap: 0;
-			overflow-x: hidden;
+			overflow-x: visible;
 			overflow-y: hidden;
 			overscroll-behavior: contain;
 			touch-action: pan-x;
