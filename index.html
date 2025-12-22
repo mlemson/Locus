@@ -1674,8 +1674,8 @@
 	  transition: box-shadow 0.18s ease, border 0.18s ease;
 	}
 	.cell{
-	  width: 24px;
-	  height: 24px;      
+	  width: var(--cell-size);
+	  height: var(--cell-size);
 	  background: #f9fafc;      
 	  color: #222;
 	  border: 1px solid #d8dee9;
@@ -1688,6 +1688,54 @@
 	  justify-content: center;
 	  transition: background 0.25s, transform 0.15s;
 	  animation: growRoot 0.3s forwards;
+	}
+
+	/* Very short mobile screens: tighten everything to avoid overlaps and blurry/merged cells. */
+	@media (max-width: 650px) and (max-height: 650px) {
+		:root {
+			/* Slightly smaller board + cards so the zoom area has room. */
+			--board-scale: 0.54;
+			--cell-size: clamp(16px, 5.4vw, 22px);
+			--bottom-bar-height: 155px;
+			--hand-card-width: 88px;
+			--hand-card-height: 90px;
+			--hand-card-gap: 5px;
+			--card-hand-lift: 34px;
+		}
+
+		body {
+			padding-top: 76px;
+		}
+
+		#mobile-objective-banner {
+			top: 8px;
+			left: 10px;
+			right: 10px;
+		}
+		#mobile-objective-banner #objective-zone {
+			width: min(100%, 320px);
+			padding: 10px 12px 8px;
+			gap: 4px;
+		}
+		#mobile-objective-banner #objective-zone h2 {
+			font-size: 0.66rem;
+		}
+		#mobile-objective-banner .objective-current {
+			font-size: 0.74rem;
+		}
+
+		/* Prevent right-side action buttons (deck/next turn) from touching the screen edge. */
+		#bottom-bar {
+			padding-right: calc(15px + env(safe-area-inset-right, 0px));
+			padding-left: calc(10px + env(safe-area-inset-left, 0px));
+		}
+		#bottom-bar-cards {
+			height: 112px;
+			min-height: 86px;
+		}
+		#card-controls {
+			padding-right: 10px;
+		}
 	}
 
 	/* WORLD 2 (Yellow): Alternate diagonal shading so players see the diagonal-row rule.
@@ -13903,20 +13951,21 @@
 		if (!['yellow-zone', 'green-zone', 'blue-zone', 'purple-zone', 'red-zone'].includes(zone.id)) return;
 
 		const viewportH = Math.round((window.visualViewport && window.visualViewport.height) ? window.visualViewport.height : window.innerHeight);
+		const isShortViewport = viewportH <= 650;
 		const objectiveBanner = document.getElementById('mobile-objective-banner');
 		const bottomBar = document.getElementById('bottom-bar');
 		const objectiveBottom = objectiveBanner ? objectiveBanner.getBoundingClientRect().bottom : 0;
 		const bottomTop = bottomBar ? bottomBar.getBoundingClientRect().top : viewportH;
-		const margin = 10;
+		const margin = isShortViewport ? 8 : 10;
 		const available = Math.max(120, Math.floor(bottomTop - objectiveBottom - margin * 2));
-		// User request: +3.5% above +3.5% below compared to 50% baseline.
-		const desired = Math.floor(viewportH * 0.57);
+		// Short screens: slightly smaller zoom height so everything fits without overlapping controls.
+		const desired = Math.floor(viewportH * (isShortViewport ? 0.54 : 0.57));
 		const height = Math.max(120, Math.min(desired, available));
 
 		const minCenter = objectiveBottom + margin + height / 2;
 		const maxCenter = bottomTop - margin - height / 2;
-		// User request: move the zoom center ~20px higher (smaller Y).
-		let center = Math.round(viewportH * 0.32 + 30);
+		// Short screens: keep the zoomed zone a bit higher to reduce the gap above the bottom bar.
+		let center = Math.round(viewportH * (isShortViewport ? 0.30 : 0.32) + (isShortViewport ? 16 : 30));
 		if (!Number.isFinite(center)) center = Math.round((minCenter + maxCenter) / 2);
 		center = Math.max(minCenter, Math.min(maxCenter, center));
 
@@ -22909,7 +22958,9 @@ function showFloatingPreview(shape, color, options = {}) {
 			preview.style.top = 'auto';
 			preview.style.left = '50%';
 			preview.style.right = 'auto';
-			preview.style.bottom = `${Math.round(effectiveBottomBarHeight - 6)}px`;
+			const viewportH = Math.round((window.visualViewport && window.visualViewport.height) ? window.visualViewport.height : window.innerHeight);
+			const extraDrop = (viewportH <= 650) ? 26 : 6;
+			preview.style.bottom = `${Math.round(effectiveBottomBarHeight - extraDrop)}px`;
 		} else if (isBonusPreview) {
 			// Bonus: klein en onderin, gecentreerd
 			preview.style.top = 'auto';
