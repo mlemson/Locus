@@ -79,6 +79,8 @@
 		:root {
 			/* Base measurements */
 			--cell-size: clamp(18px, 6vw, 26px);
+			--board-grid-gap: 2px;
+			--preview-gap: 2px;
 			--gap: 10px;
 			--radius: 10px;
 			--bottom-height: 70px;
@@ -294,7 +296,7 @@
 
 		#zoom-lens-content .zoom-grid {
 			display: grid;
-			gap: 1px;
+			gap: var(--board-grid-gap, 2px);
 			transform: scale(1.5);
 			transform-origin: center;
 		}
@@ -1008,7 +1010,7 @@
 	  }
 
 	  #bottom-bar #card-choice-zone .card-option .card-pattern {
-		gap: 1px;
+		gap: var(--preview-gap);
 	  }
 
 	  #bottom-bar #card-choice-zone .card-option .card-label {
@@ -1061,7 +1063,8 @@
 
 	@media (max-width: 650px) {
 		:root {
-			--board-scale: 0.58;
+			/* Use 0.5 for pixel-perfect scaling: 2px gaps become clean 1px after scaling */
+			--board-scale: 0.5;
 		}
 
 		/* Classic mode (mobile): show ONLY the board + hamburger menu. */
@@ -1102,7 +1105,7 @@
 			transform-origin: top left;
 			transition: transform 0.4s ease;	
 			left: 50%;
-			transform: translateX(-50%) scale(var(--board-scale, 0.58));
+			transform: translateX(-50%) scale(var(--board-scale, 0.5));
 			max-height: none;
 		}
 
@@ -1115,7 +1118,7 @@
 			justify-content: flex-start;
 		}
 		#bottom-bar #card-choice-zone .card-pattern {
-			gap: 1px;
+			gap: var(--preview-gap);
 		}
 		#bottom-bar #card-choice-zone .card-label {
 			font-size: 0.52rem;
@@ -1187,7 +1190,7 @@
 			transform-origin: top left;
 			transition: transform 0.4s ease;	
 			left: 50%;
-			transform: translateX(-50%) scale(var(--board-scale, 0.58));
+			transform: translateX(-50%) scale(var(--board-scale, 0.5));
 			max-height: none;
 		}
 
@@ -1245,7 +1248,7 @@
 			transform-origin: top left;
 			transition: transform 0.4s ease;	
 			left: 50%;
-			transform: translateX(-50%) scale(var(--board-scale, 0.58));
+			transform: translateX(-50%) scale(var(--board-scale, 0.5));
 			max-height: none;
 		}
 
@@ -1282,7 +1285,7 @@
 			transform-origin: top left;
 			transition: transform 0.4s ease;	
 			left: 50%;
-			transform: translateX(-50%) scale(var(--board-scale, 0.58));
+			transform: translateX(-50%) scale(var(--board-scale, 0.5));
 			max-height: none;
 			padding: 0;
 		}
@@ -1304,7 +1307,7 @@
 			transform-origin: top left;
 			transition: transform 0.4s ease;	
 			left: 50%;
-			transform: translateX(-50%) scale(var(--board-scale, 0.58));
+			transform: translateX(-50%) scale(var(--board-scale, 0.5));
 			max-height: none;
 			padding: 0;
 		}
@@ -1343,7 +1346,7 @@
 			transform-origin: top left;
 			transition: transform 0.4s ease;	
 			left: 50%;
-			transform: translateX(-50%) scale(var(--board-scale, 0.58));
+			transform: translateX(-50%) scale(var(--board-scale, 0.5));
 			max-height: none;
 			padding: 0;
 		}
@@ -1381,7 +1384,7 @@
 			transform-origin: top left;
 			transition: transform 0.4s ease;	
 			left: 50%;
-			transform: translateX(-50%) scale(var(--board-scale, 0.58));
+			transform: translateX(-50%) scale(var(--board-scale, 0.5));
 			max-height: none;
 			padding: 0;
 		}
@@ -1418,7 +1421,7 @@
 			transform-origin: top left;
 			transition: transform 0.4s ease;	
 			left: 50%;
-			transform: translateX(-50%) scale(var(--board-scale, 0.58));
+			transform: translateX(-50%) scale(var(--board-scale, 0.5));
 			max-height: none;
 		}
 
@@ -1440,7 +1443,7 @@
 			transform-origin: top left;
 			transition: transform 0.4s ease;	
 			left: 50%;
-			transform: translateX(-50%) scale(var(--board-scale, 0.58));
+			transform: translateX(-50%) scale(var(--board-scale, 0.5));
 			max-height: none;
 		}
 
@@ -1649,7 +1652,7 @@
 	   Basisstijl voor alle grid containers binnen zones
 	   Gebruikt CSS Grid voor automatische cel positionering
 	*/
-	.grid { display: grid; gap: 2px; justify-content: center; margin: 20px; }
+	.grid { display: grid; gap: var(--board-grid-gap, 2px); justify-content: center; margin: 20px; }
 	/* Yellow (World 2): remove inner grid margin so spacing stays even and not clipped. */
 	#yellow-zone #yellow-grid.grid,
 	#yellow-zone--placeholder #yellow-grid.grid {
@@ -3219,7 +3222,7 @@
 
 	.card-pattern {
 		display: inline-grid;
-		gap: 4px;
+		gap: var(--preview-gap, 2px);
 		align-items: center;
 		justify-items: center;
 		justify-content: center;
@@ -4023,7 +4026,7 @@
 		}
 
 		.deck-modal-grid .card-pattern {
-			gap: 1px;
+			gap: var(--preview-gap);
 		}
 
 		.deck-modal-grid .card-option {
@@ -6445,7 +6448,7 @@
 
 		#bottom-bar #card-choice-zone .card-pattern {
 			display: grid;
-			gap: 1px;
+			gap: var(--preview-gap);
 			align-items: center;
 			justify-items: center;
 		}
@@ -7451,8 +7454,8 @@
 	  box-shadow: 0 0 6px rgba(0,0,0,0.25);
 	}
 	.card-cell {
-	  width: 20px;
-	  height: 20px;
+	  width: var(--card-cell-size, 20px);
+	  height: var(--card-cell-size, 20px);
 	  border-radius: 3px;
 	}
 
@@ -8840,7 +8843,7 @@
 	  /* Kaart patroon (grid met cellen) */
 	  #card-choice-zone .card-pattern {
 		display: grid;
-		gap: 2px;
+		gap: var(--preview-gap);
 		align-items: center;
 		justify-items: center;
 	  }
@@ -9744,13 +9747,13 @@
 
 		/* If there is extra vertical room in zoom, center the small square grids (like Purple in the screenshot). */
 		body.zoomed-in #yellow-zone.zoom-focus,
-		body.zoomed-in #purple-zone.zoom-focus,
-		body.zoomed-in #green-zone.zoom-focus {
+		body.zoomed-in #purple-zone.zoom-focus {
 			justify-content: center !important;
 		}
-		/* Green zoom: ensure the (sometimes narrow) grid container itself is centered, so the start cell is in the middle even when there's no scroll. */
+		/* Green zoom: let JS handle scroll-centering to the start cell; don't use align-items which moves the grid. */
 		body.zoomed-in #green-zone.zoom-focus {
-			align-items: center !important;
+			align-items: flex-start !important;
+			justify-content: flex-start !important;
 		}
 
 		/* Red zone: center the 2×2 subgrids vertically within the fixed zoom container. */
@@ -17192,10 +17195,8 @@ document.addEventListener('pointermove', ev => {
 		pattern.innerHTML = '';
 		pattern.style.gridTemplateColumns = `repeat(${shape[0].length}, ${cellSize}px)`;
 		pattern.style.gridTemplateRows = `repeat(${shape.length}, ${cellSize}px)`;
-		// Keep previews tight on mobile; on larger screens allow a little breathing room.
-		const isMobilePreview = window.innerWidth <= MOBILE_BREAKPOINT;
-		const previewGap = isMobilePreview ? 1 : Math.max(2, Math.round(cellSize * 0.12));
-		pattern.style.setProperty('gap', `${previewGap}px`, 'important');
+		// Gap is controlled via CSS (`--preview-gap`) so all previews stay consistent.
+		pattern.style.removeProperty('gap');
 		shape.forEach(row => {
 		  row.forEach(cell => {
 			const div = document.createElement('div');
@@ -17234,8 +17235,8 @@ document.addEventListener('pointermove', ev => {
 	  block.style.display = 'grid';
 	  block.style.gridTemplateColumns = `repeat(${shape[0].length}, var(--cell-size))`;
 	  block.style.gridTemplateRows = `repeat(${shape.length}, var(--cell-size))`;
-	  // Use 0px gap because we use margin on cells to match the board's new look
-	  block.style.gap = '0px';
+	  // Keep spacing consistent with the board grid.
+	  block.style.gap = 'var(--board-grid-gap)';
 	  block.style.opacity = '0.8';
 	  const optionalSet = new Set(getOptionalCells(shape).map(({ x, y }) => `${x},${y}`));
 	  
@@ -24523,6 +24524,9 @@ function showFloatingPreview(shape, color, options = {}) {
   <style>
 	/* FINAL CONSOLIDATED MOBILE LAYOUT (CLEANUP & FIXES) */
 	@media (max-width: 650px) {
+		:root {
+			--preview-gap: 2px;
+		}
 		
 		/* 1. UNIFORM ZONE WIDTHS & CENTERING */
 		/* Yellow + Purple keep equal width; Red + Green are slightly wider to allow the 2×2 red layout. */
@@ -24549,8 +24553,8 @@ function showFloatingPreview(shape, color, options = {}) {
 			max-width: calc(15 * var(--cell-size) + 60px) !important;
 		}
 
-		/* Mobile unzoomed: give grids a bit more breathing room (matches the “zoomed looks better” feedback). */
-		body:not(.zoomed-in) .grid { gap: 3px !important; }
+		/* Mobile: keep gaps consistent across zones (zoomed AND unzoomed). */
+		.grid { gap: var(--board-grid-gap, 2px) !important; }
 
 		/* Mobile unzoomed: cap blue height so it's not an extremely tall strip; keep it scrollable. */
 		body:not(.zoomed-in) #blue-zone,
@@ -24575,16 +24579,19 @@ function showFloatingPreview(shape, color, options = {}) {
 			box-sizing: border-box !important;
 		}
 
-		/* When the board is scaled down to fit the screen, restore visual spacing/rounding. */
-		body.board-scaled .grid { gap: 3px !important; }
+		/* When the board is scaled down to fit the screen, keep spacing consistent. */
+		body.board-scaled .grid { gap: var(--board-grid-gap, 2px) !important; }
 		body.board-scaled .cell { border-radius: 7px !important; }
 
 		/* 2. SYMMETRICAL HEIGHTS */
-		/* Yellow, Purple, and Red MUST have the same dimensions */
+		/* Yellow and Purple keep same min-height; Red is shorter since it's a 2×2 layout */
 		#yellow-zone, #yellow-zone--placeholder,
-		#purple-zone, #purple-zone--placeholder,
-		#red-zone, #red-zone--placeholder {
+		#purple-zone, #purple-zone--placeholder {
 			min-height: 360px !important;
+			height: auto !important;
+		}
+		#red-zone, #red-zone--placeholder {
+			min-height: 280px !important;
 			height: auto !important;
 		}
 
