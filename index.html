@@ -9721,11 +9721,16 @@
 			margin: 0 !important;
 
 			/* Center position matches existing yellow-ish placement; JS clamps to avoid objective/bottom-bar overlap. */
-			top: var(--mobile-zoom-center, calc(25% + 50px)) !important;
+			top: var(--mobile-zoom-center, calc(25% + 30px)) !important;
 			height: var(--mobile-zoom-height, 57svh) !important;
 			transform: translateY(-50%) !important;
 			z-index: var(--z-zoom) !important;
 			box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+		}
+
+		/* Red zone: center the 2×2 subgrids vertically within the fixed zoom container. */
+		body.zoomed-in #red-zone.zoom-focus.red-group {
+			align-content: center !important;
 		}
 
 		/* Keep green/blue scrollable while zoomed. */
@@ -13910,7 +13915,8 @@
 
 		const minCenter = objectiveBottom + margin + height / 2;
 		const maxCenter = bottomTop - margin - height / 2;
-		let center = Math.round(viewportH * 0.32 + 50);
+		// User request: move the zoom center ~20px higher (smaller Y).
+		let center = Math.round(viewportH * 0.32 + 30);
 		if (!Number.isFinite(center)) center = Math.round((minCenter + maxCenter) / 2);
 		center = Math.max(minCenter, Math.min(maxCenter, center));
 
@@ -22903,7 +22909,7 @@ function showFloatingPreview(shape, color, options = {}) {
 			preview.style.top = 'auto';
 			preview.style.left = '50%';
 			preview.style.right = 'auto';
-			preview.style.bottom = `${Math.round(effectiveBottomBarHeight + 14)}px`;
+			preview.style.bottom = `${Math.round(effectiveBottomBarHeight - 6)}px`;
 		} else if (isBonusPreview) {
 			// Bonus: klein en onderin, gecentreerd
 			preview.style.top = 'auto';
