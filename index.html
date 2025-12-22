@@ -17167,8 +17167,10 @@ document.addEventListener('pointermove', ev => {
 		pattern.innerHTML = '';
 		pattern.style.gridTemplateColumns = `repeat(${shape[0].length}, ${cellSize}px)`;
 		pattern.style.gridTemplateRows = `repeat(${shape.length}, ${cellSize}px)`;
-		// Scale the gap with the cell size so mini-previews don't look too spaced out on mobile.
-		pattern.style.gap = `${Math.max(1, Math.round(cellSize * 0.12))}px`;
+		// Keep previews tight on mobile; on larger screens allow a little breathing room.
+		const isMobilePreview = window.innerWidth <= MOBILE_BREAKPOINT;
+		const previewGap = isMobilePreview ? 1 : Math.max(2, Math.round(cellSize * 0.12));
+		pattern.style.setProperty('gap', `${previewGap}px`, 'important');
 		shape.forEach(row => {
 		  row.forEach(cell => {
 			const div = document.createElement('div');
@@ -24324,7 +24326,59 @@ function showFloatingPreview(shape, color, options = {}) {
 			  scaleBoardForDesktop();
 			  scaleBoardForMobile();
 		  renderTrapSummary();
+		  autoCenterScrollableZones();
 		  
+	}
+
+	function scrollChildIntoView(container, child, opts = {}) {
+	  if (!container || !child) return;
+	  const alignX = opts.alignX || 'center';
+	  const alignY = opts.alignY || 'center';
+	  const paddingY = Number.isFinite(opts.paddingY) ? opts.paddingY : 16;
+	  const containerRect = container.getBoundingClientRect();
+	  const childRect = child.getBoundingClientRect();
+	  const currentLeft = container.scrollLeft;
+	  const currentTop = container.scrollTop;
+	  const deltaLeft = childRect.left - containerRect.left;
+	  const deltaTop = childRect.top - containerRect.top;
+	  let targetLeft = currentLeft;
+	  let targetTop = currentTop;
+	  if (alignX === 'center') {
+		targetLeft = currentLeft + deltaLeft - (containerRect.width / 2 - childRect.width / 2);
+	  }
+	  if (alignY === 'center') {
+		targetTop = currentTop + deltaTop - (containerRect.height / 2 - childRect.height / 2);
+	  } else if (alignY === 'bottom') {
+		targetTop = currentTop + deltaTop - (containerRect.height - childRect.height - paddingY);
+	  }
+	  container.scrollLeft = Math.max(0, targetLeft);
+	  container.scrollTop = Math.max(0, targetTop);
+	}
+
+	function autoCenterScrollableZones() {
+	  // Only auto-center when the user hasn't scrolled yet (prevents fighting the player).
+	  const greenZone = document.getElementById('green-zone');
+	  if (greenZone && greenZone.scrollTop <= 2 && greenZone.scrollLeft <= 2) {
+		const greenStart = document.querySelector('#green-grid .cell.root-cell')
+		  || document.querySelector('#green-grid .cell.end-cell')
+		  || document.querySelector('#green-grid .cell.active');
+		if (greenStart) scrollChildIntoView(greenZone, greenStart, { alignX: 'center', alignY: 'center' });
+	  }
+
+	  const blueZone = document.getElementById('blue-zone');
+	  if (blueZone && blueZone.scrollTop <= 2) {
+		const boldCells = Array.from(document.querySelectorAll('#blue-grid .cell.bold-cell'));
+		if (boldCells.length) {
+			const maxY = Math.max(...boldCells.map(cell => Number(cell.dataset.y) || 0));
+			const bottomCells = boldCells.filter(cell => (Number(cell.dataset.y) || 0) === maxY);
+			bottomCells.sort((a, b) => (Number(a.dataset.x) || 0) - (Number(b.dataset.x) || 0));
+			const target = bottomCells[Math.floor(bottomCells.length / 2)] || boldCells[0];
+			scrollChildIntoView(blueZone, target, { alignX: 'center', alignY: 'bottom', paddingY: 18 });
+		} else {
+			blueZone.scrollTop = blueZone.scrollHeight;
+			blueZone.scrollLeft = Math.max(0, (blueZone.scrollWidth - blueZone.clientWidth) / 2);
+		}
+	  }
 	}
 
 	// Initial run
@@ -24341,6 +24395,7 @@ function showFloatingPreview(shape, color, options = {}) {
 			// Probeer de save te laden
 			if (loadGameState()) {
 				console.log('✅ Successfully loaded saved game');
+				requestAnimationFrame(() => requestAnimationFrame(autoCenterScrollableZones));
 				return;
 			} else {
 				console.warn('⚠️ Failed to load save, starting new game');
@@ -24351,6 +24406,7 @@ function showFloatingPreview(shape, color, options = {}) {
 		
 		// Als we hier komen: geen save of laden mislukt
 		startNewRun();
+		requestAnimationFrame(() => requestAnimationFrame(autoCenterScrollableZones));
 	})();
 
 	// Run again on resize
@@ -24478,7 +24534,7 @@ function showFloatingPreview(shape, color, options = {}) {
 		/* Blue Height = Green (400) + Red (360) + Gap (10) = 770px */
 		#blue-zone, #blue-zone--placeholder {
 			min-height: 770px !important;
-			height: 770px !important; /* Force fixed height to match calculation */
+			/* Don't force fixed height; zoom uses vh sizing and should not inherit a large px height. */
 			width: 160px !important; /* Fixed width for blue strip */
 			margin: 10px auto !important;
 		}
@@ -24496,15 +24552,9 @@ function showFloatingPreview(shape, color, options = {}) {
 			max-width: 58px !important;
 			min-height: 85px !important;
 			padding: 4px !important;
-		}
-
-		/* Force Card Cells to be larger and clearer */
-		#bottom-bar #card-choice-zone .card-option .card-cell,
-		.card-option .card-cell {
-			width: 10px !important;
-			height: 10px !important;
-			border-width: 1px !important;
-			margin: 0px !important; /* Ensure no margin causes gaps */
+			/* Key: keep JS preview sizing and CSS in sync */
+			--preview-cell: 10px;
+			--card-cell-size: 10px;
 		}
 		
 		/* Adjust card pattern gap */
@@ -24539,6 +24589,13 @@ function showFloatingPreview(shape, color, options = {}) {
 		transform: translate(-50%, -50%) !important;
 		z-index: 1000 !important;
 		margin: 0 !important;
+	}
+
+	/* Blue specifically: override mobile min-height when zoomed so it matches other zones */
+	body.zoomed-in #blue-zone.zoom-focus,
+	body.zoomed-in #blue-zone--placeholder.zoom-focus {
+		min-height: 0 !important;
+		height: 65vh !important;
 	}
 
 	/* 4. Desktop Landscape Fixes */
