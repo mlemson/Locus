@@ -921,15 +921,15 @@
 	  }
 
 	#bottom-bar #collected-coins {
-		grid-template-rows: repeat(3, var(--coin-size, 12px));
-		grid-auto-columns: var(--coin-size, 12px);
+		grid-template-rows: repeat(3, 12px);
+		grid-auto-columns: 12px;
 		column-gap: 4px;
 		row-gap: 4px;
 	}
 
 	#bottom-bar .coin {
-		width: var(--coin-size, 12px);
-		height: var(--coin-size, 12px);
+		width: 12px;
+		height: 12px;
 	}
 	}
 
@@ -1057,13 +1057,14 @@
 		:root {
 			--board-scale: 0.58;
 			/* Keep board + card preview cells the same size on mobile. */
-			--cell-size: clamp(12px, 4.2vw, 17px);
+			--cell-size: clamp(14px, 4.8vw, 20px);
 			--card-cell-size: var(--cell-size);
-			/* Keep coins/bonuses proportional to cell-size on mobile. */
-			--coin-size: clamp(8px, calc(var(--cell-size) * 0.6), 11px);
 			/* Bottom bar hand cards: smaller footprint without scaling cells. */
-			--hand-card-width: calc(4 * var(--cell-size) + 10px);
-			--hand-card-height: calc(5 * var(--cell-size) + 20px);
+			--hand-card-width: calc(4 * var(--cell-size) + 18px);
+			--hand-card-height: calc(5 * var(--cell-size) + 32px);
+			/* Scale HUD pieces together so proportions stay consistent. */
+			--bottom-bar-cards-scale: 0.88;
+			--bottom-bar-footer-scale: 0.92;
 		}
 
 		/* Classic mode (mobile): show ONLY the board + hamburger menu. */
@@ -1111,35 +1112,20 @@
 		#bottom-bar #card-choice-zone .card-option {
 			width: var(--hand-card-width);
 			min-height: var(--hand-card-height);
-			padding: 3px 5px 5px;
-			gap: 3px;
+			padding: 4px 6px 6px;
+			gap: 4px;
 			justify-content: flex-start;
 		}
 		#bottom-bar #card-choice-zone .card-pattern {
 			gap: 2px;
 		}
 		#bottom-bar #card-choice-zone .card-label {
-			font-size: 0.52rem;
-			padding: 1px 5px;
-			gap: 2px;
+			font-size: 0.56rem;
+			padding: 2px 6px;
+			gap: 3px;
 		}
 		#bottom-bar #card-choice-zone .card-meta {
-			font-size: 0.56rem;
-		}
-
-		/* Bonus badges: compact on mobile so they don't dominate vs the board/cells. */
-		:is(#bonus-zone, #bottom-bar-bonus) .bonus-badge {
-			gap: 4px;
-			padding: 4px 7px;
-			font-size: 0.64rem;
-			border-radius: 10px;
-		}
-		:is(#bonus-zone, #bottom-bar-bonus) .bonus-badge .bonus-swatch {
-			width: var(--coin-size);
-			height: var(--coin-size);
-		}
-		:is(#bonus-zone, #bottom-bar-bonus) .bonus-badge .bonus-count {
-			padding: 1px 5px;
+			font-size: 0.6rem;
 		}
 
 		/* Red zone sub-grids: center the grid inside each quadrant (also when NOT zoomed). */
@@ -1754,6 +1740,8 @@
 			--hand-card-height: calc(5 * var(--cell-size) + 28px);
 			--hand-card-gap: 5px;
 			--card-hand-lift: 34px;
+			--bottom-bar-cards-scale: 0.82;
+			--bottom-bar-footer-scale: 0.86;
 		}
 
 		body {
@@ -2237,10 +2225,6 @@
 		.purchased-block-preview {
 			gap: 4px;
 			padding: 8px 12px;
-		}
-		.purchased-block-cell {
-			width: clamp(14px, calc(var(--cell-size) * 0.9), 20px);
-			height: clamp(14px, calc(var(--cell-size) * 0.9), 20px);
 		}
 	}
 	body.dark-mode .purchased-block-preview {
@@ -6036,7 +6020,8 @@
 			-ms-overflow-style: none; /* IE/Edge legacy */
 			padding: 0 0 0;
 			margin-top: -18px;
-			transform: translateY(10%);
+			transform: translateY(10%) scale(var(--bottom-bar-cards-scale, 1));
+			transform-origin: top center;
 			scroll-snap-type: x mandatory;
 			border-radius: 0;
 			background: transparent;
@@ -6059,6 +6044,8 @@
 			align-items: flex-end;
 			gap: 0;
 			padding: 0 4px 0;
+			transform: scale(var(--bottom-bar-footer-scale, 1));
+			transform-origin: bottom center;
 		}
 
 		#bottom-bar-score-coins {
