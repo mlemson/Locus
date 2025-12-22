@@ -1500,6 +1500,14 @@
 	#green-zone.drag-scroll-active {
 		cursor: grabbing;
 	}
+	/* World 1: disable scrolling in green zone */
+	#green-zone.no-scroll {
+		overflow: hidden !important;
+		cursor: default !important;
+	}
+	#green-zone.no-scroll.drag-scroll-active {
+		cursor: default !important;
+	}
 
 	/* Desktop: beperk groene en rode zone breedte */
 	@media (min-width: 651px) {
@@ -21004,6 +21012,16 @@ function openShopModal(callback) {
 	  const { world, subLevel } = getWorldAndSubLevel(currentLevel);
 	  currentWorld = world;
 	  
+	  // World 1: disable scrolling in green zone
+	  const greenZone = document.getElementById('green-zone');
+	  if (greenZone) {
+		if (world === 1) {
+		  greenZone.classList.add('no-scroll');
+		} else {
+		  greenZone.classList.remove('no-scroll');
+		}
+	  }
+	  
 	  if (world === 1) {
 		rebuildGameBoards_World1();
 	  } else if (world === 2) {
@@ -24622,31 +24640,31 @@ function showFloatingPreview(shape, color, options = {}) {
 		}
 
 		/* 2. SYMMETRICAL HEIGHTS */
-		/* Blue = 690px reference. Gap = 6px between zones. */
-		/* Column 1: Yellow + gap(6) + Purple = 690 → Yellow = 342, Purple = 342 */
+		/* Blue = 750px reference. Gap = 6px between zones. */
+		/* Column 1: Yellow + gap(6) + Purple = 750 → Yellow = 372, Purple = 372 */
 		#yellow-zone, #yellow-zone--placeholder {
-			min-height: 342px !important;
-			height: 342px !important;
+			min-height: 372px !important;
+			height: 372px !important;
 		}
 		#purple-zone, #purple-zone--placeholder {
-			min-height: 342px !important;
-			height: 342px !important;
+			min-height: 372px !important;
+			height: 372px !important;
 		}
-		/* Column 2: Green + gap(6) + Red = 690 → Green = 380, Red = 304 */
+		/* Column 2: Green + gap(6) + Red = 750 → Green = 410, Red = 334 */
 		#green-zone, #green-zone--placeholder {
-			min-height: 380px !important;
-			height: 380px !important;
+			min-height: 410px !important;
+			height: 410px !important;
 		}
 		#red-zone, #red-zone--placeholder {
-			min-height: 304px !important;
-			height: 304px !important;
+			min-height: 334px !important;
+			height: 334px !important;
 		}
 
 		/* 3. BLUE ZONE: reference height for column symmetry */
-		/* Blue = 690px. Column 1: 342+6+342=690. Column 2: 380+6+304=690. */
+		/* Blue = 750px. Column 1: 372+6+372=750. Column 2: 410+6+334=750. */
 		#blue-zone, #blue-zone--placeholder {
-			min-height: 690px !important;
-			height: 690px !important;
+			min-height: 750px !important;
+			height: 750px !important;
 			width: 160px !important;
 			margin: 0 !important;
 			padding: 6px !important;
