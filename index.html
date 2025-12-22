@@ -421,22 +421,28 @@
 
 		.zone.zoom-focus {
 			position: fixed;
-			top: 25%;
+			top: 22%;
 			left: 50%;
 			transform: translate(-50%, -50%) scale(1.25);
 			z-index: var(--z-zoom);
 			box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+			margin: 2px;
+			padding: 3px;
+			border-radius: 6px;
 		}
 
 		/* Mobile (incl. larger phones): use the same zoom sizing as the compact (<550px) layout. */
 		@media (max-width: 900px) {
 			.zone.zoom-focus {
 				position: fixed;
-				top: 28%;
+				top: 25%;
 				left: 50%;
 				transform: translate(-50%, -50%) scale(0.95);
 				z-index: var(--z-zoom);
 				box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+				margin: 2px;
+				padding: 3px;
+				border-radius: 6px;
 			}
 
 			/* Red zone: keep proportions in zoom, like compact mobile. */
@@ -453,7 +459,7 @@
 		@media (max-width: 650px) {
 			body.zoomed-in #yellow-zone.zoom-focus,
 			body.zoomed-in #blue-zone.zoom-focus {
-				top: calc(25% + 50px);
+				top: calc(22% + 50px);
 			}
 		}
 		
@@ -833,7 +839,7 @@
 			--bottom-bar-gap: 4px;
 			--bottom-bar-bottom-offset: -16px;
 			--card-hand-lift: 0px;
-			--hand-card-width: 62px;
+			--hand-card-width: 52px;
 			--hand-card-gap: 4px;
 			--hand-card-height: 78px;
 		}
@@ -997,8 +1003,8 @@
 	  }
 
 	  #bottom-bar #card-choice-zone .card-option .card-cell {
-		width: var(--card-cell-size, var(--cell-size));
-		height: var(--card-cell-size, var(--cell-size));
+		width: 8px;
+		height: 8px;
 	  }
 
 	  #bottom-bar #card-choice-zone .card-option .card-pattern {
@@ -1135,31 +1141,34 @@
 		#yellow-zone--placeholder,
 		#purple-zone,
 		#purple-zone--placeholder { 
-			min-width: calc(10 * var(--cell-size) + 20px);
-			margin: 4px;
-			padding: 6px;
-			border-radius: 8px;
-		}
-
-		#yellow-zone,
-		#yellow-zone--placeholder { 
+			min-width: calc(10 * var(--cell-size) - 10px);
+			max-width: calc(10 * var(--cell-size) + 10px);
+			margin: 2px;
+			padding: 2px;
+			border-radius: 6px;
 			height: auto;
-			min-height: 120px;
-		}
-
-		#purple-zone,
-		#purple-zone--placeholder { 
-			height: auto;
-			min-height: 100px;
+			min-height: 90px;
 		}
 
 		#red-zone,
 		#red-zone--placeholder {
-			margin: 4px;
-			padding: 6px;
-			border-radius: 8px;
+			min-width: calc(13 * var(--cell-size));
+			max-width: calc(13 * var(--cell-size) + 20px);
+			margin: 2px;
+			padding: 2px;
+			border-radius: 6px;
 			height: auto;
-			min-height: 80px;
+			min-height: 60px;
+		}
+
+		#green-zone,
+		#green-zone--placeholder {
+			min-width: calc(13 * var(--cell-size));
+			max-width: calc(13 * var(--cell-size) + 20px);
+			margin: 2px;
+			padding: 2px;
+			border-radius: 6px;
+			min-height: 180px;
 		}
 
 		/* Green grid (lichtgroene binnenste area) beperken (niet tijdens zoom) */
@@ -1175,17 +1184,11 @@
 
 		#blue-zone,
 		#blue-zone--placeholder { 
-			width: 120px;
-			margin: 4px;
-			padding: 4px;
-			border-radius: 8px;
-		}
-
-		#green-zone,
-		#green-zone--placeholder {
-			margin: 4px;
-			padding: 4px;
-			border-radius: 8px;
+			width: 100px;
+			margin: 2px;
+			padding: 2px;
+			border-radius: 6px;
+			min-height: 800px;
 		}
 
 		/* Mobile: blue is vertically long by design; keep it scrollable but not a giant strip. */
@@ -1235,17 +1238,20 @@
 		#yellow-zone--placeholder,
 		#purple-zone,
 		#purple-zone--placeholder { 
-			min-width: calc(10 * var(--cell-size) + 24px); 
+			min-width: calc(10 * var(--cell-size) - 5px);
+			max-width: calc(10 * var(--cell-size) + 15px);
 		}
 
 		#yellow-zone,
 		#yellow-zone--placeholder { 
-			height: 210px; 
+			height: auto;
+			min-height: 180px;
 		}
 
 		#purple-zone,
 		#purple-zone--placeholder { 
-			height: 210px; 
+			height: auto;
+			min-height: 180px;
 		}
 
 		/* Green grid (lichtgroene binnenste area) beperken (niet tijdens zoom) */
@@ -1271,11 +1277,21 @@
 		/* Actieve zone komt BOVEN de blur - behoud aspect ratio */
 		.zone.zoom-focus {
 		  position: fixed;
-		  top: 35%;
+		  top: 32%;
 		  left: 50%;
 		  transform: translate(-50%, -50%) scale(0.95);
 		  z-index: var(--z-zoom);
 		  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+		  margin: 2px;
+		  padding: 3px;
+		  border-radius: 6px;
+		}
+
+		/* Green zone zoom-focus specifiek */
+		#green-zone.zoom-focus {
+		  margin: 2px;
+		  padding: 3px;
+		  border-radius: 6px;
 		}
 
 		/* Red zone: behoud originele verhoudingen bij zoom */
@@ -1824,15 +1840,15 @@
 	   Gekleurde vierkantjes die in cellen kunnen verschijnen
 	   Tonen welke kleur/zone de cel vertegenwoordigt
 	*/
-	.symbol { display: inline-block; width: 14px; height: 14px; border-radius: 4px; margin: auto; border:2px solid #444; background-color: #999; }
+	.symbol { display: inline-block; width: calc(var(--cell-size) * 0.55); height: calc(var(--cell-size) * 0.55); border-radius: 3px; margin: auto; border: 1px solid #444; background-color: #999; }
 	.symbol.yellow { background-color: #fff48f; }
 	.symbol.green  { background-color: #69cf57; }
 	.symbol.purple { background-color: #ae7eed; }
 	.symbol.blue   { background-color: #76a0e3; }
 	.symbol.red    { background-color: #ed7e89; }
 	.symbol.trap-symbol {
-	  width: 18px;
-	  height: 18px;
+	  width: calc(var(--cell-size) * 0.7);
+	  height: calc(var(--cell-size) * 0.7);
 	  border-radius: 2px;
 	  background: #656565;
 	  border: none;
@@ -5796,20 +5812,20 @@
 		*/
 		#menu-toggle {
 			position: fixed;
-			left: 12px;
-			top: 12px;
+			left: 8px;
+			top: 8px;
 			display: flex;
 			align-items: center;
 			justify-content: center;
 			flex-direction: column;
-			gap: 5px;
-			width: 44px;
-			height: 44px;
-			padding: 10px;
-			border-radius: 50%;
+			gap: 3px;
+			width: 30px;
+			height: 30px;
+			padding: 6px;
+			border-radius: 6px;
 			background: linear-gradient(145deg, #ffd560, #ffb23c);
 			border: 1px solid rgba(255,255,255,0.35);
-			box-shadow: 0 8px 16px rgba(0,0,0,0.28);
+			box-shadow: 0 4px 10px rgba(0,0,0,0.28);
 			cursor: pointer;
 			transition: transform 0.2s ease, box-shadow 0.2s ease;
 			z-index: var(--z-menu);
@@ -5817,12 +5833,12 @@
 
 		#menu-toggle:hover {
 			transform: scale(1.05);
-			box-shadow: 0 10px 20px rgba(0,0,0,0.32);
+			box-shadow: 0 6px 14px rgba(0,0,0,0.32);
 		}
 
 		#menu-toggle span {
 			display: block;
-			width: 20px;
+			width: 14px;
 			height: 2px;
 			background: #1c1c1c;
 			border-radius: 2px;
@@ -6503,11 +6519,11 @@
 		}
 
 		#bottom-bar #card-choice-zone .card-option .card-cell {
-			width: 11px;
-			height: 11px;
-			border-radius: 2px;
-			border: 1px solid rgba(12,16,30,0.12);
-			box-shadow: inset 0 0 2px rgba(0,0,0,0.18);
+			width: 7px;
+			height: 7px;
+			border-radius: 1px;
+			border: 1px solid rgba(12,16,30,0.1);
+			box-shadow: inset 0 0 1px rgba(0,0,0,0.12);
 		}
 
 		#bottom-bar #card-choice-zone .card-label {
@@ -6577,20 +6593,20 @@
 			#bottom-bar #card-choice-zone .card-option {
 				width: var(--hand-card-width, 50px);
 				min-height: var(--hand-card-height, 65px);
-				padding: 3px;
+				padding: 2px;
 			}
 
 			#bottom-bar #card-choice-zone .card-option .card-cell {
-				width: 8px;
-				height: 8px;
+				width: 7px;
+				height: 7px;
 			}
 
 			#bottom-bar #card-choice-zone .card-label {
-				font-size: 0.45rem;
+				font-size: 0.4rem;
 			}
 
 			#bottom-bar #card-choice-zone .card-meta {
-				font-size: 0.5rem;
+				font-size: 0.45rem;
 			}
 			
 			#turn-counter-inline {
@@ -11511,6 +11527,8 @@
 					return colorScores.filter(s => s >= 30).length >= 4;
 				}
 			},
+			/* REMOVED BONUS OBJECTIVE AS REQUESTED */
+			/*
 			{
 				id: 'level-14-bonus-master',
 				description: 'Level 14: Verzamel 40+ bonuspunten.',
@@ -11518,6 +11536,7 @@
 				check: scores => scores.bonus >= 40,
 				progress: scores => (scores.bonus >= 40 ? '⭐✔' : `⭐${Math.max(0, scores.bonus)}/40`)
 			},
+			*/
 			{
 				id: 'level-14-blue-marathon',
 				description: 'Level 14: Scoor 45+ punten in blauw (lange marathon).',
@@ -24469,4 +24488,60 @@ function showFloatingPreview(shape, color, options = {}) {
 	}
 	
   </script>
+  <style>
+	/* FINAL OVERRIDES FOR MOBILE LAYOUT */
+	@media (max-width: 650px) {
+		/* Force Yellow and Purple to be identical width and centered */
+		#yellow-zone, #purple-zone,
+		#yellow-zone--placeholder, #purple-zone--placeholder {
+			width: calc(10 * var(--cell-size)) !important;
+			min-width: calc(10 * var(--cell-size)) !important;
+			max-width: calc(10 * var(--cell-size)) !important;
+			margin: 10px auto !important;
+			box-sizing: content-box !important; /* Ensure padding doesn't shrink content */
+		}
+
+		/* Force Red and Green to be identical width and centered */
+		#red-zone, #green-zone,
+		#red-zone--placeholder, #green-zone--placeholder {
+			width: calc(13 * var(--cell-size)) !important;
+			min-width: calc(13 * var(--cell-size)) !important;
+			max-width: calc(13 * var(--cell-size)) !important;
+			margin: 10px auto !important;
+			box-sizing: content-box !important;
+		}
+
+		/* Make Green zone taller */
+		#green-zone, #green-zone--placeholder {
+			min-height: 400px !important;
+		}
+
+		/* Force Cards to be smaller */
+		:root {
+			--hand-card-width: 42px !important;
+			--hand-card-height: 65px !important;
+		}
+
+		#bottom-bar #card-choice-zone .card-option {
+			width: 42px !important;
+			min-width: 42px !important;
+			max-width: 42px !important;
+			min-height: 65px !important;
+			padding: 2px !important;
+		}
+
+		/* Force Card Cells to be tiny */
+		#bottom-bar #card-choice-zone .card-option .card-cell,
+		.card-option .card-cell {
+			width: 4px !important;
+			height: 4px !important;
+			border-width: 0.5px !important;
+		}
+		
+		/* Adjust card pattern gap */
+		#bottom-bar #card-choice-zone .card-option .card-pattern {
+			gap: 0.5px !important;
+		}
+	}
+  </style>
 </html>
