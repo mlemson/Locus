@@ -17729,6 +17729,11 @@ document.addEventListener('pointermove', ev => {
 			return;
 		}
 		
+		// Negeer clicks op gold-zone (buy button, coin display, etc.)
+		if (ev.target.closest('#gold-zone')) {
+			return;
+		}
+		
 		if (!draggedBlock) return;
 		if (dragPointerId !== null && ev.pointerId !== dragPointerId) return;
 		const bonusContext = activeBonusPlacement;
@@ -24951,7 +24956,16 @@ function showFloatingPreview(shape, color, options = {}) {
 	const buyPlacementBtn = document.getElementById('buy-placement-btn');
 	const purchasedBlockPreview = document.getElementById('purchased-block-preview');
 	if (buyPlacementBtn) {
-	  buyPlacementBtn.addEventListener('click', onBuyPlacementClick);
+	  buyPlacementBtn.addEventListener('click', (e) => {
+		e.stopPropagation();
+		onBuyPlacementClick();
+	  });
+	  buyPlacementBtn.addEventListener('pointerdown', (e) => {
+		e.stopPropagation();
+	  });
+	  buyPlacementBtn.addEventListener('pointerup', (e) => {
+		e.stopPropagation();
+	  });
 	  updateBuyPlacementButton();
 	}
 	if (purchasedBlockPreview) {
