@@ -538,6 +538,34 @@
 			}
 		}
 
+		/* Mobile landscape sidebar zoom mode */
+		body.mobile-sidebar-layout.zoomed-in .zone.zoom-focus {
+			position: fixed;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%) scale(0.85);
+			z-index: var(--z-zoom);
+			box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+			margin: 0;
+			padding: 6px;
+			border-radius: 8px;
+			max-width: 90vw;
+			max-height: 85vh;
+			max-height: 85svh;
+			overflow: auto;
+		}
+
+		body.mobile-sidebar-layout.zoomed-in #red-zone.zoom-focus {
+			display: grid !important;
+			grid-template-columns: repeat(2, max-content) !important;
+			width: auto;
+			max-width: 95vw;
+		}
+
+		body.mobile-sidebar-layout.zoomed-in .zone-nav-arrow {
+			display: flex;
+		}
+
 		body.mobile-sidebar-layout #mobile-landscape-wrapper {
 			display: flex !important;
 			flex-direction: row;
@@ -3504,7 +3532,7 @@
 		box-shadow: 0 32px 52px rgba(70,90,180,0.45);
 	}
 
-	/* Card control buttons voor mobiel zonder touch - fixed positie boven kaarten */
+	/* Card control buttons voor mobiel en touch devices - fixed positie boven kaarten */
 	.card-control-btn {
 		position: fixed;
 		/* Mobile request: move these ~50px down so they don't block the board. */
@@ -3556,6 +3584,37 @@
 		left: 50%;
 		transform: translateX(-85px);
 		background: #e74c3c;
+	}
+
+	.card-control-drop {
+		left: 50%;
+		transform: translateX(-170px);
+		background: #27ae60;
+	}
+
+	/* Desktop touch mode: position buttons along the side instead of bottom */
+	@media (min-width: 651px) {
+		.card-control-btn {
+			bottom: auto;
+			top: 50%;
+			left: auto;
+			right: 20px;
+			width: 44px;
+			height: 44px;
+			font-size: 22px;
+		}
+		.card-control-rotate {
+			transform: translateY(-110px);
+		}
+		.card-control-mirror {
+			transform: translateY(-50px);
+		}
+		.card-control-cancel {
+			transform: translateY(10px);
+		}
+		.card-control-drop {
+			transform: translateY(70px);
+		}
 	}
 
 	.card-control-rotate:hover,
@@ -8081,8 +8140,9 @@
 	*/
 	@media (min-width: 651px) {
 	  html {
-		background: var(--main-bg-light);
+		background: #2d3142;
 		overflow: hidden;
+		height: 100%;
 	  }
 
 	  html, body {
@@ -8102,10 +8162,11 @@
 		position: static;
 		margin: 0;
 		padding: 10px;
-		min-height: 100%;
+		min-height: 100vh;
+		min-height: 100svh;
 		width: 100%;
-		background: var(--main-bg-light);
-		color: #222;
+		background: #2d3142;
+		color: #e5e5e5;
 		overflow: hidden;
 	  }
 
@@ -8162,10 +8223,10 @@
 		margin: 0 auto;
 		padding: 6px;
 		box-sizing: border-box;
-		height: auto;
-		min-height: auto;
-		max-height: 100vh;
-		max-height: 100svh;
+		height: calc(100vh - 20px);
+		height: calc(100svh - 20px);
+		min-height: 0;
+		max-height: none;
 		overflow: hidden;
 	  }
 
@@ -15021,7 +15082,9 @@
 	document.querySelectorAll('.zone').forEach(zone => {
 	  if (zone.classList.contains('zone-placeholder')) return;
 	  zone.addEventListener('click', e => {
-		if (window.innerWidth > MOBILE_BREAKPOINT) return;
+		// Allow zoom in mobile portrait AND mobile landscape sidebar mode
+		const isMobileSidebarMode = document.body.classList.contains('mobile-sidebar-layout');
+		if (window.innerWidth > MOBILE_BREAKPOINT && !isMobileSidebarMode) return;
 		if (skipNextZoneClick) {
 		  skipNextZoneClick = false;
 		  return;
@@ -16009,21 +16072,50 @@
   /* ============================================
      BONUS MUNT BELONINGEN
      ============================================
-     Elke 10 punten bonus geeft 1 gratis munt
+     World 1: Elke 10 punten bonus geeft 1 gratis munt
+     World 2+: Elke 20 punten bonus geeft 1 gratis munt (50% minder)
      Houdt bij hoeveel milestones al bereikt zijn
   */
   function trackBonusCoinRewards(currentBonus) {
 	if (typeof currentBonus !== 'number' || currentBonus <= 0) return;
-	const milestonesReached = Math.floor(currentBonus / 10);
+	const worldInfo = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(currentLevel) : { world: 1 };
+	const isWorld2Plus = Number(worldInfo?.world || 1) >= 2;
+	const bonusPerCoin = isWorld2Plus ? 20 : 10; // World 2+: 50% minder coins
+	const milestonesReached = Math.floor(currentBonus / bonusPerCoin);
 	if (milestonesReached <= bonusCoinMilestones) return;
 	const coinsToGrant = milestonesReached - bonusCoinMilestones;
 	for (let i = 0; i < coinsToGrant; i += 1) addCoin();
 	bonusCoinMilestones = milestonesReached;
   }
 
+	/* Bereken hoeveel coins je krijgt voor een bepaalde score
+	   World 1: 1 coin per 10 punten
+	   World 2+: Getrapte schaal:
+	     - 0-50 punten: 1 coin per 10 punten (max 5)
+	     - 50-150 punten: 1 coin per 25 punten (max 4 extra = 9 totaal)
+	     - 150+ punten: 1 coin per 50 punten
+	*/
+	function calculateCoinsForScore(score, isWorld2Plus = false) {
+	  if (!isWorld2Plus) {
+		return Math.floor(score / 10);
+	  }
+	  // World 2+ tiered system
+	  let coins = 0;
+	  if (score <= 50) {
+		coins = Math.floor(score / 10);
+	  } else if (score <= 150) {
+		coins = 5 + Math.floor((score - 50) / 25);
+	  } else {
+		coins = 5 + 4 + Math.floor((score - 150) / 50);
+	  }
+	  return coins;
+	}
+
 	function grantRoundScoreCoins(finalScore) {
 	  if (!Number.isFinite(finalScore) || finalScore <= 0) return;
-	  const targetCoins = Math.floor(finalScore / 10);
+	  const worldInfo = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(currentLevel) : { world: 1 };
+	  const isWorld2Plus = Number(worldInfo?.world || 1) >= 2;
+	  const targetCoins = calculateCoinsForScore(finalScore, isWorld2Plus);
 	  if (targetCoins <= coinsAwardedFromScore) return;
 	  const coinsToGrant = targetCoins - coinsAwardedFromScore;
 	  for (let i = 0; i < coinsToGrant; i += 1) addCoin();
@@ -22165,15 +22257,15 @@ function openShopModal(callback) {
 	  
 	  // Genereer alle grids
 	  const boardConfigs = [
-		// Geel: Shape-based met bold cells op specifieke posities - MINDER coins/symbolen
+		// Geel: Shape-based met bold cells op specifieke posities - MINDER coins/symbolen (50% reduction voor World 2)
 		() => {
 		  createGrid('yellow-grid', yellowRows, yellowCols, {
 			goldCells: true,
 			symbols: true,
-			minSymbols: 10,
-			maxSymbols: 14,
-			coinChance: 0.14,
-			maxCoins: 16,
+			minSymbols: 5,
+			maxSymbols: 7,
+			coinChance: 0.07,
+			maxCoins: 8,
 			rowLengths: yellowShape.pattern,
 			rowOffsets: yellowShape.offsets,
 			boldColumns: [], // Geen kolom-based bolds
@@ -22212,14 +22304,14 @@ function openShopModal(callback) {
 		  }
 		},
 		
-		// Paars: World 2 rules (fixed corner bolds + outer ring shading)
+		// Paars: World 2 rules (fixed corner bolds + outer ring shading) - 50% reduction coins/symbols
 		() => createGrid('purple-grid', purpleSize, purpleSize, {
 		  symbols: true,
 		  goldCells: true,
-		  minSymbols: 16,
-		  maxSymbols: 22,
-		  coinChance: 0.08,
-		  maxCoins: 12,
+		  minSymbols: 8,
+		  maxSymbols: 11,
+		  coinChance: 0.04,
+		  maxCoins: 6,
 		  // Keep the World 2 fixed corner bolds, but also keep the normal connector bolds in the middle (like World 1).
 		  randomBoldCount: 10,
 		  avoidAdjacentBold: true,
@@ -22232,16 +22324,16 @@ function openShopModal(callback) {
 		  blackHoleChance: blackHoleChance * 0.5
 		}),
 		
-		// Blauw: Lang kronkelig pad met split tak - VEEL meer coins en bonussen
+		// Blauw: Lang kronkelig pad met split tak - 50% reduction coins/symbols voor World 2
 		() => {
 		  createGrid('blue-grid', blueRows, blueCols, {
 			boldBottom: true,
 			goldCells: true,
 			symbols: true,
-			minSymbols: 30,
-			maxSymbols: 45,
-			coinChance: 0.18,
-			maxCoins: 32,
+			minSymbols: 15,
+			maxSymbols: 22,
+			coinChance: 0.09,
+			maxCoins: 16,
 			rowLengths: blueRowPattern,
 			rowOffsets: blueRowOffsets,
 			voidCells: blueGapCells, // Gap cells tussen main en split
@@ -23651,10 +23743,58 @@ document.addEventListener('pointerdown', ev => {
 			document.body.appendChild(cancelBtn);
 		}
 		
+		// Drop button: laat blok los maar behoud selectie (voor touch devices op desktop)
+		let dropBtn = document.querySelector('.card-control-drop');
+		if (!dropBtn) {
+			dropBtn = document.createElement('button');
+			dropBtn.className = 'card-control-btn card-control-drop';
+			dropBtn.innerHTML = '↓';
+			dropBtn.title = 'Laat blok los';
+			dropBtn.setAttribute('aria-label', 'Laat blok los');
+			
+			const handleDrop = (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				e.stopImmediatePropagation();
+				// Remove the draggable block but keep the card selected
+				if (draggedBlock) {
+					try { draggedBlock.remove(); } catch {}
+					draggedBlock = null;
+					draggedShape = null;
+					draggedColor = null;
+					lastZone = null;
+					lastBaseX = lastBaseY = null;
+					endPointerDragTracking();
+					const overlay = document.getElementById('drag-overlay');
+					if (overlay) overlay.style.display = 'none';
+					document.body.classList.remove('dragging');
+					stopGlobalDragVisuals();
+				}
+				// Show floating preview so user sees current shape
+				if (selectedShape && selectedColor) {
+					showFloatingPreview(selectedShape, selectedColor);
+				}
+			};
+			
+			dropBtn.addEventListener('click', handleDrop);
+			dropBtn.addEventListener('mousedown', (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				e.stopImmediatePropagation();
+			});
+			dropBtn.addEventListener('pointerdown', (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				e.stopImmediatePropagation();
+			});
+			document.body.appendChild(dropBtn);
+		}
+		
 		// Maak buttons zichtbaar
 		rotateBtn.classList.add('visible');
 		mirrorBtn.classList.add('visible');
 		cancelBtn.classList.add('visible');
+		dropBtn.classList.add('visible');
 	}
 
 	function removeCardControlButtons() {
