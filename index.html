@@ -489,6 +489,27 @@
 			overflow: hidden !important;
 		}
 
+		/* Hamburger menu in mobile sidebar layout */
+		body.mobile-sidebar-layout #menu-toggle {
+			position: fixed !important;
+			top: 4px;
+			left: 4px;
+			z-index: 1100;
+			width: 36px;
+			height: 36px;
+			display: flex !important;
+		}
+
+		body.mobile-sidebar-layout #controls {
+			position: fixed;
+			top: 44px;
+			left: 4px;
+			z-index: 1099;
+			max-height: calc(100vh - 50px);
+			max-height: calc(100svh - 50px);
+			overflow-y: auto;
+		}
+
 		body.mobile-sidebar-layout #bottom-bar {
 			display: none !important;
 		}
@@ -507,6 +528,7 @@
 			height: 100svh;
 			gap: 2px;
 			padding: 2px;
+			padding-left: 44px; /* Room for hamburger */
 			box-sizing: border-box;
 			overflow: hidden;
 		}
@@ -606,21 +628,26 @@
 
 		/* Gold zone in left sidebar */
 		body.mobile-sidebar-layout #ml-sidebar-left #gold-zone {
+			display: flex !important;
 			flex-direction: column;
 			align-items: center;
 			gap: 2px;
+			padding: 4px;
+			background: rgba(255, 215, 0, 0.15);
+			border-radius: 6px;
 		}
 
 		body.mobile-sidebar-layout #ml-sidebar-left #gold-zone::after {
-			content: '\\1FA99  ' attr(data-coin-text);
+			content: '🪙 ' attr(data-coin-text);
 			display: block;
-			font-size: 0.55rem;
+			font-size: 0.6rem;
 			font-weight: 700;
 		}
 
 		body.mobile-sidebar-layout #ml-sidebar-left #gold-zone .buy-placement-btn {
-			padding: 2px 4px;
-			font-size: 0.4rem;
+			padding: 3px 5px;
+			font-size: 0.45rem;
+			display: block !important;
 		}
 
 		body.mobile-sidebar-layout #ml-sidebar-left #gold-zone #collected-coins {
@@ -678,6 +705,9 @@
 
 		body.mobile-sidebar-layout #ml-sidebar-right #card-choice-zone {
 			padding: 3px;
+			display: flex;
+			flex-direction: column;
+			gap: 4px;
 		}
 
 		body.mobile-sidebar-layout #ml-sidebar-right #card-choice-zone h2,
@@ -689,6 +719,19 @@
 		body.mobile-sidebar-layout #ml-sidebar-right #card-options {
 			flex-direction: column;
 			gap: 3px;
+			order: 1;
+		}
+
+		/* Action buttons below cards */
+		body.mobile-sidebar-layout #ml-sidebar-right #card-action-buttons {
+			order: 2;
+			flex-direction: row;
+			flex-wrap: wrap;
+			justify-content: center;
+			gap: 3px;
+			margin-top: 4px;
+			padding-top: 4px;
+			border-top: 1px solid rgba(0,0,0,0.1);
 		}
 
 		/* Portrait: smaller cards */
@@ -727,13 +770,6 @@
 				font-size: 0.45rem;
 				padding: 1px 3px;
 			}
-		}
-
-		body.mobile-sidebar-layout #ml-sidebar-right #card-action-buttons {
-			flex-direction: row;
-			flex-wrap: wrap;
-			justify-content: center;
-			gap: 2px;
 		}
 
 		body.mobile-sidebar-layout #ml-sidebar-right .card-action-btn {
@@ -8026,6 +8062,19 @@
 	@media (min-width: 651px) {
 	  html {
 		background: var(--main-bg-light);
+		overflow: hidden;
+	  }
+
+	  html, body {
+		scrollbar-width: none;
+		-ms-overflow-style: none;
+	  }
+
+	  html::-webkit-scrollbar,
+	  body::-webkit-scrollbar {
+		display: none;
+		width: 0;
+		height: 0;
 	  }
 
 	  body {
@@ -8037,8 +8086,7 @@
 		width: 100%;
 		background: var(--main-bg-light);
 		color: #222;
-		overflow-x: hidden;
-		overflow-y: hidden;
+		overflow: hidden;
 	  }
 
 	  body.dark-mode {
@@ -8078,8 +8126,8 @@
 
 	  /* Portrait mode: stack (objective -> board -> bottom) so nothing ends up off-screen on narrow widths. */
 	  body.desktop-portrait {
-		/* Allow scrolling as a fallback when the viewport is too short for all panels. */
-		overflow-y: auto;
+		/* No scrolling - everything should fit */
+		overflow: hidden;
 	  }
 
 	  body.desktop-portrait #desktop-wrapper {
@@ -8088,15 +8136,15 @@
 		flex-wrap: nowrap;
 		align-items: center;
 		justify-content: flex-start;
-		gap: 6px;
+		gap: 4px;
 		width: 100%;
 		max-width: 100%;
 		margin: 0 auto;
-		padding: 8px;
+		padding: 6px;
 		box-sizing: border-box;
-		height: calc(100vh - 16px);
-		overflow-y: auto;
-		overflow-x: hidden;
+		height: calc(100vh - 12px);
+		height: calc(100svh - 12px);
+		overflow: hidden;
 	  }
 
 	  /* Hide empty sidebars in portrait: JS moves content into #desktop-bottom. */
@@ -8109,7 +8157,8 @@
 	  body.desktop-portrait #desktop-grids {
 		flex: 1 1 auto;
 		min-height: 0;
-		max-height: calc(100vh - 180px); /* Leave room for bottom bar */
+		max-height: calc(100vh - 160px); /* Leave room for bottom bar */
+		max-height: calc(100svh - 160px);
 		width: 100%;
 		display: flex;
 		justify-content: center;
@@ -24917,18 +24966,19 @@ function showFloatingPreview(shape, color, options = {}) {
 	  const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
 	  // Bepaal of scherm portrait is (meer hoogte dan breedte)
 	  const isPortrait = window.innerHeight > window.innerWidth;
-	  // Check for mobile sidebar mode: any mobile device should use sidebar layout
-	  const useMobileSidebarLayout = isMobile || (isCoarsePointer() && (window.innerWidth <= 900 || window.innerHeight <= 600));
+	  // Check for mobile LANDSCAPE sidebar mode only: touch device + landscape + short height
+	  // Portrait mobiel moet bottom bar behouden!
+	  const isMobileLandscape = !isPortrait && isCoarsePointer() && window.innerHeight <= 500 && window.innerWidth > 500;
 	  // Desktop: portrait = bottom layout. Daarnaast: bij smalle desktopbreedtes (split-screen/iPad)
 	  // is de landscape sidebar layout te krap; forceer dan ook de bottom layout.
 	  const DESKTOP_NARROW_BREAKPOINT = 925;
-	  const isNarrowDesktop = !useMobileSidebarLayout && window.innerWidth <= DESKTOP_NARROW_BREAKPOINT;
-	  const useBottomLayout = !useMobileSidebarLayout && (isPortrait || isNarrowDesktop);
+	  const isNarrowDesktop = !isMobile && !isMobileLandscape && window.innerWidth <= DESKTOP_NARROW_BREAKPOINT;
+	  const useBottomLayout = !isMobile && !isMobileLandscape && (isPortrait || isNarrowDesktop);
 	  
 	  // Add body classes for CSS targeting
-	  document.body.classList.toggle('mobile-sidebar-layout', useMobileSidebarLayout);
+	  document.body.classList.toggle('mobile-sidebar-layout', isMobileLandscape);
 	  document.body.classList.remove('mobile-landscape'); // deprecated class
-	  if (!useMobileSidebarLayout) {
+	  if (!isMobile && !isMobileLandscape) {
 		  document.body.classList.toggle('desktop-portrait', useBottomLayout);
 		  document.body.classList.toggle('desktop-landscape', !useBottomLayout);
 	  } else {
@@ -24964,8 +25014,8 @@ function showFloatingPreview(shape, color, options = {}) {
 	  const origCards = document.getElementById('original-card-zone');
 	  const origControls = document.getElementById('original-controls-zone');
 
-			// === MOBILE SIDEBAR LAYOUT (all mobile devices) ===
-			if (useMobileSidebarLayout && mlWrapper && mlLeft && mlCenter && mlRight) {
+			// === MOBILE LANDSCAPE SIDEBAR LAYOUT ===
+			if (isMobileLandscape && mlWrapper && mlLeft && mlCenter && mlRight) {
 				// Remove desktop wrapper if exists
 				const desktopWrapper = document.getElementById('desktop-wrapper');
 				if (desktopWrapper) {
