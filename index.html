@@ -518,6 +518,26 @@
 			display: none !important;
 		}
 
+		/* Safety net: if the sidebar class ever lingers, never apply it in portrait. */
+		@media (max-width: 650px) and (orientation: portrait) {
+			body.mobile-sidebar-layout {
+				overflow: auto !important;
+				max-height: none;
+			}
+			body.mobile-sidebar-layout html {
+				overflow: auto !important;
+			}
+			body.mobile-sidebar-layout #mobile-landscape-wrapper {
+				display: none !important;
+			}
+			body.mobile-sidebar-layout #bottom-bar {
+				display: flex !important;
+			}
+			body.mobile-sidebar-layout #mobile-objective-banner {
+				display: flex !important;
+			}
+		}
+
 		body.mobile-sidebar-layout #mobile-landscape-wrapper {
 			display: flex !important;
 			flex-direction: row;
@@ -20262,8 +20282,10 @@ document.addEventListener('pointermove', ev => {
 		if (!actionWrap) return;
 		const newCardsBtn = document.getElementById('new-cards-btn');
 		const rotateBtn = document.getElementById('rotate-card-btn');
+		const mirrorBtn = document.getElementById('mirror-card-btn');
+		const deckPreview = document.getElementById('deck-preview');
 		const turnCounter = document.getElementById('turn-counter-inline');
-		[newCardsBtn, rotateBtn, turnCounter].forEach(el => {
+		[newCardsBtn, rotateBtn, mirrorBtn, deckPreview, turnCounter].forEach(el => {
 			if (el && el.parentElement !== actionWrap) {
 				actionWrap.appendChild(el);
 			}
@@ -23386,6 +23408,7 @@ function openShopModal(callback) {
 		selectedShape = currentShape;
 		selectedColor = currentColor;
 		if (rotateButton) rotateButton.disabled = false;
+		if (mirrorButton) mirrorButton.disabled = false;
 		// Keep cards switchable; only apply turn-based locks (golden vs normal) + playability.
 		applyTurnCardLocks();
 
@@ -23473,7 +23496,7 @@ function openShopModal(callback) {
 	}
 
 	// Voor touch devices op mobiel: toon direct transform buttons bij het blok
-	if (isTouchDevice && isMobileLayout) {
+	if (isTouchDevice && isCoarsePointer()) {
 		addCardControlButtons();
 	}
 }
@@ -24863,6 +24886,7 @@ function showFloatingPreview(shape, color, options = {}) {
 		const board = document.getElementById('board');
 		if (!board) return;
 		const boardContainer = board.parentElement;
+		const desktopBottom = document.getElementById('desktop-bottom');
 		const isDesktop = window.innerWidth > MOBILE_BREAKPOINT;
 		const isMobileSidebar = document.body.classList.contains('mobile-sidebar-layout');
 		if (!isDesktop || isMobileSidebar) {
@@ -24870,6 +24894,9 @@ function showFloatingPreview(shape, color, options = {}) {
 			board.style.removeProperty('transform-origin');
 			if (boardContainer && boardContainer.id === 'desktop-grids') {
 				boardContainer.style.removeProperty('justify-content');
+			}
+			if (desktopBottom) {
+				desktopBottom.style.removeProperty('margin-top');
 			}
 			document.body.classList.remove('board-scaled');
 			return;
@@ -24914,6 +24941,7 @@ function showFloatingPreview(shape, color, options = {}) {
 		const scale = Math.min(availableWidth / boardWidth, availableHeight / boardHeight, maxScale);
 		const containerWidth = (boardContainer && boardContainer.clientWidth) ? boardContainer.clientWidth : (window.innerWidth - sidebarReserve);
 		const scaledBoardWidth = boardWidth * scale;
+		const scaledBoardHeight = boardHeight * scale;
 		const offsetX = Math.max((containerWidth - scaledBoardWidth) / 2, 0);
 
 		if (scale < 0.999) {
@@ -24923,6 +24951,14 @@ function showFloatingPreview(shape, color, options = {}) {
 			if (boardContainer && boardContainer.id === 'desktop-grids') {
 				boardContainer.style.justifyContent = 'flex-start';
 			}
+			// Desktop-portrait: compensate for transform-scale whitespace by pulling the bottom UI up.
+			// This avoids clipping the board (transform doesn't affect layout height).
+			if (isPortrait && desktopBottom) {
+				const gap = Math.max(0, Math.round(boardHeight - scaledBoardHeight));
+				desktopBottom.style.marginTop = gap ? `-${gap}px` : '';
+			} else if (desktopBottom) {
+				desktopBottom.style.removeProperty('margin-top');
+			}
 			board.style.transform = `translateX(${offsetX.toFixed(1)}px) scale(${scale})`;
 			board.style.transformOrigin = 'top left';
 			document.body.classList.add('board-scaled');
@@ -24931,6 +24967,9 @@ function showFloatingPreview(shape, color, options = {}) {
 			board.style.removeProperty('transform-origin');
 			if (boardContainer && boardContainer.id === 'desktop-grids') {
 				boardContainer.style.removeProperty('justify-content');
+			}
+			if (desktopBottom) {
+				desktopBottom.style.removeProperty('margin-top');
 			}
 			document.body.classList.remove('board-scaled');
 		}
@@ -24979,10 +25018,11 @@ function showFloatingPreview(shape, color, options = {}) {
 	function moveGameElements() {
 	  const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
 	  // Bepaal of scherm portrait is (meer hoogte dan breedte)
-	  const isPortrait = window.innerHeight > window.innerWidth;
+	  const isPortrait = window.matchMedia ? window.matchMedia('(orientation: portrait)').matches : (window.innerHeight > window.innerWidth);
+	  const isLandscapeOrientation = window.matchMedia ? window.matchMedia('(orientation: landscape)').matches : !isPortrait;
 	  // Check for mobile LANDSCAPE sidebar mode only: touch device + landscape + short height
 	  // Portrait mobiel moet bottom bar behouden!
-	  const isMobileLandscape = !isPortrait && isCoarsePointer() && window.innerHeight <= 500 && window.innerWidth > 500;
+	  const isMobileLandscape = isLandscapeOrientation && isCoarsePointer() && window.innerHeight <= 500 && window.innerWidth > 500;
 	  // Desktop: portrait = bottom layout. Daarnaast: bij smalle desktopbreedtes (split-screen/iPad)
 	  // is de landscape sidebar layout te krap; forceer dan ook de bottom layout.
 	  const DESKTOP_NARROW_BREAKPOINT = 925;
