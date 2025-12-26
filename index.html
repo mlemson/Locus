@@ -2553,8 +2553,9 @@
 	body.dark-mode .purchased-block-label {
 		color: #c9b0e8;
 	}
-	/* Hide purchased block preview on touch devices - not needed there */
-	@media (pointer: coarse) {
+	/* Hide purchased block preview only on small touch screens (phones).
+	   On tablets/iPad we keep it visible because it's the main tap target to start placement. */
+	@media (pointer: coarse) and (max-width: 650px) {
 		.purchased-block-preview {
 			display: none !important;
 		}
@@ -3599,12 +3600,6 @@
 		background: #e74c3c;
 	}
 
-	.card-control-drop {
-		left: 50%;
-		margin-left: -75px;
-		background: #27ae60;
-	}
-
 	/* Touch portrait mode: buttons blijven onderaan gecentreerd */
 	body.touch-portrait .card-control-btn {
 		bottom: calc(var(--bottom-bar-height) + 10px);
@@ -3628,9 +3623,6 @@
 	}
 	body.mobile-sidebar-layout .card-control-cancel {
 		transform: translateY(25px);
-	}
-	body.mobile-sidebar-layout .card-control-drop {
-		transform: translateY(80px);
 	}
 
 	.card-control-btn:hover {
@@ -19576,10 +19568,22 @@ document.addEventListener('pointermove', ev => {
 	  const btn = document.getElementById('buy-placement-btn');
 	  const preview = document.getElementById('purchased-block-preview');
 	  if (!btn) return;
+	  const isTouch = (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+	  const isPhoneLike = isTouch && window.innerWidth <= 650;
 	  
 	  // Als er een gekochte plaatsing actief is, toon preview en verberg knop
 	  if (window.hasPurchasedPlacement) {
+		// Phone UX: keep the button visible (preview is hidden on phones), and use it to start placement.
+		if (isPhoneLike) {
+			btn.style.display = 'flex';
+			btn.disabled = false;
+			btn.title = 'Plaats gekocht bonusblok';
+			btn.setAttribute('data-has-purchased', 'true');
+			if (preview) preview.style.display = 'none';
+			return;
+		}
 		btn.style.display = 'none';
+		btn.removeAttribute('data-has-purchased');
 		if (preview) preview.style.display = 'flex';
 		return;
 	  }
@@ -19594,9 +19598,24 @@ document.addEventListener('pointermove', ev => {
 	  btn.title = coins < cost 
 		? `Onvoldoende munten (${coins}/${cost})` 
 		: 'Koop bonusblok (2 munten)';
+	  btn.removeAttribute('data-has-purchased');
 	}
 
 	function onBuyPlacementClick() {
+	  // If a purchase is already pending (common on phones where the preview is hidden),
+	  // interpret this as "start placing the purchased block".
+	  if (window.hasPurchasedPlacement) {
+		const fallbackEvent = {
+			clientX: window.innerWidth / 2,
+			clientY: window.innerHeight / 2,
+			pointerId: null,
+			target: document.getElementById('buy-placement-btn'),
+			preventDefault() {},
+			stopPropagation() {}
+		};
+		onPurchasedBlockPreviewClick(fallbackEvent);
+		return;
+	  }
 	  const coins = getSpendableCoinCount();
 	  const cost = 2;
 	  if (coins < cost) {
@@ -21545,15 +21564,16 @@ document.addEventListener('pointermove', ev => {
 			return;
 		}
 		if (confirmCompleteDetails) {
-			const state = getCompletionWarningState();
-			const detailText = buildCompletionWarningDetails(state);
-			if (detailText) {
-				confirmCompleteDetails.textContent = `${detailText} Weet je zeker dat je naar de volgende hand wilt gaan?`;
-				confirmCompleteDetails.style.display = '';
+			// ONLY warn about playable cards when moving to the next hand.
+			// Bonuses should not block/warn here; they matter when ending the round.
+			const playableCount = currentHand.filter(card => card && isCardPlayable(card)).length;
+			if (playableCount > 0) {
+				const cardLabel = playableCount === 1 ? 'speelbare kaart' : 'speelbare kaarten';
+				confirmCompleteDetails.textContent = `Je hebt nog ${playableCount} ${cardLabel} die je zou kunnen plaatsen. Weet je zeker dat je naar de volgende hand wilt gaan?`;
 			} else {
 				confirmCompleteDetails.textContent = 'Weet je zeker dat je naar de volgende hand wilt gaan?';
-				confirmCompleteDetails.style.display = '';
 			}
+			confirmCompleteDetails.style.display = '';
 		}
 		confirmCompleteLayer.classList.add('show');
 		if (confirmCompleteYes) confirmCompleteYes.focus();
@@ -24206,64 +24226,10 @@ document.addEventListener('pointerdown', ev => {
 			document.body.appendChild(cancelBtn);
 		}
 		
-		// Drop button: laat blok los maar behoud selectie (voor touch devices op desktop)
-		let dropBtn = document.querySelector('.card-control-drop');
-		if (!dropBtn) {
-			dropBtn = document.createElement('button');
-			dropBtn.className = 'card-control-btn card-control-drop';
-			dropBtn.innerHTML = '↓';
-			dropBtn.title = 'Laat blok los';
-			dropBtn.setAttribute('aria-label', 'Laat blok los');
-			
-			const handleDrop = (e) => {
-				e.preventDefault();
-				e.stopPropagation();
-				e.stopImmediatePropagation();
-				// Remove the draggable block but keep the card selected
-				if (draggedBlock) {
-					try { draggedBlock.remove(); } catch {}
-					draggedBlock = null;
-					draggedShape = null;
-					draggedColor = null;
-					lastZone = null;
-					lastBaseX = lastBaseY = null;
-					endPointerDragTracking();
-					const overlay = document.getElementById('drag-overlay');
-					if (overlay) overlay.style.display = 'none';
-					document.body.classList.remove('dragging');
-					stopGlobalDragVisuals();
-				}
-				// Show floating preview so user sees current shape
-				if (selectedShape && selectedColor) {
-					showFloatingPreview(selectedShape, selectedColor);
-				}
-			};
-			
-			dropBtn.addEventListener('click', handleDrop);
-			dropBtn.addEventListener('touchend', handleDrop);
-			dropBtn.addEventListener('mousedown', (e) => {
-				e.preventDefault();
-				e.stopPropagation();
-				e.stopImmediatePropagation();
-			});
-			dropBtn.addEventListener('touchstart', (e) => {
-				e.preventDefault();
-				e.stopPropagation();
-				e.stopImmediatePropagation();
-			});
-			dropBtn.addEventListener('pointerdown', (e) => {
-				e.preventDefault();
-				e.stopPropagation();
-				e.stopImmediatePropagation();
-			});
-			document.body.appendChild(dropBtn);
-		}
-		
 		// Maak buttons zichtbaar
 		rotateBtn.classList.add('visible');
 		mirrorBtn.classList.add('visible');
 		cancelBtn.classList.add('visible');
-		dropBtn.classList.add('visible');
 	}
 
 	function removeCardControlButtons() {
@@ -25127,13 +25093,8 @@ function showFloatingPreview(shape, color, options = {}) {
 	  newCardsButton.addEventListener('click', event => {
 		event.stopPropagation();
 		if (drawPile.length === 0) {
-		  const objectiveComplete = isCurrentObjectiveCompleted();
-		  const hasRemainingBonuses = getRemainingBonusCharges() > 0;
-		  // Als er nog speelbare kaarten zijn, toon waarschuwing in plaats van blokkeren
-		  const hasPlayableCards = currentHand.some(card => card && isCardPlayable(card));
-		  // Alleen blokkeren als objective niet compleet EN er zijn nog speelbare kaarten
-		  // Anders tonen we een waarschuwing
-		  if (shouldWarnBeforeCompletingRound() || hasRemainingBonuses || (currentHand.length > 0 && hasPlayableCards)) {
+		  // End of round: warn about playable cards AND remaining bonuses.
+		  if (shouldWarnBeforeCompletingRound()) {
 			showCompleteRoundConfirm(finalizeRoundCompletion);
 		  } else {
 			finalizeRoundCompletion();
@@ -25141,8 +25102,9 @@ function showFloatingPreview(shape, color, options = {}) {
 		  return;
 		}
 		if (currentHand.length > 0) {
-		  // Toon waarschuwing als er nog iets bruikbaars is (speelbare kaarten/bonussen/actieve selectie)
-		  if (shouldWarnBeforeCompletingRound()) {
+		  // Next hand: ONLY warn about playable cards (no bonus-only warnings).
+		  const hasPlayableCards = currentHand.some(card => card && isCardPlayable(card));
+		  if (cardsPlayedThisTurn === 0 && hasPlayableCards) {
 			showDiscardHandConfirm(() => {
 			  discardCurrentHand();
 			  drawNextHand();
