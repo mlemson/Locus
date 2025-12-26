@@ -8303,9 +8303,9 @@
 		}
 
 		body.desktop-portrait #desktop-bottom-right {
-			flex: 0 0 100px !important;
-			min-width: 90px !important;
-			max-width: 120px !important;
+			flex: 0 0 110px !important;
+			min-width: 100px !important;
+			max-width: 130px !important;
 		}
 
 		/* Card panel: remove extra vertical chrome and force a single row of cards. */
@@ -8443,13 +8443,234 @@
 		body.desktop-portrait #gold-zone {
 			flex-direction: row;
 			align-items: center;
-			justify-content: center;
-			gap: 6px;
+			justify-content: flex-start;
+			gap: 4px;
 			padding: 4px 6px;
 			min-height: 0;
 			max-height: 36px;
 			background: rgba(40, 45, 60, 0.9);
 			border-radius: 6px;
+			flex-wrap: nowrap;
+			overflow: visible;
+		}
+		body.desktop-portrait #gold-zone h2 {
+			display: none;
+		}
+		body.desktop-portrait #gold-zone::after {
+			content: attr(data-coin-text) ' 🪙';
+			font-size: 0.7rem;
+			font-weight: bold;
+			text-align: center;
+			color: #ffd700;
+			display: inline;
+			flex: 0 0 auto;
+			white-space: nowrap;
+			min-width: 40px;
+		}
+		body.desktop-portrait #gold-zone #buy-placement-container {
+			margin: 0;
+			flex: 0 1 auto;
+			min-width: 0;
+		}
+		body.desktop-portrait #gold-zone .buy-placement-btn {
+			padding: 3px 5px;
+			max-width: 70px;
+			width: auto;
+			white-space: nowrap;
+			font-size: 0.5rem;
+			border-radius: 4px;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+		body.desktop-portrait #collected-coins {
+			display: none !important;
+		}
+
+		/* Remove fixed zone heights - let them scale naturally */
+		body.desktop-portrait #blue-zone,
+		body.desktop-portrait #blue-zone--placeholder,
+		body.desktop-portrait #green-zone,
+		body.desktop-portrait #green-zone--placeholder {
+			height: auto;
+			min-height: 0;
+		}
+	  }
+
+	  /* Short desktop height (<=925px) in landscape: use same compact styles as narrow portrait.
+	     This ensures portrait mode kicks in when there's not enough vertical space. */
+	  @media (min-width: 926px) and (max-height: 925px) and (orientation: landscape) {
+		body.desktop-portrait #objective-zone {
+			padding: 6px 12px;
+			min-height: 32px;
+			gap: 8px;
+		}
+		body.desktop-portrait #objective-zone h2 {
+			font-size: 0.85rem;
+		}
+		body.desktop-portrait #objective-current {
+			font-size: 0.8rem;
+		}
+		
+		body.desktop-portrait #desktop-bottom {
+			flex-wrap: nowrap;
+			justify-content: center;
+			align-items: stretch;
+			gap: 8px;
+			padding: 4px 8px;
+			max-height: 140px;
+		}
+
+		body.desktop-portrait #desktop-bottom-left {
+			flex: 0 0 140px !important;
+			min-width: 130px !important;
+			max-width: 160px !important;
+		}
+
+		body.desktop-portrait #desktop-bottom-center {
+			flex: 1 1 auto !important;
+			min-width: 180px !important;
+			max-width: 450px !important;
+			align-items: center;
+		}
+
+		body.desktop-portrait #desktop-bottom-buttons {
+			flex: 0 0 auto;
+			min-width: 0;
+			width: auto;
+		}
+
+		body.desktop-portrait #desktop-bottom-right {
+			flex: 0 0 100px !important;
+			min-width: 90px !important;
+			max-width: 140px !important;
+		}
+
+		/* Card panel: compact horizontal row */
+		body.desktop-portrait #card-choice-zone {
+			padding: 4px 6px;
+		}
+		body.desktop-portrait #card-choice-zone h2,
+		body.desktop-portrait #kiesKaartTitel,
+		body.desktop-portrait #card-choice-zone br {
+			display: none !important;
+		}
+		body.desktop-portrait #desktop-bottom-center #card-controls {
+			flex-direction: row;
+			justify-content: center;
+			width: fit-content;
+		}
+		body.desktop-portrait #desktop-bottom-center #card-options {
+			flex-wrap: nowrap;
+			justify-content: center;
+			gap: 6px;
+			width: fit-content;
+		}
+		body.desktop-portrait #desktop-bottom-center .card-option {
+			width: 54px;
+			max-width: 54px;
+			min-height: 80px;
+			padding: 4px;
+			gap: 4px;
+			--preview-cell: 10px;
+		}
+		body.desktop-portrait #desktop-bottom-center .card-option .card-cell {
+			width: 8px;
+			height: 8px;
+		}
+		body.desktop-portrait #desktop-bottom-center .card-label {
+			font-size: 0.5rem;
+			padding: 2px 4px;
+		}
+
+		/* Buttons: compact column */
+		body.desktop-portrait #desktop-bottom-buttons #card-action-buttons {
+			display: flex !important;
+			flex-direction: column;
+			gap: 4px;
+			align-items: center;
+			justify-content: flex-start;
+			margin: 0;
+			padding: 0;
+		}
+		body.desktop-portrait #desktop-bottom-buttons .card-action-btn,
+		body.desktop-portrait #desktop-bottom-buttons .deck-preview {
+			width: 36px;
+			min-width: 36px;
+			max-width: 36px;
+			height: 36px;
+			min-height: 36px;
+			padding: 6px;
+		}
+
+		/* Scoreboard: compact */
+		body.desktop-portrait #scoreboard {
+			padding: 6px 8px;
+			background: rgba(40, 45, 60, 0.9);
+			border-radius: 8px;
+		}
+		body.desktop-portrait #scoreboard h2,
+		body.desktop-portrait #scoreboard hr {
+			display: none;
+		}
+		body.desktop-portrait #scoreboard .score-row {
+			font-size: 0.75rem;
+			padding: 2px 4px;
+			gap: 6px;
+		}
+		body.desktop-portrait #scoreboard .score-row .label {
+			display: none;
+		}
+		body.desktop-portrait #scoreboard .score-row .color-box {
+			width: 12px;
+			height: 12px;
+		}
+		body.desktop-portrait #scoreboard .score-total {
+			padding: 4px 6px;
+			gap: 6px;
+			margin-top: 4px;
+		}
+		body.desktop-portrait #scoreboard .score-total .total-score {
+			font-size: 0.95rem;
+			font-weight: bold;
+		}
+
+		/* Bonus panel: compact */
+		body.desktop-portrait #bonus-zone {
+			padding: 4px 6px;
+			background: rgba(40, 45, 60, 0.9);
+			border-radius: 6px;
+		}
+		body.desktop-portrait #bonus-zone h2,
+		body.desktop-portrait #bonus-zone .bonus-hint {
+			display: none;
+		}
+		body.desktop-portrait .bonus-inventory {
+			gap: 2px;
+			flex-wrap: wrap;
+			justify-content: center;
+		}
+		body.desktop-portrait .bonus-badge {
+			padding: 2px 4px;
+			font-size: 0.55rem;
+		}
+		body.desktop-portrait .bonus-count {
+			font-size: 0.5rem;
+			padding: 1px 3px;
+		}
+
+		/* Coins: compact with visible coin icon */
+		body.desktop-portrait #gold-zone {
+			flex-direction: row;
+			align-items: center;
+			justify-content: center;
+			gap: 6px;
+			padding: 4px 8px;
+			min-height: 0;
+			max-height: 36px;
+			background: rgba(40, 45, 60, 0.9);
+			border-radius: 6px;
+			flex-wrap: nowrap;
+			overflow: visible;
 		}
 		body.desktop-portrait #gold-zone h2 {
 			display: none;
@@ -8462,24 +8683,28 @@
 			color: #ffd700;
 			display: inline;
 			flex: 0 0 auto;
+			white-space: nowrap;
 		}
 		body.desktop-portrait #gold-zone #buy-placement-container {
 			margin: 0;
-			flex: 0 0 auto;
+			flex: 0 1 auto;
+			min-width: 0;
 		}
 		body.desktop-portrait #gold-zone .buy-placement-btn {
-			padding: 4px 8px;
-			max-width: none;
+			padding: 4px 6px;
+			max-width: 100px;
 			width: auto;
 			white-space: nowrap;
-			font-size: 0.6rem;
+			font-size: 0.55rem;
 			border-radius: 4px;
+			overflow: hidden;
+			text-overflow: ellipsis;
 		}
 		body.desktop-portrait #collected-coins {
 			display: none !important;
 		}
 
-		/* Remove fixed zone heights - let them scale naturally */
+		/* Remove fixed zone heights */
 		body.desktop-portrait #blue-zone,
 		body.desktop-portrait #blue-zone--placeholder,
 		body.desktop-portrait #green-zone,
@@ -20602,18 +20827,72 @@ document.addEventListener('pointermove', ev => {
 			return;
 		}
 
-		// Touch desktop (e.g. iPad): start a drag immediately.
+		// Touch desktop (e.g. iPad): tap to select, drag to pick up block.
+		// Changed from immediate forceDrag to tap-select behavior with drag support.
 		if (!isMobileLayout) {
 			const pointerId = event.pointerId;
-			const lastX = event.clientX;
-			const lastY = event.clientY;
-			if (typeof onSelect === 'function') {
-				onSelect(cardData, card);
-			} else {
-				selectCard(card, card.cardShape, card.cardColor, { clientX: lastX, clientY: lastY, pointerId, forceDrag: true });
-			}
-			suppressCardSelectUntil = Date.now() + 400;
-			try { card.setPointerCapture(pointerId); } catch {}
+			const startX = event.clientX;
+			const startY = event.clientY;
+			let lastX = startX;
+			let lastY = startY;
+			let started = false;
+			let timer = null;
+
+			const clear = () => {
+				if (timer) {
+					clearTimeout(timer);
+					timer = null;
+				}
+				document.removeEventListener('pointermove', onMove, true);
+				document.removeEventListener('pointerup', onUp, true);
+				document.removeEventListener('pointercancel', onUp, true);
+			};
+
+			const startDrag = () => {
+				if (started) return;
+				started = true;
+				// Start drag met forceDrag
+				if (typeof onSelect === 'function') {
+					onSelect(cardData, card);
+				} else {
+					selectCard(card, card.cardShape, card.cardColor, { clientX: lastX, clientY: lastY, pointerId, forceDrag: true });
+				}
+				suppressCardSelectUntil = Date.now() + 400;
+				try { card.setPointerCapture(pointerId); } catch {}
+				clear();
+			};
+
+			const onMove = ev => {
+				if (ev.pointerId !== pointerId) return;
+				lastX = ev.clientX;
+				lastY = ev.clientY;
+				const dx = Math.abs(lastX - startX);
+				const dy = Math.abs(lastY - startY);
+				// Als gebruiker beweegt, start drag
+				if (!started && (dx + dy) > 8) {
+					ev.preventDefault();
+					startDrag();
+				}
+			};
+
+			const onUp = ev => {
+				if (ev.pointerId !== pointerId) return;
+				if (started) {
+					suppressCardSelectUntil = Date.now() + 650;
+				}
+				clear();
+				// Als niet gedragged, laat de click handler het afhandelen (selectie/toggle)
+			};
+
+			document.addEventListener('pointermove', onMove, true);
+			document.addEventListener('pointerup', onUp, true);
+			document.addEventListener('pointercancel', onUp, true);
+
+			// Long-press start drag (voor gebruikers die lang ingedrukt houden)
+			timer = setTimeout(() => {
+				if (started) return;
+				startDrag();
+			}, 200);
 			return;
 		}
 
@@ -22769,13 +23048,16 @@ function openShopModal(callback) {
 	}
 
 	function adjustZoneSizesForWorld2() {
-	  const cellSize = 30; // var(--cell-size) waarde
+	  // Gebruik de echte --cell-size CSS variabele voor consistente sizing tussen werelden
+	  const computedCellSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')) || 26;
+	  const cellSize = Math.max(18, Math.min(30, computedCellSize)); // Clamp between 18 and 30
 	  const isPortrait = window.innerHeight > window.innerWidth;
-	  const tallZoneMaxVh = isPortrait ? '52vh' : '85vh';
+	  const isShortHeight = window.innerHeight <= 925;
+	  const tallZoneMaxVh = isPortrait ? '52vh' : (isShortHeight ? '65vh' : '85vh');
 	  // Green should be visibly shorter so the rest of the UI fits, but still scrollable.
 	  // User request: make it ~40px shorter.
-	  const greenZoneMaxVh = isPortrait ? 'calc(40vh - 40px)' : 'calc(52vh - 40px)';
-	  const tallZoneMaxPx = isPortrait ? 600 : 1200;
+	  const greenZoneMaxVh = isPortrait ? 'calc(40vh - 40px)' : (isShortHeight ? 'calc(50vh - 40px)' : 'calc(52vh - 40px)');
+	  const tallZoneMaxPx = isPortrait ? 600 : (isShortHeight ? 800 : 1200);
 	  
 	  // Geel zone - iets korter
 	  const yellowGrid = document.getElementById('yellow-grid');
@@ -22793,9 +23075,9 @@ function openShopModal(callback) {
 	  const purpleZone = document.getElementById('purple-zone');
 	  if (purpleGrid && purpleZone) {
 		const purpleSize = parseInt(purpleGrid.dataset.rows) || 10;
-		// Tighter chrome around the generated purple grid.
+		// Tighter chrome around the generated purple grid - gebruik minder padding.
 		purpleZone.style.width = `${purpleSize * cellSize + 30}px`;
-		purpleZone.style.height = `${purpleSize * cellSize + 40}px`;
+		purpleZone.style.height = `${purpleSize * cellSize + 20}px`; // Was +40, nu +20 voor minder hoogte
 	  }
 
 	  // WORLD 2 UX: make yellow zone the same width as purple.
@@ -23469,9 +23751,9 @@ function openShopModal(callback) {
 		const forceDrag = !!options.forceDrag;
 		const isMobileLayout = isMobileViewport();
 		const isTouchDevice = ('ontouchstart' in window || navigator.maxTouchPoints > 0);
-		// Touch UX: a tap should only select (no loose draggable copy). Dragging from the card spawns the block.
-		// iPad / large-screen touch: prefer immediate draggable blocks (no click-to-select-only).
-		const shouldSpawnBlock = forceDrag || (!isMobileLayout && isTouchDevice);
+		// Touch UX: alleen een draggable block spawnen als forceDrag true is (bij slepen/long-press).
+		// Een normale tap moet alleen selecteren en floating preview + control buttons tonen.
+		const shouldSpawnBlock = forceDrag;
 		const isSameCard = (selectedCardElement === card) || (!!selectedCardId && !!card?.dataset?.cardId && selectedCardId === card.dataset.cardId);
 		if (isSameCard && !forceDrag) {
 			cancelDesktopHoverDragKeepSelection({ showPreview: false });
@@ -23534,9 +23816,13 @@ function openShopModal(callback) {
 		if (!shouldSpawnBlock) {
 			if (isMobileLayout) {
 				autoZoomToColorZone(currentColor);
-			} else if (isTouchDevice) {
-				// Large-screen touch devices: keep floating preview + tap-to-place.
+				// Mobile: toon floating preview + control buttons
 				showFloatingPreview(currentShape, currentColor);
+				addCardControlButtons();
+			} else if (isTouchDevice) {
+				// Large-screen touch devices (iPad): floating preview + control buttons voor draaien/spiegelen
+				showFloatingPreview(currentShape, currentColor);
+				addCardControlButtons();
 			} else {
 				startDesktopHoverDragFromSelection(card, currentShape, currentColor);
 			}
@@ -24304,6 +24590,7 @@ function showFloatingPreview(shape, color, options = {}) {
 				selectCard(selectedCardElement); // Toggle off (dit verbergt preview al)
 			}
 			hideFloatingPreview(); // Verberg altijd bij cancel button
+			removeCardControlButtons(); // Verberg control buttons
 			closeZoom();
 		});
 
@@ -24450,15 +24737,17 @@ function showFloatingPreview(shape, color, options = {}) {
 			selectedShape = null;
 			selectedColor = null;
 			hideFloatingPreview();
+			removeCardControlButtons();
 			
 			// Voer na-plaatsing logica uit
 			if (rotateButton) rotateButton.disabled = true;
+			if (mirrorButton) mirrorButton.disabled = true;
 			updateTurnState();
 		} else {
 			// Visual feedback dat plaatsing invalid is
 			// Preview uitgeschakeld
 			// showPreview(zone, selectedShape, baseX, baseY, false);
-			// setTimeout(() => clearPreview(zone), 300);
+			// setTimeout(() => clearPreview(zone), 300;
 		}
 	}, true); // Use capture phase zodat we voor andere handlers triggeren
 
@@ -24969,7 +25258,13 @@ function showFloatingPreview(shape, color, options = {}) {
 	  updateBuyPlacementButton();
 	}
 	if (purchasedBlockPreview) {
-	  purchasedBlockPreview.addEventListener('pointerdown', onPurchasedBlockPreviewClick);
+	  purchasedBlockPreview.addEventListener('pointerdown', (e) => {
+		e.stopPropagation();
+		onPurchasedBlockPreviewClick(e);
+	  });
+	  purchasedBlockPreview.addEventListener('click', (e) => {
+		e.stopPropagation();
+	  });
 	}
 
   // expose some helpers for debugging
@@ -25098,7 +25393,9 @@ function showFloatingPreview(shape, color, options = {}) {
 		
 		// Portrait mode: leave more room for bottom bar
 		// Landscape mode: account for right sidebar
-		const bottomReserve = isPortrait ? 160 : 80;
+		// Short height (<=925px): need extra room for compact bottom bar
+		const isShortHeight = window.innerHeight <= 925;
+		const bottomReserve = isPortrait ? (isShortHeight ? 150 : 160) : 80;
 		const horizontalPadding = isPortrait ? 40 : 60;
 		const sidebarReserve = isLandscape ? (rightSidebarWidth + 40) : 0; // sidebar + gap
 		
@@ -25199,9 +25496,12 @@ function showFloatingPreview(shape, color, options = {}) {
 	  const isMobileLandscape = isLandscapeOrientation && isCoarsePointer() && window.innerHeight <= 500 && window.innerWidth > 500;
 	  // Desktop: portrait = bottom layout. Daarnaast: bij smalle desktopbreedtes (split-screen/iPad)
 	  // is de landscape sidebar layout te krap; forceer dan ook de bottom layout.
+	  // OOK bij beperkte hoogte (<= 925px) moet portrait mode worden gebruikt om alles te laten passen.
 	  const DESKTOP_NARROW_BREAKPOINT = 925;
+	  const DESKTOP_SHORT_HEIGHT_BREAKPOINT = 925;
 	  const isNarrowDesktop = !isMobile && !isMobileLandscape && window.innerWidth <= DESKTOP_NARROW_BREAKPOINT;
-	  const useBottomLayout = !isMobile && !isMobileLandscape && (isPortrait || isNarrowDesktop);
+	  const isShortDesktop = !isMobile && !isMobileLandscape && window.innerHeight <= DESKTOP_SHORT_HEIGHT_BREAKPOINT;
+	  const useBottomLayout = !isMobile && !isMobileLandscape && (isPortrait || isNarrowDesktop || isShortDesktop);
 	  
 	  // Add body classes for CSS targeting
 	  document.body.classList.toggle('mobile-sidebar-layout', isMobileLandscape);
