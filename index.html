@@ -2442,7 +2442,8 @@
 	.buy-placement-rainbow-cell {
 		width: 18px;
 		height: 18px;
-		border-radius: 4px;
+		/* Border-radius consistent met speelveld: 18px / 4 = 4.5px */
+		border-radius: calc(18px / 4);
 		display: inline-block;
 		box-shadow: inset 0 0 0 1px rgba(0,0,0,0.22), 0 2px 6px rgba(0,0,0,0.22);
 		background: linear-gradient(
@@ -3658,7 +3659,8 @@
 	.card-option .card-cell {
 		width: var(--card-cell-size, 22px);
 		height: var(--card-cell-size, 22px);
-		border-radius: 4px;
+		/* Border-radius consistent met speelveld: size / 4 */
+		border-radius: calc(var(--card-cell-size, 22px) / 4);
 		border: 1px solid rgba(12,16,30,0.12);
 		box-shadow: inset 0 0 4px rgba(0,0,0,0.18);
 		background: rgba(255,255,255,0.95);
@@ -5630,7 +5632,8 @@
 	.shop-card .card-option .card-cell {
 		width: 22px;
 		height: 22px;
-		border-radius: 4px;
+		/* Border-radius consistent met speelveld: 22px / 4 */
+		border-radius: calc(22px / 4);
 		border: 1px solid rgba(12,16,30,0.12);
 		box-shadow: inset 0 0 4px rgba(0,0,0,0.18);
 		background: rgba(255,255,255,0.95);
@@ -5766,7 +5769,8 @@
 		.shop-card .card-option .card-cell {
 			width: 12px;
 			height: 12px;
-			border-radius: 3px;
+			/* Border-radius consistent: 12px / 4 */
+			border-radius: calc(12px / 4);
 		}
 
 		.shop-card .card-label {
@@ -5892,6 +5896,7 @@
 		.shop-card .card-option .card-cell {
 			width: 11px;
 			height: 11px;
+			/* Border-radius erft van base regel */
 		}
 
 		.shop-card-header {
@@ -5980,6 +5985,7 @@
 		.shop-card .card-option .card-cell {
 			width: 10px;
 			height: 10px;
+			/* Border-radius erft van base regel */
 		}
 
 		.shop-card-header {
@@ -6882,7 +6888,8 @@
 		#bottom-bar #card-choice-zone .card-option .card-cell {
 			width: 7px;
 			height: 7px;
-			border-radius: 1px;
+			/* Border-radius consistent: 7px / 4 = 1.75px */
+			border-radius: calc(7px / 4);
 			border: 1px solid rgba(12,16,30,0.1);
 			box-shadow: inset 0 0 1px rgba(0,0,0,0.12);
 		}
@@ -7311,7 +7318,8 @@
 		#bottom-bar .buy-placement-rainbow-cell {
 			width: 14px;
 			height: 14px;
-			border-radius: 3px;
+			/* Border-radius consistent met speelveld: 14px / 4 */
+			border-radius: calc(14px / 4);
 		}
 		#bottom-bar .buy-placement-cost {
 			padding: 1px 4px;
@@ -7617,7 +7625,7 @@
 				font-size: 0.62rem !important;
 			}
 			#bottom-bar .buy-placement-arrow { font-size: 0.8rem !important; }
-			#bottom-bar .buy-placement-rainbow-cell { width: 12px !important; height: 12px !important; border-radius: 3px !important; }
+			#bottom-bar .buy-placement-rainbow-cell { width: 12px !important; height: 12px !important; border-radius: calc(12px / 4) !important; }
 			#bottom-bar .buy-placement-cost { font-size: 0.58rem !important; padding: 0 3px !important; }
 
 			/* Bonus upgrade shop is no longer accessed via a button. */
@@ -7882,7 +7890,8 @@
 	.card-cell {
 	  width: var(--card-cell-size, 20px);
 	  height: var(--card-cell-size, 20px);
-	  border-radius: 3px;
+	  /* Border-radius consistent met speelveld: size / 4 */
+	  border-radius: calc(var(--card-cell-size, 20px) / 4);
 	}
 
 	.card.selected {
@@ -18351,6 +18360,8 @@ document.addEventListener('pointermove', ev => {
 			div.classList.add('card-cell');
 			div.style.width = `${cellSize}px`;
 			div.style.height = `${cellSize}px`;
+			// Border-radius consistent met speelveld: size / 4
+			div.style.borderRadius = `${cellSize / 4}px`;
 			if (cell) {
 			  let background;
 			  let shadow;
@@ -18394,7 +18405,8 @@ document.addEventListener('pointermove', ev => {
 			div.style.width = 'var(--cell-size)';
 			div.style.height = 'var(--cell-size)';
 			div.style.margin = '0px';
-			div.style.borderRadius = '4px';
+			// Border-radius consistent met speelveld: calc(var(--cell-size) / 4)
+			div.style.borderRadius = 'calc(var(--cell-size) / 4)';
 			div.style.boxSizing = 'border-box';
 			const key = `${colIdx},${rowIdx}`;
 			const isOptional = optionalSet.has(key);
