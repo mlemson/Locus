@@ -466,6 +466,300 @@
 				top: calc(22% + 50px);
 			}
 		}
+
+		/* Phone landscape (short height): scale board down so everything fits.
+		   Keep this limited to coarse pointers to avoid shrinking desktop windows. */
+		@media (max-height: 600px) and (orientation: landscape) and (pointer: coarse) {
+			:root {
+				--cell-size: clamp(14px, 4.2vw, 20px);
+			}
+		}
+
+		/* ===== MOBILE SIDEBAR LAYOUT =====
+		   Used for both mobile landscape AND mobile portrait on phones.
+		   Board center, options in slim sidebars. */
+		body.mobile-sidebar-layout {
+			overflow: hidden !important;
+			max-height: 100vh;
+			max-height: 100svh;
+		}
+
+		body.mobile-sidebar-layout,
+		body.mobile-sidebar-layout html {
+			overflow: hidden !important;
+		}
+
+		body.mobile-sidebar-layout #bottom-bar {
+			display: none !important;
+		}
+
+		body.mobile-sidebar-layout #mobile-objective-banner {
+			display: none !important;
+		}
+
+		body.mobile-sidebar-layout #mobile-landscape-wrapper {
+			display: flex !important;
+			flex-direction: row;
+			align-items: stretch;
+			justify-content: center;
+			width: 100vw;
+			height: 100vh;
+			height: 100svh;
+			gap: 2px;
+			padding: 2px;
+			box-sizing: border-box;
+			overflow: hidden;
+		}
+
+		body.mobile-sidebar-layout #ml-sidebar-left,
+		body.mobile-sidebar-layout #ml-sidebar-right {
+			display: flex !important;
+			flex-direction: column;
+			gap: 2px;
+			flex: 0 0 auto;
+			width: 58px;
+			min-width: 50px;
+			max-width: 70px;
+			overflow-y: auto;
+			overflow-x: hidden;
+			scrollbar-width: none;
+		}
+
+		/* Landscape: slightly wider sidebars */
+		@media (orientation: landscape) {
+			body.mobile-sidebar-layout #ml-sidebar-left,
+			body.mobile-sidebar-layout #ml-sidebar-right {
+				width: 72px;
+				min-width: 65px;
+				max-width: 90px;
+				gap: 3px;
+			}
+			
+			body.mobile-sidebar-layout #mobile-landscape-wrapper {
+				gap: 4px;
+				padding: 4px;
+			}
+		}
+
+		body.mobile-sidebar-layout #ml-sidebar-left::-webkit-scrollbar,
+		body.mobile-sidebar-layout #ml-sidebar-right::-webkit-scrollbar {
+			display: none;
+		}
+
+		body.mobile-sidebar-layout #ml-board-center {
+			flex: 1 1 auto;
+			display: flex;
+			flex-direction: column;
+			justify-content: flex-start;
+			align-items: center;
+			min-width: 0;
+			overflow: hidden;
+			gap: 2px;
+		}
+
+		/* Compact objective banner in sidebar layout */
+		body.mobile-sidebar-layout #ml-objective-top {
+			display: flex !important;
+			width: 100%;
+			padding: 2px 6px;
+			background: rgba(255, 251, 234, 0.95);
+			border-radius: 6px;
+			font-size: 0.65rem;
+			text-align: center;
+			justify-content: center;
+			align-items: center;
+			flex-shrink: 0;
+		}
+
+		body.dark-mode.mobile-sidebar-layout #ml-objective-top {
+			background: rgba(34, 37, 43, 0.95);
+			color: #e5e5e5;
+		}
+
+		body.mobile-sidebar-layout #ml-objective-top #objective-zone {
+			min-height: auto;
+			padding: 2px 8px;
+			font-size: 0.6rem;
+		}
+
+		body.mobile-sidebar-layout #ml-objective-top #objective-zone h2 {
+			display: none;
+		}
+
+		body.mobile-sidebar-layout #ml-board-center #board {
+			transform-origin: top center;
+		}
+
+		/* Mobile sidebar styling */
+		body.mobile-sidebar-layout #ml-sidebar-left #scoreboard,
+		body.mobile-sidebar-layout #ml-sidebar-left #gold-zone,
+		body.mobile-sidebar-layout #ml-sidebar-right #bonus-zone {
+			padding: 3px 4px;
+			font-size: 0.6rem;
+		}
+
+		body.mobile-sidebar-layout #ml-sidebar-left #scoreboard h2,
+		body.mobile-sidebar-layout #ml-sidebar-left #gold-zone h2,
+		body.mobile-sidebar-layout #ml-sidebar-right #bonus-zone h2 {
+			display: none;
+		}
+
+		/* Gold zone in left sidebar */
+		body.mobile-sidebar-layout #ml-sidebar-left #gold-zone {
+			flex-direction: column;
+			align-items: center;
+			gap: 2px;
+		}
+
+		body.mobile-sidebar-layout #ml-sidebar-left #gold-zone::after {
+			content: '\\1FA99  ' attr(data-coin-text);
+			display: block;
+			font-size: 0.55rem;
+			font-weight: 700;
+		}
+
+		body.mobile-sidebar-layout #ml-sidebar-left #gold-zone .buy-placement-btn {
+			padding: 2px 4px;
+			font-size: 0.4rem;
+		}
+
+		body.mobile-sidebar-layout #ml-sidebar-left #gold-zone #collected-coins {
+			display: none !important;
+		}
+
+		@media (orientation: landscape) {
+			body.mobile-sidebar-layout #ml-sidebar-left #gold-zone::after {
+				font-size: 0.6rem;
+			}
+
+			body.mobile-sidebar-layout #ml-sidebar-left #gold-zone .buy-placement-btn {
+				padding: 3px 5px;
+				font-size: 0.45rem;
+			}
+		}
+
+		body.mobile-sidebar-layout #ml-sidebar-left #scoreboard .score-row {
+			padding: 1px 2px;
+			font-size: 0.55rem;
+		}
+
+		body.mobile-sidebar-layout #ml-sidebar-left #scoreboard .score-row .label {
+			display: none;
+		}
+
+		body.mobile-sidebar-layout #ml-sidebar-left #scoreboard .score-row .color-box {
+			width: 8px;
+			height: 8px;
+		}
+
+		body.mobile-sidebar-layout #ml-sidebar-left #scoreboard .score-total {
+			font-size: 0.7rem;
+			padding: 2px;
+		}
+
+		body.mobile-sidebar-layout #ml-sidebar-left #scoreboard .score-total .label {
+			display: none;
+		}
+
+		body.mobile-sidebar-layout .bonus-inventory {
+			flex-direction: column;
+			gap: 1px;
+		}
+
+		body.mobile-sidebar-layout .bonus-badge {
+			padding: 2px 4px;
+			font-size: 0.5rem;
+		}
+
+		body.mobile-sidebar-layout .bonus-count {
+			font-size: 0.45rem;
+			padding: 1px 3px;
+		}
+
+		body.mobile-sidebar-layout #ml-sidebar-right #card-choice-zone {
+			padding: 3px;
+		}
+
+		body.mobile-sidebar-layout #ml-sidebar-right #card-choice-zone h2,
+		body.mobile-sidebar-layout #ml-sidebar-right #kiesKaartTitel,
+		body.mobile-sidebar-layout #ml-sidebar-right #card-choice-zone br {
+			display: none !important;
+		}
+
+		body.mobile-sidebar-layout #ml-sidebar-right #card-options {
+			flex-direction: column;
+			gap: 3px;
+		}
+
+		/* Portrait: smaller cards */
+		body.mobile-sidebar-layout #ml-sidebar-right .card-option {
+			width: 44px;
+			min-height: 50px;
+			padding: 2px;
+			--preview-cell: 6px;
+		}
+
+		body.mobile-sidebar-layout #ml-sidebar-right .card-option .card-cell {
+			width: 6px;
+			height: 6px;
+		}
+
+		body.mobile-sidebar-layout #ml-sidebar-right .card-label {
+			font-size: 0.4rem;
+			padding: 1px 2px;
+		}
+
+		/* Landscape: allow slightly larger cards */
+		@media (orientation: landscape) {
+			body.mobile-sidebar-layout #ml-sidebar-right .card-option {
+				width: 54px;
+				min-height: 60px;
+				padding: 3px;
+				--preview-cell: 8px;
+			}
+
+			body.mobile-sidebar-layout #ml-sidebar-right .card-option .card-cell {
+				width: 7px;
+				height: 7px;
+			}
+
+			body.mobile-sidebar-layout #ml-sidebar-right .card-label {
+				font-size: 0.45rem;
+				padding: 1px 3px;
+			}
+		}
+
+		body.mobile-sidebar-layout #ml-sidebar-right #card-action-buttons {
+			flex-direction: row;
+			flex-wrap: wrap;
+			justify-content: center;
+			gap: 2px;
+		}
+
+		body.mobile-sidebar-layout #ml-sidebar-right .card-action-btn {
+			width: 22px;
+			height: 22px;
+			min-width: 22px;
+			padding: 2px;
+		}
+
+		body.mobile-sidebar-layout #ml-sidebar-right .card-action-btn::before {
+			font-size: 0.65rem;
+		}
+
+		/* Landscape: larger action buttons */
+		@media (orientation: landscape) {
+			body.mobile-sidebar-layout #ml-sidebar-right .card-action-btn {
+				width: 24px;
+				height: 24px;
+				min-width: 24px;
+				padding: 3px;
+			}
+
+			body.mobile-sidebar-layout #ml-sidebar-right .card-action-btn::before {
+				font-size: 0.7rem;
+			}
+		}
 		
 		.zone.portal-active {
 			box-shadow: 0 0 12px 4px rgba(100, 200, 255, 0.6);
@@ -1702,7 +1996,7 @@
 	  color: #222;
 	  border: 1px solid #d8dee9;
 	  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-	  border-radius: calc(var(--cell-size) / 6);
+	  border-radius: calc(var(--cell-size) / 4);
 	  position:relative;
 	  user-select:none;
 	  display: flex;
@@ -1710,6 +2004,13 @@
 	  justify-content: center;
 	  transition: background 0.25s, transform 0.15s;
 	  animation: growRoot 0.3s forwards;
+	}
+
+	/* Green root cells are absolutely positioned; shrink + center them to create visible spacing. */
+	#green-grid .root-cell:not(.void-cell) {
+		width: calc(var(--cell-size) - 4px);
+		height: calc(var(--cell-size) - 4px);
+		transform: translate(2px, 2px);
 	}
 
 
@@ -7787,13 +8088,13 @@
 		flex-wrap: nowrap;
 		align-items: center;
 		justify-content: flex-start;
-		gap: 10px;
+		gap: 6px;
 		width: 100%;
 		max-width: 100%;
 		margin: 0 auto;
-		padding: 12px;
+		padding: 8px;
 		box-sizing: border-box;
-		height: calc(100vh - 20px);
+		height: calc(100vh - 16px);
 		overflow-y: auto;
 		overflow-x: hidden;
 	  }
@@ -7808,11 +8109,17 @@
 	  body.desktop-portrait #desktop-grids {
 		flex: 1 1 auto;
 		min-height: 0;
+		max-height: calc(100vh - 180px); /* Leave room for bottom bar */
 		width: 100%;
 		display: flex;
 		justify-content: center;
 		align-items: flex-start;
 		overflow: hidden;
+	  }
+
+	  /* Scale board to fit in constrained portrait */
+	  body.desktop-portrait #desktop-grids .board {
+		transform-origin: top center;
 	  }
 
 	  body.desktop-portrait #desktop-bottom {
@@ -7827,20 +8134,21 @@
 			flex-wrap: nowrap;
 			justify-content: center;
 			align-items: flex-start;
-			gap: 6px;
-			padding: 0;
+			gap: 4px;
+			padding: 0 4px;
+			max-height: 140px;
 		}
 
 		body.desktop-portrait #desktop-bottom-left {
-			flex: 0 0 92px !important;
-			min-width: 92px !important;
-			max-width: 108px !important;
+			flex: 0 0 80px !important;
+			min-width: 75px !important;
+			max-width: 90px !important;
 		}
 
 		body.desktop-portrait #desktop-bottom-center {
-			flex: 0 0 260px !important;
-			min-width: 240px !important;
-			max-width: 280px !important;
+			flex: 1 1 auto !important;
+			min-width: 200px !important;
+			max-width: 320px !important;
 			align-items: center;
 		}
 
@@ -7851,14 +8159,14 @@
 		}
 
 		body.desktop-portrait #desktop-bottom-right {
-			flex: 0 0 120px !important;
-			min-width: 112px !important;
-			max-width: 132px !important;
+			flex: 0 0 100px !important;
+			min-width: 90px !important;
+			max-width: 110px !important;
 		}
 
 		/* Card panel: remove extra vertical chrome and force a single row of cards. */
 		body.desktop-portrait #card-choice-zone {
-			padding: 8px 10px;
+			padding: 4px 6px;
 		}
 		body.desktop-portrait #card-choice-zone h2,
 		body.desktop-portrait #kiesKaartTitel,
@@ -7873,31 +8181,31 @@
 		body.desktop-portrait #desktop-bottom-center #card-options {
 			flex-wrap: nowrap;
 			justify-content: center;
-			gap: 8px;
+			gap: 6px;
 			width: fit-content;
 		}
 		body.desktop-portrait #desktop-bottom-center .card-option {
-			width: 62px;
-			max-width: 62px;
-			min-height: 102px;
-			padding: 6px 4px;
-			gap: 6px;
-			--preview-cell: 12px;
+			width: 54px;
+			max-width: 54px;
+			min-height: 80px;
+			padding: 4px;
+			gap: 4px;
+			--preview-cell: 10px;
 		}
 		body.desktop-portrait #desktop-bottom-center .card-option .card-cell {
-			width: 10px;
-			height: 10px;
+			width: 8px;
+			height: 8px;
 		}
 		body.desktop-portrait #desktop-bottom-center .card-label {
-			font-size: 0.58rem;
-			padding: 2px 6px;
+			font-size: 0.5rem;
+			padding: 2px 4px;
 		}
 
 		/* Buttons: smaller footprint in the dedicated portrait button column. */
 		body.desktop-portrait #desktop-bottom-buttons #card-action-buttons {
 			display: flex !important;
 			flex-direction: column;
-			gap: 6px;
+			gap: 4px;
 			align-items: center;
 			justify-content: flex-start;
 			margin: 0;
@@ -7905,110 +8213,115 @@
 		}
 		body.desktop-portrait #desktop-bottom-buttons .card-action-btn,
 		body.desktop-portrait #desktop-bottom-buttons .deck-preview {
-			width: 44px;
-			min-width: 44px;
-			max-width: 44px;
-			height: 44px;
-			min-height: 44px;
-			padding: 10px;
+			width: 36px;
+			min-width: 36px;
+			max-width: 36px;
+			height: 36px;
+			min-height: 36px;
+			padding: 6px;
 		}
 		body.desktop-portrait #desktop-bottom-buttons .card-action-btn::before {
-			font-size: 1.1rem;
+			font-size: 0.95rem;
 		}
 		body.desktop-portrait #desktop-bottom-buttons .deck-preview::before {
-			font-size: 1.05rem;
+			font-size: 0.9rem;
 		}
 		body.desktop-portrait #desktop-bottom-buttons .deck-count {
-			font-size: 0.7rem;
+			font-size: 0.6rem;
 		}
 
-		/* Scoreboard: compact rows; hide labels (colors already indicate the row). */
+		/* Scoreboard: ultra-compact */
 		body.desktop-portrait #scoreboard {
-			padding: 6px 8px;
+			padding: 4px 6px;
 		}
 		body.desktop-portrait #scoreboard h2,
 		body.desktop-portrait #scoreboard hr {
 			display: none;
 		}
 		body.desktop-portrait #scoreboard .score-row {
-			font-size: 0.68rem;
-			padding: 2px 4px;
-			gap: 4px;
+			font-size: 0.6rem;
+			padding: 1px 2px;
+			gap: 3px;
 		}
 		body.desktop-portrait #scoreboard .score-row .label {
 			display: none;
 		}
 		body.desktop-portrait #scoreboard .score-row .color-box {
-			width: 9px;
-			height: 9px;
+			width: 8px;
+			height: 8px;
 		}
 		body.desktop-portrait #scoreboard .score-total {
-			padding: 2px 4px;
-			gap: 4px;
+			padding: 2px 3px;
+			gap: 3px;
 		}
 		body.desktop-portrait #scoreboard .score-total .label {
-			display: inline;
-			font-size: 0.62rem;
-			opacity: 0.85;
+			display: none;
 		}
 		body.desktop-portrait #scoreboard .score-total .total-score {
-			font-size: 0.86rem;
+			font-size: 0.75rem;
 		}
 		body.desktop-portrait #scoreboard .score-total {
-			justify-content: space-between;
+			justify-content: center;
 		}
 
-		/* Bonus panel: narrower and less vertical chrome. */
+		/* Bonus panel: ultra-compact */
 		body.desktop-portrait #bonus-zone {
-			padding: 6px 8px;
+			padding: 4px 5px;
 		}
 		body.desktop-portrait #bonus-zone h2,
 		body.desktop-portrait #bonus-zone .bonus-hint {
 			display: none;
 		}
 		body.desktop-portrait .bonus-inventory {
-			gap: 2px;
+			gap: 1px;
 		}
 		body.desktop-portrait .bonus-badge {
-			padding: 4px 6px;
-			font-size: 0.58rem;
+			padding: 3px 4px;
+			font-size: 0.5rem;
 		}
 		body.desktop-portrait .bonus-count {
-			font-size: 0.58rem;
-			padding: 2px 5px;
+			font-size: 0.5rem;
+			padding: 1px 3px;
 		}
 
-		/* Coins: counter + buy button next to each other (under the cards). */
+		/* Coins: compact row with counter always visible. */
 		body.desktop-portrait #gold-zone {
 			flex-direction: row;
 			align-items: center;
-			justify-content: space-between;
-			gap: 10px;
-			padding: 6px 8px;
+			justify-content: flex-start;
+			gap: 4px;
+			padding: 3px 5px;
+			min-height: 0;
+			max-height: 32px;
 		}
 		body.desktop-portrait #gold-zone #buy-placement-container {
 			margin-top: 0;
+			margin-left: auto;
 			flex: 0 0 auto;
 		}
 		body.desktop-portrait #gold-zone .buy-placement-btn {
-			padding: 6px 8px;
-			max-width: none;
-			width: auto;
+			padding: 3px 6px;
+			max-width: 90px;
+			width: fit-content;
 			white-space: nowrap;
+			font-size: 0.6rem;
 		}
 		body.desktop-portrait #gold-zone::after {
-			font-size: 0.86rem;
-			text-align: right;
+			font-size: 0.7rem;
+			text-align: left;
+			flex: 0 0 auto;
+		}
+		body.desktop-portrait #collected-coins {
+			display: none !important;
 		}
 
-		/* Increase blue + green zone height for this narrow desktop portrait layout. */
+		/* Remove fixed zone heights - let them scale naturally */
 		body.desktop-portrait #blue-zone,
-		body.desktop-portrait #blue-zone--placeholder {
-			height: 1052px;
-		}
+		body.desktop-portrait #blue-zone--placeholder,
 		body.desktop-portrait #green-zone,
 		body.desktop-portrait #green-zone--placeholder {
-			min-height: 520px;
+			height: auto;
+			min-height: 0;
 		}
 	  }
 
@@ -8072,6 +8385,132 @@
   @media (max-width: 350px) {
 	body.desktop-portrait #desktop-wrapper {
 	  transform: scale(0.7);
+	}
+  }
+
+  /* iPad / constrained landscape: when right sidebar would overflow, scale the whole layout */
+  @media (min-width: 651px) and (max-width: 1650px) and (orientation: landscape) {
+	body.desktop-landscape #desktop-wrapper {
+		grid-template-columns: minmax(120px, 160px) 1fr minmax(120px, 160px);
+		gap: 6px;
+		padding: 6px;
+		max-width: 100vw;
+		overflow: hidden;
+	}
+	
+	body.desktop-landscape #desktop-left,
+	body.desktop-landscape #desktop-right {
+		min-width: 110px;
+		max-width: 160px;
+		flex-shrink: 0;
+	}
+	
+	body.desktop-landscape #desktop-right #card-choice-zone {
+		padding: 6px;
+	}
+	
+	body.desktop-landscape #desktop-right .card-option {
+		width: 60px;
+		min-height: 80px;
+		padding: 5px;
+		--preview-cell: 10px;
+	}
+	
+	body.desktop-landscape #desktop-right .card-option .card-cell {
+		width: 9px;
+		height: 9px;
+	}
+	
+	body.desktop-landscape #desktop-right .card-label {
+		font-size: 0.5rem;
+	}
+	
+	body.desktop-landscape #desktop-right #bonus-zone {
+		padding: 5px;
+	}
+	
+	body.desktop-landscape #desktop-right .bonus-badge {
+		padding: 3px 5px;
+		font-size: 0.55rem;
+	}
+	
+	body.desktop-landscape #desktop-left #scoreboard {
+		padding: 6px;
+	}
+	
+	body.desktop-landscape #desktop-left #scoreboard h2 {
+		font-size: 0.8rem;
+	}
+	
+	body.desktop-landscape #desktop-left #scoreboard .score-row {
+		font-size: 0.65rem;
+		padding: 2px 3px;
+	}
+	
+	body.desktop-landscape #desktop-left #gold-zone {
+		padding: 5px 6px;
+	}
+  }
+
+  /* Slightly wider screens (1100-1650px): allow a bit more room */
+  @media (min-width: 1101px) and (max-width: 1650px) and (orientation: landscape) {
+	body.desktop-landscape #desktop-wrapper {
+		grid-template-columns: minmax(150px, 200px) 1fr minmax(150px, 200px);
+		gap: 10px;
+		padding: 10px;
+	}
+	
+	body.desktop-landscape #desktop-left,
+	body.desktop-landscape #desktop-right {
+		min-width: 140px;
+		max-width: 200px;
+	}
+	
+	body.desktop-landscape #desktop-right .card-option {
+		width: 75px;
+		min-height: 95px;
+		padding: 6px;
+		--preview-cell: 12px;
+	}
+	
+	body.desktop-landscape #desktop-right .card-option .card-cell {
+		width: 11px;
+		height: 11px;
+	}
+	
+	body.desktop-landscape #desktop-right .card-label {
+		font-size: 0.55rem;
+	}
+	
+	body.desktop-landscape #desktop-left #scoreboard h2 {
+		font-size: 0.9rem;
+	}
+	
+	body.desktop-landscape #desktop-left #scoreboard .score-row {
+		font-size: 0.7rem;
+		padding: 2px 4px;
+	}
+  }
+
+  /* Very constrained iPad landscape: force portrait-style bottom layout */
+  @media (min-width: 651px) and (max-width: 950px) and (max-height: 700px) and (orientation: landscape) {
+	body.desktop-landscape #desktop-wrapper {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+	}
+	
+	body.desktop-landscape #desktop-left,
+	body.desktop-landscape #desktop-right {
+		display: none !important;
+	}
+	
+	body.desktop-landscape #desktop-bottom {
+		display: flex !important;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 8px;
+		width: 100%;
 	}
   }
 
@@ -8423,7 +8862,7 @@
 		display: flex;
 		flex-direction: row;
 		align-items: center;
-		justify-content: space-between;
+		justify-content: flex-start;
 		gap: 10px;
 		min-height: auto;
 		max-height: none;
@@ -8438,6 +8877,7 @@
 	  body.desktop-portrait #gold-zone::after {
 		content: '\1FA99  ' attr(data-coin-text);
 		display: block;
+		flex: 0 0 auto;
 		text-align: center;
 		font-size: 0.95rem;
 		font-weight: 700;
@@ -8452,11 +8892,14 @@
 
 	  body.desktop-portrait #gold-zone #buy-placement-container {
 		margin-top: 0;
+		margin-left: auto;
 	  }
 
 	  body.desktop-portrait #gold-zone .buy-placement-btn {
 		margin-top: 0;
 		padding: 6px 10px;
+		max-width: 180px;
+		width: fit-content;
 	  }
 
 	  body.desktop-portrait #collected-coins {
@@ -10130,6 +10573,15 @@
     <span></span>
   </button>
 	<div id="mobile-objective-banner"></div>
+
+	<!-- Mobile Sidebar Layout Container (hidden by default, JS populates for mobile) -->
+	<div id="mobile-landscape-wrapper" style="display: none;">
+		<div id="ml-sidebar-left"></div>
+		<div id="ml-board-center">
+			<div id="ml-objective-top" style="display: none;"></div>
+		</div>
+		<div id="ml-sidebar-right"></div>
+	</div>
   
 	<div id="board" class="board">
 		<!-- Column 1: purple and yellow zones -->
@@ -10507,6 +10959,19 @@
 	const MOBILE_BREAKPOINT = 650;
 	const DESKTOP_LOW_HEIGHT_BREAKPOINT = 1080;
 	const TRAP_PENALTY = 5;
+
+	function isCoarsePointer() {
+		try {
+			return !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+		} catch {
+			return false;
+		}
+	}
+
+	function isMobileViewport() {
+		// Mobile = small width OR (phone-landscape style: short height on coarse pointer).
+		return window.innerWidth <= MOBILE_BREAKPOINT || (isCoarsePointer() && window.innerHeight <= 600);
+	}
 	// User request: black holes should be rarer.
 	const BLACK_HOLE_DEFAULT_CHANCE = 0.12;
 	const BLACK_HOLE_CARD_COUNT = 25; // 5x5 grid
@@ -19874,7 +20339,7 @@ document.addEventListener('pointermove', ev => {
 	  // - Touch: tap selects (no loose block), press/hold or move starts drag.
 	  // - Mouse: click selects (no floating block); click+drag starts drag (floating block follows cursor).
 	  card.addEventListener('pointerdown', event => {
-		const isMobileLayout = window.innerWidth <= MOBILE_BREAKPOINT;
+		const isMobileLayout = isMobileViewport();
 		const isTouchDevice = ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 		if (event.button !== undefined && event.button !== 0) return;
 
@@ -19935,8 +20400,20 @@ document.addEventListener('pointermove', ev => {
 			return;
 		}
 
-		// Touch: only special-case mobile layouts.
-		if (!isMobileLayout) return;
+		// Touch desktop (e.g. iPad): start a drag immediately.
+		if (!isMobileLayout) {
+			const pointerId = event.pointerId;
+			const lastX = event.clientX;
+			const lastY = event.clientY;
+			if (typeof onSelect === 'function') {
+				onSelect(cardData, card);
+			} else {
+				selectCard(card, card.cardShape, card.cardColor, { clientX: lastX, clientY: lastY, pointerId, forceDrag: true });
+			}
+			suppressCardSelectUntil = Date.now() + 400;
+			try { card.setPointerCapture(pointerId); } catch {}
+			return;
+		}
 
 		const pointerId = event.pointerId;
 		const startX = event.clientX;
@@ -20077,7 +20554,7 @@ document.addEventListener('pointermove', ev => {
 		console.log('📋 Container visible:', container.offsetParent !== null, 'display:', getComputedStyle(container).display);
 	  }
 	  
-	  const inlineButton = window.innerWidth <= MOBILE_BREAKPOINT;
+	  const inlineButton = isMobileViewport();
 
 	  container.innerHTML = '';
 	  selectedShape = null;
@@ -22788,10 +23265,11 @@ function openShopModal(callback) {
 		if (!card) return;
 		if (card.classList.contains('selection-disabled') && card !== selectedCardElement) return;
 		const forceDrag = !!options.forceDrag;
-		const isMobileLayout = window.innerWidth <= MOBILE_BREAKPOINT;
+		const isMobileLayout = isMobileViewport();
 		const isTouchDevice = ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 		// Touch UX: a tap should only select (no loose draggable copy). Dragging from the card spawns the block.
-		const shouldSpawnBlock = forceDrag;
+		// iPad / large-screen touch: prefer immediate draggable blocks (no click-to-select-only).
+		const shouldSpawnBlock = forceDrag || (!isMobileLayout && isTouchDevice);
 		const isSameCard = (selectedCardElement === card) || (!!selectedCardId && !!card?.dataset?.cardId && selectedCardId === card.dataset.cardId);
 		if (isSameCard && !forceDrag) {
 			cancelDesktopHoverDragKeepSelection({ showPreview: false });
@@ -24323,7 +24801,8 @@ function showFloatingPreview(shape, color, options = {}) {
 		if (!board) return;
 		const boardContainer = board.parentElement;
 		const isDesktop = window.innerWidth > MOBILE_BREAKPOINT;
-		if (!isDesktop) {
+		const isMobileSidebar = document.body.classList.contains('mobile-sidebar-layout');
+		if (!isDesktop || isMobileSidebar) {
 			board.style.removeProperty('transform');
 			board.style.removeProperty('transform-origin');
 			if (boardContainer && boardContainer.id === 'desktop-grids') {
@@ -24337,15 +24816,40 @@ function showFloatingPreview(shape, color, options = {}) {
 		board.style.removeProperty('transform');
 		board.style.removeProperty('transform-origin');
 
-		const padding = 80; // breathing room around the layout
-		const availableWidth = Math.max(window.innerWidth - padding, 320);
-		const availableHeight = Math.max(window.innerHeight - padding, 320);
+		const isPortrait = document.body.classList.contains('desktop-portrait');
+		const isLandscape = document.body.classList.contains('desktop-landscape');
+		
+		// Calculate sidebar widths for landscape mode
+		let rightSidebarWidth = 0;
+		if (isLandscape) {
+			const wrapper = document.getElementById('desktop-wrapper');
+			const rightSidebar = wrapper ? wrapper.querySelector('.desktop-right-column, #right-sidebar, [class*="right"]') : null;
+			if (rightSidebar) {
+				rightSidebarWidth = rightSidebar.offsetWidth || 200;
+			} else {
+				// Estimate sidebar width based on viewport
+				rightSidebarWidth = Math.min(220, window.innerWidth * 0.18);
+			}
+		}
+		
+		// Portrait mode: leave more room for bottom bar
+		// Landscape mode: account for right sidebar
+		const bottomReserve = isPortrait ? 160 : 80;
+		const horizontalPadding = isPortrait ? 40 : 60;
+		const sidebarReserve = isLandscape ? (rightSidebarWidth + 40) : 0; // sidebar + gap
+		
+		const availableWidth = Math.max(window.innerWidth - horizontalPadding - sidebarReserve, 280);
+		const availableHeight = Math.max(window.innerHeight - horizontalPadding - bottomReserve, 200);
 		const boardWidth = board.scrollWidth;
 		const boardHeight = board.scrollHeight;
 		if (!boardWidth || !boardHeight) return;
 
-		const scale = Math.min(availableWidth / boardWidth, availableHeight / boardHeight, 1);
-		const containerWidth = (boardContainer && boardContainer.clientWidth) ? boardContainer.clientWidth : window.innerWidth;
+		// For constrained viewports (925-1650px), be more aggressive with scaling
+		const isConstrainedLandscape = isLandscape && window.innerWidth < 1650;
+		const maxScale = isConstrainedLandscape ? 0.95 : 1;
+		
+		const scale = Math.min(availableWidth / boardWidth, availableHeight / boardHeight, maxScale);
+		const containerWidth = (boardContainer && boardContainer.clientWidth) ? boardContainer.clientWidth : (window.innerWidth - sidebarReserve);
 		const scaledBoardWidth = boardWidth * scale;
 		const offsetX = Math.max((containerWidth - scaledBoardWidth) / 2, 0);
 
@@ -24413,14 +24917,18 @@ function showFloatingPreview(shape, color, options = {}) {
 	  const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
 	  // Bepaal of scherm portrait is (meer hoogte dan breedte)
 	  const isPortrait = window.innerHeight > window.innerWidth;
+	  // Check for mobile sidebar mode: any mobile device should use sidebar layout
+	  const useMobileSidebarLayout = isMobile || (isCoarsePointer() && (window.innerWidth <= 900 || window.innerHeight <= 600));
 	  // Desktop: portrait = bottom layout. Daarnaast: bij smalle desktopbreedtes (split-screen/iPad)
 	  // is de landscape sidebar layout te krap; forceer dan ook de bottom layout.
 	  const DESKTOP_NARROW_BREAKPOINT = 925;
-	  const isNarrowDesktop = !isMobile && window.innerWidth <= DESKTOP_NARROW_BREAKPOINT;
-	  const useBottomLayout = !isMobile && (isPortrait || isNarrowDesktop);
+	  const isNarrowDesktop = !useMobileSidebarLayout && window.innerWidth <= DESKTOP_NARROW_BREAKPOINT;
+	  const useBottomLayout = !useMobileSidebarLayout && (isPortrait || isNarrowDesktop);
 	  
 	  // Add body classes for CSS targeting
-	  if (!isMobile) {
+	  document.body.classList.toggle('mobile-sidebar-layout', useMobileSidebarLayout);
+	  document.body.classList.remove('mobile-landscape'); // deprecated class
+	  if (!useMobileSidebarLayout) {
 		  document.body.classList.toggle('desktop-portrait', useBottomLayout);
 		  document.body.classList.toggle('desktop-landscape', !useBottomLayout);
 	  } else {
@@ -24441,6 +24949,13 @@ function showFloatingPreview(shape, color, options = {}) {
 			  const bottomBarCoins = document.getElementById('bottom-bar-coins');
 			  const bottomBarScoreCoins = document.getElementById('bottom-bar-score-coins');
 		  const mobileObjective = document.getElementById('mobile-objective-banner');
+		  
+		  // Mobile Sidebar containers
+		  const mlWrapper = document.getElementById('mobile-landscape-wrapper');
+		  const mlLeft = document.getElementById('ml-sidebar-left');
+		  const mlCenter = document.getElementById('ml-board-center');
+		  const mlRight = document.getElementById('ml-sidebar-right');
+		  const mlObjectiveTop = document.getElementById('ml-objective-top');
 
 	const origCoins = document.getElementById('original-coins-zone');
 	const origScore = document.getElementById('original-score-zone');
@@ -24448,6 +24963,60 @@ function showFloatingPreview(shape, color, options = {}) {
 	const origBonus = document.getElementById('original-bonus-zone');
 	  const origCards = document.getElementById('original-card-zone');
 	  const origControls = document.getElementById('original-controls-zone');
+
+			// === MOBILE SIDEBAR LAYOUT (all mobile devices) ===
+			if (useMobileSidebarLayout && mlWrapper && mlLeft && mlCenter && mlRight) {
+				// Remove desktop wrapper if exists
+				const desktopWrapper = document.getElementById('desktop-wrapper');
+				if (desktopWrapper) {
+					const parent = desktopWrapper.parentNode;
+					while (desktopWrapper.firstChild) {
+						parent.insertBefore(desktopWrapper.firstChild, desktopWrapper);
+					}
+					desktopWrapper.remove();
+				}
+				
+				// Show wrapper
+				mlWrapper.style.display = 'flex';
+				
+				// Move elements to sidebars
+				if (score && !mlLeft.contains(score)) mlLeft.appendChild(score);
+				if (coins && !mlLeft.contains(coins)) mlLeft.appendChild(coins);
+				
+				// Move objective to top of center column
+				if (objective && mlObjectiveTop && !mlObjectiveTop.contains(objective)) {
+					mlObjectiveTop.appendChild(objective);
+					mlObjectiveTop.style.display = 'flex';
+				}
+				
+				if (board && !mlCenter.contains(board)) mlCenter.appendChild(board);
+				if (cards && !mlRight.contains(cards)) mlRight.appendChild(cards);
+				if (bonus && !mlRight.contains(bonus)) mlRight.appendChild(bonus);
+				
+				// Scale board to fit center
+				requestAnimationFrame(() => {
+					if (!board || !mlCenter) return;
+					const objectiveH = mlObjectiveTop ? mlObjectiveTop.offsetHeight : 0;
+					const availW = mlCenter.clientWidth - 6;
+					const availH = mlCenter.clientHeight - objectiveH - 10;
+					const boardW = board.scrollWidth;
+					const boardH = board.scrollHeight;
+					if (boardW > 0 && boardH > 0) {
+						const scale = Math.min(availW / boardW, availH / boardH, 1);
+						board.style.transform = `scale(${Math.max(0.25, scale).toFixed(3)})`;
+						board.style.transformOrigin = 'top center';
+					}
+				});
+				
+				placeActionButtons();
+				applyCardSizing();
+				hideEmptyZones();
+				return;
+			}
+			
+			// Hide mobile sidebar wrapper when not in that mode
+			if (mlWrapper) mlWrapper.style.display = 'none';
+			if (mlObjectiveTop) mlObjectiveTop.style.display = 'none';
 
 				if (isMobile) {
 				const isClassicMode = document.body.classList.contains('classic-mode');
