@@ -8277,22 +8277,22 @@
 		body.desktop-portrait #desktop-bottom {
 			flex-wrap: nowrap;
 			justify-content: center;
-			align-items: flex-start;
-			gap: 4px;
-			padding: 0 4px;
-			max-height: 140px;
+			align-items: stretch;
+			gap: 8px;
+			padding: 4px 8px;
+			max-height: 160px;
 		}
 
 		body.desktop-portrait #desktop-bottom-left {
-			flex: 0 0 80px !important;
-			min-width: 75px !important;
-			max-width: 90px !important;
+			flex: 0 0 140px !important;
+			min-width: 130px !important;
+			max-width: 160px !important;
 		}
 
 		body.desktop-portrait #desktop-bottom-center {
 			flex: 1 1 auto !important;
-			min-width: 200px !important;
-			max-width: 320px !important;
+			min-width: 180px !important;
+			max-width: 350px !important;
 			align-items: center;
 		}
 
@@ -8305,7 +8305,7 @@
 		body.desktop-portrait #desktop-bottom-right {
 			flex: 0 0 100px !important;
 			min-width: 90px !important;
-			max-width: 110px !important;
+			max-width: 120px !important;
 		}
 
 		/* Card panel: remove extra vertical chrome and force a single row of cards. */
@@ -8374,86 +8374,106 @@
 			font-size: 0.6rem;
 		}
 
-		/* Scoreboard: ultra-compact */
+		/* Scoreboard: compact but readable */
 		body.desktop-portrait #scoreboard {
-			padding: 4px 6px;
+			padding: 6px 8px;
+			background: rgba(40, 45, 60, 0.9);
+			border-radius: 8px;
 		}
 		body.desktop-portrait #scoreboard h2,
 		body.desktop-portrait #scoreboard hr {
 			display: none;
 		}
 		body.desktop-portrait #scoreboard .score-row {
-			font-size: 0.6rem;
-			padding: 1px 2px;
-			gap: 3px;
+			font-size: 0.75rem;
+			padding: 2px 4px;
+			gap: 6px;
 		}
 		body.desktop-portrait #scoreboard .score-row .label {
 			display: none;
 		}
 		body.desktop-portrait #scoreboard .score-row .color-box {
-			width: 8px;
-			height: 8px;
+			width: 12px;
+			height: 12px;
 		}
 		body.desktop-portrait #scoreboard .score-total {
-			padding: 2px 3px;
-			gap: 3px;
+			padding: 4px 6px;
+			gap: 6px;
+			margin-top: 4px;
+			border-top: 1px solid rgba(255,255,255,0.2);
 		}
 		body.desktop-portrait #scoreboard .score-total .label {
-			display: none;
+			display: inline;
+			font-size: 0.7rem;
+			opacity: 0.8;
 		}
 		body.desktop-portrait #scoreboard .score-total .total-score {
-			font-size: 0.75rem;
+			font-size: 0.95rem;
+			font-weight: bold;
 		}
 		body.desktop-portrait #scoreboard .score-total {
 			justify-content: center;
 		}
 
-		/* Bonus panel: ultra-compact */
+		/* Bonus panel: compact */
 		body.desktop-portrait #bonus-zone {
-			padding: 4px 5px;
+			padding: 4px 6px;
+			background: rgba(40, 45, 60, 0.9);
+			border-radius: 6px;
 		}
 		body.desktop-portrait #bonus-zone h2,
 		body.desktop-portrait #bonus-zone .bonus-hint {
 			display: none;
 		}
 		body.desktop-portrait .bonus-inventory {
-			gap: 1px;
+			gap: 2px;
+			flex-wrap: wrap;
+			justify-content: center;
 		}
 		body.desktop-portrait .bonus-badge {
-			padding: 3px 4px;
-			font-size: 0.5rem;
+			padding: 2px 4px;
+			font-size: 0.55rem;
 		}
 		body.desktop-portrait .bonus-count {
 			font-size: 0.5rem;
 			padding: 1px 3px;
 		}
 
-		/* Coins: compact row with counter always visible. */
+		/* Coins: ultra-compact inline with buy button */
 		body.desktop-portrait #gold-zone {
 			flex-direction: row;
 			align-items: center;
-			justify-content: flex-start;
-			gap: 4px;
-			padding: 3px 5px;
+			justify-content: center;
+			gap: 6px;
+			padding: 4px 6px;
 			min-height: 0;
-			max-height: 32px;
+			max-height: 36px;
+			background: rgba(40, 45, 60, 0.9);
+			border-radius: 6px;
+		}
+		body.desktop-portrait #gold-zone h2 {
+			display: none;
+		}
+		body.desktop-portrait #gold-zone::after {
+			content: attr(data-coin-text) ' 🪙';
+			font-size: 0.8rem;
+			font-weight: bold;
+			text-align: center;
+			color: #ffd700;
+			display: inline;
+			flex: 0 0 auto;
 		}
 		body.desktop-portrait #gold-zone #buy-placement-container {
-			margin-top: 0;
-			margin-left: auto;
+			margin: 0;
 			flex: 0 0 auto;
 		}
 		body.desktop-portrait #gold-zone .buy-placement-btn {
-			padding: 3px 6px;
-			max-width: 90px;
-			width: fit-content;
+			padding: 4px 8px;
+			max-width: none;
+			width: auto;
 			white-space: nowrap;
 			font-size: 0.6rem;
-		}
-		body.desktop-portrait #gold-zone::after {
-			font-size: 0.7rem;
-			text-align: left;
-			flex: 0 0 auto;
+			border-radius: 4px;
 		}
 		body.desktop-portrait #collected-coins {
 			display: none !important;
