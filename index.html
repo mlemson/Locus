@@ -2439,6 +2439,12 @@
 		opacity: 0.9;
 		transform: translateY(-0.5px);
 	}
+	/* Hide the arrow on touch devices */
+	@media (pointer: coarse) {
+		.buy-placement-arrow {
+			display: none;
+		}
+	}
 	.buy-placement-rainbow-cell {
 		width: 18px;
 		height: 18px;
@@ -2546,6 +2552,12 @@
 	}
 	body.dark-mode .purchased-block-label {
 		color: #c9b0e8;
+	}
+	/* Hide purchased block preview on touch devices - not needed there */
+	@media (pointer: coarse) {
+		.purchased-block-preview {
+			display: none !important;
+		}
 	}
 	@keyframes pulse-glow {
 		0%, 100% { box-shadow: 0 0 8px rgba(150,100,200,0.2); }
@@ -3533,25 +3545,25 @@
 		box-shadow: 0 32px 52px rgba(70,90,180,0.45);
 	}
 
-	/* Card control buttons voor mobiel en touch devices - fixed positie boven kaarten */
+	/* Card control buttons voor mobiel en touch devices - fixed positie onderaan */
 	.card-control-btn {
 		position: fixed;
-		/* Mobile request: move these ~50px down so they don't block the board. */
-		bottom: calc(var(--bottom-bar-height) + 5px);
-		width: 36px;
-		height: 36px;
+		/* Position bottom center for touch devices */
+		bottom: calc(var(--bottom-bar-height) + 10px);
+		width: 44px;
+		height: 44px;
 		border: 2px solid white;
 		border-radius: 50%;
 		display: none;
 		align-items: center;
 		justify-content: center;
-		font-size: 18px;
+		font-size: 20px;
 		color: white;
 		cursor: pointer;
 		box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 		z-index: calc(var(--z-controls) + 10);
 		user-select: none;
-		transition: transform 0.15s ease;
+		transition: transform 0.15s ease, opacity 0.15s ease;
 		pointer-events: auto;
 		touch-action: manipulation;
 	}
@@ -3571,65 +3583,62 @@
 
 	.card-control-rotate {
 		left: 50%;
-		transform: translateX(85px);
+		margin-left: 75px;
 		background: #4a90e2;
 	}
 
 	.card-control-mirror {
 		left: 50%;
-		transform: translateX(0px);
+		margin-left: 25px;
 		background: #9b59b6;
 	}
 
 	.card-control-cancel {
 		left: 50%;
-		transform: translateX(-85px);
+		margin-left: -25px;
 		background: #e74c3c;
 	}
 
 	.card-control-drop {
 		left: 50%;
-		transform: translateX(-170px);
+		margin-left: -75px;
 		background: #27ae60;
 	}
 
-	/* Desktop touch mode: position buttons along the side instead of bottom */
-	@media (min-width: 651px) {
-		.card-control-btn {
-			bottom: auto;
-			top: 50%;
-			left: auto;
-			right: 20px;
-			width: 44px;
-			height: 44px;
-			font-size: 22px;
-		}
-		.card-control-rotate {
-			transform: translateY(-110px);
-		}
-		.card-control-mirror {
-			transform: translateY(-50px);
-		}
-		.card-control-cancel {
-			transform: translateY(10px);
-		}
-		.card-control-drop {
-			transform: translateY(70px);
-		}
+	/* Touch portrait mode: buttons blijven onderaan gecentreerd */
+	body.touch-portrait .card-control-btn {
+		bottom: calc(var(--bottom-bar-height) + 10px);
+		top: auto;
+		right: auto;
+	}
+	
+	/* Mobile sidebar landscape: buttons aan de rechterkant */
+	body.mobile-sidebar-layout .card-control-btn {
+		bottom: auto;
+		top: 50%;
+		left: auto;
+		right: 15px;
+		margin-left: 0;
+	}
+	body.mobile-sidebar-layout .card-control-rotate {
+		transform: translateY(-85px);
+	}
+	body.mobile-sidebar-layout .card-control-mirror {
+		transform: translateY(-30px);
+	}
+	body.mobile-sidebar-layout .card-control-cancel {
+		transform: translateY(25px);
+	}
+	body.mobile-sidebar-layout .card-control-drop {
+		transform: translateY(80px);
 	}
 
-	.card-control-rotate:hover,
-	.card-control-mirror:hover,
-	.card-control-cancel:hover {
-		transform: translateX(85px) scale(1.1);
+	.card-control-btn:hover {
+		transform: scale(1.1);
 	}
-
-	.card-control-mirror:hover {
-		transform: translateX(0px) scale(1.1);
-	}
-
-	.card-control-cancel:hover {
-		transform: translateX(-85px) scale(1.1);
+	
+	.card-control-btn:active {
+		transform: scale(0.95);
 	}
 
 	body.dark-mode .card-control-rotate {
@@ -22726,6 +22735,7 @@ function openShopModal(callback) {
 		},
 		
 		// Groen: Complexe wortelstructuur met meer vertakkingen (smaller maar hoger)
+		// World 2: 50% minder symbols en coins dan normaal
 		() => {
 		  const greenSize = 28; // World 2: wider so horizontal scrolling is meaningful
 		  const greenRows = 34; // Slightly shorter/less tall than before
@@ -22738,12 +22748,15 @@ function openShopModal(callback) {
 			minEndCellPoints: 14,
 			maxEndCellPoints: 30
 		  };
-		  return generateRoots('green-grid', greenRows, greenSize, greenMaxGrowth, greenBoldChance, greenSplitChance, 12, 20, 5, false, trapChance, Math.floor(maxTraps * 0.9), blackHoleChance * 0.3);
+		  // 50% reduction: minSymbols 12->6, maxSymbols 20->10, maxCoins 5->3
+		  return generateRoots('green-grid', greenRows, greenSize, greenMaxGrowth, greenBoldChance, greenSplitChance, 6, 10, 3, false, trapChance, Math.floor(maxTraps * 0.9), blackHoleChance * 0.3);
 		},
 		
 		// Rood: 4 grids met verschillende groottes (smaller maar hoger)
+		// World 2: 50% minder symbols en coins
 		...redConfigs.map(cfg => () => {
-		  const grid = generateRoots(cfg.id, cfg.height, cfg.width, cfg.growth, 0.35, 0.06, 3, 6, 3, true, 0, 0, 0);
+		  // 50% reduction: minSymbols 3->2, maxSymbols 6->3, maxCoins 3->2
+		  const grid = generateRoots(cfg.id, cfg.height, cfg.width, cfg.growth, 0.35, 0.03, 2, 3, 2, true, 0, 0, 0);
 		  // Markeer bonus grids visueel
 		  if (cfg.bonus) {
 			const zone = document.getElementById(cfg.id.replace('-grid', '-zone'));
@@ -25608,37 +25621,57 @@ function showFloatingPreview(shape, color, options = {}) {
 	}
 
 	function moveGameElements() {
-	  const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
-	  // Bepaal of scherm portrait is (meer hoogte dan breedte)
-	  const isPortrait = window.matchMedia ? window.matchMedia('(orientation: portrait)').matches : (window.innerHeight > window.innerWidth);
-	  const isLandscapeOrientation = window.matchMedia ? window.matchMedia('(orientation: landscape)').matches : !isPortrait;
-	  // Check for tablet/mobile LANDSCAPE sidebar mode: touch device + landscape orientation
-	  // Tablets (iPad) in landscape moeten ALTIJD sidebars krijgen, niet bottom bar
-	  // Portrait mobiel moet bottom bar behouden!
-	  const isTabletLandscape = isLandscapeOrientation && isCoarsePointer() && window.innerWidth > MOBILE_BREAKPOINT;
-	  const isMobileLandscape = isLandscapeOrientation && isCoarsePointer() && window.innerHeight <= 500 && window.innerWidth > 500 && window.innerWidth <= MOBILE_BREAKPOINT;
-	  const useSidebarLayout = isTabletLandscape || isMobileLandscape;
+	  const width = window.innerWidth;
+	  const height = window.innerHeight;
+	  const isMobile = width <= MOBILE_BREAKPOINT;
 	  
-	  // Desktop: portrait = bottom layout. Daarnaast: bij smalle desktopbreedtes (split-screen/iPad)
-	  // is de landscape sidebar layout te krap; forceer dan ook de bottom layout.
-	  // MAAR: tablets (touch devices) in landscape krijgen ALTIJD sidebar layout.
-	  // OOK bij beperkte hoogte (<= 925px) moet portrait mode worden gebruikt om alles te laten passen.
+	  // Bepaal of scherm portrait is (meer hoogte dan breedte)
+	  const isPortrait = window.matchMedia ? window.matchMedia('(orientation: portrait)').matches : (height > width);
+	  const isLandscapeOrientation = window.matchMedia ? window.matchMedia('(orientation: landscape)').matches : !isPortrait;
+	  // Extra check: als breedte duidelijk groter is dan hoogte, is het landscape
+	  const isWideLandscape = width > height * 1.2;
+	  const effectiveLandscape = isLandscapeOrientation || isWideLandscape;
+	  
+	  // Touch device check - belangrijk voor onderscheid desktop vs tablet/telefoon
+	  // isCoarsePointer() checkt voor touch-primaire devices
+	  const isTouchDevice = isCoarsePointer();
+	  
+	  // Desktop breakpoints
 	  const DESKTOP_NARROW_BREAKPOINT = 925;
 	  const DESKTOP_SHORT_HEIGHT_BREAKPOINT = 925;
-	  // Narrow/short desktop checks alleen als het GEEN touch device in landscape is
-	  const isNarrowDesktop = !isMobile && !useSidebarLayout && !isCoarsePointer() && window.innerWidth <= DESKTOP_NARROW_BREAKPOINT;
-	  const isShortDesktop = !isMobile && !useSidebarLayout && !isCoarsePointer() && window.innerHeight <= DESKTOP_SHORT_HEIGHT_BREAKPOINT;
-	  // Touch device in portrait desktop mode: voeg class toe voor CSS targeting
-	  const isTouchPortrait = isCoarsePointer() && !useSidebarLayout && isPortrait;
-	  const useBottomLayout = !isMobile && !useSidebarLayout && (isPortrait || isNarrowDesktop || isShortDesktop);
+	  
+	  // BELANGRIJK: Verschil maken tussen:
+	  // 1. Desktop/laptop (muis) → gebruikt normale desktop layout (sidebars of bottom)
+	  // 2. Tablet/telefoon (touch) in landscape → gebruikt compacte mobile sidebar layout
+	  
+	  // Mobile sidebar layout is ALLEEN voor touch devices (tablets/telefoons) in landscape
+	  // Desktop gebruikt de normale desktop-landscape of desktop-portrait classes
+	  const useMobileSidebarLayout = isTouchDevice && effectiveLandscape && 
+	                                  width > 500 && height >= 350;
+	  
+	  // Desktop sidebar layout: desktop in landscape met voldoende ruimte
+	  // Dit is de NORMALE layout, niet de compacte mobile versie
+	  const useDesktopLandscape = !isMobile && !isTouchDevice && effectiveLandscape;
+	  
+	  // Bottom layout: portrait mode of te smal/kort voor sidebars
+	  const isNarrowDesktop = !isMobile && !isTouchDevice && width <= DESKTOP_NARROW_BREAKPOINT;
+	  const isShortDesktop = !isMobile && !isTouchDevice && height <= DESKTOP_SHORT_HEIGHT_BREAKPOINT;
+	  
+	  // Touch device in portrait mode
+	  const isTouchPortrait = isTouchDevice && !effectiveLandscape;
+	  
+	  // Desktop bottom layout: portrait of te klein voor landscape sidebars
+	  const useDesktopPortrait = !isMobile && !isTouchDevice && (isPortrait || isNarrowDesktop || isShortDesktop);
 	  
 	  // Add body classes for CSS targeting
-	  document.body.classList.toggle('mobile-sidebar-layout', useSidebarLayout);
+	  document.body.classList.toggle('mobile-sidebar-layout', useMobileSidebarLayout);
 	  document.body.classList.toggle('touch-portrait', isTouchPortrait);
 	  document.body.classList.remove('mobile-landscape'); // deprecated class
-	  if (!isMobile && !useSidebarLayout) {
-		  document.body.classList.toggle('desktop-portrait', useBottomLayout);
-		  document.body.classList.toggle('desktop-landscape', !useBottomLayout);
+	  
+	  // Desktop classes - alleen voor niet-touch devices
+	  if (!isMobile && !isTouchDevice) {
+		  document.body.classList.toggle('desktop-portrait', useDesktopPortrait);
+		  document.body.classList.toggle('desktop-landscape', useDesktopLandscape && !useDesktopPortrait);
 	  } else {
 		  document.body.classList.remove('desktop-portrait', 'desktop-landscape');
 	  }
@@ -25672,9 +25705,14 @@ function showFloatingPreview(shape, color, options = {}) {
 	  const origCards = document.getElementById('original-card-zone');
 	  const origControls = document.getElementById('original-controls-zone');
 
-			// === TABLET/MOBILE LANDSCAPE SIDEBAR LAYOUT ===
-			// Dit geldt voor zowel tablets in landscape als kleine mobiele schermen in landscape
-			if (useSidebarLayout && mlWrapper && mlLeft && mlCenter && mlRight) {
+			// === MOBILE LANDSCAPE SIDEBAR LAYOUT ===
+			// Dit geldt ALLEEN voor touch devices (tablets/telefoons) in landscape mode
+			// Desktop/laptop behoudt normale layout
+			if (useMobileSidebarLayout) {
+				// Zorg dat de sidebar wrapper elementen bestaan
+				if (!mlWrapper || !mlLeft || !mlCenter || !mlRight) {
+					console.warn('Mobile landscape wrapper elements not found, cannot use sidebar layout');
+				} else {
 				// Remove desktop wrapper if exists
 				const desktopWrapper = document.getElementById('desktop-wrapper');
 				if (desktopWrapper) {
@@ -25721,6 +25759,7 @@ function showFloatingPreview(shape, color, options = {}) {
 				applyCardSizing();
 				hideEmptyZones();
 				return;
+				}
 			}
 			
 			// Hide mobile sidebar wrapper when not in that mode
@@ -25767,8 +25806,8 @@ function showFloatingPreview(shape, color, options = {}) {
 				}
 		
 		// Toggle body class for portrait bottom layout (keep both flags consistent)
-		document.body.classList.toggle('desktop-portrait', useBottomLayout);
-		document.body.classList.toggle('desktop-landscape', !useBottomLayout);
+		document.body.classList.toggle('desktop-portrait', useDesktopPortrait);
+		document.body.classList.toggle('desktop-landscape', useDesktopLandscape && !useDesktopPortrait);
 		
 		// Create desktop wrapper if not exists
 		let desktopWrapper = document.getElementById('desktop-wrapper');
@@ -25848,7 +25887,7 @@ function showFloatingPreview(shape, color, options = {}) {
 					desktopGrids.appendChild(board);
 				}
 				
-				if (useBottomLayout) {
+				if (useDesktopPortrait) {
 					// Portrait mode: gebruik bottom layout
 					if (score && bottomLeft && !bottomLeft.contains(score)) {
 						bottomLeft.appendChild(score);
