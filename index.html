@@ -23459,8 +23459,13 @@ function openShopModal(callback) {
 		// World 2 request: green zone must be a SQUARE: height == width (unzoomed).
 		try {
 			if (isWorld2 && greenZone && !document.body.classList.contains('zoomed-in')) {
-				// Use the rendered width as the single source of truth.
-				let target = Math.round(greenZone.getBoundingClientRect().width);
+				// Use the UNTRANSFORMED layout width as source of truth.
+				// If an ancestor is transform-scaled, getBoundingClientRect() returns the scaled width,
+				// and setting height to that value would be scaled again (ending up too short).
+				let target = Math.round(greenZone.offsetWidth || 0);
+				if (!(target > 0)) {
+					target = Math.round(greenZone.getBoundingClientRect().width);
+				}
 				if (!(target > 0)) {
 					// Fallback to the desktop sizing formula.
 					target = Math.round((13 * cellSize) + 80);
@@ -26078,7 +26083,9 @@ ${noBonuses ? '.symbol,.trap-symbol,.coin{display:none !important;}' : ''}
 			// Be conservative: transformed content + shadows can otherwise get clipped at the viewport edges.
 			const viewportW = document.documentElement ? document.documentElement.clientWidth : window.innerWidth;
 			const viewportH = document.documentElement ? document.documentElement.clientHeight : window.innerHeight;
-			const safeMargin = 40;
+			// Margin to avoid edge clipping from shadows/rounding.
+			// Keep this modest so the left/right panels don't get unnecessarily cramped.
+			const safeMargin = 24;
 			const availableWidth = Math.max(viewportW - safeMargin, 280);
 			const availableHeight = Math.max(viewportH - safeMargin, 240);
 			const contentWidth = desktopWrapper.scrollWidth;
@@ -26087,10 +26094,12 @@ ${noBonuses ? '.symbol,.trap-symbol,.coin{display:none !important;}' : ''}
 
 			const scale = Math.min(availableWidth / contentWidth, availableHeight / contentHeight, 1);
 			if (scale < 0.999) {
-				desktopWrapper.style.transform = `scale(${scale.toFixed(4)})`;
-				// IMPORTANT: Anchor to the left so we don't waste space on the left on narrow landscape.
-				// Using top-center causes the scaled UI to visually shift right while the layout box stays full-width.
+				// Anchor to the left so narrow screens don't waste space on the left,
+				// but center it when there is spare horizontal room after scaling.
 				desktopWrapper.style.transformOrigin = 'top left';
+				const scaledWidth = contentWidth * scale;
+				const offsetX = Math.max(0, (viewportW - scaledWidth) / 2);
+				desktopWrapper.style.transform = `translateX(${offsetX.toFixed(1)}px) scale(${scale.toFixed(4)})`;
 			} else {
 				desktopWrapper.style.removeProperty('transform');
 				desktopWrapper.style.removeProperty('transform-origin');
