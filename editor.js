@@ -12,6 +12,8 @@
   }
 
   function getSelectedTool() {
+    // Allow an override tool (buttons added dynamically) to take precedence.
+    if (window.__locusEditorOverrideTool) return window.__locusEditorOverrideTool;
     const el = document.querySelector('input[name="tool"]:checked');
     return el ? String(el.value) : 'select';
   }
@@ -80,60 +82,84 @@
 
   function applyTool(cell, tool) {
     if (!cell) return;
-
+    // Toggleable tool behaviors: clicking again removes what was placed.
     switch (tool) {
       case 'erase':
-        // "Lege cell": ensure a real cell exists, then clear any special markers.
         ensureNonVoid(cell);
         clearCell(cell);
         return;
-		case 'delete':
-			// "Cell verwijderen": turn this cell into a void placeholder.
-			makeVoid(cell);
-			return;
+      case 'delete':
+        if (cell.classList.contains('void-cell')) {
+          ensureNonVoid(cell);
+        } else {
+          makeVoid(cell);
+        }
+        return;
       case 'bold':
         ensureNonVoid(cell);
-        cell.classList.toggle('bold-cell', true);
+        cell.classList.toggle('bold-cell');
         return;
       case 'coin':
         ensureNonVoid(cell);
-        setCoin(cell);
+        cell.classList.toggle('gold-cell');
         return;
       case 'portal':
         ensureNonVoid(cell);
-        setPortal(cell);
+        if (cell.classList.contains('portal-cell')) {
+          cell.classList.remove('portal-cell');
+          cell.querySelectorAll('.portal-symbol').forEach(n => n.remove());
+        } else setPortal(cell);
         return;
       case 'trap-pit':
         ensureNonVoid(cell);
-        setTrap(cell, 'pit');
+        if (cell.classList.contains('trap-cell')) {
+          // remove trap
+          cell.classList.remove('trap-cell');
+          cell.querySelectorAll('.trap-symbol').forEach(n => n.remove());
+          delete cell.dataset.trap;
+        } else setTrap(cell, 'pit');
         return;
       case 'trap-blackhole':
         ensureNonVoid(cell);
-        setTrap(cell, 'blackhole');
+        if (cell.classList.contains('trap-cell')) {
+          cell.classList.remove('trap-cell');
+          cell.querySelectorAll('.trap-symbol').forEach(n => n.remove());
+          delete cell.dataset.trap;
+        } else setTrap(cell, 'blackhole');
         return;
       case 'sym-yellow':
-        ensureNonVoid(cell);
-        setSymbol(cell, 'yellow');
-        return;
       case 'sym-green':
-        ensureNonVoid(cell);
-        setSymbol(cell, 'green');
-        return;
       case 'sym-purple':
-        ensureNonVoid(cell);
-        setSymbol(cell, 'purple');
-        return;
       case 'sym-blue':
-        ensureNonVoid(cell);
-        setSymbol(cell, 'blue');
-        return;
       case 'sym-red':
         ensureNonVoid(cell);
-        setSymbol(cell, 'red');
+        // extract color
+        const color = tool.split('-')[1];
+        // If the same symbol already exists, remove it; otherwise set it (and replace others)
+        const existingSym = Array.from(cell.querySelectorAll('.symbol:not(.trap-symbol)')).find(s => s.classList.contains(color));
+        if (existingSym) {
+          existingSym.remove();
+        } else {
+          // remove other non-trap symbols first
+          cell.querySelectorAll('.symbol:not(.trap-symbol)').forEach(n => n.remove());
+          setSymbol(cell, color);
+        }
+        return;
+      case 'sym-shop':
+        // Bonus-upgrade shop / diamond symbol
+        ensureNonVoid(cell);
+        const shopSym = cell.querySelector('.symbol.upgrade-shop-symbol');
+        if (shopSym) {
+          shopSym.remove();
+        } else {
+          const s = document.createElement('span');
+          s.className = 'symbol upgrade-shop-symbol';
+          s.textContent = '♦';
+          cell.appendChild(s);
+        }
         return;
       case 'select':
       default:
-        // Requirement: clicking a special block makes it normal again.
         if (hasSpecial(cell)) clearCell(cell);
         return;
     }
@@ -463,6 +489,9 @@
       }
     }
 
+    // detect green zone: skip placing initial bonuses/coins for green
+    const isGreenZone = (grid.closest && grid.closest('.zone') && grid.closest('.zone').dataset && grid.closest('.zone').dataset.color === 'groen') || (grid.id && String(grid.id).toLowerCase().includes('green'));
+
     // shuffle helper
     const shuffle = (arr) => {
       for (let i = arr.length - 1; i > 0; i--) {
@@ -475,35 +504,40 @@
     const clusterIndices = Array.from(clusterSet).filter(i => i !== centerIdx);
     shuffle(clusterIndices);
     const clusterSize = clusterIndices.length;
-    const isSmall = clusterSize < 20;
-    const minSymBase = isSmall ? 4 : 8;
-    const maxSymBase = isSmall ? 6 : 12;
-    const finalMinSymbols = Math.max(minSymBase, Math.floor(clusterSize * 0.15));
-    const finalMaxSymbols = Math.max(maxSymBase, Math.floor(clusterSize * 0.25));
-    const finalMaxCoins = Math.max(2, Math.floor(clusterSize * 0.08));
-    const finalCoinChance = 0.12;
 
-    const symCount = Math.min(clusterIndices.length, Math.floor(Math.random() * (finalMaxSymbols - finalMinSymbols + 1)) + finalMinSymbols);
-    const symbolIndices = new Set(clusterIndices.slice(0, symCount));
-
-    const remaining = clusterIndices.filter(i => !symbolIndices.has(i));
-    shuffle(remaining);
+    // Only assign symbols/coins when NOT a green zone in the editor
+    let symbolIndices = new Set();
     const coinSet = new Set();
-    for (const cand of remaining) {
-      if (coinSet.size >= finalMaxCoins) break;
-      if (Math.random() < finalCoinChance) coinSet.add(cand);
-    }
+    if (!isGreenZone) {
+      const isSmall = clusterSize < 20;
+      const minSymBase = isSmall ? 4 : 8;
+      const maxSymBase = isSmall ? 6 : 12;
+      const finalMinSymbols = Math.max(minSymBase, Math.floor(clusterSize * 0.15));
+      const finalMaxSymbols = Math.max(maxSymBase, Math.floor(clusterSize * 0.25));
+      const finalMaxCoins = Math.max(2, Math.floor(clusterSize * 0.08));
+      const finalCoinChance = 0.12;
 
-    for (const idx of clusterSet) {
-      const cell = clusterMap.get(idx);
-      if (!cell) continue;
-      if (symbolIndices.has(idx)) {
-        // random color selection
-        const colors = ['green','blue','yellow','purple','red'];
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        setSymbol(cell, color);
-      } else if (coinSet.has(idx)) {
-        setCoin(cell);
+      const symCount = Math.min(clusterIndices.length, Math.floor(Math.random() * (finalMaxSymbols - finalMinSymbols + 1)) + finalMinSymbols);
+      symbolIndices = new Set(clusterIndices.slice(0, symCount));
+
+      const remaining = clusterIndices.filter(i => !symbolIndices.has(i));
+      shuffle(remaining);
+      for (const cand of remaining) {
+        if (coinSet.size >= finalMaxCoins) break;
+        if (Math.random() < finalCoinChance) coinSet.add(cand);
+      }
+
+      for (const idx of clusterSet) {
+        const cell = clusterMap.get(idx);
+        if (!cell) continue;
+        if (symbolIndices.has(idx)) {
+          // random color selection
+          const colors = ['green','blue','yellow','purple','red'];
+          const color = colors[Math.floor(Math.random() * colors.length)];
+          setSymbol(cell, color);
+        } else if (coinSet.has(idx)) {
+          setCoin(cell);
+        }
       }
     }
 
@@ -644,10 +678,11 @@
       setStatus('Popup geblokkeerd.');
       return;
     }
-.    const css = `
+  const css = `
 @page { size: A4 landscape; margin: 8mm; }
   /* Use mm for cell size so printer renders physical dimensions reliably */
-  :root { --cell-size: 6.88mm; --board-grid-gap: 2px; }
+  /* cell/ gap in mm so print renders physical sizes reliably */
+  :root { --cell-size: 6.88mm; --board-grid-gap: 0.53mm; }
 html, body { height: 100%; }
 body { margin: 0; padding: 0; background: white; color: #111; font-family: Arial, sans-serif; }
 .boardHost { width: fit-content; margin: 0 auto; max-width: calc(297mm - 16mm); }
@@ -660,8 +695,8 @@ body { margin: 0; padding: 0; background: white; color: #111; font-family: Arial
 .zone[data-color="rood"] { background: #de838c; }
 .zone[data-color="blauw"] { background: #6ba8d8; }
 .zone.red-group { display: grid; grid-template-columns: repeat(2, max-content); justify-content: center; gap: 18px; }
-.grid { display: grid; gap: var(--board-grid-gap, 2px); justify-content: center; }
-.cell { width: var(--cell-size, 26px); height: var(--cell-size, 26px); background: rgba(255,255,255,0.92); border: 1px solid rgba(0,0,0,0.16); border-radius: calc(var(--cell-size, 26px) / 4); box-shadow: 0 1px 2px rgba(0,0,0,0.05); position: relative; display: flex; align-items: center; justify-content: center; }
+.grid { display: grid; gap: var(--board-grid-gap, 0.53mm); justify-content: center; }
+.cell { box-sizing: border-box; width: var(--cell-size, 6.88mm); height: var(--cell-size, 6.88mm); background: rgba(255,255,255,0.92); border: 0.26mm solid rgba(0,0,0,0.16); border-radius: calc(var(--cell-size, 6.88mm) / 4); box-shadow: 0 0.15mm 0.3mm rgba(0,0,0,0.05); position: relative; display: flex; align-items: center; justify-content: center; }
 .cell.bold-cell { border: 2px solid #2c3333 !important; }
 .symbol { display: inline-block; width: 14px; height: 14px; border-radius: 4px; border: 2px solid #444; background-color: #999; }
 .symbol.yellow { background-color: #fff48f; }
@@ -862,12 +897,19 @@ body { margin: 0; padding: 0; background: white; color: #111; font-family: Arial
     try {
       const container = (printBtn && printBtn.parentNode) ? printBtn.parentNode : document.body;
       if (!document.getElementById('save-board')) {
-        const b = document.createElement('button'); b.id = 'save-board'; b.textContent = 'Opslaan'; b.style.marginLeft = '8px';
+        const b = document.createElement('button'); b.id = 'save-board'; b.textContent = 'Opslaan';
+        // copy classes from an existing control so styling matches
+        const styleSource = printBtn || refreshBtn || null;
+        if (styleSource && styleSource.className) b.className = styleSource.className;
+        else b.style.marginLeft = '8px';
         b.addEventListener('click', promptSaveBoard);
         container.insertBefore(b, printBtn ? printBtn.nextSibling : null);
       }
       if (!document.getElementById('manage-saved-boards')) {
-        const m = document.createElement('button'); m.id = 'manage-saved-boards'; m.textContent = 'Opgeslagen'; m.style.marginLeft = '8px';
+        const m = document.createElement('button'); m.id = 'manage-saved-boards'; m.textContent = 'Opgeslagen';
+        const styleSource2 = document.getElementById('save-board') || printBtn || refreshBtn || null;
+        if (styleSource2 && styleSource2.className) m.className = styleSource2.className;
+        else m.style.marginLeft = '8px';
         m.addEventListener('click', createSavedBoardsModal);
         container.insertBefore(m, document.getElementById('save-board') ? document.getElementById('save-board').nextSibling : null);
       }
@@ -875,6 +917,37 @@ body { margin: 0; padding: 0; background: white; color: #111; font-family: Arial
   }
 
   ensureSaveButtons();
+  
+  // --- Extra tool buttons (shop/diamond) ---
+  function ensureExtraToolButtons() {
+    try {
+      const container = (printBtn && printBtn.parentNode) ? printBtn.parentNode : document.body;
+      if (!document.getElementById('tool-shop-btn')) {
+        const b = document.createElement('button');
+        b.id = 'tool-shop-btn';
+        b.textContent = '♦';
+        b.title = 'Bonus-upgrade shop (diamond)';
+        const styleSource = document.getElementById('save-board') || printBtn || refreshBtn || null;
+        if (styleSource && styleSource.className) b.className = styleSource.className;
+        b.style.marginLeft = '8px';
+        b.addEventListener('click', () => {
+          // toggle override tool
+          if (window.__locusEditorOverrideTool === 'sym-shop') {
+            window.__locusEditorOverrideTool = null;
+            b.classList.remove('active');
+          } else {
+            window.__locusEditorOverrideTool = 'sym-shop';
+            // mark active
+            document.querySelectorAll('#tool-shop-btn').forEach(n => n.classList.remove('active'));
+            b.classList.add('active');
+          }
+        });
+        container.insertBefore(b, document.getElementById('manage-saved-boards') ? document.getElementById('manage-saved-boards').nextSibling : null);
+      }
+    } catch (e) {}
+  }
+
+  ensureExtraToolButtons();
 
 
   // Auto-load on open: if opened from the game, load snapshot once; otherwise fallback to storage.
