@@ -11254,6 +11254,7 @@
 			<button id="classic-mode-toggle" type="button" aria-pressed="false">Klassieke versie: uit</button>
 			<button id="debug-mode-toggle" type="button" aria-pressed="false">Debug modus: uit</button>
 			<button id="print-btn" type="button">Print</button>
+			<button id="menu-editor-btn" type="button">🛠️ Editor</button>
 			<button id="mobile-dark-mode-toggle" type="button">🌙 Nacht</button>
 			<button id="menu-rules-btn" onclick="showRulesModal()">📖 Spelregels</button>
 			<button id="menu-highscore-btn" onclick="showHighScoreModal()">🏆 High Score</button>
@@ -11364,6 +11365,7 @@
 				</div>
 				<div class="modal-actions" style="justify-content: flex-end;">
 					<button id="print-settings-cancel" type="button">Annuleer</button>
+					<button id="print-settings-preview" type="button">Preview</button>
 					<button id="print-settings-print" type="button">Print</button>
 				</div>
 			</div>
@@ -25303,8 +25305,10 @@ function showFloatingPreview(shape, color, options = {}) {
 	const printSettingsClose = document.getElementById('print-settings-close');
 	const printSettingsCancel = document.getElementById('print-settings-cancel');
 	const printSettingsPrint = document.getElementById('print-settings-print');
+	const printSettingsPreview = document.getElementById('print-settings-preview');
 	const printOptLight = document.getElementById('print-opt-light');
 	const printOptNoBonuses = document.getElementById('print-opt-no-bonuses');
+	const editorBtn = document.getElementById('menu-editor-btn');
 
 	function showPrintSettings() {
 		if (!printSettingsLayer) return;
@@ -25346,6 +25350,42 @@ function showFloatingPreview(shape, color, options = {}) {
 		if (noBonuses) stripBoardForLowInk(wrapper);
 		return wrapper.outerHTML;
 	}
+
+	// External editor bridge (separate page): send a snapshot of the current playfield.
+	const LOCUS_EDITOR_STORAGE_KEY = 'locusEditorBoardHtml';
+	function getEditorBoardHtml() {
+		// Editor wants the full playfield; do not strip bonuses/symbols here.
+		try {
+			return buildPrintBoardFromCurrent(false);
+		} catch (e) {
+			const board = document.getElementById('board');
+			return board ? board.outerHTML : '';
+		}
+	}
+	function openEditorWindow() {
+		const boardHtml = getEditorBoardHtml();
+		try { localStorage.setItem(LOCUS_EDITOR_STORAGE_KEY, boardHtml); } catch (e) {}
+		// Open as a separate page (clean separation).
+		const w = window.open('editor.html', '_blank');
+		if (!w) {
+			alert('Popup geblokkeerd. Sta popups toe om de editor te openen.');
+			return;
+		}
+		// Best effort: send immediately (editor also requests on load).
+		try {
+			w.postMessage({ type: 'LOCUS_EDITOR_BOARD', boardHtml }, '*');
+		} catch (e) {}
+	}
+	window.addEventListener('message', (event) => {
+		// Only respond to the opener/child channel we use.
+		const data = event && event.data ? event.data : {};
+		if (!data || data.type !== 'LOCUS_EDITOR_REQUEST_BOARD') return;
+		const boardHtml = getEditorBoardHtml();
+		try { localStorage.setItem(LOCUS_EDITOR_STORAGE_KEY, boardHtml); } catch (e) {}
+		try {
+			event.source && event.source.postMessage({ type: 'LOCUS_EDITOR_BOARD', boardHtml }, '*');
+		} catch (e) {}
+	});
 
 	function mulberry32(seed) {
 		let a = seed >>> 0;
@@ -25565,6 +25605,14 @@ function showFloatingPreview(shape, color, options = {}) {
 			try { Math.random = origRandom; } catch (_) {}
 		}
 
+		// For World 2 prints, mark the green-zone start cell so the print preview can center on it.
+		if (world === 'world2') {
+			try {
+				const greenRoot = staging.querySelector('#' + greenGridId + ' .root-cell');
+				if (greenRoot) greenRoot.classList.add('print-focus');
+			} catch (e) {}
+		}
+
 		if (noBonuses) stripBoardForLowInk(boardEl);
 		const html = boardEl.outerHTML;
 		try { staging.remove(); } catch { try { staging.parentNode && staging.parentNode.removeChild(staging); } catch {} }
@@ -25580,14 +25628,14 @@ function showFloatingPreview(shape, color, options = {}) {
 		const lightMode = !!opts.lightMode;
 		const noBonuses = !!opts.noBonuses;
 		const css = `
-@page { size: A4 landscape; margin: 8mm; }
+.@page { size: A4 landscape; margin: 8mm; }
 html, body { height: 100%; }
 body { margin: 0; padding: 0; background: ${lightMode ? 'white' : '#111'}; color: ${lightMode ? '#111' : '#eee'}; font-family: Arial, sans-serif; }
 #print-root { width: fit-content; }
-.board { display: flex; gap: 14px; align-items: flex-start; transform-origin: top left; }
-.column { display: flex; flex-direction: column; gap: 14px; }
-.zone { background: transparent; padding: 10px; border-radius: 10px; box-shadow: none; border: 1px solid ${lightMode ? '#b9b9b9' : '#666'}; }
-.zone.red-group { border-radius: 10px; }
+.board { display: flex; gap: 14px; align-items: center; transform-origin: top left; }
+.column { display: flex; flex-direction: column; gap: 14px; align-items: center; }
+.zone { background: transparent; padding: 10px; border-radius: 10px; box-shadow: none; border: 1px solid ${lightMode ? '#b9b9b9' : '#666'}; overflow: visible; max-height: none; }
+.zone.red-group { border-radius: 10px; align-self: flex-start; }
 .zone[data-color="geel"] { background: ${lightMode ? (noBonuses ? '#fffdf4' : '#fff6cf') : 'transparent'}; }
 .zone[data-color="paars"] { background: ${lightMode ? (noBonuses ? '#fdf9ff' : '#f1e7ff') : 'transparent'}; }
 .zone[data-color="groen"] { background: ${lightMode ? (noBonuses ? '#f6fff6' : '#e1f7e1') : 'transparent'}; }
@@ -25595,50 +25643,141 @@ body { margin: 0; padding: 0; background: ${lightMode ? 'white' : '#111'}; color
 .zone[data-color="rood"] { background: ${lightMode ? (noBonuses ? '#fff7f7' : '#ffe3e3') : 'transparent'}; }
 .zone.red-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
 .zone.red-group > .zone { padding: 6px; }
-.grid { display: grid; gap: 2px; }
-.cell { width: var(--cell-size); height: var(--cell-size); box-sizing: border-box; border: 1px solid ${lightMode ? '#b7b7b7' : '#777'}; background: ${lightMode ? 'rgba(255,255,255,0.92)' : '#1a1a1a'}; border-radius: 4px; }
-.cell.bold-cell { border: 2px solid ${lightMode ? '#2d2d2d' : '#ddd'}; }
+	.grid { display: grid; gap: var(--board-grid-gap,2px); overflow: visible; max-height: none; grid-auto-columns: var(--cell-size); grid-auto-rows: var(--cell-size); }
+	.cell { display: block; width: var(--cell-size); height: var(--cell-size); min-width: var(--cell-size); min-height: var(--cell-size); padding: 0; margin: 0; box-sizing: border-box; border: 1px solid ${lightMode ? '#b7b7b7' : '#777'}; background: ${lightMode ? 'rgba(255,255,255,0.92)' : '#1a1a1a'}; border-radius: 4px; }
+	.cell.bold-cell { border-style: solid; border-width: 2px; border-color: ${lightMode ? '#2d2d2d' : '#ddd'}; }
+	.cell.bold-cell.active { box-shadow: none; }
 .cell.void-cell { border-color: transparent !important; background: transparent !important; }
 .cell.active { background: ${lightMode ? '#f0f0f0' : '#2a2a2a'}; }
-.root-cell { border-radius: 0; }
+	.root-cell { border-radius: 4px; }
 /* Zone-specific cell tinting (keeps the board recognizable, but very light). */
 .zone[data-color="geel"] .cell { background: ${lightMode ? (noBonuses ? '#fffef8' : '#fffbe3') : 'transparent'}; }
+
 .zone[data-color="geel"] .cell.active { background: ${lightMode ? (noBonuses ? '#f6f2d8' : '#efe29c') : 'transparent'}; }
 
-.zone[data-color="paars"] .cell { background: ${lightMode ? (noBonuses ? '#fdfbff' : '#f6efff') : 'transparent'}; }
-.zone[data-color="paars"] .cell.active { background: ${lightMode ? (noBonuses ? '#efe7fb' : '#d4c3f2') : 'transparent'}; }
+		.zone[data-color="groen"] .cell { background: ${lightMode ? (noBonuses ? '#fbfffb' : '#eef9ee') : 'transparent'}; }
+		.zone[data-color="groen"] .cell.active { background: ${lightMode ? (noBonuses ? '#e7f1e7' : '#bfe3bf') : 'transparent'}; }
 
-.zone[data-color="groen"] .cell { background: ${lightMode ? (noBonuses ? '#fbfffb' : '#eef9ee') : 'transparent'}; }
-.zone[data-color="groen"] .cell.active { background: ${lightMode ? (noBonuses ? '#e7f1e7' : '#bfe3bf') : 'transparent'}; }
+		.zone[data-color="blauw"] .cell { background: ${lightMode ? (noBonuses ? '#fbfdff' : '#ecf6ff') : 'transparent'}; }
+		.zone[data-color="blauw"] .cell.active { background: ${lightMode ? (noBonuses ? '#e5eef7' : '#b7d6f2') : 'transparent'}; }
 
-.zone[data-color="blauw"] .cell { background: ${lightMode ? (noBonuses ? '#fbfdff' : '#ecf6ff') : 'transparent'}; }
-.zone[data-color="blauw"] .cell.active { background: ${lightMode ? (noBonuses ? '#e5eef7' : '#b7d6f2') : 'transparent'}; }
+		.zone[data-color="rood"] .cell { background: ${lightMode ? (noBonuses ? '#fffafb' : '#fff0f0') : 'transparent'}; }
+		.zone[data-color="rood"] .cell.active { background: ${lightMode ? (noBonuses ? '#f6e4e4' : '#eeb3b3') : 'transparent'}; }
 
-.zone[data-color="rood"] .cell { background: ${lightMode ? (noBonuses ? '#fffafb' : '#fff0f0') : 'transparent'}; }
-.zone[data-color="rood"] .cell.active { background: ${lightMode ? (noBonuses ? '#f6e4e4' : '#eeb3b3') : 'transparent'}; }
+		/* Normalise all zone cells to the same base appearance so green/red match other grids. */
+		.zone .cell { border-radius: 4px; border: 1px solid ${lightMode ? '#b7b7b7' : '#777'}; background: ${lightMode ? 'rgba(255,255,255,0.92)' : '#1a1a1a'}; }
+		.zone .cell.active { background: ${lightMode ? '#f0f0f0' : '#2a2a2a'}; }
 
-/* Keep start/end/bold cells readable without heavy ink. */
-.cell.bold-cell.active { filter: ${lightMode ? 'none' : 'none'}; }
-${noBonuses ? '' : '.cell.gold-cell{outline:1px solid ' + (lightMode ? '#a98c2a' : '#c9a94a') + ';}'}
-${noBonuses ? '.symbol,.trap-symbol,.coin{display:none !important;}' : ''}
+		/* Keep start/end/bold cells readable without heavy ink. */
+		.cell.bold-cell.active { filter: ${lightMode ? 'none' : 'none'}; }
+		${noBonuses ? '' : '.cell.gold-cell{outline:1px solid ' + (lightMode ? '#a98c2a' : '#c9a94a') + ';}'}
+		${noBonuses ? '.symbol,.trap-symbol,.coin{display:none !important;}' : ''}
+		`;
+
+		// Collect existing page styles (all <style> and linked stylesheets) so print window matches game styling exactly.
+		const existingStyles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]')).map(el => el.outerHTML).join('\n');
+
+		// Determine actual cell size from the current board so printed board keeps on-screen proportions.
+		const actualCellSize = (typeof getActualCellSize === 'function') ? getActualCellSize() : (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')) || 26);
+
+		// Build head: include original stylesheets and a minimal set of print-only overrides.
+		let htmlClass = (document.documentElement && document.documentElement.className) ? document.documentElement.className : '';
+		// Respect the print lightMode option: if true, remove dark-mode; if false, ensure dark-mode present.
+		if (typeof opts !== 'undefined' && opts) {
+			if (opts.lightMode) {
+				htmlClass = htmlClass.replace(/\bdark-mode\b/g, '').trim();
+			} else {
+				if (!/\bdark-mode\b/.test(htmlClass)) htmlClass = (htmlClass + ' dark-mode').trim();
+			}
+		}
+		const printOverrides = `
+/* Minimal print overrides: hide UI elements, keep original colors and sizing */
+@page { size: A4 landscape; margin: 8mm; }
+body { background: transparent !important; }
+#dark-mode-toggle,
+.blur-overlay,
+#drag-overlay,
+#floating-preview,
+#placement-zoom-lens,
+#mobile-objective-banner,
+#bottom-bar,
+#card-choice-zone,
+#bonus-zone,
+#scoreboard,
+#objective-zone,
+#original-coins-zone,
+#gold-zone,
+#collected-coins,
+#buy-placement-container,
+#controls,
+#round-modal-layer,
+#shop-modal-layer,
+#upgrade-modal-layer,
+#deck-modal-layer,
+#golden-unlock-layer,
+#blackhole-modal-layer,
+.objective-toast,
+.zone-nav-arrow,
+.zone-info-btn,
+.zone-info-popover { display: none !important; }
+
+/* Clip content to the zone bounds so grids do not overflow outside their zone */
+.zone { overflow: hidden !important; max-height: none !important; }
+
+/* Grids should scroll inside their zones if needed; default to auto so clipped content is accessible in preview (but not visually overflowing). */
+.grid { display: grid !important; gap: var(--board-grid-gap,2px) !important; overflow: auto !important; max-height: none !important; box-sizing: border-box; }
+
+/* Green zone: center the inner grid so the start cell (print-focus) appears centered. */
+.zone[data-color="groen"] .grid,
+#green-zone .grid { align-content: center !important; justify-content: center !important; height: 100% !important; }
+
+/* Blue zone: anchor content to the bottom so the grid appears to grow upwards. */
+.zone[data-color="blauw"] .grid,
+#blue-zone .grid { align-content: end !important; justify-content: center !important; height: 100% !important; }
+
+/* Red zone: keep standard clipping behavior but allow its internal grids to center. */
+.zone[data-color="rood"] .grid,
+#red-zone .grid { align-content: center !important; justify-content: center !important; }
+
+/* Hide native scrollbars in print preview */
+* { scrollbar-width: none; -ms-overflow-style: none; }
+*::-webkit-scrollbar { display: none; }
 `;
-		const doc = `<!doctype html><html lang="nl"><head><meta charset="utf-8"><title>Print</title><style>${css}</style></head>
-<body style="--cell-size: 10px;">
-<div id="print-root">${boardHtml}</div>
+
+		const headContent = existingStyles + '\n' + '<style>' + printOverrides + '</style>';
+
+		const doc = `<!doctype html><html lang="nl" class="${htmlClass}"><head><meta charset="utf-8"><title>Print</title>${headContent}</head>\n<body>\n<div id="print-root">${boardHtml}</div>\n
 <script>
 (function(){
-  function fit(){
-    var b = document.querySelector('.board');
-    if(!b) return;
-    b.style.transform = '';
-    var rect = b.getBoundingClientRect();
-    var margin = 16;
-    var scale = Math.min((window.innerWidth - margin) / rect.width, (window.innerHeight - margin) / rect.height, 1);
-    b.style.transform = 'scale(' + scale.toFixed(4) + ')';
-    b.style.transformOrigin = 'top left';
-  }
-  window.addEventListener('load', function(){ fit(); setTimeout(function(){ window.print(); }, 50); });
-  window.addEventListener('resize', fit);
+	function fit(){
+		var b = document.querySelector('.board');
+		if(!b) return;
+		b.style.transform = '';
+		b.style.transformOrigin = 'top left';
+		var rect = b.getBoundingClientRect();
+		var margin = 16;
+		var scale = Math.min((window.innerWidth - margin) / rect.width, (window.innerHeight - margin) / rect.height, 1);
+
+		// Try to center the start/root cell in the viewport when present.
+		var root = b.querySelector('.print-focus') || b.querySelector('.root-cell') || b.querySelector('.cell.root') || b.querySelector('.cell.start');
+		if (root) {
+			var rootRect = root.getBoundingClientRect();
+			var relX = (rootRect.left - rect.left) + (rootRect.width/2);
+			var relY = (rootRect.top - rect.top) + (rootRect.height/2);
+			var centerX = window.innerWidth / 2;
+			var centerY = window.innerHeight / 2;
+			// After scaling, the root center will be at rel*scale. Compute translation so it's at viewport center.
+			var tx = centerX - (relX * scale);
+			var ty = centerY - (relY * scale);
+			// Apply scale first, then translate (translate values are in device pixels after scaling).
+			b.style.transform = 'scale(' + scale.toFixed(4) + ') translate(' + tx.toFixed(2) + 'px,' + ty.toFixed(2) + 'px)';
+		} else {
+			b.style.transform = 'scale(' + scale.toFixed(4) + ')';
+		}
+	}
+	var __autoPrint = ${opts && typeof opts.autoPrint !== 'undefined' ? (opts.autoPrint ? 'true' : 'false') : 'true'};
+	window.addEventListener('load', function(){ fit(); if(__autoPrint) setTimeout(function(){ window.print(); }, 200); });
+	window.addEventListener('resize', fit);
 })();
 </scr` + `ipt>
 </body></html>`;
@@ -25658,6 +25797,20 @@ ${noBonuses ? '.symbol,.trap-symbol,.coin{display:none !important;}' : ''}
 			boardHtml = buildPrintBoardFromCurrent(opts.noBonuses);
 		}
 		openPrintWindow(boardHtml, opts);
+	}
+
+	function performPreviewFromSettings() {
+		const opts = getPrintSettings();
+		let boardHtml = '';
+		if (opts.source === 'world1') {
+			boardHtml = buildGeneratedPrintBoard('world1', opts.noBonuses);
+		} else if (opts.source === 'world2') {
+			boardHtml = buildGeneratedPrintBoard('world2', opts.noBonuses);
+		} else {
+			boardHtml = buildPrintBoardFromCurrent(opts.noBonuses);
+		}
+		// Open print window but do not auto-invoke window.print()
+		openPrintWindow(boardHtml, Object.assign({}, opts, { autoPrint: false }));
 	}
 
 	if (printBtn) {
@@ -25683,6 +25836,26 @@ ${noBonuses ? '.symbol,.trap-symbol,.coin{display:none !important;}' : ''}
 			e.preventDefault();
 			hidePrintSettings();
 			performPrintFromSettings();
+		});
+	}
+	if (printSettingsPreview) {
+		printSettingsPreview.addEventListener('click', (e) => {
+			e.preventDefault();
+			hidePrintSettings();
+			performPreviewFromSettings();
+		});
+	}
+	if (editorBtn) {
+		editorBtn.addEventListener('click', (e) => {
+			e.preventDefault();
+			// Close the hamburger menu if open.
+			try {
+				const menuToggle = document.getElementById('menu-toggle');
+				const controls = document.getElementById('controls');
+				if (menuToggle) menuToggle.classList.remove('active');
+				if (controls) controls.classList.remove('open');
+			} catch (err) {}
+			openEditorWindow();
 		});
 	}
 	if (printSettingsLayer) {
