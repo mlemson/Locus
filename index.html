@@ -17,7 +17,10 @@
 				if (!storedTheme) {
 					var legacy = localStorage.getItem('darkMode');
 					if (legacy === 'true') storedTheme = 'dark';
+					else if (legacy === 'false') storedTheme = 'light';
 				}
+				// Default: dark mode on (unless user explicitly chose light before).
+				if (!storedTheme) storedTheme = 'dark';
 				if (storedTheme === 'dark') {
 					document.documentElement.classList.add('dark-mode');
 				}
@@ -80,7 +83,8 @@
 
 		:root {
 			/* Base measurements */
-			--cell-size: clamp(18px, 6vw, 26px);
+			/* Fixed across all grids; the board itself is scaled to fit the screen. */
+			--cell-size: 26px;
 			--board-grid-gap: 2px;
 			--preview-gap: 2px;
 			--gap: 10px;
@@ -471,7 +475,7 @@
 		   Keep this limited to coarse pointers to avoid shrinking desktop windows. */
 		@media (max-height: 600px) and (orientation: landscape) and (pointer: coarse) {
 			:root {
-				--cell-size: clamp(14px, 4.2vw, 20px);
+				--cell-size: 26px;
 			}
 		}
 
@@ -632,7 +636,15 @@
 		/* Small-ish desktop landscape: slightly smaller cells so zones fit cleanly. */
 		@media (min-width: 651px) and (orientation: landscape) and (max-height: 760px) {
 			body.desktop-landscape {
-				--cell-size: clamp(16px, 2.2vw, 23px);
+				--cell-size: 26px;
+			}
+		}
+
+		/* Mid-size desktop landscape (e.g. ~950px wide / ~925px tall):
+		   reduce cell size so symbols don't look oversized and the board fits better. */
+		@media (min-width: 801px) and (max-width: 1100px) and (orientation: landscape) and (max-height: 980px) {
+			body.desktop-landscape {
+				--cell-size: 26px;
 			}
 		}
 
@@ -1871,6 +1883,14 @@
 	}
 	#green-zone,
 	#green-zone--placeholder { background:#a8d5a2; }
+	/* World 2: keep green zone square (same width, more height). */
+	body.world-2:not(.zoomed-in) #green-zone,
+	body.world-2:not(.zoomed-in) #green-zone--placeholder {
+		/* Width is set below; match height to that width. */
+		height: calc(13 * var(--cell-size) + 80px);
+		max-height: calc(13 * var(--cell-size) + 80px);
+		overflow: auto;
+	}
 	/* Green (World 2 request): hide scrollbar visuals while keeping scroll. */
 	#green-zone {
 		scrollbar-width: none; /* Firefox */
@@ -8215,7 +8235,8 @@
 	box-sizing: border-box;
 	margin: 0 auto;
 	position: relative;
-	overflow: hidden;
+	/* Allow board shadows / scaled content without being clipped by the wrapper. */
+	overflow: visible;
 	transform-origin: top center;
   }
 
@@ -8818,7 +8839,7 @@
 		gap: 6px;
 		padding: 6px;
 		max-width: 100vw;
-		overflow: hidden;
+		overflow: visible;
 	}
 	
 	body.desktop-landscape #desktop-left,
@@ -9119,17 +9140,18 @@
 	  /* Half-screen desktop landscape (≈900-1200px): tighten sidebars + gaps so the full board fits. */
 	  @media (min-width: 651px) and (max-width: 1200px) and (orientation: landscape) {
 		body.desktop-landscape #desktop-wrapper {
-			grid-template-columns: minmax(96px, 130px) 1fr minmax(96px, 130px);
-			gap: 4px;
-			padding: 6px;
+			grid-template-columns: minmax(88px, 118px) 1fr minmax(88px, 118px);
+			gap: 3px;
+			padding: 4px;
+			margin: 0;
 		}
 		body.desktop-landscape #desktop-left,
 		body.desktop-landscape #desktop-right {
-			min-width: 96px;
-			max-width: 130px;
+			min-width: 88px;
+			max-width: 118px;
 		}
 		body.desktop-landscape #desktop-right .card-option {
-			width: 56px;
+			width: 54px;
 			min-height: 76px;
 			padding: 4px;
 			--preview-cell: 9px;
@@ -9152,7 +9174,36 @@
 	  /* Extra fit: if the window is narrow, slightly reduce cell-size (keeps proportions consistent). */
 	  @media (min-width: 651px) and (max-width: 1200px) and (orientation: landscape) {
 		body.desktop-landscape {
-			--cell-size: clamp(16px, 1.9vw, 24px);
+			--cell-size: 26px;
+		}
+	  }
+
+	  /* Extra-tight landscape for small desktop widths: pull sidebars inward so right sidebar stays visible. */
+	  @media (min-width: 651px) and (max-width: 1050px) and (orientation: landscape) {
+		body.desktop-landscape #desktop-wrapper {
+			grid-template-columns: minmax(82px, 108px) 1fr minmax(82px, 108px);
+			gap: 2px;
+			padding: 2px;
+			margin: 0;
+		}
+		body.desktop-landscape #desktop-left,
+		body.desktop-landscape #desktop-right {
+			min-width: 82px;
+			max-width: 108px;
+		}
+		body.desktop-landscape #desktop-right .card-option {
+			width: 52px;
+			min-height: 72px;
+			padding: 3px;
+			--preview-cell: 8px;
+		}
+		body.desktop-landscape #desktop-right .card-option .card-cell {
+			width: 7px;
+			height: 7px;
+		}
+		body.desktop-landscape #desktop-left #scoreboard,
+		body.desktop-landscape #desktop-left #gold-zone {
+			padding: 4px;
 		}
 	  }
 
@@ -10672,6 +10723,25 @@
 		margin: 0 !important;
 		transform: none !important;
 	  }
+
+	  /* Ensure print contains full grids, not only the visible part of scroll containers. */
+	  #yellow-zone,
+	  #green-zone,
+	  #red-zone,
+	  #purple-zone,
+	  #blue-zone {
+		overflow: visible !important;
+		height: auto !important;
+		max-height: none !important;
+	  }
+	  #yellow-grid,
+	  #green-grid,
+	  #purple-grid,
+	  #blue-grid,
+	  #red-zone .grid {
+		overflow: visible !important;
+		max-height: none !important;
+	  }
 	  .board {
 		transform: none !important;
 		max-height: none !important;
@@ -11183,7 +11253,7 @@
 			<button id="new-game-btn" type="button">Nieuw Spel</button>
 			<button id="classic-mode-toggle" type="button" aria-pressed="false">Klassieke versie: uit</button>
 			<button id="debug-mode-toggle" type="button" aria-pressed="false">Debug modus: uit</button>
-			<button id="print-btn" onclick="window.print()">Print</button>
+			<button id="print-btn" type="button">Print</button>
 			<button id="mobile-dark-mode-toggle" type="button">🌙 Nacht</button>
 			<button id="menu-rules-btn" onclick="showRulesModal()">📖 Spelregels</button>
 			<button id="menu-highscore-btn" onclick="showHighScoreModal()">🏆 High Score</button>
@@ -11253,6 +11323,48 @@
 				</div>
 				<div class="modal-actions">
 					<button id="shop-modal-skip">Naar volgend level</button>
+				</div>
+			</div>
+		</div>
+
+		<div id="print-settings-layer" class="modal-overlay" aria-hidden="true">
+			<div id="print-settings-modal" class="game-modal" role="dialog" aria-modal="true" aria-labelledby="print-settings-title">
+				<div class="shop-modal-header">
+					<h2 id="print-settings-title">Print instellingen</h2>
+					<button class="modal-close-btn" id="print-settings-close" aria-label="Sluit print instellingen">&times;</button>
+				</div>
+				<p id="print-settings-hint" style="margin-top: 6px;">Printvriendelijk (geen screenshot): alleen het speelveld, met zo min mogelijk inkt.</p>
+				<div class="shop-content-grid" style="grid-template-columns: 1fr; gap: 10px;">
+					<div class="shop-section" style="min-width: 0;">
+						<h3 class="shop-section-title">Speelveld</h3>
+						<label style="display:flex; gap:8px; align-items:center; margin: 6px 0;">
+							<input type="radio" name="print-board-source" value="current" checked>
+							<span>Huidig speelveld</span>
+						</label>
+						<label style="display:flex; gap:8px; align-items:center; margin: 6px 0;">
+							<input type="radio" name="print-board-source" value="world1">
+							<span>Genereer Wereld 1</span>
+						</label>
+						<label style="display:flex; gap:8px; align-items:center; margin: 6px 0;">
+							<input type="radio" name="print-board-source" value="world2">
+							<span>Genereer Wereld 2</span>
+						</label>
+					</div>
+					<div class="shop-section" style="min-width: 0;">
+						<h3 class="shop-section-title">Opties</h3>
+						<label style="display:flex; gap:8px; align-items:center; margin: 6px 0;">
+							<input id="print-opt-light" type="checkbox" checked>
+							<span>Lichte modus</span>
+						</label>
+						<label style="display:flex; gap:8px; align-items:center; margin: 6px 0;">
+							<input id="print-opt-no-bonuses" type="checkbox" checked>
+							<span>Zonder bonussen/symbolen (minder inkt)</span>
+						</label>
+					</div>
+				</div>
+				<div class="modal-actions" style="justify-content: flex-end;">
+					<button id="print-settings-cancel" type="button">Annuleer</button>
+					<button id="print-settings-print" type="button">Print</button>
 				</div>
 			</div>
 		</div>
@@ -13518,11 +13630,45 @@
 	let trapIdCounter = 0;
 	let lastTrapHighlightId = null;
 
-	function computeShapeCenterOffsets(shape, cellSize = 26) {
+	function getBoardCellMetrics() {
+		// Measure the *rendered* board cell size (accounts for transforms / scaling).
+		let cellSizePx = 26;
+		try {
+			const sampleCell = document.querySelector('#board .grid .cell:not(.void-cell)');
+			if (sampleCell) {
+				const rect = sampleCell.getBoundingClientRect();
+				cellSizePx = Math.min(rect.width, rect.height) || cellSizePx;
+			} else {
+				cellSizePx = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')) || cellSizePx;
+			}
+		} catch {
+			// keep default
+		}
+
+		let gapPx = 0;
+		try {
+			gapPx = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--board-grid-gap')) || 0;
+		} catch {
+			gapPx = 0;
+		}
+
+		return {
+			cellSize: cellSizePx,
+			gap: gapPx,
+			step: cellSizePx + gapPx
+		};
+	}
+
+	function computeShapeCenterOffsets(shape, cellSize = null) {
 		try {
 			if (!shape || !shape.length || !shape[0] || !shape[0].length) {
 				return { offsetX: 0, offsetY: 0 };
 			}
+			const metrics = getBoardCellMetrics();
+			const resolvedCellSize = Number.isFinite(cellSize) ? Number(cellSize) : metrics.cellSize;
+			const resolvedGap = Number.isFinite(cellSize) ? 0 : metrics.gap;
+			const resolvedStep = resolvedCellSize + resolvedGap;
+
 			const shapeHeight = shape.length;
 			const shapeWidth = shape[0].length;
 			let minX = shapeWidth, maxX = -1, minY = shapeHeight, maxY = -1;
@@ -13537,13 +13683,16 @@
 				}
 			}
 			if (maxX < 0 || maxY < 0) {
-				return { offsetX: (shapeWidth * cellSize) / 2, offsetY: (shapeHeight * cellSize) / 2 };
+				return { offsetX: (shapeWidth * resolvedStep) / 2, offsetY: (shapeHeight * resolvedStep) / 2 };
 			}
 			const filledWidth = (maxX - minX + 1);
 			const filledHeight = (maxY - minY + 1);
+			// Center between first/last filled cell centers, accounting for grid gap.
+			const centerCol = minX + (filledWidth - 1) / 2;
+			const centerRow = minY + (filledHeight - 1) / 2;
 			return {
-				offsetX: (minX + filledWidth / 2) * cellSize,
-				offsetY: (minY + filledHeight / 2) * cellSize
+				offsetX: (centerCol * resolvedStep) + (resolvedCellSize / 2),
+				offsetY: (centerRow * resolvedStep) + (resolvedCellSize / 2)
 			};
 		} catch {
 			return { offsetX: 0, offsetY: 0 };
@@ -14606,19 +14755,13 @@
 		draggedColor = colorObj;
 		beginPointerDrag({ clientX: event.clientX, clientY: event.clientY, pointerId: event.pointerId || null });
 		startGlobalDragVisuals();
-		
-		// Bereken het middenpunt van het blok voor correcte offset
-		const shapeWidth = shape[0].length;
-		const shapeHeight = shape.length;
-		const cellSize = 26; // Approximate cell size
-		const blockWidth = shapeWidth * cellSize;
-		const blockHeight = shapeHeight * cellSize;
-		
-		offsetX = blockWidth / 2;
-		offsetY = blockHeight / 2;
-		
+
+		// Compute offsets based on the *actual rendered* board cell size + gap.
+		({ offsetX, offsetY } = computeShapeCenterOffsets(draggedShape));
+		const localTouchDevice = ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+		const touchOffsetY = localTouchDevice ? 60 : 0;
 		block.style.left = `${event.clientX - offsetX}px`;
-		block.style.top = `${event.clientY - offsetY}px`;
+		block.style.top = `${event.clientY - offsetY - touchOffsetY}px`;
 		activeBonusPlacement = {
 			colorKey,
 			pointerId: event.pointerId || null,
@@ -14654,7 +14797,7 @@
 		- DUPLICATE: Theme is handled in two places (head preload + here). If you keep both, ensure they do the same thing.
 	*/
 	  const savedTheme = localStorage.getItem('theme');
-	  const preferDark = savedTheme === 'dark' || root.classList.contains('dark-mode');
+	  const preferDark = (savedTheme ? (savedTheme === 'dark') : true) || root.classList.contains('dark-mode');
 
 	  function applyTheme(isDark) {
 		/*
@@ -17530,41 +17673,8 @@
         draggedColor = color;
 		draggedShape = currentShape;
 		
-		// Bereken de bounding box van de gevulde cellen voor juiste offset
-		const shapeHeight = currentShape.length;
-		const shapeWidth = currentShape[0].length;
-		let minX = shapeWidth, maxX = -1, minY = shapeHeight, maxY = -1;
-		
-		for (let y = 0; y < shapeHeight; y++) {
-			for (let x = 0; x < shapeWidth; x++) {
-				if (isSolidShapeCell(currentShape[y][x])) {
-					minX = Math.min(minX, x);
-					maxX = Math.max(maxX, x);
-					minY = Math.min(minY, y);
-					maxY = Math.max(maxY, y);
-				}
-			}
-		}
-		
-		// Bereken het EXACTE centrum van de gevulde cellen (met 0.5 voor even afmetingen)
-		const filledWidth = (maxX - minX + 1);
-		const filledHeight = (maxY - minY + 1);
-		
-		// Measure actual cell size dynamically
-		let cellSize = 26;
-		const measureEl = document.querySelector('.board .cell');
-		if (measureEl) {
-			cellSize = measureEl.getBoundingClientRect().width + 2; 
-		}
-
-		// Voor 2x2: minX=0, filledWidth=2 → 0 + 2/2 = 1.0 (centrum tussen cel 0 en 1)
-		const centerOffsetX = (minX + filledWidth / 2) * cellSize;
-		const centerOffsetY = (minY + filledHeight / 2) * cellSize;
-		
-		const rect = block.getBoundingClientRect();
-		// Gebruik het centrum van de gevulde cellen als ankerpunt
-		offsetX = centerOffsetX;
-		offsetY = centerOffsetY;
+		// Offsets based on the current shape and actual board cell size.
+		({ offsetX, offsetY } = computeShapeCenterOffsets(currentShape));
 
 		// Voor touch devices: voeg extra upward offset toe zodat blok boven vinger verschijnt
 		const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -17595,32 +17705,7 @@
 		block._shape = currentShape;
 		draggedShape = currentShape;
 		renderBlock(draggedBlock, currentShape, draggedColor);
-		
-		// Herbereken center offsets na rotatie
-		const shapeHeight = currentShape.length;
-		const shapeWidth = currentShape[0].length;
-		let minX = shapeWidth, maxX = -1, minY = shapeHeight, maxY = -1;
-		for (let y = 0; y < shapeHeight; y++) {
-			for (let x = 0; x < shapeWidth; x++) {
-				if (isSolidShapeCell(currentShape[y][x])) {
-					minX = Math.min(minX, x);
-					maxX = Math.max(maxX, x);
-					minY = Math.min(minY, y);
-					maxY = Math.max(maxY, y);
-				}
-			}
-		}
-		const filledWidth = (maxX - minX + 1);
-		const filledHeight = (maxY - minY + 1);
-		
-		let cellSize = 26;
-		const measureEl = document.querySelector('.board .cell');
-		if (measureEl) {
-			cellSize = measureEl.getBoundingClientRect().width + 2; 
-		}
-
-		offsetX = (minX + filledWidth / 2) * cellSize;
-		offsetY = (minY + filledHeight / 2) * cellSize;
+		({ offsetX, offsetY } = computeShapeCenterOffsets(currentShape));
 	  });
 	  
   return block;
@@ -17632,7 +17717,7 @@
 	- WHY: Keyboard shortcuts while a shape exists (dragging OR selected card).
 	- STATE: reads/writes `draggedBlock`, `draggedShape`, `selectedShape`, `selectedColor`, `offsetX/offsetY`.
 	- DUPLICATE: Rotation/mirror also exists via buttons (floating preview buttons) and mouse wheel rotate.
-	- MAGIC NUMBER: `cellSize = 26` is assumed in multiple places; if you change cell size in CSS, update these.
+	- NOTE: Offsets are based on measured board cell size + `--board-grid-gap` for consistent scaling.
 	- Escape: cancels current drag OR cancels bonus placement.
 */
 document.addEventListener('keydown', ev => {
@@ -17657,31 +17742,7 @@ document.addEventListener('keydown', ev => {
 			draggedShape = rotateShape(draggedShape);
 			draggedBlock._shape = draggedShape;
 			renderBlock(draggedBlock, draggedShape, draggedColor);
-			// Herbereken center offsets na rotatie
-			const shapeHeight = draggedShape.length;
-			const shapeWidth = draggedShape[0].length;
-			let minX = shapeWidth, maxX = -1, minY = shapeHeight, maxY = -1;
-			for (let y = 0; y < shapeHeight; y++) {
-				for (let x = 0; x < shapeWidth; x++) {
-					if (isSolidShapeCell(draggedShape[y][x])) {
-						minX = Math.min(minX, x);
-						maxX = Math.max(maxX, x);
-						minY = Math.min(minY, y);
-						maxY = Math.max(maxY, y);
-					}
-				}
-			}
-			const filledWidth = (maxX - minX + 1);
-			const filledHeight = (maxY - minY + 1);
-			
-			let cellSize = 26;
-			const measureEl = document.querySelector('.board .cell');
-			if (measureEl) {
-				cellSize = measureEl.getBoundingClientRect().width + 2; 
-			}
-
-			offsetX = (minX + filledWidth / 2) * cellSize;
-			offsetY = (minY + filledHeight / 2) * cellSize;
+			({ offsetX, offsetY } = computeShapeCenterOffsets(draggedShape));
 		} else if (selectedShape) {
 			rotateSelectedCard();
 		}
@@ -17692,25 +17753,7 @@ document.addEventListener('keydown', ev => {
 		draggedShape = mirrorShape(draggedShape);
 		draggedBlock._shape = draggedShape;
 		renderBlock(draggedBlock, draggedShape, draggedColor);
-		// Herbereken center offsets na mirror
-		const shapeHeight = draggedShape.length;
-		const shapeWidth = draggedShape[0].length;
-		let minX = shapeWidth, maxX = -1, minY = shapeHeight, maxY = -1;
-		for (let y = 0; y < shapeHeight; y++) {
-			for (let x = 0; x < shapeWidth; x++) {
-					if (isSolidShapeCell(draggedShape[y][x])) {
-					minX = Math.min(minX, x);
-					maxX = Math.max(maxX, x);
-					minY = Math.min(minY, y);
-					maxY = Math.max(maxY, y);
-				}
-			}
-		}
-		const filledWidth = (maxX - minX + 1);
-		const filledHeight = (maxY - minY + 1);
-		const cellSize = 26;
-		offsetX = (minX + filledWidth / 2) * cellSize;
-		offsetY = (minY + filledHeight / 2) * cellSize;
+			({ offsetX, offsetY } = computeShapeCenterOffsets(draggedShape));
 	} else if (selectedShape) {
 		mirrorSelectedCard();
 	}
@@ -17773,7 +17816,7 @@ document.addEventListener('pointermove', ev => {
 
 	  // ===== Vind zones en cellen onder ALLE gevulde cellen van het blok =====
 	  const blockRect = draggedBlock.getBoundingClientRect();
-	  const cellSize = 26;
+	  const { cellSize, step } = getBoardCellMetrics();
 	  
 	  // Verzamel alle hits van gevulde cellen
 	  const shapeHeight = draggedShape.length;
@@ -17790,8 +17833,8 @@ document.addEventListener('pointermove', ev => {
 		  // Optional (value 2) cells should NOT drive hit-testing / anchoring.
 		  if (isSolidShapeCell(draggedShape[row][col])) {
 			// Bereken de positie van deze cel in het visuele blok
-			const cellX = blockRect.left + (col * cellSize) + (cellSize / 2);
-			const cellY = blockRect.top + (row * cellSize) + (cellSize / 2);
+			const cellX = blockRect.left + (col * step) + (cellSize / 2);
+			const cellY = blockRect.top + (row * step) + (cellSize / 2);
 			
 			// Vind de grid cel onder dit punt
 			const elem = document.elementFromPoint(cellX, cellY);
@@ -18072,13 +18115,19 @@ document.addEventListener('pointermove', ev => {
 	// LOSLATEN
 	// =============
 	document.addEventListener('pointerup', ev => {
+			// If a pointer is captured (e.g. purchased preview in #gold-zone), ev.target can be misleading.
+			// Use the real element under the pointer at release for drop logic.
+			const releaseTarget = (typeof ev.clientX === 'number' && typeof ev.clientY === 'number')
+				? (document.elementFromPoint(ev.clientX, ev.clientY) || ev.target)
+				: ev.target;
+
 		// Negeer als we op een control button klikken
-		if (ev.target.classList.contains('card-control-btn')) {
+			if (releaseTarget && releaseTarget.classList && releaseTarget.classList.contains('card-control-btn')) {
 			return;
 		}
 		
 		// Negeer clicks op gold-zone (buy button, coin display, etc.)
-		if (ev.target.closest('#gold-zone')) {
+			if (releaseTarget && releaseTarget.closest && releaseTarget.closest('#gold-zone') && !draggedBlock) {
 			return;
 		}
 		
@@ -18131,8 +18180,8 @@ document.addEventListener('pointermove', ev => {
 			if (bonusContext.colorKey === 'purchased') {
 				const goldZone = document.getElementById('gold-zone');
 				const previewDiv = document.getElementById('purchased-block-preview');
-				const clickedOnGoldZone = goldZone && goldZone.contains(ev.target);
-				const clickedOnPreview = previewDiv && previewDiv.contains(ev.target);
+				const clickedOnGoldZone = goldZone && releaseTarget && goldZone.contains(releaseTarget);
+				const clickedOnPreview = previewDiv && releaseTarget && previewDiv.contains(releaseTarget);
 				
 				// Als geklikt op gold-zone/preview, annuleer
 				if (clickedOnGoldZone || clickedOnPreview) {
@@ -22411,6 +22460,9 @@ function openShopModal(callback) {
 	  // Bepaal in welke world we zitten
 	  const { world, subLevel } = getWorldAndSubLevel(currentLevel);
 	  currentWorld = world;
+	  document.body.classList.toggle('world-2', world === 2);
+	  document.body.classList.toggle('world-1', world === 1);
+	  document.body.classList.toggle('world-3', world === 3);
 	  
 	  // World 1: disable scrolling in green zone
 	  const greenZone = document.getElementById('green-zone');
@@ -23275,6 +23327,8 @@ function openShopModal(callback) {
 	  // Gebruik de echte --cell-size CSS variabele voor consistente sizing tussen werelden
 	  const computedCellSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')) || 26;
 	  const cellSize = Math.max(18, Math.min(30, computedCellSize)); // Clamp between 18 and 30
+	  const worldInfo = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(currentLevel) : null;
+	  const isWorld2 = !!(worldInfo && worldInfo.world === 2);
 	  const isPortrait = window.innerHeight > window.innerWidth;
 	  const isShortHeight = window.innerHeight <= 925;
 	  const isDesktopPortraitLayout = document.body.classList.contains('desktop-portrait')
@@ -23366,18 +23420,20 @@ function openShopModal(callback) {
 		console.log(`30a Blue zone: width=${maxWidthPx}px, scroll enabled, maxHeight=${tallZoneMaxVh}`);
 	  }
 	  
-	  // Groen zone - laat CSS media queries de sizing bepalen
+	  // Groen zone
 	  const greenGrid = document.getElementById('green-grid');
 	  const greenZone = document.getElementById('green-zone');
 	  if (greenGrid && greenZone) {
-		// WORLD 2 UX: Make the taller green grid vertically scrollable.
-		greenZone.style.height = 'auto';
-		greenZone.style.maxHeight = greenZoneMaxVh;
+		// Always keep green scrollable when content exceeds the viewport.
 		greenZone.style.overflowY = 'auto';
-		// WORLD 2 UX: Allow horizontal scroll for the wider mega-root layout.
 		greenZone.style.overflowX = 'auto';
+		// Clear potentially stale inline sizing; we re-apply below when needed.
+		greenZone.style.removeProperty('width');
+		greenZone.style.removeProperty('height');
+		greenZone.style.removeProperty('min-height');
+		greenZone.style.removeProperty('max-height');
 		enableZoneDragScroll(greenZone, { ignoreSelectors: '#controls,#bottom-bar,#card-choice-zone,.card,.card-option' });
-		console.log(`💚 Green zone: scroll enabled (maxHeight ${greenZoneMaxVh})`);
+		console.log('💚 Green zone: scroll enabled');
 	  }
 	  
 	  // Rood zones - VEEL meer height voor uitstekende cells
@@ -23400,28 +23456,18 @@ function openShopModal(callback) {
 	  });
 
 	  requestAnimationFrame(() => {
-		// World 2: green zone MUST be square using RED zone width as the dimension.
-		// User request: green should be square with width and height = red zone width.
+		// World 2 request: green zone must be a SQUARE: height == width (unzoomed).
 		try {
-			const worldInfo = typeof getWorldAndSubLevel === 'function' ? getWorldAndSubLevel(currentLevel) : null;
-			if (worldInfo && worldInfo.world === 2 && greenZone && !document.body.classList.contains('zoomed-in')) {
-				// Get first red zone width as reference
-				const redZone1 = document.getElementById('red-zone1');
-				if (redZone1) {
-					const redWidth = redZone1.getBoundingClientRect().width;
-					if (redWidth > 0) {
-						// Max available height based on viewport (don't exceed screen)
-						const maxAvailableHeight = Math.max(180,
-							Math.floor(window.innerHeight * (isPortrait ? 0.40 : (isShortHeight ? 0.50 : 0.52))) - 40
-						);
-						// Green is square with red's width, but cap to available space
-						const target = Math.round(Math.min(redWidth, maxAvailableHeight));
-						greenZone.style.width = `${target}px`;
-						greenZone.style.height = `${target}px`;
-						greenZone.style.maxHeight = `${target}px`;
-						greenZone.style.minHeight = `${target}px`;
-					}
+			if (isWorld2 && greenZone && !document.body.classList.contains('zoomed-in')) {
+				// Use the rendered width as the single source of truth.
+				let target = Math.round(greenZone.getBoundingClientRect().width);
+				if (!(target > 0)) {
+					// Fallback to the desktop sizing formula.
+					target = Math.round((13 * cellSize) + 80);
 				}
+				greenZone.style.height = `${target}px`;
+				greenZone.style.minHeight = `${target}px`;
+				greenZone.style.maxHeight = `${target}px`;
 			}
 		} catch (_) {}
 
@@ -25245,6 +25291,400 @@ function showFloatingPreview(shape, color, options = {}) {
 			}
 		});
 	}
+
+	// Print instellingen + printvriendelijke output (geen screenshot)
+	const printBtn = document.getElementById('print-btn');
+	const printSettingsLayer = document.getElementById('print-settings-layer');
+	const printSettingsClose = document.getElementById('print-settings-close');
+	const printSettingsCancel = document.getElementById('print-settings-cancel');
+	const printSettingsPrint = document.getElementById('print-settings-print');
+	const printOptLight = document.getElementById('print-opt-light');
+	const printOptNoBonuses = document.getElementById('print-opt-no-bonuses');
+
+	function showPrintSettings() {
+		if (!printSettingsLayer) return;
+		printSettingsLayer.classList.add('show');
+		printSettingsLayer.setAttribute('aria-hidden', 'false');
+	}
+	function hidePrintSettings() {
+		if (!printSettingsLayer) return;
+		printSettingsLayer.classList.remove('show');
+		printSettingsLayer.setAttribute('aria-hidden', 'true');
+	}
+	function getPrintSettings() {
+		const selected = document.querySelector('input[name="print-board-source"]:checked');
+		const source = selected ? String(selected.value) : 'current';
+		return {
+			source,
+			lightMode: !!(printOptLight && printOptLight.checked),
+			noBonuses: !!(printOptNoBonuses && printOptNoBonuses.checked)
+		};
+	}
+
+	function stripBoardForLowInk(rootEl) {
+		if (!rootEl) return;
+		rootEl.querySelectorAll('.zone-info-btn,.zone-info-popover,h2').forEach(el => el.remove());
+		rootEl.querySelectorAll('.symbol,.trap-symbol,.coin-icon,.coin').forEach(el => el.remove());
+		// Remove classes that imply heavy fills; print CSS will further normalize.
+		rootEl.querySelectorAll('.cell.gold-cell').forEach(el => el.classList.remove('gold-cell'));
+		rootEl.querySelectorAll('.cell.trap-cell').forEach(el => el.classList.remove('trap-cell'));
+	}
+
+	function buildPrintBoardFromCurrent(noBonuses) {
+		const board = document.getElementById('board');
+		if (!board) return '';
+		const columns = Array.from(board.children).filter(el => el && el.classList && el.classList.contains('column'));
+		const playColumns = columns.slice(0, 3);
+		const wrapper = document.createElement('div');
+		wrapper.className = 'board';
+		playColumns.forEach(col => wrapper.appendChild(col.cloneNode(true)));
+		if (noBonuses) stripBoardForLowInk(wrapper);
+		return wrapper.outerHTML;
+	}
+
+	function mulberry32(seed) {
+		let a = seed >>> 0;
+		return function() {
+			a |= 0;
+			a = (a + 0x6D2B79F5) | 0;
+			let t = Math.imul(a ^ (a >>> 15), 1 | a);
+			t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+			return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+		};
+	}
+
+	function buildGeneratedPrintBoard(world, noBonuses) {
+		const includeBonuses = !noBonuses;
+		const prefix = `print-${world}-${Date.now().toString(36)}-${Math.random().toString(16).slice(2)}`;
+		const staging = document.createElement('div');
+		staging.style.position = 'fixed';
+		staging.style.left = '-99999px';
+		staging.style.top = '-99999px';
+		staging.style.width = '1px';
+		staging.style.height = '1px';
+		staging.style.overflow = 'hidden';
+		document.body.appendChild(staging);
+
+		const makeZone = (id, color, child) => {
+			const z = document.createElement('div');
+			z.className = 'zone';
+			z.id = id;
+			z.dataset.color = color;
+			if (child) z.appendChild(child);
+			return z;
+		};
+		const makeGrid = (id) => {
+			const g = document.createElement('div');
+			g.className = 'grid';
+			g.id = id;
+			return g;
+		};
+
+		const boardEl = document.createElement('div');
+		boardEl.className = 'board';
+		const col1 = document.createElement('div');
+		col1.className = 'column';
+		const col2 = document.createElement('div');
+		col2.className = 'column';
+		const col3 = document.createElement('div');
+		col3.className = 'column';
+
+		const purpleGridId = `${prefix}-purple-grid`;
+		const yellowGridId = `${prefix}-yellow-grid`;
+		const greenGridId = `${prefix}-green-grid`;
+		const blueGridId = `${prefix}-blue-grid`;
+		const redZoneId = `${prefix}-red-zone`;
+		const red1Id = `${prefix}-red-grid1`;
+		const red2Id = `${prefix}-red-grid2`;
+		const red3Id = `${prefix}-red-grid3`;
+		const red4Id = `${prefix}-red-grid4`;
+
+		const purpleZone = makeZone(`${prefix}-purple-zone`, 'paars', makeGrid(purpleGridId));
+		const yellowZone = makeZone(`${prefix}-yellow-zone`, 'geel', makeGrid(yellowGridId));
+		const greenZone = makeZone(`${prefix}-green-zone`, 'groen', makeGrid(greenGridId));
+		const blueZone = makeZone(`${prefix}-blue-zone`, 'blauw', makeGrid(blueGridId));
+		const redZone = document.createElement('div');
+		redZone.className = 'zone red-group';
+		redZone.id = redZoneId;
+		redZone.dataset.color = 'rood';
+		const red1 = document.createElement('div'); red1.className = 'zone'; red1.id = red1Id; red1.dataset.color = 'rood';
+		const red2 = document.createElement('div'); red2.className = 'zone'; red2.id = red2Id; red2.dataset.color = 'rood';
+		const red3 = document.createElement('div'); red3.className = 'zone'; red3.id = red3Id; red3.dataset.color = 'rood';
+		const red4 = document.createElement('div'); red4.className = 'zone'; red4.id = red4Id; red4.dataset.color = 'rood';
+		redZone.append(red1, red2, red3, red4);
+
+		col1.append(purpleZone, yellowZone);
+		col2.append(greenZone, redZone);
+		col3.append(blueZone);
+		boardEl.append(col1, col2, col3);
+		staging.appendChild(boardEl);
+
+		// Seed randomness so print generation is stable-ish.
+		const origRandom = Math.random;
+		try {
+			Math.random = mulberry32(0xC0FFEE + (world === 'world2' ? 2 : 1));
+		} catch (_) {}
+
+		try {
+			if (world === 'world1') {
+				// Yellow (World 1): irregular columns -> rowLengths/offsets
+				const yellowColumnHeights = [6, 6, 8, 8, 10, 10, 12, 12, 14, 14];
+				const yellowCols = yellowColumnHeights.length;
+				const yellowRows = Math.max(...yellowColumnHeights);
+				const yellowRowPattern = [];
+				const yellowRowOffsets = [];
+				for (let r = 0; r < yellowRows; r++) {
+					let activeCount = 0;
+					for (let c = 0; c < yellowCols; c++) {
+						const topRow = yellowRows - yellowColumnHeights[c];
+						if (r >= topRow) activeCount++;
+					}
+					yellowRowPattern.push(activeCount);
+					yellowRowOffsets.push(Math.max(0, yellowCols - activeCount));
+				}
+				createGrid(yellowGridId, yellowRows, yellowCols, {
+					symbols: includeBonuses,
+					goldCells: includeBonuses,
+					minSymbols: includeBonuses ? 8 : 0,
+					maxSymbols: includeBonuses ? 12 : 0,
+					coinChance: includeBonuses ? 0.2 : 0,
+					maxCoins: includeBonuses ? 15 : 0,
+					rowLengths: yellowRowPattern,
+					rowOffsets: yellowRowOffsets,
+					boldColumns: [0],
+					trapChance: 0,
+					maxTraps: 0,
+					blackHoleChance: 0
+				});
+				createGrid(purpleGridId, 9, 9, {
+					symbols: includeBonuses,
+					goldCells: includeBonuses,
+					minSymbols: includeBonuses ? 6 : 0,
+					maxSymbols: includeBonuses ? 8 : 0,
+					coinChance: includeBonuses ? 0.03 : 0,
+					maxCoins: includeBonuses ? 4 : 0,
+					randomBoldCount: 8,
+					avoidAdjacentBold: true,
+					trapChance: 0,
+					maxTraps: 0,
+					blackHoleChance: 0
+				});
+				const blueRowPattern = [2, 2, 3, 3, 3, 2, 2, 3, 3, 2, 2, 3, 3, 3, 2, 2, 3, 3, 2, 2, 3, 3, 2, 3, 3];
+				const blueRowOffsets = [1, 1, 1, 0, 0, 1, 2, 2, 2, 3, 2, 2, 1, 1, 1, 0, 0, 0, 1, 2, 2, 2, 3, 2, 1];
+				const blueRows = blueRowPattern.length;
+				const blueCols = Math.max(...blueRowOffsets.map((o, idx) => o + (blueRowPattern[idx] || 0)), 3);
+				createGrid(blueGridId, blueRows, blueCols, {
+					boldBottom: true,
+					symbols: includeBonuses,
+					goldCells: includeBonuses,
+					minSymbols: includeBonuses ? 10 : 0,
+					maxSymbols: includeBonuses ? 12 : 0,
+					coinChance: includeBonuses ? 0.05 : 0,
+					maxCoins: includeBonuses ? 6 : 0,
+					rowLengths: blueRowPattern,
+					rowOffsets: blueRowOffsets,
+					trapChance: 0,
+					maxTraps: 0,
+					blackHoleChance: 0
+				});
+				generateRoots(greenGridId, 15, 15, 40, 0.25, includeBonuses ? 0.06 : 0, includeBonuses ? 12 : 0, includeBonuses ? 16 : 0, includeBonuses ? 4 : 0, false, 0, 0, 0);
+				generateRoots(red1Id, 4, 4, 10, 0.3, includeBonuses ? 0.04 : 0, includeBonuses ? 2 : 0, includeBonuses ? 4 : 0, includeBonuses ? 2 : 0, true, 0, 0, 0);
+				generateRoots(red2Id, 4, 5, 10, 0.3, includeBonuses ? 0.04 : 0, includeBonuses ? 2 : 0, includeBonuses ? 4 : 0, includeBonuses ? 2 : 0, true, 0, 0, 0);
+				generateRoots(red3Id, 5, 5, 12, 0.3, includeBonuses ? 0.06 : 0, includeBonuses ? 3 : 0, includeBonuses ? 5 : 0, includeBonuses ? 2 : 0, true, 0, 0, 0);
+				generateRoots(red4Id, 5, 5, 12, 0.3, includeBonuses ? 0.06 : 0, includeBonuses ? 3 : 0, includeBonuses ? 5 : 0, includeBonuses ? 2 : 0, true, 0, 0, 0);
+			} else {
+				// World 2 (print): deterministic shapes that keep proportions.
+				createGrid(yellowGridId, 11, 11, {
+					symbols: includeBonuses,
+					goldCells: includeBonuses,
+					minSymbols: includeBonuses ? 5 : 0,
+					maxSymbols: includeBonuses ? 7 : 0,
+					coinChance: includeBonuses ? 0.07 : 0,
+					maxCoins: includeBonuses ? 8 : 0,
+					trapChance: 0,
+					maxTraps: 0,
+					blackHoleChance: 0
+				});
+				createGrid(purpleGridId, 13, 13, {
+					symbols: includeBonuses,
+					goldCells: includeBonuses,
+					minSymbols: includeBonuses ? 8 : 0,
+					maxSymbols: includeBonuses ? 11 : 0,
+					coinChance: includeBonuses ? 0.04 : 0,
+					maxCoins: includeBonuses ? 6 : 0,
+					fixedBoldCells: [[0,0],[0,12],[12,0],[12,12]],
+					randomBoldCount: 10,
+					avoidAdjacentBold: true,
+					randomBoldMinEdgeDistance: 2,
+					outerRingShade: includeBonuses,
+					trapChance: 0,
+					maxTraps: 0,
+					blackHoleChance: 0
+				});
+				const blueRows = 60;
+				const blueCols = 18;
+				const blueRowPattern = [];
+				const blueRowOffsets = [];
+				for (let i = 0; i < blueRows; i++) {
+					const baseW = (i % 12 === 7) ? 5 : ((i % 5 === 0) ? 4 : 3);
+					const w = Math.max(2, Math.min(5, baseW));
+					const raw = 4 + Math.round(2 * Math.sin(i / 6));
+					const maxOffset = Math.max(0, blueCols - w);
+					const off = Math.max(0, Math.min(maxOffset, raw));
+					blueRowPattern.push(w);
+					blueRowOffsets.push(off);
+				}
+				createGrid(blueGridId, blueRows, blueCols, {
+					boldBottom: true,
+					symbols: includeBonuses,
+					goldCells: includeBonuses,
+					minSymbols: includeBonuses ? 15 : 0,
+					maxSymbols: includeBonuses ? 22 : 0,
+					coinChance: includeBonuses ? 0.09 : 0,
+					maxCoins: includeBonuses ? 16 : 0,
+					rowLengths: blueRowPattern,
+					rowOffsets: blueRowOffsets,
+					trimLeft: true,
+					trimRight: true,
+					trapChance: 0,
+					maxTraps: 0,
+					blackHoleChance: 0
+				});
+				generateRoots(greenGridId, 34, 28, 220, 0.35, includeBonuses ? 0.02 : 0, includeBonuses ? 4 : 0, includeBonuses ? 6 : 0, includeBonuses ? 2 : 0, false, 0, 0, 0);
+				generateRoots(red1Id, 4, 5, 14, 0.35, includeBonuses ? 0.03 : 0, includeBonuses ? 2 : 0, includeBonuses ? 3 : 0, includeBonuses ? 2 : 0, true, 0, 0, 0);
+				generateRoots(red2Id, 4, 6, 16, 0.35, includeBonuses ? 0.03 : 0, includeBonuses ? 2 : 0, includeBonuses ? 3 : 0, includeBonuses ? 2 : 0, true, 0, 0, 0);
+				generateRoots(red3Id, 5, 6, 18, 0.35, includeBonuses ? 0.03 : 0, includeBonuses ? 2 : 0, includeBonuses ? 3 : 0, includeBonuses ? 2 : 0, true, 0, 0, 0);
+				generateRoots(red4Id, 5, 6, 20, 0.35, includeBonuses ? 0.03 : 0, includeBonuses ? 2 : 0, includeBonuses ? 3 : 0, includeBonuses ? 2 : 0, true, 0, 0, 0);
+			}
+		} finally {
+			try { Math.random = origRandom; } catch (_) {}
+		}
+
+		if (noBonuses) stripBoardForLowInk(boardEl);
+		const html = boardEl.outerHTML;
+		try { staging.remove(); } catch { try { staging.parentNode && staging.parentNode.removeChild(staging); } catch {} }
+		return html;
+	}
+
+	function openPrintWindow(boardHtml, opts) {
+		const w = window.open('', '_blank');
+		if (!w) {
+			alert('Popup geblokkeerd. Sta popups toe om te printen.');
+			return;
+		}
+		const lightMode = !!opts.lightMode;
+		const noBonuses = !!opts.noBonuses;
+		const css = `
+@page { size: A4 landscape; margin: 8mm; }
+html, body { height: 100%; }
+body { margin: 0; padding: 0; background: ${lightMode ? 'white' : '#111'}; color: ${lightMode ? '#111' : '#eee'}; font-family: Arial, sans-serif; }
+#print-root { width: fit-content; }
+.board { display: flex; gap: 14px; align-items: flex-start; transform-origin: top left; }
+.column { display: flex; flex-direction: column; gap: 14px; }
+.zone { background: transparent; padding: 10px; border-radius: 10px; box-shadow: none; border: 1px solid ${lightMode ? '#b9b9b9' : '#666'}; }
+.zone.red-group { border-radius: 10px; }
+.zone[data-color="geel"] { background: ${lightMode ? (noBonuses ? '#fffdf4' : '#fff6cf') : 'transparent'}; }
+.zone[data-color="paars"] { background: ${lightMode ? (noBonuses ? '#fdf9ff' : '#f1e7ff') : 'transparent'}; }
+.zone[data-color="groen"] { background: ${lightMode ? (noBonuses ? '#f6fff6' : '#e1f7e1') : 'transparent'}; }
+.zone[data-color="blauw"] { background: ${lightMode ? (noBonuses ? '#f6fbff' : '#dff1ff') : 'transparent'}; }
+.zone[data-color="rood"] { background: ${lightMode ? (noBonuses ? '#fff7f7' : '#ffe3e3') : 'transparent'}; }
+.zone.red-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
+.zone.red-group > .zone { padding: 6px; }
+.grid { display: grid; gap: 2px; }
+.cell { width: var(--cell-size); height: var(--cell-size); box-sizing: border-box; border: 1px solid ${lightMode ? '#b7b7b7' : '#777'}; background: ${lightMode ? 'rgba(255,255,255,0.92)' : '#1a1a1a'}; border-radius: 4px; }
+.cell.bold-cell { border: 2px solid ${lightMode ? '#2d2d2d' : '#ddd'}; }
+.cell.void-cell { border-color: transparent !important; background: transparent !important; }
+.cell.active { background: ${lightMode ? '#f0f0f0' : '#2a2a2a'}; }
+.root-cell { border-radius: 0; }
+/* Zone-specific cell tinting (keeps the board recognizable, but very light). */
+.zone[data-color="geel"] .cell { background: ${lightMode ? (noBonuses ? '#fffef8' : '#fffbe3') : 'transparent'}; }
+.zone[data-color="geel"] .cell.active { background: ${lightMode ? (noBonuses ? '#f6f2d8' : '#efe29c') : 'transparent'}; }
+
+.zone[data-color="paars"] .cell { background: ${lightMode ? (noBonuses ? '#fdfbff' : '#f6efff') : 'transparent'}; }
+.zone[data-color="paars"] .cell.active { background: ${lightMode ? (noBonuses ? '#efe7fb' : '#d4c3f2') : 'transparent'}; }
+
+.zone[data-color="groen"] .cell { background: ${lightMode ? (noBonuses ? '#fbfffb' : '#eef9ee') : 'transparent'}; }
+.zone[data-color="groen"] .cell.active { background: ${lightMode ? (noBonuses ? '#e7f1e7' : '#bfe3bf') : 'transparent'}; }
+
+.zone[data-color="blauw"] .cell { background: ${lightMode ? (noBonuses ? '#fbfdff' : '#ecf6ff') : 'transparent'}; }
+.zone[data-color="blauw"] .cell.active { background: ${lightMode ? (noBonuses ? '#e5eef7' : '#b7d6f2') : 'transparent'}; }
+
+.zone[data-color="rood"] .cell { background: ${lightMode ? (noBonuses ? '#fffafb' : '#fff0f0') : 'transparent'}; }
+.zone[data-color="rood"] .cell.active { background: ${lightMode ? (noBonuses ? '#f6e4e4' : '#eeb3b3') : 'transparent'}; }
+
+/* Keep start/end/bold cells readable without heavy ink. */
+.cell.bold-cell.active { filter: ${lightMode ? 'none' : 'none'}; }
+${noBonuses ? '' : '.cell.gold-cell{outline:1px solid ' + (lightMode ? '#a98c2a' : '#c9a94a') + ';}'}
+${noBonuses ? '.symbol,.trap-symbol,.coin{display:none !important;}' : ''}
+`;
+		const doc = `<!doctype html><html lang="nl"><head><meta charset="utf-8"><title>Print</title><style>${css}</style></head>
+<body style="--cell-size: 10px;">
+<div id="print-root">${boardHtml}</div>
+<script>
+(function(){
+  function fit(){
+    var b = document.querySelector('.board');
+    if(!b) return;
+    b.style.transform = '';
+    var rect = b.getBoundingClientRect();
+    var margin = 16;
+    var scale = Math.min((window.innerWidth - margin) / rect.width, (window.innerHeight - margin) / rect.height, 1);
+    b.style.transform = 'scale(' + scale.toFixed(4) + ')';
+    b.style.transformOrigin = 'top left';
+  }
+  window.addEventListener('load', function(){ fit(); setTimeout(function(){ window.print(); }, 50); });
+  window.addEventListener('resize', fit);
+})();
+</scr` + `ipt>
+</body></html>`;
+		w.document.open();
+		w.document.write(doc);
+		w.document.close();
+	}
+
+	function performPrintFromSettings() {
+		const opts = getPrintSettings();
+		let boardHtml = '';
+		if (opts.source === 'world1') {
+			boardHtml = buildGeneratedPrintBoard('world1', opts.noBonuses);
+		} else if (opts.source === 'world2') {
+			boardHtml = buildGeneratedPrintBoard('world2', opts.noBonuses);
+		} else {
+			boardHtml = buildPrintBoardFromCurrent(opts.noBonuses);
+		}
+		openPrintWindow(boardHtml, opts);
+	}
+
+	if (printBtn) {
+		printBtn.addEventListener('click', (e) => {
+			e.preventDefault();
+			showPrintSettings();
+		});
+	}
+	if (printSettingsClose) {
+		printSettingsClose.addEventListener('click', (e) => {
+			e.preventDefault();
+			hidePrintSettings();
+		});
+	}
+	if (printSettingsCancel) {
+		printSettingsCancel.addEventListener('click', (e) => {
+			e.preventDefault();
+			hidePrintSettings();
+		});
+	}
+	if (printSettingsPrint) {
+		printSettingsPrint.addEventListener('click', (e) => {
+			e.preventDefault();
+			hidePrintSettings();
+			performPrintFromSettings();
+		});
+	}
+	if (printSettingsLayer) {
+		printSettingsLayer.addEventListener('click', (e) => {
+			if (e.target === printSettingsLayer) hidePrintSettings();
+		});
+	}
 	
 	if (confirmCompleteYes) {
 	  confirmCompleteYes.addEventListener('click', () => {
@@ -25635,9 +26075,12 @@ function showFloatingPreview(shape, color, options = {}) {
 			document.body.classList.remove('board-scaled');
 
 			// The body has padding: 10px on each side.
-			const outerPadding = 20;
-			const availableWidth = Math.max(window.innerWidth - outerPadding, 280);
-			const availableHeight = Math.max(window.innerHeight - outerPadding, 240);
+			// Be conservative: transformed content + shadows can otherwise get clipped at the viewport edges.
+			const viewportW = document.documentElement ? document.documentElement.clientWidth : window.innerWidth;
+			const viewportH = document.documentElement ? document.documentElement.clientHeight : window.innerHeight;
+			const safeMargin = 40;
+			const availableWidth = Math.max(viewportW - safeMargin, 280);
+			const availableHeight = Math.max(viewportH - safeMargin, 240);
 			const contentWidth = desktopWrapper.scrollWidth;
 			const contentHeight = desktopWrapper.scrollHeight;
 			if (!(contentWidth > 0 && contentHeight > 0)) return;
@@ -25645,7 +26088,9 @@ function showFloatingPreview(shape, color, options = {}) {
 			const scale = Math.min(availableWidth / contentWidth, availableHeight / contentHeight, 1);
 			if (scale < 0.999) {
 				desktopWrapper.style.transform = `scale(${scale.toFixed(4)})`;
-				desktopWrapper.style.transformOrigin = 'top center';
+				// IMPORTANT: Anchor to the left so we don't waste space on the left on narrow landscape.
+				// Using top-center causes the scaled UI to visually shift right while the layout box stays full-width.
+				desktopWrapper.style.transformOrigin = 'top left';
 			} else {
 				desktopWrapper.style.removeProperty('transform');
 				desktopWrapper.style.removeProperty('transform-origin');
