@@ -32,12 +32,16 @@ html, body {
   justify-content: space-between;
   gap: 10px;
   margin-bottom: 10px;
+  flex-wrap: wrap; /* allow actions to wrap below title */
 }
 
 .panel__headerActions {
-  display: inline-flex;
+  display: flex;
   gap: 8px;
   align-items: center;
+  flex-basis: 100%;
+  margin-top: 8px; /* allow wrapping so buttons can be two-across */
+  flex-wrap: wrap;
 }
 
 .panel__title {
@@ -78,7 +82,12 @@ html, body {
   padding: 6px 6px;
   border-radius: 10px;
   cursor: pointer;
+  width: 100%;
+  margin-bottom: 6px; /* ensure tools stack vertically with spacing */
 }
+
+/* Ensure labels inside panel sections always stack vertically */
+.panel__section label.tool { display: block; width: 100%; }
 
 .tool:hover {
   background: rgba(0,0,0,0.04);
@@ -191,8 +200,8 @@ html, body {
   position: absolute;
   left: 8px;
   top: 8px;
-  right: 8px;
-  height: 18px;
+  right: 44px; /* leave space for delete button */
+  height: 20px;
   border-radius: 8px;
   background: rgba(255,255,255,0.35);
   border: 1px solid rgba(0,0,0,0.08);
@@ -218,6 +227,22 @@ html, body {
   background: rgba(255,255,255,0.6);
   cursor: nwse-resize;
 }
+
+/* Zone delete button (editor chrome) */
+.zone-delete {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 20;
+  background: rgba(255,255,255,0.9);
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 8px;
+  padding: 4px 6px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+.zone-delete:active { transform: translateY(1px); }
 
 @media print {
   /* Print only the board (no editor UI) */

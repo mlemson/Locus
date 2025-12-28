@@ -2037,6 +2037,23 @@
 	#green-zone--placeholder .cell.active { background: #92c28c; border-color: #c1ffa8; }
 	#green-zone .cell.end-cell.active,
 	#green-zone--placeholder .cell.end-cell.active {background-color: #5da35d !important; border-color: #518755; } 
+#yellow-zone .cell.end-cell.active,
+#yellow-zone--placeholder .cell.end-cell.active { background-color: #cfae4a !important; border-color: #b8963c !important; }
+#purple-zone .cell.end-cell.active,
+#purple-zone--placeholder .cell.end-cell.active { background-color: #7a5aa8 !important; border-color: #62478a !important; }
+#blue-zone .cell.end-cell.active,
+#blue-zone--placeholder .cell.end-cell.active { background-color: #3b7aa4 !important; border-color: #2f6386 !important; }
+
+	/* Bold start cells should keep the normal active background but have a thicker/darker border */
+	#green-zone .cell.bold-cell.active,
+	#green-zone--placeholder .cell.bold-cell.active {
+		background-color: #92c28c !important; /* match normal green active */
+		border-color: #2b572b !important;
+	}
+
+	/* Start cell in green should not use the dark end-cell active color */
+	#green-zone .cell.start-cell.active,
+	#green-zone--placeholder .cell.start-cell.active { background-color: #92c28c !important; border-color: #c1ffa8 !important; }
 	#blue-zone .cell.active,
 	#blue-zone--placeholder .cell.active { background: #5689b0; border-color: #a8d8ff; }
 
@@ -2297,9 +2314,15 @@
 	  transform: translate(-50%, -50%);
 	  transition: transform 0.2s ease;
 	  z-index: 15;
-	  background: rgba(255, 215, 0, 0.9);
-	  box-shadow: 0 0 8px rgba(255, 215, 0, 0.45);
+		/* Diamond-like cool gradient to distinguish from traps */
+		background: linear-gradient(135deg, #e6fbff 0%, #bfefff 40%, #9ad8ff 100%);
+		color: #0b3b4a;
+		box-shadow: 0 0 8px rgba(60,160,200,0.25), inset 0 0 6px rgba(255,255,255,0.6);
 	}
+
+/* Diamond glyph styling for inline text (toasts, titles) */
+.diamond-glyph { color: #0b3b4a; font-weight: 700; text-shadow: 0 1px 0 rgba(255,255,255,0.25); }
+body.dark-mode .diamond-glyph { color: #bfefff; }
 
 	.symbol.upgrade-shop-symbol:hover {
 	  transform: translate(-50%, -50%) scale(1.15);
@@ -3169,6 +3192,42 @@
 		background: #555;
 	}
 
+/* Saved-levels modal tweaks */
+#saved-levels-modal .highscore-modal { width: 420px; max-width: 95%; text-align: left; }
+#saved-levels-modal .highscore-modal h2 { margin: 0 0 12px 0; }
+#saved-levels-modal #saved-levels-list { padding: 6px 4px; gap: 8px; }
+#saved-levels-modal #saved-levels-list > div { display:flex; align-items:center; gap:8px; padding:8px; border-radius:6px; }
+#saved-levels-modal #saved-levels-list > div:hover { background: rgba(0,0,0,0.03); }
+#saved-levels-modal .highscore-modal button { padding:6px 10px; border-radius:6px; border:1px solid rgba(0,0,0,0.08); background:transparent; cursor:pointer; }
+#saved-levels-modal .highscore-modal button:hover { background: rgba(0,0,0,0.04); }
+#saved-levels-modal .trash-btn { color: #666; }
+#saved-levels-modal .trash-btn:hover { color: #c0392b; }
+
+/* Buttons: default + primary (blue) */
+#saved-levels-modal .modal-btn { background: #f6f6f6; color: #222; border: 1px solid rgba(0,0,0,0.06); }
+#saved-levels-modal .modal-btn.primary { background: linear-gradient(135deg,#4a90e2,#6fb1ff); color: #fff; border: none; }
+#saved-levels-modal .modal-btn.primary:hover { filter: brightness(0.95); }
+
+/* Dark mode overrides for better contrast */
+body.dark-mode #saved-levels-modal .modal-btn { background: #3a3a3a; color: #eee; border: 1px solid rgba(255,255,255,0.04); }
+body.dark-mode #saved-levels-modal .modal-btn.primary { background: linear-gradient(135deg,#2b6fb8,#4a90e2); color: #fff; }
+body.dark-mode #saved-levels-modal .modal-btn.primary:hover { filter: brightness(1.05); }
+body.dark-mode #saved-levels-modal .trash-btn { color: #ccc; }
+
+/* Saved item title and label colors */
+#saved-levels-modal .saved-title { font-size: 14px; color: rgba(0,0,0,0.9); }
+body.dark-mode #saved-levels-modal .saved-title { color: #fff; }
+
+/* Custom scrollbar for saved-levels list */
+#saved-levels-modal #saved-levels-list::-webkit-scrollbar { width:10px; }
+#saved-levels-modal #saved-levels-list::-webkit-scrollbar-track { background: transparent; }
+#saved-levels-modal #saved-levels-list::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 6px; }
+#saved-levels-modal #saved-levels-list::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.18); }
+
+/* Saved level item text */
+#saved-levels-modal .saved-obj-text { font-size: 13px; color: rgba(0,0,0,0.85); opacity: 1; }
+body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95; }
+
 	/* ============================================
 	   ANIMATIES
 	   ============================================
@@ -3992,8 +4051,8 @@
 			opacity: 0; 
 			transform: translateX(-30px);
 		}
-		to { 
-			opacity: 1; 
+		to {
+			opacity: 1;
 			transform: translateX(0);
 		}
 	}
@@ -10711,7 +10770,9 @@
 	  .objective-toast,
 	  .zone-nav-arrow,
 	  .zone-info-btn,
-	  .zone-info-popover {
+	  .zone-info-popover,
+	  .zone-delete,
+	  .trash-btn {
 		display: none !important;
 	  }
 
@@ -11255,6 +11316,7 @@
 			<button id="debug-mode-toggle" type="button" aria-pressed="false">Debug modus: uit</button>
 			<button id="print-btn" type="button">Print</button>
 			<button id="menu-editor-btn" type="button">🛠️ Editor</button>
+			<button id="menu-open-levels-btn" type="button" onclick="showSavedLevelsModal()">Open level</button>
 			<button id="mobile-dark-mode-toggle" type="button">🌙 Nacht</button>
 			<button id="menu-rules-btn" onclick="showRulesModal()">📖 Spelregels</button>
 			<button id="menu-highscore-btn" onclick="showHighScoreModal()">🏆 High Score</button>
@@ -11734,10 +11796,10 @@
 			name: 'Betere Kaarten',
 			description: 'Ontgrendel een extra premium kaart in de shop (grotere vormen, meer kans op goud/multikleur).',
 			cost: 25,
-			icon: '💎',
+			icon: '♦',
 			purchased: false,
 			onPurchase: () => {
-				showObjectiveToast('💎 Premium shopkaart ontgrendeld!');
+				showObjectiveToast('♦ Premium shopkaart ontgrendeld!');
 			}
 		},
 		xlBlocks: {
@@ -12046,7 +12108,7 @@
 
 	function openBonusShopModal(specificColor = null) {
 		// Toon de bonus sectie als modal
-		showObjectiveToast('💎 Mega Bonus Shop geopend!');
+		showObjectiveToast('♦ Mega Bonus Shop geopend!');
 		// We hergebruiken de bestaande shop modal maar tonen alleen bonussen
 		const shopModalLayer = document.getElementById('shop-modal-layer');
 		const shopModalTitle = document.getElementById('shop-modal-title');
@@ -12080,7 +12142,7 @@
 		// Update bonus UI om bonussen te tonen
 		updateShopBonusUI();
 		updateShopCoinDisplay();
-		if (shopModalTitle) shopModalTitle.textContent = '💎 Mega Bonus Shop';
+		if (shopModalTitle) shopModalTitle.innerHTML = '<span class="diamond-glyph">♦</span> Mega Bonus Shop';
 		if (shopModalMessage) {
 			const coins = getSpendableCoinCount();
 			shopModalMessage.textContent = coins >= 5
@@ -13568,6 +13630,112 @@
 		return OBJECTIVES.find(obj => obj.id === id) || null;
 	}
 
+	// Parse a Dutch free-text objective (e.g. "Haal 50 punten bij geel" or "Haal 10 punten bij alle kleuren")
+	// and return an objective-like object with a `.check(scores)` function.
+	function parseObjectiveTextToObjective(text) {
+		const raw = (text == null) ? '' : String(text || '').trim();
+		const s = raw.toLowerCase();
+		// detect numeric target
+		const numMatch = s.match(/(\d{1,5})/);
+		const target = numMatch ? parseInt(numMatch[1], 10) : null;
+		const colorMap = { 'geel':'yellow', 'rood':'red', 'groen':'green', 'paars':'purple', 'blauw':'blue' };
+		// find mentioned colors
+		const colors = [];
+		if (/alle kleuren|bij alle kleuren|alle kleur/.test(s)) {
+			Object.keys(colorMap).forEach(k => colors.push(colorMap[k]));
+		} else {
+			Object.keys(colorMap).forEach(dutch => { if (s.indexOf(dutch) !== -1) colors.push(colorMap[dutch]); });
+		}
+		// determine if this is a total-target (in totaal) or per-color
+		const wantsTotal = /totaal|in totaal|samen|alles samen/.test(s) && !!target;
+
+		const id = `custom:${Date.now().toString(36)}:${Math.random().toString(36).slice(2,8)}`;
+		const description = raw || '';
+		const short = raw.length > 40 ? raw.slice(0,40) + '...' : raw;
+
+		// Helper: produce a live snapshot of scores from provided object or from the DOM if omitted
+		function getCurrentScores(provided) {
+			const dutchToKey = { 'geel':'yellow', 'rood':'red', 'groen':'green', 'paars':'purple', 'blauw':'blue' };
+			const snapshot = { yellow:0, red:0, green:0, purple:0, blue:0, bonus: (typeof bonus === 'number' ? bonus : 0), bonusesCollected: (typeof totalBonusesCollected === 'number' ? totalBonusesCollected : 0) };
+			// If caller provided explicit snapshot, merge it over defaults
+			if (provided && typeof provided === 'object') {
+				Object.keys(snapshot).forEach(k => { if (provided[k] != null) snapshot[k] = provided[k]; });
+				if (provided.total != null) snapshot.total = provided.total;
+				return snapshot;
+			}
+			// Fallback to global numeric variables if present (these are updated during score calc)
+			try {
+				if (typeof yellow === 'number') snapshot.yellow = yellow;
+				if (typeof red === 'number') snapshot.red = red;
+				if (typeof green === 'number') snapshot.green = green;
+				if (typeof purple === 'number') snapshot.purple = purple;
+				if (typeof blue === 'number') snapshot.blue = blue;
+			} catch (e) {}
+			// If globals are zero-ish, try DOM counts (useful in some edge cases)
+			try {
+				Object.keys(dutchToKey).forEach(dutch => {
+					const key = dutchToKey[dutch];
+					if (snapshot[key] && snapshot[key] > 0) return;
+					let count = 0;
+					const nodes = document.querySelectorAll(`.zone[data-color="${dutch}"] .cell.active`);
+					if (nodes && nodes.length) count = nodes.length;
+					if (!count) {
+						const alt = document.querySelectorAll(`#${key}-grid .cell.active`);
+						if (alt && alt.length) count = alt.length;
+					}
+					if (count) snapshot[key] = count;
+				});
+			} catch (e) {}
+			snapshot.total = (typeof snapshot.total === 'number') ? snapshot.total : (snapshot.yellow + snapshot.red + snapshot.green + snapshot.purple + snapshot.blue + (snapshot.bonus || 0));
+			return snapshot;
+		}
+
+		function computeTotalFromScores(scores) {
+			const s = getCurrentScores(scores);
+			return (typeof s.total === 'number') ? s.total : 0;
+		}
+
+		// build check function
+		let check;
+		if (!target) {
+			check = () => false;
+		} else if (wantsTotal || colors.length === 0) {
+			check = (scores) => {
+				const total = computeTotalFromScores(scores);
+				return total >= target;
+			};
+		} else {
+			// per-color: ensure all mentioned colors meet the target
+			const uniqColors = Array.from(new Set(colors));
+			check = (scores) => {
+				const s = getCurrentScores(scores);
+				return uniqColors.every(c => (s[c] || 0) >= target);
+			};
+		}
+
+		// progress helper returns a short progress string
+		function progress(scores) {
+			if (!target) return '';
+			const s = getCurrentScores(scores);
+			if (wantsTotal || colors.length === 0) {
+				const total = computeTotalFromScores(s);
+				return `${Math.min(total, target)}/${target}`;
+			}
+			const cols = Array.from(new Set(colors));
+			const vals = cols.map(c => (s[c] || 0));
+			const minv = Math.min.apply(null, vals.concat([0]));
+			return `${Math.min(minv, target)}/${target}`;
+		}
+
+		return {
+			id,
+			description,
+			short,
+			check,
+			progress
+		};
+	}
+
 	function getObjectiveForLevel(level) {
 		return OBJECTIVES.find(obj => obj.level === level) || null;
 	}
@@ -13827,7 +13995,13 @@
 				toast.className = 'objective-toast';
 				document.body.appendChild(toast);
 			}
-			toast.textContent = message;
+			// Render diamond glyph with special styling when present
+			try {
+				const safe = String(message).replace(/♦/g, '<span class="diamond-glyph">♦</span>');
+				toast.innerHTML = safe;
+			} catch (e) {
+				toast.textContent = message;
+			}
 			toast.classList.add('show');
 			if (objectiveToastTimeout) clearTimeout(objectiveToastTimeout);
 			objectiveToastTimeout = setTimeout(() => {
@@ -13860,6 +14034,42 @@
 		}
 
 		function renderObjectivePanel(snapshot = latestScoreSnapshot) {
+			// If a custom board with metadata was loaded, show a compiled objective and its progress
+			if (window && window.loadedCustomLevelMeta && (window.loadedCustomLevelMeta.name || window.loadedCustomLevelMeta.objective)) {
+				const titleEl = document.querySelector('#objective-zone h2');
+				const currentEl = document.getElementById('objective-current');
+				if (titleEl && window.loadedCustomLevelMeta.name) titleEl.textContent = window.loadedCustomLevelMeta.name;
+				const objText = (window.loadedCustomLevelMeta.objective || '').trim() || 'Haal 100 punten';
+				const compiled = window.loadedCustomObjectiveCompiled || parseObjectiveTextToObjective(objText);
+				const progressSource = snapshot || {
+					yellow,
+					red,
+					green,
+					purple,
+					blue,
+					bonus,
+					bonusesCollected: totalBonusesCollected,
+					total: yellow + red + green + purple + blue + bonus
+				};
+				let done = false;
+				try { done = !!compiled.check(progressSource); } catch (e) { done = false; }
+				if (currentEl) {
+					currentEl.classList.toggle('objective-empty-state', false);
+					if (done) {
+						currentEl.innerHTML = `<strong>Doel:</strong> ${stripObjectiveSymbols(compiled.description)} <span style="opacity: 0.85;">(voltooid)</span>`;
+					} else {
+						let desc = stripObjectiveSymbols(compiled.description);
+						if (typeof compiled.progress === 'function') {
+							try {
+								const p = normalizeObjectiveProgress(compiled.progress(progressSource));
+								if (p) desc = `${desc} (${p})`;
+							} catch (err) { /* ignore */ }
+						}
+						currentEl.innerHTML = `<strong>Doel:</strong> ${desc}`;
+					}
+				}
+				return;
+			}
 			const currentEl = document.getElementById('objective-current');
 			const historyEl = document.getElementById('objective-history');
 			const titleEl = document.querySelector('#objective-zone h2');
@@ -13969,6 +14179,33 @@
 		}
 
 		function updateObjectives(scores) {
+			// If a custom board was loaded with a free-text objective, evaluate that first
+			if (window && window.loadedCustomLevelMeta && window.loadedCustomLevelMeta.objective) {
+				const compiled = window.loadedCustomObjectiveCompiled || parseObjectiveTextToObjective(window.loadedCustomLevelMeta.objective || '');
+				const snapshotCustom = scores || latestScoreSnapshot || {
+					yellow,
+					red,
+					green,
+					purple,
+					blue,
+					bonus,
+					bonusesCollected: totalBonusesCollected,
+					total: yellow + red + green + purple + blue + bonus
+				};
+				latestScoreSnapshot = snapshotCustom;
+				let achievedCustom = false;
+				try { achievedCustom = !!compiled.check(snapshotCustom); } catch (e) { achievedCustom = false; }
+				if (achievedCustom) {
+					if (!window.loadedCustomLevelMetaCompleted) {
+						window.loadedCustomLevelMetaCompleted = true;
+						showObjectiveToast(`Doel behaald: ${compiled.short || compiled.description}`);
+					}
+				} else if (window.loadedCustomLevelMetaCompleted) {
+					window.loadedCustomLevelMetaCompleted = false;
+				}
+				renderObjectivePanel(snapshotCustom);
+				return;
+			}
 			const objective = getObjectiveById(currentObjectiveId);
 			if (!objective) {
 				renderObjectivePanel();
@@ -14012,21 +14249,23 @@
 		}
 
 	function highlightAchievedObjectiveScores(scores) {
-		// Check of er een actieve objective is
-		const objective = getObjectiveById(currentObjectiveId);
-		if (!objective) {
-			// Geen actieve objective, verwijder alle highlights
-			clearObjectiveHighlights();
-			return;
+		// If a custom loaded objective exists, use that description for highlighting
+		let objectiveDesc = null;
+		let objectiveId = null;
+		if (window && window.loadedCustomLevelMeta && window.loadedCustomLevelMeta.objective) {
+			objectiveDesc = window.loadedCustomLevelMeta.objective || '';
+			objectiveId = window.loadedCustomLevelMeta.name || 'custom';
+		} else {
+			const objective = getObjectiveById(currentObjectiveId);
+			if (!objective) { clearObjectiveHighlights(); return; }
+			objectiveDesc = objective.description || '';
+			objectiveId = objective.id || '';
 		}
 		
 		// Eerst alle highlights verwijderen
 		clearObjectiveHighlights();
 		
 		// Controleer welke scores voldoen aan de objective eisen
-		const objectiveDesc = objective.description || '';
-		const objectiveId = objective.id || '';
-		
 		// Parse de objective beschrijving om score eisen te vinden
 		// Check voor totaal score eisen (meer varianten ondersteunen)
 		const extractMinTotal = (desc) => {
@@ -14538,7 +14777,8 @@
 		target.dataset.bonusUpgradeEvent = 'true';
 		const sym = document.createElement('div');
 		sym.classList.add('symbol', 'upgrade-shop-symbol');
-		sym.textContent = '💎';
+		// Use the editor's diamond glyph for consistency
+		sym.textContent = '♦';
 		sym.setAttribute('aria-label', 'Bonus upgrade');
 		target.appendChild(sym);
 		return true;
@@ -16125,16 +16365,24 @@
 			cell.classList.remove('portal-cell');
 			// Keep bold-cell class for scoring logic
 		}
-		// zorg dat achtergrond consistent wordt gezet: expliciete kleur (bv. van placeShape) of zoneColor
-		if (explicitColor) {
-		  cell.style.background = explicitColor === 'rainbow'
-			? 'linear-gradient(45deg, #f06272, #fff25a, #4ed346, #5d90f0, #a35eff)'
-			: explicitColor;
-		} else if (zoneColor) {
-		  cell.style.background = zoneColor === 'rainbow'
-			? 'linear-gradient(45deg, #f06272, #fff25a, #4ed346, #5d90f0, #a35eff)'
-			: zoneColor;
-		}
+				// zorg dat achtergrond consistent wordt gezet: expliciete kleur (bv. van placeShape) of zoneColor
+				try {
+					const rainbowGradient = 'linear-gradient(45deg, #f06272, #fff25a, #4ed346, #5d90f0, #a35eff)';
+					let appliedBg = '';
+					if (explicitColor) appliedBg = (explicitColor === 'rainbow') ? rainbowGradient : explicitColor;
+					else if (zoneColor) appliedBg = (zoneColor === 'rainbow') ? rainbowGradient : zoneColor;
+
+					// If this is a designated start-cell in the green zone, force the lighter green (do NOT use dark end-cell color)
+					if (cell.classList.contains('start-cell')) {
+						const zcol = String(zone && zone.dataset ? (zone.dataset.color || '') : '').toLowerCase();
+						if (zcol === 'groen' || zcol === 'green') {
+							appliedBg = '#92c28c';
+							try { cell.style.borderColor = '#c1ffa8'; } catch (e) {}
+						}
+					}
+
+					cell.style.background = appliedBg;
+				} catch (e) { /* ignore styling errors */ }
 	  }
     // If this cell is a coin and is activated, add coin; if deactivated, remove coin
 	if(cell.classList.contains('gold-cell')){
@@ -17073,6 +17321,29 @@
 	}
 	
 	const waarden = [yellow, green, purple, blue, red];
+	// Additional scoring: any active end-cell outside the green grid grants 8 points to its zone's color
+	try {
+		const extraEndCells = Array.from(document.querySelectorAll('.cell.end-cell.active'));
+		extraEndCells.forEach(c => {
+			// skip green because green scoring already handles variable points
+			if (c.closest && c.closest('#green-grid')) return;
+			let zone = c.closest && c.closest('.zone') ? c.closest('.zone') : null;
+			let colorKey = zone && zone.dataset ? String(zone.dataset.color || '').toLowerCase() : '';
+			if (!colorKey) {
+				const g = c.closest && c.closest('.grid') ? c.closest('.grid') : null;
+				if (g && g.id) {
+					if (g.id.indexOf('yellow') !== -1) colorKey = 'geel';
+					else if (g.id.indexOf('purple') !== -1 || g.id.indexOf('paars') !== -1) colorKey = 'paars';
+					else if (g.id.indexOf('blue') !== -1) colorKey = 'blauw';
+					else if (g.id.indexOf('red') !== -1) colorKey = 'rood';
+				}
+			}
+			if (colorKey === 'geel' || colorKey === 'yellow') yellow += 8;
+			else if (colorKey === 'paars' || colorKey === 'purple') purple += 8;
+			else if (colorKey === 'blauw' || colorKey === 'blue') blue += 8;
+			else if (colorKey === 'rood' || colorKey === 'red') red += 8;
+		});
+	} catch (e) {}
 	const baseBonus = Math.min(...waarden);
 	const totalBonusScore = baseBonus + Math.max(0, blackHoleBonus || 0);
 	bonus = totalBonusScore;
@@ -19139,20 +19410,25 @@ document.addEventListener('pointermove', ev => {
 	  const metrics = getZoneMetrics(zone);
 	  const floorY = Number.isFinite(metrics.maxY) ? metrics.maxY : null;
 	  const touchesFloor = floorY !== null && pendingCells.some(cell => Number(cell.dataset.y) === floorY);
+	  // Also allow ANY bold-cell in the blue zone to act as a valid start anchor
+	  const touchesBold = pendingCells.some(cell => cell.classList && cell.classList.contains('bold-cell'));
 	  const hasActive = zoneHasActiveCells(zone);
-	  if (!hasActive) return touchesFloor;
-	  if (touchesFloor) return true;
+	  // If no active cells exist yet, allow placement when it touches floor OR a bold start cell
+	  if (!hasActive) return touchesFloor || touchesBold;
+	  // If there are active cells, touching floor or bold-cell is acceptable
+	  if (touchesFloor || touchesBold) return true;
 	  return pendingCells.some(cell => hasAdjacentActiveCell(zone, cell));
 	}
 
 	function validateGreenPlacement(zone, pendingCells) {
 	  const hasActive = zoneHasActiveCells(zone);
-	  const anchorCell = zone.querySelector('.cell.bold-cell');
-	  const touchesAnchor = anchorCell ? pendingCells.includes(anchorCell) : false;
+	  // Allow ANY bold-cell in the green zone to serve as a start anchor (not just the first match)
+	  const boldCells = Array.from(zone.querySelectorAll('.cell.bold-cell:not(.void-cell)'));
+	  const touchesAnchor = boldCells.length ? boldCells.some(b => pendingCells.includes(b)) : false;
 	  
 	  // Als er nog geen actieve cellen zijn
 	  if (!hasActive) {
-		if (!anchorCell) return true;
+		if (!boldCells.length) return true;
 		return touchesAnchor;
 	  }
 	  
@@ -21760,13 +22036,25 @@ document.addEventListener('pointermove', ev => {
 	}
 
 	function showRoundModal(success, score, coins, bonusCoins = 0) {
-	  if (!roundModalLayer) return;
-	  lastRoundWasSuccess = success;
-	  const activeObjective = getObjectiveById(currentObjectiveId) || getObjectiveForLevel(currentLevel);
-	  const objectiveLabel = activeObjective ? (activeObjective.short || activeObjective.description) : null;
-	  const objectiveCleared = activeObjective ? isObjectiveCompleted(activeObjective.id) : true;
+		if (!roundModalLayer) return;
+	lastRoundWasSuccess = success;
+	// Prefer a loaded custom objective when present
+	const loadedCustom = (window && window.loadedCustomObjectiveCompiled) ? window.loadedCustomObjectiveCompiled : null;
+	const activeObjective = loadedCustom || getObjectiveById(currentObjectiveId) || getObjectiveForLevel(currentLevel);
+	const objectiveLabel = activeObjective ? (activeObjective.short || activeObjective.description) : null;
+	// Compute cleared state: custom objective exposes .check(scores), otherwise use existing completed set
+	let objectiveCleared = true;
+	if (loadedCustom) {
+		try { objectiveCleared = !!loadedCustom.check(); } catch (e) { objectiveCleared = false; }
+	} else {
+		objectiveCleared = activeObjective ? isObjectiveCompleted(activeObjective.id) : true;
+	}
 	if (roundModalTitle) {
-		roundModalTitle.textContent = success ? 'Ronde voltooid' : 'Game Over';
+		if (loadedCustom && window.loadedCustomLevelMeta && window.loadedCustomLevelMeta.name) {
+			roundModalTitle.textContent = (success ? 'Ronde voltooid' : 'Game Over') + ' — ' + window.loadedCustomLevelMeta.name;
+		} else {
+			roundModalTitle.textContent = success ? 'Ronde voltooid' : 'Game Over';
+		}
 	}
 	  if (success) {
 		if (objectiveLabel) {
@@ -21784,14 +22072,15 @@ document.addEventListener('pointermove', ev => {
 				break;
 		}
 	  }
-	  if (roundModalSummary) {
+		if (roundModalSummary) {
 		let summaryHTML = buildCardSummaryHTML(score, coins, bonusCoins);
 		if (activeObjective) {
 			const statusLabel = objectiveCleared ? 'Voltooid' : 'Niet voltooid';
-			summaryHTML += `<div class="modal-summary-line"><strong>Doel</strong><span>${objectiveLabel} - ${statusLabel}</span></div>`;
+			const objDesc = (loadedCustom && loadedCustom.description) ? loadedCustom.description : (activeObjective.short || activeObjective.description);
+			summaryHTML += `<div class="modal-summary-line"><strong>Doel</strong><span>${objDesc} - ${statusLabel}</span></div>`;
 		}
 		roundModalSummary.innerHTML = summaryHTML;
-	  }
+	}
 	  if (roundModalNext) {
 		roundModalNext.textContent = success ? `Naar level ${currentLevel + 1}` : 'Opnieuw proberen';
 		roundModalNext.disabled = false;
@@ -23491,6 +23780,8 @@ function openShopModal(callback) {
 	function startLevel(level) {
 	  console.log('🎮 startLevel called with level:', level);
 	  currentLevel = level;
+	  // Clear any previously loaded custom board metadata when starting a normal level
+	  try { window.loadedCustomLevelMeta = null; window.loadedCustomObjectiveCompiled = null; window.loadedCustomLevelMetaCompleted = false; } catch(e){}
 	  lastRoundFailureReason = null;
 		
 	  // Rebuild shape pool zodat nieuwe card categorieën beschikbaar zijn
@@ -23673,6 +23964,17 @@ function openShopModal(callback) {
 		  // Portals
 		  portalsActive: portalsActive || false
 		};
+
+		// Include a sanitized snapshot of the current board DOM (without active/placed cells)
+		try {
+			if (typeof getEditorBoardHtml === 'function') {
+				const raw = getEditorBoardHtml();
+				if (raw) gameState.boardHtml = (typeof sanitizeBoardHtml === 'function') ? sanitizeBoardHtml(raw) : raw;
+			} else if (document.getElementById('board')) {
+				const raw = document.getElementById('board').outerHTML;
+				if (raw) gameState.boardHtml = (typeof sanitizeBoardHtml === 'function') ? sanitizeBoardHtml(raw) : raw;
+			}
+		} catch (e) {}
 		
 		localStorage.setItem('locusGameSave', JSON.stringify(gameState));
 		console.log('✅ Game saved successfully at level', currentLevel);
@@ -23683,6 +23985,38 @@ function openShopModal(callback) {
 		return false;
 	  }
 	}
+
+// Sanitize a board HTML snapshot so it never contains runtime-placed cells or inline styles.
+// IMPORTANT: Preserve inline styles for grids using absolute positioning (green/red).
+function sanitizeBoardHtml(html) {
+	try {
+		const tmp = document.createElement('div');
+		tmp.innerHTML = html || '';
+		tmp.querySelectorAll('.cell').forEach(cell => {
+			// Preserve symbols/bonus visuals; only clear runtime-filled state
+			try { cell.classList.remove('active', 'edge-cell'); } catch (e) {}
+			// Check if this cell uses absolute positioning (green/red zones)
+			// These rely on inline left/top for placement - do NOT remove their styles
+			// Red subgrids (red-grid1, red-grid2, etc.) have cells directly inside, no .grid child
+			const grid = cell.closest('.grid');
+			const zone = cell.closest('.zone');
+			const isGreenGrid = (grid && grid.id === 'green-grid') || (zone && zone.dataset && zone.dataset.color === 'groen');
+			const isRedGrid = (zone && zone.id && zone.id.startsWith('red-grid')) ||
+				(zone && zone.dataset && zone.dataset.color === 'rood') ||
+				(zone && zone.classList && zone.classList.contains('red-group'));
+			const usesAbsolutePositioning = isGreenGrid || isRedGrid || (cell.style && cell.style.position === 'absolute');
+			// Only remove inline styles for CSS Grid-based zones, not absolute-positioned ones
+			if (!usesAbsolutePositioning) {
+				try { cell.removeAttribute('style'); } catch (e) {}
+			}
+		});
+		// Also remove any floating info popovers in zones
+		tmp.querySelectorAll('.zone-info-btn, .zone-info-popover, .zone-handle, .grid-resizer, .zone-delete').forEach(n => n.remove());
+		return tmp.innerHTML;
+	} catch (e) {
+		return html;
+	}
+}
 
 	function loadGameState() {
 	  try {
@@ -23843,6 +24177,13 @@ function openShopModal(callback) {
 		// Start the loaded level (zal savedDeckState gebruiken)
 		isLoadingGame = true;
 		startLevel(currentLevel);
+		// If the save includes a board snapshot, apply it (sanitized) so structure is restored
+		try {
+			if (gameState.boardHtml) {
+				const htmlToApply = (typeof sanitizeBoardHtml === 'function') ? sanitizeBoardHtml(gameState.boardHtml) : gameState.boardHtml;
+				applyBoardHtmlToGame(htmlToApply);
+			}
+		} catch (e) { console.error('Failed to apply saved board snapshot after startLevel', e); }
 		isLoadingGame = false;
 		savedDeckState = null; // Clear na gebruik
 		
@@ -25362,6 +25703,466 @@ function showFloatingPreview(shape, color, options = {}) {
 			return board ? board.outerHTML : '';
 		}
 	}
+
+	// Apply a board HTML snapshot into the current game DOM by replacing known grids.
+	function applyBoardHtmlToGame(boardHtml) {
+		if (!boardHtml) return;
+		try {
+			const temp = document.createElement('div');
+			temp.innerHTML = boardHtml;
+			// helper: ensure absolute-positioned root grids have a real layout box
+			function ensureAbsoluteContainerSizing(containerEl, srcEl) {
+				if (!containerEl) return;
+				// Determine the zone ID for this container
+				const zone = containerEl.closest('.zone');
+				const zoneId = containerEl.id || (zone ? zone.id : '') || '';
+				
+				// Root grids (green/red) must render with absolute-positioned children.
+				// Editor exports may omit inline `position/left/top`, so we reconstruct them from data-x/y or data-c/r.
+				function ensureAbsoluteCells(targetEl) {
+					if (!targetEl) return;
+					const cells = Array.from(targetEl.querySelectorAll('.cell'));
+					// Determine columns from dataset or by counting cells in each row
+					let fallbackCols = (() => {
+						const n = parseInt(String(targetEl.dataset && targetEl.dataset.cols || ''), 10);
+						return Number.isFinite(n) && n > 0 ? n : 0;
+					})();
+					// If no cols in dataset, try to infer from cell count and rows, or use sqrt heuristic
+					if (!fallbackCols && cells.length > 0) {
+						const rowsAttr = parseInt(String(targetEl.dataset && targetEl.dataset.rows || ''), 10);
+						if (Number.isFinite(rowsAttr) && rowsAttr > 0) {
+							fallbackCols = Math.ceil(cells.length / rowsAttr);
+						} else {
+							// Use sqrt heuristic for square-ish grids
+							fallbackCols = Math.ceil(Math.sqrt(cells.length));
+						}
+					}
+					cells.forEach((cell, idx) => {
+						try {
+							if (!cell || !cell.style) return;
+							// Ensure absolute positioning
+							if (!cell.style.position || cell.style.position === 'relative') {
+								cell.style.position = 'absolute';
+							}
+							let x = Number(cell.dataset.x ?? cell.dataset.c);
+							let y = Number(cell.dataset.y ?? cell.dataset.r);
+							// Fallback: derive coordinates from DOM order if needed (only if missing)
+							if (!Number.isFinite(x) || !Number.isFinite(y)) {
+								if (fallbackCols > 0) {
+									x = Number.isFinite(x) ? x : (idx % fallbackCols);
+									y = Number.isFinite(y) ? y : Math.floor(idx / fallbackCols);
+									// Store derived coordinates in dataset for later use
+									cell.dataset.x = String(x);
+									cell.dataset.y = String(y);
+								}
+							}
+							// Ensure zoneId is set for game logic
+							if (zoneId && !cell.dataset.zoneId) {
+								cell.dataset.zoneId = zoneId;
+							}
+							// Only set left/top if they are missing (preserve existing positions)
+							if (!cell.style.left && Number.isFinite(x)) {
+								cell.style.left = `calc(${x} * var(--cell-size))`;
+							}
+							if (!cell.style.top && Number.isFinite(y)) {
+								cell.style.top = `calc(${y} * var(--cell-size))`;
+							}
+						} catch (e) {}
+					});
+				}
+				const readInt = (v) => {
+					const n = parseInt(String(v || ''), 10);
+					return Number.isFinite(n) && n > 0 ? n : 0;
+				};
+				let cols = readInt((containerEl.dataset && containerEl.dataset.cols) || (srcEl && srcEl.dataset && srcEl.dataset.cols));
+				let rows = readInt((containerEl.dataset && containerEl.dataset.rows) || (srcEl && srcEl.dataset && srcEl.dataset.rows));
+				if (!cols || !rows) {
+					const cells = Array.from(containerEl.querySelectorAll('.cell:not(.void-cell)'));
+					let maxX = -Infinity;
+					let maxY = -Infinity;
+					cells.forEach(c => {
+						const x = Number(c.dataset.x ?? c.dataset.c);
+						const y = Number(c.dataset.y ?? c.dataset.r);
+						if (Number.isFinite(x)) maxX = Math.max(maxX, x);
+						if (Number.isFinite(y)) maxY = Math.max(maxY, y);
+					});
+					if (!cols && Number.isFinite(maxX) && maxX >= 0) cols = maxX + 1;
+					if (!rows && Number.isFinite(maxY) && maxY >= 0) rows = maxY + 1;
+					if (containerEl.dataset) {
+						if (cols) containerEl.dataset.cols = String(cols);
+						if (rows) containerEl.dataset.rows = String(rows);
+					}
+				}
+				// These root grids rely on absolute-positioned children; without a width/height the zone can look empty
+				try { containerEl.style.position = 'relative'; } catch (e) {}
+				if (cols) {
+					try { containerEl.style.width = `calc(${cols} * var(--cell-size))`; } catch (e) {}
+				}
+				if (rows) {
+					try { containerEl.style.height = `calc(${rows} * var(--cell-size))`; } catch (e) {}
+				}
+				// Root grids are not CSS-grid laid out; keep them as a normal block box
+				try { containerEl.style.display = 'block'; } catch (e) {}
+				// And ensure the children are truly placed absolutely (prevents the “cells under each other” symptom)
+				ensureAbsoluteCells(containerEl);
+			}
+			// helper: remove editor-only chrome from a node
+			function stripEditorChrome(node) {
+				if (!node) return;
+				node.querySelectorAll('.zone-handle, .grid-resizer, .zone-delete').forEach(n => n.remove());
+				node.querySelectorAll('[draggable]').forEach(n => n.removeAttribute('draggable'));
+			}
+			// helper: copy grid content from source grid into destination grid (cleaning editor chrome)
+			function copyGridContent(srcGrid, destGrid) {
+				if (!srcGrid || !destGrid) return;
+				stripEditorChrome(srcGrid);
+				// Clone children to avoid carrying over event listeners or references
+				destGrid.innerHTML = '';
+				// Be robust: some older editor exports may wrap cells in extra nodes.
+				const directCells = Array.from(srcGrid.querySelectorAll(':scope > .cell'));
+				const cellsToCopy = directCells.length ? directCells : Array.from(srcGrid.querySelectorAll('.cell'));
+				if (cellsToCopy.length) {
+					cellsToCopy.forEach(ch => destGrid.appendChild(ch.cloneNode(true)));
+				} else {
+					Array.from(srcGrid.children || []).forEach(ch => destGrid.appendChild(ch.cloneNode(true)));
+				}
+				// Ensure any runtime-filled state (active) is cleared so the game starts with an empty board
+				// IMPORTANT: Do NOT remove inline styles for grids using absolute positioning (green/red).
+				// Those grids rely on inline left/top for cell placement.
+				// Red subgrids (red-grid1, red-grid2, etc.) don't have a .grid child - cells are directly inside.
+				const isGreenGrid = destGrid.id === 'green-grid' || destGrid.closest('.zone[data-color="groen"]');
+				const isRedGrid = destGrid.id && destGrid.id.startsWith('red-grid') || destGrid.closest('.zone[data-color="rood"]') || destGrid.closest('.red-group') || (destGrid.dataset && destGrid.dataset.color === 'rood');
+				const usesAbsolutePositioning = isGreenGrid || isRedGrid;
+				
+				// Determine the zone ID for this grid
+				const zone = destGrid.closest('.zone');
+				const zoneId = destGrid.id || (zone ? zone.id : '') || '';
+				
+				destGrid.querySelectorAll('.cell').forEach(cell => {
+					try { cell.classList.remove('active', 'edge-cell'); } catch (e) {}
+					if (!usesAbsolutePositioning) {
+						try { cell.removeAttribute('style'); } catch (e) {}
+					}
+				});
+				// copy dataset rows/cols
+				if (srcGrid.dataset && srcGrid.dataset.rows) destGrid.dataset.rows = srcGrid.dataset.rows;
+				if (srcGrid.dataset && srcGrid.dataset.cols) destGrid.dataset.cols = srcGrid.dataset.cols;
+				// ensure grid template columns/rows match dataset or cell count (only for CSS Grid zones, not absolute-positioned ones)
+				if (!usesAbsolutePositioning) {
+					const cols = parseInt(destGrid.dataset.cols || '', 10) || (destGrid.querySelectorAll(':scope > .cell').length ? Math.max(1, Math.round(Math.sqrt(destGrid.querySelectorAll(':scope > .cell').length))) : 0);
+					if (cols) destGrid.style.gridTemplateColumns = `repeat(${cols}, var(--cell-size))`;
+					destGrid.style.gridAutoRows = 'var(--cell-size)';
+					
+					// CRITICAL: Ensure all cells have data-x, data-y, and data-zone-id for game logic
+					const allCells = Array.from(destGrid.querySelectorAll(':scope > .cell'));
+					allCells.forEach((cell, idx) => {
+						const x = idx % cols;
+						const y = Math.floor(idx / cols);
+						cell.dataset.x = String(x);
+						cell.dataset.y = String(y);
+						if (zoneId) cell.dataset.zoneId = zoneId;
+					});
+				} else {
+					// For green/red grids: derive cols/rows from cell count if not set
+					const cellCount = destGrid.querySelectorAll(':scope > .cell').length;
+					if (!destGrid.dataset.cols && cellCount > 0) {
+						const inferred = Math.ceil(Math.sqrt(cellCount));
+						destGrid.dataset.cols = String(inferred);
+						destGrid.dataset.rows = String(Math.ceil(cellCount / inferred));
+					}
+					ensureAbsoluteContainerSizing(destGrid, srcGrid);
+				}
+			}
+			// Map zones by color so editor IDs don't need to match game IDs
+			const colors = ['paars','geel','groen','blauw'];
+			colors.forEach(color => {
+				const srcZone = temp.querySelector(`.zone[data-color="${color}"]`) || temp.querySelector(`#${color}-zone`);
+				const destZone = document.querySelector(`.zone[data-color="${color}"]`);
+				if (!destZone) return;
+				if (!srcZone) {
+					// Editor removed this zone — hide it in the game view
+					destZone.style.display = 'none';
+					destZone.innerHTML = '';
+					return;
+				} else {
+					destZone.style.display = '';
+				}
+				const srcGrid = srcZone.querySelector(':scope > .grid') || srcZone.querySelector('.grid');
+				const destGrid = destZone.querySelector(':scope > .grid') || destZone.querySelector('.grid');
+				copyGridContent(srcGrid, destGrid);
+				// Diagnostics: help spot missing grids/cells during editor -> game import
+				try {
+					const srcCount = srcGrid ? srcGrid.querySelectorAll('.cell').length : 0;
+					const dstCount = destGrid ? destGrid.querySelectorAll('.cell').length : 0;
+					if (String(color).toLowerCase() === 'groen' || String(color).toLowerCase() === 'blauw') {
+						console.log(`📦 import ${color}: srcCells=${srcCount} destCells=${dstCount} srcGrid=${!!srcGrid} destGrid=${!!destGrid}`);
+					}
+				} catch (e) {}
+
+				// Special handling for green zone: synchronize end-cell / start markers from the editor
+				// NOTE: The game uses .bold-cell as the start marker in green, NOT .start-cell.
+				// Support older boards where cells may be direct children of the zone (no .grid wrapper)
+				if (String(color).toLowerCase() === 'groen') {
+					try {
+						// Remove any lingering start-cell markers in destination (game doesn't use them)
+						const destContainerForStartRemove = destGrid || destZone;
+						if (destContainerForStartRemove) destContainerForStartRemove.querySelectorAll('.cell.start-cell').forEach(n => n.classList.remove('start-cell'));
+
+						// Collect source and destination cells robustly whether wrapped in .grid or direct children
+						const srcCells = Array.from((srcGrid ? srcGrid : srcZone).querySelectorAll(':scope > .cell'));
+						const destCells = Array.from((destGrid ? destGrid : destZone).querySelectorAll(':scope > .cell'));
+
+						// Build a map of dest cells by coordinates for robust matching
+						const destCellMap = new Map();
+						destCells.forEach(dcell => {
+							const r = dcell.dataset.r || dcell.dataset.y;
+							const c = dcell.dataset.c || dcell.dataset.x;
+							if (r !== undefined && c !== undefined) {
+								destCellMap.set(`${r},${c}`, dcell);
+							}
+						});
+
+						srcCells.forEach((scell) => {
+							const r = scell.dataset.r || scell.dataset.y;
+							const c = scell.dataset.c || scell.dataset.x;
+							const dcell = destCellMap.get(`${r},${c}`);
+							if (!dcell) return;
+							const shouldBeEnd = scell.classList.contains('end-cell');
+							const shouldBeStart = scell.classList.contains('start-cell') || scell.classList.contains('bold-cell');
+							// Preserve end-cell state
+							if (shouldBeEnd) dcell.classList.add('end-cell');
+							else dcell.classList.remove('end-cell');
+							// Ensure start markers in the editor become bold-cells in the game
+							if (shouldBeStart && !dcell.classList.contains('bold-cell')) dcell.classList.add('bold-cell');
+						});
+					} catch (e) { /* ignore */ }
+				}
+
+				// Special handling for blue zone: preserve editor-placed bold-cells as start positions
+				// Only use bottom-row fallback if NO bold-cells exist from the source
+				if (String(color).toLowerCase() === 'blauw') {
+					try {
+						const srcContainer = srcGrid || srcZone;
+						const destContainer = destGrid || destZone;
+						if (destContainer) {
+							// Check if source had any bold-cells (editor-placed start positions)
+							const srcHasBoldCells = srcContainer && srcContainer.querySelectorAll('.cell.bold-cell').length > 0;
+							const destHasBoldCells = destContainer.querySelectorAll('.cell.bold-cell').length > 0;
+							
+							// Backfill coordinate attributes if an older export used r/c instead of x/y
+							destContainer.querySelectorAll('.cell').forEach(c => {
+								if ((c.dataset.x == null || c.dataset.x === '') && c.dataset.c != null) c.dataset.x = String(c.dataset.c);
+								if ((c.dataset.y == null || c.dataset.y === '') && c.dataset.r != null) c.dataset.y = String(c.dataset.r);
+							});
+							
+							// Only apply bottom-row fallback if there are NO existing bold-cells
+							if (!srcHasBoldCells && !destHasBoldCells) {
+								const destCells = Array.from(destContainer.querySelectorAll(':scope > .cell:not(.void-cell)'));
+								if (destCells.length) {
+									let maxY = -Infinity;
+									destCells.forEach(c => {
+										const y = Number(c.dataset.y || c.dataset.r || c.dataset.y);
+										if (Number.isFinite(y) && y > maxY) maxY = y;
+									});
+									if (maxY !== -Infinity) {
+										destCells.filter(c => Number(c.dataset.y || c.dataset.r || c.dataset.y) === maxY)
+											.forEach(c => { if (!c.classList.contains('bold-cell')) c.classList.add('bold-cell'); });
+									}
+								}
+							}
+						}
+					} catch (e) { /* ignore */ }
+				}
+			});
+			// Post-import: if the editor snapshot had explicit bold-cells for blue,
+			// enforce that the game uses exactly those positions (avoid bottom-row fallback).
+			try {
+				const srcBlue = temp.querySelector('.zone[data-color="blauw"]') || temp.querySelector('#blauw-zone');
+				const destBlue = document.querySelector('.zone[data-color="blauw"]');
+				if (srcBlue && destBlue) {
+					const srcBold = Array.from(srcBlue.querySelectorAll(':scope > .grid > .cell.bold-cell, :scope > .cell.bold-cell, .cell.bold-cell'));
+					if (srcBold.length > 0) {
+						// Clear existing bold markers in destination
+						destBlue.querySelectorAll('.cell.bold-cell').forEach(n => n.classList.remove('bold-cell'));
+						// Map dest cells by r,c or y,x for robust matching
+						const destCells = Array.from(destBlue.querySelectorAll(':scope > .grid > .cell, :scope > .cell'));
+						const destMap = new Map();
+						destCells.forEach(d => {
+							const r = d.dataset.r || d.dataset.y;
+							const c = d.dataset.c || d.dataset.x;
+							if (r !== undefined && c !== undefined) destMap.set(`${r},${c}`, d);
+						});
+						srcBold.forEach(s => {
+							const r = s.dataset.r || s.dataset.y;
+							const c = s.dataset.c || s.dataset.x;
+							const match = destMap.get(`${r},${c}`);
+							if (match) match.classList.add('bold-cell');
+						});
+					}
+				}
+			} catch (e) { /* ignore */ }
+			// Handle red-group (may contain multiple sub-zones)
+			// NOTE: Red subgrids use absolute positioning (like green), cells are directly in the zone (no .grid child)
+			const srcRed = temp.querySelector('.zone.red-group') || temp.querySelector('.zone[data-color="rood"]');
+			const destRed = document.querySelector('.zone.red-group') || document.querySelector('.zone[data-color="rood"]');
+			if (!destRed) {
+				// nothing to do
+			} else if (!srcRed) {
+				// Editor removed red-group entirely — hide it
+				destRed.style.display = 'none';
+				destRed.innerHTML = '';
+			} else {
+				const srcSubs = Array.from(srcRed.querySelectorAll(':scope > .zone'));
+				let destSubs = Array.from(destRed.querySelectorAll(':scope > .zone'));
+				// Create missing destination sub-zones if necessary
+				if (destSubs.length < srcSubs.length) {
+					srcSubs.slice(destSubs.length).forEach((srcSub, i) => {
+						const newSub = document.createElement('div');
+						newSub.className = 'zone';
+						newSub.dataset.color = 'rood';
+						newSub.id = srcSub.id || `red-grid${destSubs.length + i + 1}`;
+						destRed.appendChild(newSub);
+					});
+					destSubs = Array.from(destRed.querySelectorAll(':scope > .zone'));
+				}
+				srcSubs.forEach((srcSub, idx) => {
+					const destSub = destSubs[idx] || destSubs[destSubs.length - 1];
+					if (!destSub) return;
+					// Red subgrids: cells are directly in the zone, not in a .grid child
+					// Check if there's a .grid child or if cells are direct children
+					const srcGrid = srcSub.querySelector(':scope > .grid');
+					const destGrid = destSub.querySelector(':scope > .grid');
+					if (srcGrid && destGrid) {
+						// Standard case with .grid child on both sides
+						copyGridContent(srcGrid, destGrid);
+							ensureAbsoluteContainerSizing(destGrid, srcGrid);
+					} else if (srcGrid && !destGrid) {
+						// Source has .grid wrapper but destination expects cells directly in the zone
+						stripEditorChrome(srcSub);
+						// Remove existing direct cells in dest
+						destSub.querySelectorAll(':scope > .cell').forEach(c => c.remove());
+						// Clone from srcGrid into destSub (direct children)
+							const srcCells = Array.from(srcGrid.querySelectorAll(':scope > .cell'));
+							const srcCellsToCopy = srcCells.length ? srcCells : Array.from(srcGrid.querySelectorAll('.cell'));
+							srcCellsToCopy.forEach(srcCell => {
+							const clone = srcCell.cloneNode(true);
+							try { clone.classList.remove('active', 'edge-cell'); } catch (e) {}
+							destSub.appendChild(clone);
+						});
+						// Copy dataset from srcGrid or srcSub if present
+						if (srcGrid.dataset && srcGrid.dataset.rows) destSub.dataset.rows = srcGrid.dataset.rows;
+						if (srcGrid.dataset && srcGrid.dataset.cols) destSub.dataset.cols = srcGrid.dataset.cols;
+						if (srcSub.dataset && srcSub.dataset.rows) destSub.dataset.rows = srcSub.dataset.rows;
+						if (srcSub.dataset && srcSub.dataset.cols) destSub.dataset.cols = srcSub.dataset.cols;
+							ensureAbsoluteContainerSizing(destSub, srcGrid);
+					} else if (!srcGrid && destGrid) {
+						// Source has direct cells in the zone but destination expects a .grid child
+						stripEditorChrome(srcSub);
+						// Clear destination grid and append cloned cells into its .grid
+						destGrid.innerHTML = '';
+							const srcCells = Array.from(srcSub.querySelectorAll(':scope > .cell'));
+							const srcCellsToCopy = srcCells.length ? srcCells : Array.from(srcSub.querySelectorAll('.cell'));
+							srcCellsToCopy.forEach(srcCell => {
+							const clone = srcCell.cloneNode(true);
+							try { clone.classList.remove('active', 'edge-cell'); } catch (e) {}
+							destGrid.appendChild(clone);
+						});
+						// Copy dataset into destGrid
+						if (srcSub.dataset && srcSub.dataset.rows) destGrid.dataset.rows = srcSub.dataset.rows;
+						if (srcSub.dataset && srcSub.dataset.cols) destGrid.dataset.cols = srcSub.dataset.cols;
+							ensureAbsoluteContainerSizing(destGrid, srcSub);
+					} else {
+						// Neither side has a .grid wrapper: both expect direct children in the zone
+						stripEditorChrome(srcSub);
+						destSub.querySelectorAll(':scope > .cell').forEach(c => c.remove());
+							const srcCells = Array.from(srcSub.querySelectorAll(':scope > .cell'));
+							const srcCellsToCopy = srcCells.length ? srcCells : Array.from(srcSub.querySelectorAll('.cell'));
+							srcCellsToCopy.forEach(srcCell => {
+							const clone = srcCell.cloneNode(true);
+							try { clone.classList.remove('active', 'edge-cell'); } catch (e) {}
+							destSub.appendChild(clone);
+						});
+						if (srcSub.dataset.rows) destSub.dataset.rows = srcSub.dataset.rows;
+						if (srcSub.dataset.cols) destSub.dataset.cols = srcSub.dataset.cols;
+							ensureAbsoluteContainerSizing(destSub, srcSub);
+					}
+				});
+					// Diagnostics for red import
+					try {
+						const dstSubCount = Array.from(destRed.querySelectorAll(':scope > .zone')).map(z => z.querySelectorAll('.cell').length);
+						console.log('📦 import rood: subgrid cell counts', dstSubCount);
+					} catch (e) {}
+			}
+
+			// Ensure any portal cells in the destination are considered start positions by marking them bold
+			try {
+				const allPortalDest = document.querySelectorAll('.portal-cell');
+				allPortalDest.forEach(pc => { if (!pc.classList.contains('bold-cell')) pc.classList.add('bold-cell'); });
+			} catch (e) { /* ignore */ }
+			// Initialize trap state for imported boards so black-hole and other traps work
+			try {
+				// Find candidate trap cells: explicit dataset, editor trap class, or trap-symbol present
+				const allCells = Array.from(document.querySelectorAll('.cell'));
+				const importedTraps = allCells.filter(cell => {
+					if (!cell) return false;
+					if (cell.dataset && cell.dataset.trap === 'true') return true;
+					if (cell.classList && cell.classList.contains('trap-cell')) return true;
+					if (cell.querySelector && cell.querySelector('.trap-symbol')) return true;
+					return false;
+				});
+				importedTraps.forEach(cell => {
+					try {
+						// Ensure the dataset.trap flag exists
+						if (!cell.dataset) cell.dataset = {};
+						if (!cell.dataset.trap || String(cell.dataset.trap) !== 'true') cell.dataset.trap = 'true';
+						// Prefer explicit trapType if present, else infer from symbol/class
+						if (!cell.dataset.trapType) {
+							const hasBH = !!cell.querySelector('.trap-symbol.trap-symbol--black-hole');
+							const hasPit = !!cell.querySelector('.trap-symbol') && !hasBH;
+							if (hasBH) cell.dataset.trapType = 'blackHole';
+							else if (hasPit) cell.dataset.trapType = 'pit';
+						}
+						const zoneId = cell.dataset.zoneId || cell.closest('.grid')?.id || '';
+						// Register or release trap depending on active state
+						ensureTrapState(cell, zoneId, { silent: true });
+					} catch (e) { /* ignore per-cell errors */ }
+				});
+				// Refresh trap UI summary
+				try { if (typeof renderTrapSummary === 'function') renderTrapSummary(); } catch (e) {}
+			} catch (e) { /* ignore */ }
+			// Final cleanup: remove any lingering editor chrome from DOM
+			document.querySelectorAll('.zone-handle, .grid-resizer, .zone-delete').forEach(n => n.remove());
+			// Recompute scores and UI
+			if (typeof resetScoreState === 'function') resetScoreState();
+			if (typeof updateScore === 'function') updateScore();
+			if (typeof updateDeckPreview === 'function') updateDeckPreview();
+			if (typeof renderCurrentHand === 'function') renderCurrentHand();
+		} catch (e) {
+			console.error('applyBoardHtmlToGame failed', e);
+		}
+	}
+
+	// Set the visible level title and objective in the UI when loading a custom board
+	function setLoadedLevelMeta(name, objective) {
+		try {
+			// Persist loaded custom level metadata and compile objective once
+			window.loadedCustomLevelMeta = { name: name ? String(name) : '', objective: objective == null ? '' : String(objective).trim() };
+			window.loadedCustomObjectiveCompiled = null;
+			window.loadedCustomLevelMetaCompleted = false;
+			if (window.loadedCustomLevelMeta.objective) {
+				try { window.loadedCustomObjectiveCompiled = parseObjectiveTextToObjective(window.loadedCustomLevelMeta.objective); } catch (e) { window.loadedCustomObjectiveCompiled = null; }
+			}
+			// Prevent built-in objectives interfering
+			currentObjectiveId = null;
+			const titleEl = document.querySelector('#objective-zone h2');
+			const currentEl = document.getElementById('objective-current');
+			if (titleEl) titleEl.textContent = window.loadedCustomLevelMeta.name || titleEl.textContent;
+			let obj = window.loadedCustomLevelMeta.objective || '';
+			if (!obj) obj = 'Haal 100 punten';
+			if (currentEl) currentEl.innerHTML = `<strong>Doel:</strong> ${obj}`;
+		} catch (e) { /* ignore */ }
+	}
+
 	function openEditorWindow() {
 		const boardHtml = getEditorBoardHtml();
 		try { localStorage.setItem(LOCUS_EDITOR_STORAGE_KEY, boardHtml); } catch (e) {}
@@ -25379,12 +26180,27 @@ function showFloatingPreview(shape, color, options = {}) {
 	window.addEventListener('message', (event) => {
 		// Only respond to the opener/child channel we use.
 		const data = event && event.data ? event.data : {};
-		if (!data || data.type !== 'LOCUS_EDITOR_REQUEST_BOARD') return;
-		const boardHtml = getEditorBoardHtml();
-		try { localStorage.setItem(LOCUS_EDITOR_STORAGE_KEY, boardHtml); } catch (e) {}
-		try {
-			event.source && event.source.postMessage({ type: 'LOCUS_EDITOR_BOARD', boardHtml }, '*');
-		} catch (e) {}
+		if (!data) return;
+		if (data.type === 'LOCUS_EDITOR_REQUEST_BOARD') {
+			const boardHtml = getEditorBoardHtml();
+			try { localStorage.setItem(LOCUS_EDITOR_STORAGE_KEY, boardHtml); } catch (e) {}
+			try { event.source && event.source.postMessage({ type: 'LOCUS_EDITOR_BOARD', boardHtml }, '*'); } catch (e) {}
+			return;
+		}
+		// Accept boards sent from the external editor window
+		if (data.type === 'LOCUS_EDITOR_BOARD' && typeof data.boardHtml === 'string') {
+			try {
+				applyBoardHtmlToGame(data.boardHtml);
+				// If the editor provided name/objective, persist that metadata in the UI
+				if (data.name || data.objective) {
+					setLoadedLevelMeta(data.name || '', data.objective || '');
+					try { if (typeof resetScoreState === 'function') resetScoreState(); } catch(e){}
+					if (typeof updateScore === 'function') setTimeout(()=> updateScore(), 120);
+				}
+				if (typeof setStatus === 'function') setStatus('Speelveld geladen vanuit editor.');
+			} catch (e) { console.error(e); }
+			return;
+		}
 	});
 
 	function mulberry32(seed) {
@@ -25631,6 +26447,8 @@ function showFloatingPreview(shape, color, options = {}) {
 .@page { size: A4 landscape; margin: 8mm; }
 html, body { height: 100%; }
 body { margin: 0; padding: 0; background: ${lightMode ? 'white' : '#111'}; color: ${lightMode ? '#111' : '#eee'}; font-family: Arial, sans-serif; }
+#print-hide-icons .zone-info-btn, #print-hide-icons .zone-delete, #print-hide-icons .trash-btn,
+.zone-info-btn, .zone-delete, .trash-btn { display: none !important; }
 #print-root { width: fit-content; }
 .board { display: flex; gap: 14px; align-items: center; transform-origin: top left; }
 .column { display: flex; flex-direction: column; gap: 14px; align-items: center; }
@@ -26791,9 +27609,10 @@ body { background: transparent !important; }
 		console.log('🔍 Initializing game...');
 		const hasSave = localStorage.getItem('locusGameSave');
 		console.log('💾 Save found:', !!hasSave);
-		
-		if (hasSave) {
-			// Probeer de save te laden
+		// By default do NOT auto-restore save on page reload to avoid surprising persistent decks.
+		// Set AUTO_LOAD_SAVED_GAME = true to restore previous behavior.
+		const AUTO_LOAD_SAVED_GAME = true;
+		if (hasSave && AUTO_LOAD_SAVED_GAME) {
 			if (loadGameState()) {
 				console.log('✅ Successfully loaded saved game');
 				requestAnimationFrame(() => requestAnimationFrame(autoCenterScrollableZones));
@@ -26802,7 +27621,7 @@ body { background: transparent !important; }
 				console.warn('⚠️ Failed to load save, starting new game');
 			}
 		} else {
-			console.log('🎮 No save found, starting new game');
+			console.log('🎮 Starting new game (auto-restore disabled)');
 		}
 		
 		// Als we hier komen: geen save of laden mislukt
@@ -26911,6 +27730,164 @@ body { background: transparent !important; }
 
 	function closeHighScoreModal() {
 		const overlay = document.getElementById('highscore-modal-layer');
+		if (overlay) overlay.classList.remove('show');
+	}
+
+	function showSavedLevelsModal() {
+		let overlay = document.getElementById('saved-levels-modal');
+		if (!overlay) {
+			overlay = document.createElement('div');
+			overlay.id = 'saved-levels-modal';
+			overlay.className = 'highscore-modal-overlay';
+			overlay.innerHTML = `
+				<div class="highscore-modal">
+					<h2>Opgeslagen levels</h2>
+					<div id="saved-levels-list" style="max-height:420px; overflow:auto; padding-right:8px;"></div>
+					<div style="margin-top:12px;"><button class="modal-btn" onclick="closeSavedLevelsModal()">Sluit</button></div>
+				</div>
+			`;
+			document.body.appendChild(overlay);
+			overlay.addEventListener('click', (e) => { if (e.target === overlay) closeSavedLevelsModal(); });
+		}
+		// populate list
+		const list = document.getElementById('saved-levels-list');
+		list.innerHTML = '';
+		let saved = {};
+		try {
+			const raw = localStorage.getItem('locusSavedBoards');
+			if (raw) {
+				try {
+					saved = JSON.parse(raw || '{}');
+				} catch (err) {
+					console.error('Failed to parse locusSavedBoards JSON:', err, 'raw length:', raw.length);
+					console.error('Raw locusSavedBoards starts with:', String(raw).slice(0, 200));
+					saved = {};
+				}
+			} else saved = {};
+		} catch (e) { console.error('Error reading locusSavedBoards from localStorage', e); saved = {}; }
+		// Also check for an existing backup of the current game session
+		let backup = null;
+		try { backup = JSON.parse(localStorage.getItem('locusGameSaveBackup') || 'null'); } catch (e) { backup = null; }
+		const names = Object.keys(saved).sort((a,b)=>(saved[b].ts||0)-(saved[a].ts||0));
+		if (!names.length && !backup) {
+			list.textContent = 'Geen opgeslagen levels.';
+		} else {
+			names.forEach(n => {
+				const item = document.createElement('div');
+				item.style.display = 'flex'; item.style.gap = '8px'; item.style.alignItems = 'center'; item.style.marginBottom = '8px';
+				const label = document.createElement('div'); label.style.flex = '1';
+				const titleText = document.createElement('div'); titleText.textContent = n; titleText.style.fontWeight = '600'; titleText.className = 'saved-title';
+				const objText = document.createElement('div'); objText.className = 'saved-obj-text';
+				objText.textContent = saved[n].objective ? saved[n].objective : 'Geen doel (standaard: Haal 100 punten)';
+				label.appendChild(titleText); label.appendChild(objText);
+				const openEditorBtn = document.createElement('button'); openEditorBtn.textContent = 'Open in Editor'; openEditorBtn.className = 'modal-btn';
+				openEditorBtn.addEventListener('click', ()=>{
+					try { localStorage.setItem('locusEditorBoardHtml', saved[n].html); } catch (e) {}
+					const w = window.open('editor.html', '_blank');
+					if (w) try { w.postMessage({ type:'LOCUS_EDITOR_BOARD', boardHtml: saved[n].html, name: saved[n].name || n, objective: saved[n].objective || null }, '*'); } catch (e) {}
+				});
+				const loadBtn = document.createElement('button'); loadBtn.textContent = 'Laad in spel'; loadBtn.className = 'modal-btn primary';
+				const delBtn = document.createElement('button');
+				delBtn.className = 'trash-btn modal-btn';
+				delBtn.title = 'Verwijder opgeslagen level';
+				delBtn.setAttribute('aria-label', `Verwijder ${n}`);
+				delBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M3 6h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 6v14a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+				delBtn.style.padding = '6px';
+				delBtn.style.border = '0';
+				delBtn.style.background = 'transparent';
+				delBtn.style.cursor = 'pointer';
+				delBtn.style.color = 'inherit';
+				delBtn.addEventListener('click', ()=>{
+					if (!confirm(`Verwijder "${n}"?`)) return;
+					try {
+						try {
+							const sb = JSON.parse(localStorage.getItem('locusSavedBoards')||'{}');
+							delete sb[n];
+							try {
+								localStorage.setItem('locusSavedBoards', JSON.stringify(sb));
+							} catch (le) {
+								console.error('Failed to write locusSavedBoards during delete:', le, 'size:', JSON.stringify(sb).length);
+								alert('Kon opgeslagen levels niet bijwerken (localStorage fout). Zie console voor details.');
+							}
+						} catch (pe) { console.error('Failed to parse locusSavedBoards when deleting:', pe); }
+						// remove item from DOM
+						if (item && item.parentNode) item.parentNode.removeChild(item);
+					} catch (e) { console.error(e); }
+				});
+				loadBtn.addEventListener('click', ()=>{
+					// Backup current game state + board before loading — ensure latest game state (coins/deck) is saved
+					try {
+						if (typeof saveGameState === 'function') {
+							try { saveGameState(); } catch (e) { /* ignore save errors */ }
+						}
+						const currentGameSave = localStorage.getItem('locusGameSave') || null;
+						const currentBoardHtmlRaw = (typeof getEditorBoardHtml === 'function') ? getEditorBoardHtml() : (document.getElementById('board') ? document.getElementById('board').outerHTML : null);
+						const currentBoardHtml = (typeof sanitizeBoardHtml === 'function' && currentBoardHtmlRaw) ? sanitizeBoardHtml(currentBoardHtmlRaw) : currentBoardHtmlRaw;
+						const backupObj = { ts: Date.now(), level: currentLevel || null, gameSave: currentGameSave, boardHtml: currentBoardHtml };
+						localStorage.setItem('locusGameSaveBackup', JSON.stringify(backupObj));
+						// Also add/overwrite a single autosave entry to saved boards for easy access (include gameSave)
+						try {
+							try {
+								const sb = JSON.parse(localStorage.getItem('locusSavedBoards')||'{}');
+								const autosaveKey = 'Autosave: laatste bewerking';
+								sb[autosaveKey] = { html: backupObj.boardHtml, gameSave: backupObj.gameSave, name: autosaveKey, ts: backupObj.ts };
+								try {
+									localStorage.setItem('locusSavedBoards', JSON.stringify(sb));
+								} catch (le) {
+									console.error('Failed to write locusSavedBoards for autosave:', le, 'size:', JSON.stringify(sb).length);
+								}
+							} catch (pe) { console.error('Failed to parse locusSavedBoards for autosave:', pe); }
+						} catch (e) {}
+					} catch (e) {}
+					// Now apply the selected board into the current page and set title/objective
+					applyBoardHtmlToGame(saved[n].html);
+					setLoadedLevelMeta(saved[n].name || n, saved[n].objective || null);
+					try { if (typeof resetScoreState === 'function') resetScoreState(); } catch(e){}
+					if (typeof updateScore === 'function') setTimeout(()=> updateScore(), 120);
+					setTimeout(()=>{ if (typeof setStatus === 'function') setStatus('Speelveld geladen. Gebruik "Herstel vorige" om terug te keren.'); }, 50);
+				});
+				item.appendChild(label); item.appendChild(openEditorBtn); item.appendChild(loadBtn); item.appendChild(delBtn);
+				list.appendChild(item);
+			});
+			// If a backup exists, show a restore option at the end
+				if (backup) {
+				const restoreItem = document.createElement('div');
+				restoreItem.style.display = 'flex'; restoreItem.style.gap = '8px'; restoreItem.style.alignItems = 'center'; restoreItem.style.marginTop = '12px';
+				const lbl = document.createElement('div'); lbl.style.flex = '1'; lbl.textContent = `Herstel vorige sessie (level ${backup.level || '?'})`; lbl.className = 'saved-title';
+				const restoreBtn = document.createElement('button'); restoreBtn.textContent = 'Herstel vorige'; restoreBtn.className = 'modal-btn';
+				restoreBtn.addEventListener('click', ()=>{
+					try {
+						// restore saved game into localStorage
+						if (backup.gameSave) localStorage.setItem('locusGameSave', backup.gameSave);
+						// First restore gameplay state
+						if (typeof loadGameState === 'function') {
+							loadGameState();
+						}
+						// Then restore the exact board DOM snapshot
+						if (backup.boardHtml) {
+							setTimeout(()=>{
+								applyBoardHtmlToGame(backup.boardHtml);
+								try { if (typeof resetScoreState === 'function') resetScoreState(); } catch(e){}
+								if (typeof updateScore === 'function') setTimeout(()=> updateScore(), 120);
+							}, 80);
+						}
+						setTimeout(()=>{ if (typeof setStatus === 'function') setStatus('Vorige sessie hersteld.'); }, 200);
+					} catch (e) { console.error(e); }
+				});
+				restoreItem.appendChild(lbl); restoreItem.appendChild(restoreBtn);
+				list.appendChild(restoreItem);
+			}
+		}
+		overlay.classList.add('show');
+		// close menu
+		const controls = document.getElementById('controls');
+		const menuToggle = document.getElementById('menu-toggle');
+		if (controls) controls.classList.remove('open');
+		if (menuToggle) menuToggle.classList.remove('active');
+	}
+
+	function closeSavedLevelsModal() {
+		const overlay = document.getElementById('saved-levels-modal');
 		if (overlay) overlay.classList.remove('show');
 	}
 	

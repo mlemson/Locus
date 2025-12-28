@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>LOCUS Editor</title>
   <link rel="stylesheet" href="editor.css" />
+  <style>
+    /* Overrides: header actions wrap and can be two-across; tools forced full-width */
+    .panel__header { flex-wrap: wrap !important; }
+    .panel__headerActions { flex-basis: 100% !important; flex-direction: row !important; flex-wrap: wrap !important; margin-top: 8px !important; }
+    .panel__headerActions .btn { width: 48% !important; margin: 4px 1% !important; padding: 6px 8px !important; font-size: 0.95rem !important; }
+    .tool { display: flex !important; width: 100% !important; margin-bottom: 6px !important; }
+    .panel__section label.tool { display: block !important; }
+  </style>
 </head>
 <body>
   <div class="app">
@@ -36,10 +44,10 @@
 
       <div class="panel__section">
         <div class="panel__sectionTitle">Specials</div>
-        <label class="tool"><input type="radio" name="tool" value="coin"> <span>🪙 Munt</span></label>
-        <label class="tool"><input type="radio" name="tool" value="portal"> <span>🌀 Portal</span></label>
-        <label class="tool"><input type="radio" name="tool" value="trap-pit"> <span>◼ Trap (pit)</span></label>
-        <label class="tool"><input type="radio" name="tool" value="trap-blackhole"> <span>⬤ Trap (black hole)</span></label>
+        <label class="tool"><input type="radio" name="tool" value="coin"> <span class="symbol">🪙</span> <span> Munt</span></label>
+        <label class="tool"><input type="radio" name="tool" value="portal"> <span class="symbol">🌀</span> <span> Portal</span></label>
+        <label class="tool"><input type="radio" name="tool" value="trap-pit"> <span class="symbol trap-symbol">◼</span> <span> Trap (pit)</span></label>
+        <label class="tool"><input type="radio" name="tool" value="trap-blackhole"> <span class="symbol trap-symbol trap-symbol--black-hole">⬤</span> <span> Trap (black hole)</span></label>
       </div>
 
       <div id="status" class="status" aria-live="polite"></div>

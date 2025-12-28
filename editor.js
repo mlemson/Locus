@@ -30,7 +30,7 @@
 
   function clearCell(cell) {
     if (!cell) return;
-    cell.classList.remove('bold-cell', 'gold-cell', 'portal-cell', 'trap-cell');
+    cell.classList.remove('bold-cell', 'gold-cell', 'portal-cell', 'trap-cell', 'start-cell', 'end-cell');
     cell.querySelectorAll('.portal-symbol, .symbol').forEach((n) => n.remove());
   }
 
@@ -97,7 +97,23 @@
         return;
       case 'bold':
         ensureNonVoid(cell);
-        cell.classList.toggle('bold-cell');
+        // In green zone, the start-cell is represented by a bold-cell (same as the game).
+        const zone = cell.closest && cell.closest('.zone') ? cell.closest('.zone') : null;
+        const zcol = zone && zone.dataset ? String(zone.dataset.color || '').toLowerCase() : '';
+        if (zcol === 'groen') {
+          cell.classList.toggle('bold-cell');
+        } else {
+          cell.classList.toggle('bold-cell');
+        }
+        return;
+      case 'bold-blue':
+        ensureNonVoid(cell);
+        // Only allow toggling blue-starts inside blue zones
+        const bzone = cell.closest && cell.closest('.zone') ? cell.closest('.zone') : null;
+        const bcol = bzone && bzone.dataset ? String(bzone.dataset.color || '').toLowerCase() : '';
+        if (bcol === 'blauw' || bzone && bzone.id === 'blue-zone') {
+          cell.classList.toggle('bold-cell');
+        }
         return;
       case 'coin':
         ensureNonVoid(cell);
@@ -156,6 +172,17 @@
           s.className = 'symbol upgrade-shop-symbol';
           s.textContent = '♦';
           cell.appendChild(s);
+        }
+        return;
+      case 'end':
+        ensureNonVoid(cell);
+        if (cell.classList.contains('end-cell')) {
+          cell.classList.remove('end-cell');
+        } else {
+          cell.classList.add('end-cell');
+          // Ensure end-cell is not also a start/bold/void marker
+          cell.classList.remove('start-cell');
+          cell.classList.remove('bold-cell');
         }
         return;
       case 'select':
@@ -231,6 +258,9 @@
   }
 
   function resizeGrid(grid, newRows, newCols) {
+    // Accept optional anchor object as 4th arg (e.g. {anchorX:'left'|'right', anchorY:'top'|'bottom'})
+    const args = Array.from(arguments);
+    const anchor = args[3] || {};
     const rows = Math.max(1, Math.min(80, newRows | 0));
     const cols = Math.max(1, Math.min(80, newCols | 0));
     const oldCells = Array.from(grid.querySelectorAll(':scope > .cell'));
@@ -246,9 +276,14 @@
       });
     }
     const frag = document.createDocumentFragment();
+    // Determine offsets so existing cells can be anchored left/top or right/bottom
+    const colOffset = (anchor.anchorX === 'right') ? (oldCols - cols) : 0;
+    const rowOffset = (anchor.anchorY === 'bottom') ? (oldRows - rows) : 0;
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
-        const key = r + ',' + c;
+        const oldR = r + rowOffset;
+        const oldC = c + colOffset;
+        const key = oldR + ',' + oldC;
         const existing = map.get(key);
         if (existing) {
           frag.appendChild(existing);
@@ -274,11 +309,36 @@
         h.setAttribute('draggable', 'true');
         zone.insertBefore(h, zone.firstChild);
       }
-      if (!zone.querySelector(':scope > .grid-resizer')) {
-        const r = document.createElement('div');
-        r.className = 'grid-resizer';
-        r.title = 'Sleep om grid groter/kleiner te maken';
-        zone.appendChild(r);
+      // Ensure four corner resizers (nw, ne, sw, se)
+      const dirs = ['nw','ne','sw','se'];
+      dirs.forEach((d) => {
+        if (!zone.querySelector(`:scope > .grid-resizer[data-dir="${d}"]`)) {
+          const r = document.createElement('div');
+          r.className = 'grid-resizer';
+          r.dataset.dir = d;
+          r.title = 'Sleep om grid groter/kleiner te maken';
+          // small visual handle style fallback
+          r.style.width = '12px'; r.style.height = '12px'; r.style.position = 'absolute';
+          if (d === 'nw') { r.style.left = '4px'; r.style.top = '4px'; r.style.cursor = 'nwse-resize'; }
+          if (d === 'ne') { r.style.right = '4px'; r.style.top = '4px'; r.style.cursor = 'nesw-resize'; }
+          if (d === 'sw') { r.style.left = '4px'; r.style.bottom = '4px'; r.style.cursor = 'nesw-resize'; }
+          if (d === 'se') { r.style.right = '4px'; r.style.bottom = '4px'; r.style.cursor = 'nwse-resize'; }
+          zone.appendChild(r);
+        }
+      });
+      // delete button for removing a zone
+      if (!zone.querySelector(':scope > .zone-delete')) {
+        const del = document.createElement('button');
+        del.className = 'zone-delete';
+        del.setAttribute('aria-label', 'Verwijder zone');
+        del.title = 'Verwijder zone';
+        del.innerHTML = '🗑️';
+        del.addEventListener('click', (e) => {
+          e.preventDefault(); e.stopPropagation();
+          if (!confirm('Weet je zeker dat je deze zone wilt verwijderen?')) return;
+          try { zone.remove(); } catch (err) {}
+        });
+        zone.appendChild(del);
       }
     });
   }
@@ -341,13 +401,18 @@
     function onMove(e) {
       if (!active) return;
       e.preventDefault();
-      const { grid, startX, startY, startRows, startCols } = active;
+      const { grid, startX, startY, startRows, startCols, dir } = active;
       const dx = (e.clientX - startX);
       const dy = (e.clientY - startY);
       const cellSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')) || 26;
       const dCols = Math.round(dx / cellSize);
       const dRows = Math.round(dy / cellSize);
-      resizeGrid(grid, startRows + dRows, startCols + dCols);
+      // Determine new rows/cols based on handle direction
+      const newCols = (dir && dir.includes('w')) ? (startCols - dCols) : (startCols + dCols);
+      const newRows = (dir && dir.includes('n')) ? (startRows - dRows) : (startRows + dRows);
+      const anchorX = (dir && dir.includes('w')) ? 'right' : 'left';
+      const anchorY = (dir && dir.includes('n')) ? 'bottom' : 'top';
+      resizeGrid(grid, newRows, newCols, { anchorX, anchorY });
     }
 
     function stop() {
@@ -368,7 +433,8 @@
         const rows = parseInt(grid.dataset.rows || '0', 10) || inferGridSize(grid).rows;
         const cols = parseInt(grid.dataset.cols || '0', 10) || inferGridSize(grid).cols;
         if (!grid.dataset.rows || !grid.dataset.cols) applyGridTemplate(grid, rows, cols);
-        active = { grid, startX: e.clientX, startY: e.clientY, startRows: rows, startCols: cols };
+        const dir = resizer.dataset && resizer.dataset.dir ? String(resizer.dataset.dir) : 'se';
+        active = { grid, startX: e.clientX, startY: e.clientY, startRows: rows, startCols: cols, dir };
         window.addEventListener('pointermove', onMove, { capture: true });
         window.addEventListener('pointerup', stop, { capture: true });
       });
@@ -490,7 +556,7 @@
     }
 
     // detect green zone: skip placing initial bonuses/coins for green
-    const isGreenZone = (grid.closest && grid.closest('.zone') && grid.closest('.zone').dataset && grid.closest('.zone').dataset.color === 'groen') || (grid.id && String(grid.id).toLowerCase().includes('green'));
+    const isGreenZone = (grid.dataset && grid.dataset.color === 'groen') || (grid.closest && grid.closest('.zone') && grid.closest('.zone').dataset && grid.closest('.zone').dataset.color === 'groen') || (grid.id && String(grid.id).toLowerCase().includes('green'));
 
     // shuffle helper
     const shuffle = (arr) => {
@@ -575,9 +641,11 @@
       cell.querySelectorAll('.symbol').forEach(n => n.remove());
       cell.classList.add('end-cell');
     }
-    // ensure center cell is bold
+    // ensure center cell is bold in green editor grids
     const centerCell = clusterMap.get(centerIdx);
-    if (centerCell) centerCell.classList.add('bold-cell');
+    if (centerCell) {
+      centerCell.classList.add('bold-cell');
+    }
   }
 
   function generateNewBoard() {
@@ -591,6 +659,8 @@
     const purple = createZone('editor-purple-zone', 'paars', createGrid(13, 13));
     const yellow = createZone('editor-yellow-zone', 'geel', createGrid(11, 11));
     const greenGrid = createGrid(15, 15);
+    // Mark grid as green so carveGreenContent skips bonuses/coins
+    greenGrid.dataset.color = 'groen';
     carveGreenContent(greenGrid);
     const green = createZone('editor-green-zone', 'groen', greenGrid);
 
@@ -611,15 +681,18 @@
     applyRowPatternVoid(blueGrid, rowLengths, rowOffsets);
 
     // Red group: 4 small subgrids.
+    // NOTE: Use 'red-grid1', 'red-grid2' etc IDs to match the game's structure.
+    // The game expects these IDs for correct positioning detection.
     const redGroup = document.createElement('div');
     redGroup.className = 'zone red-group';
     redGroup.dataset.color = 'rood';
-    redGroup.id = 'editor-red-zone';
+    redGroup.id = 'red-zone';
     for (let i = 1; i <= 4; i++) {
       const sub = document.createElement('div');
       sub.className = 'zone';
       sub.dataset.color = 'rood';
-      sub.id = 'editor-red-sub-' + i;
+      sub.id = 'red-grid' + i;
+      sub.dataset.subgrid = String(i);
       sub.appendChild(createGrid(6, 6));
       redGroup.appendChild(sub);
     }
@@ -640,7 +713,7 @@
     if (!board) return '';
     const clone = board.cloneNode(true);
     // Remove editor chrome if present.
-    clone.querySelectorAll('.zone-handle,.grid-resizer').forEach((n) => n.remove());
+    clone.querySelectorAll('.zone-handle,.grid-resizer,.zone-delete').forEach((n) => n.remove());
 
     // Critical for print: ensure every grid has an explicit column template.
     // If --cell-size is missing or template is absent, the browser may stack cells vertically.
@@ -669,6 +742,124 @@
       cg.style.gridAutoRows = 'var(--cell-size, 6.88mm)';
     }
 
+    return clone.outerHTML;
+  }
+
+  // Normalize board HTML for export/save: make grid sizing stable across browsers.
+  function normalizeBoardForExport(boardEl) {
+    if (!boardEl) return '';
+    const clone = boardEl.cloneNode(true);
+    try {
+      // The GAME expects the green start cell to be a .bold-cell.
+      // The editor may additionally use .start-cell for highlighting, but we must never remove .bold-cell.
+      const greenZones = clone.querySelectorAll('.zone[data-color="groen"]');
+      greenZones.forEach(zone => {
+        const grid = zone.querySelector(':scope > .grid') || zone.querySelector('.grid');
+        if (!grid) return;
+        // If there are any explicit .start-cell markers, ensure they are also bold-cells for the game.
+        grid.querySelectorAll('.cell.start-cell').forEach(c => c.classList.add('bold-cell'));
+      });
+
+      const parseRepeatCount = (tpl) => {
+        const m = /repeat\(\s*(\d+)\s*,/i.exec(String(tpl || ''));
+        return m ? (parseInt(m[1], 10) || 0) : 0;
+      };
+      const countTopLevelTracks = (tpl) => {
+        const s = String(tpl || '').trim();
+        if (!s || s === 'none') return 0;
+        let depth = 0;
+        let token = '';
+        const tokens = [];
+        for (let i = 0; i < s.length; i++) {
+          const ch = s[i];
+          if (ch === '(') depth++;
+          if (ch === ')') depth = Math.max(0, depth - 1);
+          if (depth === 0 && /\s/.test(ch)) {
+            if (token.trim()) tokens.push(token.trim());
+            token = '';
+          } else {
+            token += ch;
+          }
+        }
+        if (token.trim()) tokens.push(token.trim());
+        return tokens.length;
+      };
+
+      // Ensure each grid has an explicit inline column template for stable layout when loaded in the game
+      // SKIP grids that use absolute positioning (green/red) — they don't use CSS Grid layout
+      try {
+        const liveGrids = boardEl.querySelectorAll('.grid');
+        const clonedGrids = clone.querySelectorAll('.grid');
+        for (let i = 0; i < clonedGrids.length; i++) {
+          const live = liveGrids[i];
+          const cg = clonedGrids[i];
+          if (!cg) continue;
+          // Check if this grid uses absolute positioning (green/red zones)
+          // Red subgrids have IDs like red-grid1, red-grid2, etc.
+          const zone = cg.closest('.zone');
+          const isGreenGrid = cg.id === 'green-grid' || (zone && zone.dataset && zone.dataset.color === 'groen');
+          const isRedGrid = (zone && zone.id && zone.id.startsWith('red-grid')) ||
+            (zone && zone.dataset && zone.dataset.color === 'rood') ||
+            (zone && zone.classList && zone.classList.contains('red-group'));
+          const usesAbsolutePositioning = isGreenGrid || isRedGrid;
+          if (usesAbsolutePositioning) {
+            // For absolute-positioned grids, copy dataset and ensure cells have coordinate attributes
+            if (live && live.dataset) {
+              if (live.dataset.cols) cg.dataset.cols = live.dataset.cols;
+              if (live.dataset.rows) cg.dataset.rows = live.dataset.rows;
+            }
+            // Ensure all cells in green/red grids have data-x and data-y attributes for the game
+            const liveCells = live ? Array.from(live.querySelectorAll(':scope > .cell')) : [];
+            const cloneCells = Array.from(cg.querySelectorAll(':scope > .cell'));
+            const cols = parseInt(cg.dataset.cols || '0', 10) || Math.ceil(Math.sqrt(cloneCells.length)) || 1;
+            const rows = parseInt(cg.dataset.rows || '0', 10) || Math.ceil(cloneCells.length / cols) || 1;
+            if (!cg.dataset.cols) cg.dataset.cols = String(cols);
+            if (!cg.dataset.rows) cg.dataset.rows = String(rows);
+            cloneCells.forEach((cell, idx) => {
+              // Derive coordinates from DOM order if not already set
+              if (cell.dataset.x == null || cell.dataset.x === '') {
+                cell.dataset.x = String(idx % cols);
+              }
+              if (cell.dataset.y == null || cell.dataset.y === '') {
+                cell.dataset.y = String(Math.floor(idx / cols));
+              }
+            });
+            continue;
+          }
+          // Determine columns: prefer dataset.cols on the live grid, else try computed style, else fallback to sqrt heuristic
+          let cols = 0;
+          try {
+            cols = Number(live && live.dataset && live.dataset.cols ? live.dataset.cols : 0) || 0;
+          } catch (_) { cols = 0; }
+          if (!cols) {
+            try {
+              const tpl = (live && live.style && live.style.gridTemplateColumns) ? live.style.gridTemplateColumns : '';
+              cols = parseRepeatCount(tpl) || countTopLevelTracks(tpl) || 0;
+            } catch (_) { cols = 0; }
+          }
+          if (!cols) {
+            try {
+              const tpl = (live ? window.getComputedStyle(live).gridTemplateColumns : '') || '';
+              cols = parseRepeatCount(tpl) || countTopLevelTracks(tpl) || 0;
+            } catch (_) { cols = 0; }
+          }
+          if (!cols) {
+            const count = cg.querySelectorAll(':scope > .cell').length;
+            cols = Math.max(1, Math.min(80, Math.round(Math.sqrt(Math.max(1, count)))));
+          }
+          // Apply inline style and dataset so the exported HTML keeps the same layout across browsers
+          try {
+            cg.style.gridTemplateColumns = `repeat(${cols}, var(--cell-size))`;
+            cg.style.gridAutoRows = 'var(--cell-size)';
+            cg.dataset.cols = String(cols);
+            // Best-effort rows for downstream logic
+            const cellCount = cg.querySelectorAll(':scope > .cell').length;
+            const rows = Math.max(1, Math.ceil(cellCount / cols));
+            cg.dataset.rows = String(rows);
+          } catch (e) {}
+        }
+      } catch (e) {}
+    } catch (e) {}
     return clone.outerHTML;
   }
 
@@ -711,6 +902,8 @@ body { margin: 0; padding: 0; background: white; color: #111; font-family: Arial
 
 /* Print requirement: hide void/placeholder cells */
 .cell.void-cell { visibility: hidden !important; border: none !important; background: transparent !important; box-shadow: none !important; }
+/* Hide editor chrome in print */
+.zone-delete, .zone-handle, .grid-resizer { display: none !important; }
 /* Avoid any runtime scaling on print */
 .boardHost, .board, .grid, .cell { transform: none !important; zoom: 1 !important; }
 `;
@@ -739,6 +932,54 @@ body { margin: 0; padding: 0; background: white; color: #111; font-family: Arial
       return;
     }
     boardHost.innerHTML = html;
+    // Ensure editor shows end-cell colors per zone so designer sees where they are
+    try { ensureEditorEndCellStyles(); } catch (e) {}
+    // Sanitize loaded board for editor: remove runtime-filled state (active/edge)
+    // IMPORTANT: Do NOT remove inline styles for grids using absolute positioning (green/red).
+    // Those grids rely on inline left/top for cell placement.
+    try {
+      const cells = boardHost.querySelectorAll('.cell');
+      cells.forEach((cell) => {
+        // Keep visual symbols/bonuses (they should remain visible in the editor).
+        // Only remove runtime-filled state (active/edge).
+        try { cell.classList.remove('active', 'edge-cell'); } catch (e) {}
+        // Check if this cell uses absolute positioning (green/red zones)
+        // Red subgrids have IDs like red-grid1, red-grid2, etc.
+        const grid = cell.closest('.grid');
+        const zone = cell.closest('.zone');
+        const isGreenGrid = (grid && grid.id === 'green-grid') || (zone && zone.dataset && zone.dataset.color === 'groen');
+        const isRedGrid = (zone && zone.id && zone.id.startsWith('red-grid')) ||
+          (zone && zone.dataset && zone.dataset.color === 'rood') ||
+          (zone && zone.classList && zone.classList.contains('red-group'));
+        const usesAbsolutePositioning = isGreenGrid || isRedGrid || (cell.style && cell.style.position === 'absolute');
+        // Only remove inline styles for CSS Grid-based zones, not absolute-positioned ones
+        if (!usesAbsolutePositioning) {
+          try { cell.removeAttribute('style'); } catch (e) {}
+        }
+      });
+    } catch (e) {}
+    // NOTE: do not invent/assign start-cell markers in the editor on load.
+    // In the game, the green start is represented by `.bold-cell`, and auto-assigning `.start-cell`
+    // caused incorrect start highlighting (often top-left) when cols/rows mismatched.
+    // Ensure each grid has proper column sizing so cells don't stack vertically
+    // Skip this for absolute-positioned grids (green/red) as they don't use CSS Grid layout
+    try {
+      const grids = boardHost.querySelectorAll('.grid');
+      grids.forEach(g => {
+        const zone = g.closest('.zone');
+        const isGreenGrid = g.id === 'green-grid' || (zone && zone.dataset && zone.dataset.color === 'groen');
+        const isRedGrid = (zone && zone.id && zone.id.startsWith('red-grid')) ||
+          (zone && zone.dataset && zone.dataset.color === 'rood') ||
+          (zone && zone.classList && zone.classList.contains('red-group'));
+        const usesAbsolutePositioning = isGreenGrid || isRedGrid;
+        if (usesAbsolutePositioning) return; // skip CSS Grid template for absolute-positioned grids
+        const cols = Number(g.dataset.cols) || (g.querySelectorAll(':scope > .cell').length ? Math.max(1, Math.round(Math.sqrt(g.querySelectorAll(':scope > .cell').length))) : 0);
+        if (cols) g.style.gridTemplateColumns = `repeat(${cols}, var(--cell-size))`;
+        g.style.gridAutoRows = 'var(--cell-size)';
+        // also ensure the grid width/height are reset so browser lays out as expected
+        try { g.style.width = ''; g.style.height = ''; } catch(e) {}
+      });
+    } catch (e) {}
     try {
       localStorage.setItem(STORAGE_KEY, html);
     } catch (_) {}
@@ -758,6 +999,25 @@ body { margin: 0; padding: 0; background: white; color: #111; font-family: Arial
         setBoardHtml(html);
         return true;
       }
+
+      // Ensure blue zone bottom-most cells are marked as bold-cells so they act as start positions in the game.
+      try {
+        const blueZone = clone.querySelector('.zone[data-color="blauw"]') || clone.querySelector('#blue-zone');
+        if (blueZone) {
+          const container = blueZone.querySelector(':scope > .grid') || blueZone;
+          const all = Array.from(container.querySelectorAll(':scope > .cell:not(.void-cell)'));
+          if (all.length) {
+            let maxY = -Infinity;
+            all.forEach(c => {
+              const y = Number(c.dataset.y || c.dataset.r || c.dataset.y);
+              if (Number.isFinite(y) && y > maxY) maxY = y;
+            });
+            if (maxY !== -Infinity) {
+              all.filter(c => Number(c.dataset.y || c.dataset.r || c.dataset.y) === maxY).forEach(c => c.classList.add('bold-cell'));
+            }
+          }
+        }
+      } catch (e) { /* ignore */ }
     } catch (_) {}
     return false;
   }
@@ -814,13 +1074,13 @@ body { margin: 0; padding: 0; background: white; color: #111; font-family: Arial
     try { localStorage.setItem(SAVED_BOARDS_KEY, JSON.stringify(obj)); } catch (_) {}
   }
 
-  function saveCurrentBoardWithName(name) {
+  function saveCurrentBoardWithName(name, objective) {
     if (!boardHost) return false;
     const board = boardHost.querySelector('.board');
     if (!board) return false;
-    const html = board.outerHTML;
+    const html = normalizeBoardForExport(board);
     const saved = getSavedBoards();
-    saved[name] = { html, name, ts: Date.now() };
+    saved[name] = { html, name, ts: Date.now(), objective: objective || null };
     writeSavedBoards(saved);
     setStatus(`Speelveld opgeslagen als "${name}".`);
     return true;
@@ -836,10 +1096,14 @@ body { margin: 0; padding: 0; background: white; color: #111; font-family: Arial
     if (saved[name]) {
       if (!window.confirm(`Er bestaat al een speelveld met naam "${name}". Overschrijven?`)) { setStatus('Opslaan geannuleerd.'); return; }
     }
-    if (saveCurrentBoardWithName(name)) {
+    // Ask for an optional objective (user can leave blank)
+    let objective = window.prompt('Optioneel: geef een doelstelling voor dit speelveld (bv. "Haal 100 punten"):');
+    if (objective == null) objective = null; else { objective = String(objective).trim(); if (!objective) objective = 'Haal 100 punten'; }
+
+    if (saveCurrentBoardWithName(name, objective)) {
       // Also notify opener/game if present
       if (window.opener && typeof window.opener.postMessage === 'function') {
-        try { window.opener.postMessage({ type: 'LOCUS_EDITOR_SAVED_BOARD', name, boardHtml: boardHost.querySelector('.board').outerHTML }, '*'); } catch (e) {}
+        try { window.opener.postMessage({ type: 'LOCUS_EDITOR_SAVED_BOARD', name, boardHtml: normalizeBoardForExport(boardHost.querySelector('.board')), objective }, '*'); } catch (e) {}
       }
     }
   }
@@ -866,13 +1130,17 @@ body { margin: 0; padding: 0; background: white; color: #111; font-family: Arial
     }
     names.forEach((n) => {
       const item = document.createElement('div'); item.style.display = 'flex'; item.style.alignItems = 'center'; item.style.gap = '8px'; item.style.marginBottom = '8px';
-      const label = document.createElement('div'); label.textContent = n; label.style.flex = '1';
+      const label = document.createElement('div'); label.style.flex = '1';
+      const titleText = document.createElement('div'); titleText.textContent = n; titleText.style.fontWeight = '600';
+      const objText = document.createElement('div'); objText.style.fontSize = '12px'; objText.style.opacity = '0.8';
+      objText.textContent = saved[n].objective ? saved[n].objective : 'Geen doel (standaard: Haal 100 punten)';
+      label.appendChild(titleText); label.appendChild(objText);
       const loadBtn = document.createElement('button'); loadBtn.textContent = 'Laad';
       loadBtn.addEventListener('click', () => { setBoardHtml(saved[n].html); overlay.remove(); });
       const exportBtn = document.createElement('button'); exportBtn.textContent = 'Naar spel';
       exportBtn.addEventListener('click', () => {
         if (window.opener && typeof window.opener.postMessage === 'function') {
-          try { window.opener.postMessage({ type: 'LOCUS_EDITOR_BOARD', boardHtml: saved[n].html, name: n }, '*'); setStatus(`Speelveld "${n}" naar spel verzonden.`); } catch (e) { setStatus('Versturen mislukt.'); }
+          try { window.opener.postMessage({ type: 'LOCUS_EDITOR_BOARD', boardHtml: saved[n].html, name: n, objective: saved[n].objective || null }, '*'); setStatus(`Speelveld "${n}" naar spel verzonden.`); } catch (e) { setStatus('Versturen mislukt.'); }
         } else setStatus('Geen spel-opener gevonden.');
       });
       const renameBtn = document.createElement('button'); renameBtn.textContent = 'Hernoem';
@@ -920,34 +1188,121 @@ body { margin: 0; padding: 0; background: white; color: #111; font-family: Arial
   
   // --- Extra tool buttons (shop/diamond) ---
   function ensureExtraToolButtons() {
-    try {
-      const container = (printBtn && printBtn.parentNode) ? printBtn.parentNode : document.body;
-      if (!document.getElementById('tool-shop-btn')) {
-        const b = document.createElement('button');
-        b.id = 'tool-shop-btn';
-        b.textContent = '♦';
-        b.title = 'Bonus-upgrade shop (diamond)';
-        const styleSource = document.getElementById('save-board') || printBtn || refreshBtn || null;
-        if (styleSource && styleSource.className) b.className = styleSource.className;
-        b.style.marginLeft = '8px';
-        b.addEventListener('click', () => {
-          // toggle override tool
-          if (window.__locusEditorOverrideTool === 'sym-shop') {
-            window.__locusEditorOverrideTool = null;
-            b.classList.remove('active');
-          } else {
-            window.__locusEditorOverrideTool = 'sym-shop';
-            // mark active
-            document.querySelectorAll('#tool-shop-btn').forEach(n => n.classList.remove('active'));
-            b.classList.add('active');
-          }
-        });
-        container.insertBefore(b, document.getElementById('manage-saved-boards') ? document.getElementById('manage-saved-boards').nextSibling : null);
-      }
-    } catch (e) {}
+    // Previously created a bottom toolbar button for the diamond. That UI is removed
+    // because the diamond now lives under the Specials tool group.
   }
 
   ensureExtraToolButtons();
+  
+  // Place the diamond shop radio under the Specials tool group (portal/coin/trap/etc.)
+  function ensureShopInSpecials() {
+    try {
+      // Remove any leftover bottom button if present
+      const oldBtn = document.getElementById('tool-shop-btn');
+      if (oldBtn && oldBtn.parentNode) oldBtn.parentNode.removeChild(oldBtn);
+      // Find the Specials panel section reliably
+      const sections = Array.from(document.querySelectorAll('.panel__section'));
+      const specials = sections.find(s => (s.querySelector('.panel__sectionTitle') || {}).textContent?.trim().toLowerCase() === 'specials');
+      const parent = specials || document.querySelector('.panel') || document.body;
+      if (!parent) return;
+      // avoid duplicate across the whole parent area
+      if (parent.querySelector('input[value="sym-shop"]') || document.querySelector('input[value="sym-shop"]')) return;
+      const id = 'tool-sym-shop';
+      const wrapper = document.createElement('label'); wrapper.className = 'tool'; wrapper.style.display = 'flex'; wrapper.style.alignItems = 'center'; wrapper.style.gap = '6px'; wrapper.style.marginTop = '4px';
+      const input = document.createElement('input'); input.type = 'radio'; input.name = 'tool'; input.value = 'sym-shop'; input.id = id;
+      const span = document.createElement('span'); span.className = 'symbol'; span.textContent = '💎';
+      const txt = document.createElement('span'); txt.textContent = ' Diamant';
+      input.addEventListener('change', () => { window.__locusEditorOverrideTool = null; });
+      wrapper.appendChild(input); wrapper.appendChild(span); wrapper.appendChild(txt);
+      parent.appendChild(wrapper);
+    } catch (e) {}
+  }
+  ensureShopInSpecials();
+  setTimeout(ensureShopInSpecials, 500);
+
+  // Inject editor-specific styles so end-cells are visible by zone color
+  function ensureEditorEndCellStyles() {
+    if (document.getElementById('editor-endcell-styles')) return;
+    const css = `
+      /* Editor: hide runtime info UI so designers don't see the "i" popovers */
+      .zone-info-btn, .zone-info-popover { display: none !important; }
+      /* Editor: show end-cells per zone color so designers can see them */
+      .zone[data-color="groen"] .cell.end-cell { background-color: #7bba7b !important; border-color: #7bb57f !important; }
+      .zone[data-color="groen"] .cell.end-cell.active { background-color: #5da35d !important; border-color: #518755 !important; }
+      /* Start cells in green should look like bold-cells (thick dark border) */
+      .zone[data-color="groen"] .cell.bold-cell { border: 2px solid #2c3333 !important; }
+      .zone[data-color="geel"] .cell.end-cell { background-color: #f0e3a8 !important; border-color: #e8d38a !important; }
+      .zone[data-color="geel"] .cell.end-cell.active { background-color: #cfae4a !important; border-color: #b8963c !important; }
+      .zone[data-color="paars"] .cell.end-cell { background-color: #e9e0f6 !important; border-color: #d7c8f0 !important; }
+      .zone[data-color="paars"] .cell.end-cell.active { background-color: #7a5aa8 !important; border-color: #62478a !important; }
+      .zone[data-color="blauw"] .cell.end-cell { background-color: #d6eaf6 !important; border-color: #c0def0 !important; }
+      .zone[data-color="blauw"] .cell.end-cell.active { background-color: #3b7aa4 !important; border-color: #2f6386 !important; }
+      .zone[data-color="rood"] .cell.end-cell { background-color: #ffd8d8 !important; border-color: #ffc0c0 !important; }
+      .zone[data-color="rood"] .cell.end-cell.active { background-color: #b56069 !important; border-color: #9a4b56 !important; }
+      /* Make end-cells slightly stand out in editor with a subtle shadow */
+      .cell.end-cell { box-shadow: inset 0 0 0 2px rgba(255,255,255,0.03); }
+    `;
+    const s = document.createElement('style');
+    s.id = 'editor-endcell-styles';
+    s.textContent = css;
+    document.head.appendChild(s);
+  }
+
+  function ensureEndToolInSpecials() {
+    try {
+      const sections = Array.from(document.querySelectorAll('.panel__section'));
+      const specials = sections.find(s => (s.querySelector('.panel__sectionTitle') || {}).textContent?.trim().toLowerCase() === 'specials');
+      const parent = specials || document.querySelector('.panel') || document.body;
+      if (!parent) return;
+      if (parent.querySelector('input[value="end"]') || document.querySelector('input[value="end"]')) return;
+      const id = 'tool-end';
+      const wrapper = document.createElement('label'); wrapper.className = 'tool'; wrapper.style.display = 'flex'; wrapper.style.alignItems = 'center'; wrapper.style.gap = '6px'; wrapper.style.marginTop = '4px';
+      const input = document.createElement('input'); input.type = 'radio'; input.name = 'tool'; input.value = 'end'; input.id = id;
+      const span = document.createElement('span'); span.className = 'symbol'; span.textContent = '🏁';
+      const txt = document.createElement('span'); txt.textContent = ' Eindcel';
+      input.addEventListener('change', () => { window.__locusEditorOverrideTool = null; });
+      wrapper.appendChild(input); wrapper.appendChild(span); wrapper.appendChild(txt); parent.appendChild(wrapper);
+    } catch (e) {}
+  }
+  ensureEndToolInSpecials();
+  setTimeout(ensureEndToolInSpecials, 600);
+
+  function ensurePortalToolInSpecials() {
+    try {
+      const sections = Array.from(document.querySelectorAll('.panel__section'));
+      const specials = sections.find(s => (s.querySelector('.panel__sectionTitle') || {}).textContent?.trim().toLowerCase() === 'specials');
+      const parent = specials || document.querySelector('.panel') || document.body;
+      if (!parent) return;
+      if (parent.querySelector('input[value="portal"]') || document.querySelector('input[value="portal"]')) return;
+      const id = 'tool-portal';
+      const wrapper = document.createElement('label'); wrapper.className = 'tool'; wrapper.style.display = 'flex'; wrapper.style.alignItems = 'center'; wrapper.style.gap = '6px'; wrapper.style.marginTop = '4px';
+      const input = document.createElement('input'); input.type = 'radio'; input.name = 'tool'; input.value = 'portal'; input.id = id;
+      const span = document.createElement('span'); span.className = 'symbol'; span.textContent = '🌀';
+      const txt = document.createElement('span'); txt.textContent = ' Portal';
+      input.addEventListener('change', () => { window.__locusEditorOverrideTool = null; });
+      wrapper.appendChild(input); wrapper.appendChild(span); wrapper.appendChild(txt);
+      parent.appendChild(wrapper);
+    } catch (e) {}
+  }
+  ensurePortalToolInSpecials();
+  setTimeout(ensurePortalToolInSpecials, 600);
+  
+  function ensureBlueStartToolInSpecials() {
+    try {
+      const toolRadios = Array.from(document.querySelectorAll('input[name="tool"]'));
+      const parent = toolRadios.length ? (toolRadios[0].closest('fieldset') || toolRadios[0].parentNode) : document.body;
+      if (!parent) return;
+      if (parent.querySelector('input[value="bold-blue"]')) return;
+      const id = 'tool-bold-blue';
+      const wrapper = document.createElement('div'); wrapper.style.display = 'flex'; wrapper.style.alignItems = 'center'; wrapper.style.gap = '6px'; wrapper.style.marginTop = '4px';
+      const input = document.createElement('input'); input.type = 'radio'; input.name = 'tool'; input.value = 'bold-blue'; input.id = id;
+      const label = document.createElement('label'); label.htmlFor = id; label.textContent = 'Blue start'; label.style.cursor = 'pointer';
+      input.addEventListener('change', () => { window.__locusEditorOverrideTool = null; });
+      wrapper.appendChild(input); wrapper.appendChild(label); parent.appendChild(wrapper);
+    } catch (e) {}
+  }
+  ensureBlueStartToolInSpecials();
+  setTimeout(ensureBlueStartToolInSpecials, 600);
 
 
   // Auto-load on open: if opened from the game, load snapshot once; otherwise fallback to storage.
