@@ -19591,57 +19591,14 @@ document.addEventListener('pointermove', ev => {
 	  const metrics = getZoneMetrics(zone);
 	  const floorY = Number.isFinite(metrics.maxY) ? metrics.maxY : null;
 	  const touchesFloor = floorY !== null && pendingCells.some(cell => Number(cell.dataset.y) === floorY);
-	  // Determine whether pendingCells touch an allowed bold-cell start.
-	  // Prefer a per-zone mark set during import (`data-editor-applied`) to detect
-	  // editor-applied boards. Fall back to global flags for backward compat.
-	const isEditorApplied = !!(
-		(zone && zone.dataset && String(zone.dataset.editorApplied) === 'true') ||
-		(window && window._locusEditorApplied)
-	);
-
-	const allBoldCells = Array.from(zone.querySelectorAll('.cell.bold-cell:not(.void-cell)'));
-	let touchesBold = false;
-	try {
-		// Compute only finite numeric Y values to avoid NaN pollution
-		const boldYs = allBoldCells.map(c => Number(c.dataset.y)).filter(v => Number.isFinite(v));
-		if (isEditorApplied || boldYs.length === 0) {
-			// Allow any bold-cell (or no explicit bold-cells exist)
-			touchesBold = pendingCells.some(cell => cell.classList && cell.classList.contains('bold-cell'));
-		} else {
-			// Restrict to bold-cells on the bottom-most bold row only
-			const maxBoldY = Math.max(...boldYs);
-			touchesBold = pendingCells.some(cell => cell.classList && cell.classList.contains('bold-cell') && Number(cell.dataset.y) === maxBoldY);
-		}
-	} catch (e) {
-		// Fallback conservative behavior: require explicit bottom-most check via dataset
-		touchesBold = pendingCells.some(cell => cell.classList && cell.classList.contains('bold-cell'));
-	}
-	try { console.debug('validateBluePlacement', { zoneId: zone.id, isEditorApplied, allBoldCount: allBoldCells.length, boldYs: allBoldCells.map(c=>c.dataset.y), touchesBold }); } catch(e){}
+	  // Blue: allow starting/anchoring from ANY bold-cell (not only the bottom row).
+	  // This matches the request to be able to place from any bold-cell without breaking scoring.
+	  const touchesBold = pendingCells.some(cell => cell && cell.classList && cell.classList.contains('bold-cell'));
 	  const hasActive = zoneHasActiveCells(zone);
 	  // If no active cells exist yet, allow placement when it touches floor OR a bold start cell
 	  if (!hasActive) return touchesFloor || touchesBold;
-	// If there are active cells, touching floor or bold-cell is acceptable
-	if (touchesFloor || touchesBold) {
-		// Extra safety: ensure any touched bold-cell is actually on the zone's bottom row
-		// when this is NOT an editor-applied board. This prevents stray bold-cells
-		// elsewhere in the DOM from being treated as valid starts.
-		try {
-			if (!isEditorApplied && touchesBold) {
-				const zoneMetrics = getZoneMetrics(zone);
-				if (zoneMetrics && Number.isFinite(zoneMetrics.maxY)) {
-					const bottomY = zoneMetrics.maxY;
-					const pendingTouchesBottom = pendingCells.some(cell => {
-						return cell && cell.classList && cell.classList.contains('bold-cell') && Number(cell.dataset.y) === bottomY;
-					});
-					if (!pendingTouchesBottom) {
-						// No touched bold-cell is on the true bottom row - disallow.
-						return pendingCells.some(cell => hasAdjacentActiveCell(zone, cell));
-					}
-				}
-			}
-		} catch (e) {}
-		return true;
-	}
+	  // If there are active cells, touching floor or bold-cell is acceptable
+	  if (touchesFloor || touchesBold) return true;
 	  return pendingCells.some(cell => hasAdjacentActiveCell(zone, cell));
 	}
 
@@ -25132,6 +25089,12 @@ document.addEventListener('pointerdown', ev => {
 				draggedBlock._shape = nextShape;
 				try { liftToBody(draggedBlock); } catch (e) {}
 				renderBlock(draggedBlock, nextShape, draggedColor || selectedColor);
+				try {
+					const overlay = document.getElementById('drag-overlay');
+					if (overlay && !overlay.contains(draggedBlock)) overlay.appendChild(draggedBlock);
+					if (overlay) overlay.style.display = 'block';
+					try { addCardControlButtons(); } catch (e) {}
+				} catch (e) {}
 				// After re-render, reposition so the center remains under the finger
 				const afterRect = draggedBlock.getBoundingClientRect();
 				if (Number.isFinite(centerX) && Number.isFinite(centerY) && afterRect.width > 0 && afterRect.height > 0) {
@@ -25142,12 +25105,33 @@ document.addEventListener('pointerdown', ev => {
 				draggedBlock.style.visibility = '';
 				if (!draggedBlock.style.position) draggedBlock.style.position = 'fixed';
 				draggedBlock.style.zIndex = draggedBlock.style.zIndex || '10000';
+					try {
+						const overlay = document.getElementById('drag-overlay');
+						if (overlay && !overlay.contains(draggedBlock)) overlay.appendChild(draggedBlock);
+						if (overlay) overlay.style.display = 'block';
+						try { addCardControlButtons(); } catch (e) {}
+					} catch (e) {}
+				// Ensure block stays attached to drag overlay and visible (fix disappearing on rotation)
+				try {
+					const overlay = document.getElementById('drag-overlay');
+					if (overlay) {
+						if (!overlay.contains(draggedBlock)) overlay.appendChild(draggedBlock);
+						overlay.style.display = 'block';
+					}
+					try { addCardControlButtons(); } catch (e) {}
+				} catch (e) {}
 			} catch (e) {
 				const nextShape = cloneShape(newShape);
 				draggedShape = nextShape;
 				draggedBlock._shape = nextShape;
 				try { liftToBody(draggedBlock); } catch (e) {}
 				renderBlock(draggedBlock, nextShape, draggedColor || selectedColor);
+				try {
+					const overlay = document.getElementById('drag-overlay');
+					if (overlay && !overlay.contains(draggedBlock)) overlay.appendChild(draggedBlock);
+					if (overlay) overlay.style.display = 'block';
+					try { addCardControlButtons(); } catch (e) {}
+				} catch (e) {}
 			}
 		} else if (draggedShape) {
 			draggedShape = cloneShape(newShape);
