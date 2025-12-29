@@ -13825,14 +13825,18 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	}
 
 	function computeShapeCenterOffsets(shape, cellSize = null) {
-		try {
-			if (!shape || !shape.length || !shape[0] || !shape[0].length) {
-				return { offsetX: 0, offsetY: 0 };
-			}
-			const metrics = getBoardCellMetrics();
-			const resolvedCellSize = Number.isFinite(cellSize) ? Number(cellSize) : metrics.cellSize;
-			const resolvedGap = Number.isFinite(cellSize) ? 0 : metrics.gap;
-			const resolvedStep = resolvedCellSize + resolvedGap;
+			try {
+				if (!shape || !shape.length || !shape[0] || !shape[0].length) {
+					return { offsetX: 0, offsetY: 0 };
+				}
+				const metrics = getBoardCellMetrics();
+				// If a specific cellSize was passed, use it (gap assumed 0). Otherwise
+				// when zoomed-in measure the actual cell size from the active zoom
+				// zone so offsets align with the rendered draggable.
+				const measuredRoot = (document.body.classList.contains('zoomed-in') && typeof activeZoomZone !== 'undefined' && activeZoomZone) ? activeZoomZone : null;
+				const resolvedCellSize = Number.isFinite(cellSize) ? Number(cellSize) : getActualCellSize(measuredRoot) || metrics.cellSize;
+				const resolvedGap = Number.isFinite(cellSize) ? 0 : metrics.gap;
+				const resolvedStep = resolvedCellSize + resolvedGap;
 
 			const shapeHeight = shape.length;
 			const shapeWidth = shape[0].length;
@@ -18130,14 +18134,19 @@ document.addEventListener('pointermove', ev => {
 	  draggedBlock.style.left = (cursorX - offsetX) + 'px';
 	  draggedBlock.style.top  = (cursorY - offsetY - touchOffsetY) + 'px';
 
-	  // ===== Vind zones en cellen onder ALLE gevulde cellen van het blok =====
-	  const blockRect = draggedBlock.getBoundingClientRect();
-	  const { cellSize, step } = getBoardCellMetrics();
-	  
-	  // Verzamel alle hits van gevulde cellen
-	  const shapeHeight = draggedShape.length;
-	  const shapeWidth = draggedShape[0].length;
-	  const cellHits = [];
+	// ===== Vind zones en cellen onder ALLE gevulde cellen van het blok =====
+	const blockRect = draggedBlock.getBoundingClientRect();
+
+	// Derive per-cell spacing from the rendered draggable block so
+	// sampling points match what the user actually sees. This keeps
+	// visual size unchanged while aligning elementFromPoint checks.
+	const shapeHeight = draggedShape.length;
+	const shapeWidth = draggedShape[0].length;
+	const stepX = shapeWidth > 0 ? (blockRect.width / shapeWidth) : 0;
+	const stepY = shapeHeight > 0 ? (blockRect.height / shapeHeight) : 0;
+
+	// Verzamel alle hits van gevulde cellen
+	const cellHits = [];
 	  
 	  // Schakel pointer events uit voor het gedraaide blok
 	  const prevPointerEvents = draggedBlock.style.pointerEvents;
@@ -18149,8 +18158,8 @@ document.addEventListener('pointermove', ev => {
 		  // Optional (value 2) cells should NOT drive hit-testing / anchoring.
 		  if (isSolidShapeCell(draggedShape[row][col])) {
 			// Bereken de positie van deze cel in het visuele blok
-			const cellX = blockRect.left + (col * step) + (cellSize / 2);
-			const cellY = blockRect.top + (row * step) + (cellSize / 2);
+			const cellX = blockRect.left + (col * stepX) + (stepX / 2);
+			const cellY = blockRect.top + (row * stepY) + (stepY / 2);
 			
 			// Vind de grid cel onder dit punt
 			const elem = document.elementFromPoint(cellX, cellY);
@@ -18906,18 +18915,29 @@ document.addEventListener('pointermove', ev => {
 	  card.cardShape = shape;
 	}
 
-	function getActualCellSize() {
-	  // Bereken de werkelijke cel-grootte op basis van een cel in het speelveld
-	  // Dit houdt rekening met board scaling
-	  const sampleCell = document.querySelector('#board .grid .cell:not(.void-cell)');
-	  if (sampleCell) {
-		const rect = sampleCell.getBoundingClientRect();
-		// Gebruik de kleinste dimensie (cellen zijn vierkant)
-		return Math.min(rect.width, rect.height);
-	  }
-	  // Fallback naar CSS variabele
-	  const cssSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')) || 26;
-	  return cssSize;
+	function getActualCellSize(root = null) {
+		// Bereken de werkelijke cel-grootte op basis van een cel in het opgegeven root
+		// (of het globale speelveld als geen root gegeven). Dit houdt rekening met
+		// board/zone scaling and any DOM lifts performed during mobile zoom.
+		try {
+			let sampleCell = null;
+			if (root instanceof Element) {
+				sampleCell = root.querySelector('.grid .cell:not(.void-cell)');
+			} else if (typeof root === 'string') {
+				sampleCell = document.querySelector(root + ' .grid .cell:not(.void-cell)');
+			} else {
+				sampleCell = document.querySelector('#board .grid .cell:not(.void-cell)');
+			}
+
+			if (sampleCell) {
+				const rect = sampleCell.getBoundingClientRect();
+				return Math.min(rect.width, rect.height);
+			}
+		} catch (e) {
+			// ignore and fallback
+		}
+		const cssSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')) || 26;
+		return cssSize;
 	}
 
 	function renderBlock(block, shape, color, useActualCellSize = true) {
@@ -18929,13 +18949,15 @@ document.addEventListener('pointermove', ev => {
 	  let cellSize;
 	  let cellSizeStr;
 	  
-	// Use the actual rendered cell size when requested OR when in zoomed-in mode
-	// (avoids visual vs hit-test mismatch caused by using the CSS var during zoom)
-	if (useActualCellSize || isZoomed) {
-		cellSize = getActualCellSize();
+	if (useActualCellSize) {
+		// If a zoomed zone is active, measure cell size from that zone so
+		// the draggable matches the zoomed-in cells exactly. Otherwise
+		// measure from the default board.
+		const measuredRoot = (document.body.classList.contains('zoomed-in') && typeof activeZoomZone !== 'undefined' && activeZoomZone) ? activeZoomZone : null;
+		cellSize = getActualCellSize(measuredRoot);
 		cellSizeStr = `${cellSize}px`;
 	} else {
-		// Fallback: use the CSS variable when explicit actual sizing is not desired
+		// Fallback: use CSS variable when explicit actual sizing is not requested.
 		cellSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')) || 26;
 		cellSizeStr = 'var(--cell-size)';
 	}
