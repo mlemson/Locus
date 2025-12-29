@@ -25125,7 +25125,11 @@ document.addEventListener('pointerdown', ev => {
 	}
 
 	function mirrorSelectedCard() {
-	  if (activeBonusPlacement) {
+		// If controls were deliberately delayed for a touch-initiated bonus drag,
+		// ignore mirror actions until the controls are revealed on release.
+		if (activeBonusPlacement && activeBonusPlacement.delayedControls) return;
+
+		if (activeBonusPlacement) {
 		// Spiegel de shape in activeBonusPlacement
 		const currentShape = selectedShape || draggedShape;
 		if (!currentShape) return;
