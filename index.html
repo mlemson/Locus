@@ -373,6 +373,26 @@
 		gap: 12px; /* ruimte tussen vakken in dezelfde kolom */
 		flex: 1; /* kolommen gelijk breed op mobiel */
 	}
+
+	// Reposition and clear touch control styling after pointer/touch release
+	(function(){
+		function repositionCardControlsSoon(){
+			try {
+				setTimeout(function(){
+					if (typeof addCardControlButtons === 'function') {
+						try { addCardControlButtons(); } catch (e) {}
+					}
+					// Clear any lingering transforms that some browsers keep after drag
+					document.querySelectorAll('.card-control-btn').forEach(btn => {
+						btn.style.transform = '';
+					});
+				}, 60);
+			} catch (e) {}
+		}
+		['touchend','pointerup','mouseup','touchcancel'].forEach(ev => {
+			document.addEventListener(ev, repositionCardControlsSoon, { passive: true });
+		});
+	})();
 	.zone {
 		/* Geen background hier - wordt per zone ingesteld */
 		position: relative;
@@ -707,10 +727,27 @@
 		}
 
 		body.mobile-sidebar-layout #ml-sidebar-left #gold-zone::after {
-			content: '🪙 ' attr(data-coin-text);
+			content: attr(data-coin-text);
 			display: block;
 			font-size: 0.6rem;
 			font-weight: 700;
+			padding-left: 20px; /* ruimte voor het CSS-coin icoon */
+			position: relative;
+		}
+
+		/* CSS-drawn coin voor compatibele weergave (fallback voor Emoji/Edge) */
+		body.mobile-sidebar-layout #ml-sidebar-left #gold-zone::before {
+			content: '';
+			position: absolute;
+			left: 0;
+			top: 50%;
+			transform: translateY(-50%);
+			width: 14px;
+			height: 14px;
+			border-radius: 50%;
+			background: radial-gradient(circle at 30% 30%, #fff6b5, #f7bb36 60%, #d49f20);
+			box-shadow: inset 0 -1px 2px rgba(0,0,0,0.2);
+			border: 1px solid #c9960a;
 		}
 
 		body.mobile-sidebar-layout #ml-sidebar-left #gold-zone .buy-placement-btn {
