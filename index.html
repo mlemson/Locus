@@ -14816,7 +14816,9 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 				selectedShape = shape;
 				selectedColor = colorObj;
 				if (rotateButton) rotateButton.disabled = false;
-				if (mirrorButton) mirrorButton.disabled = false;
+				// For touch-initiated bonus drags, delay showing the mirror control
+				// until the block is placed/released to avoid accidental mirrors.
+				if (mirrorButton) mirrorButton.disabled = true;
 				markActiveBonusButton('free');
 				
 				badge.setPointerCapture(event.pointerId);
@@ -14836,7 +14838,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 				const touchOffsetY = 60;
 				draggedBlock.style.left = `${event.clientX - offsetX}px`;
 				draggedBlock.style.top = `${event.clientY - offsetY - touchOffsetY}px`;
-				addCardControlButtons();
+				// Controls are delayed for touch bonus drags; they will appear on release.
+				activeBonusPlacement.delayedControls = true;
 			} else {
 				activeBonusPlacement = {
 					colorKey: 'free',
@@ -14897,7 +14900,9 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		selectedShape = shape;
 		selectedColor = colorObj;
 		if (rotateButton) rotateButton.disabled = false;
-		if (mirrorButton) mirrorButton.disabled = false;
+		// For touch-initiated bonus drags, delay showing the mirror control
+		// until the block is placed/released to avoid accidental mirrors.
+		if (mirrorButton) mirrorButton.disabled = true;
 		markActiveBonusButton(colorKey);
 
 		// Maak het blok direct draggable vanaf pointer positie (niet op de badge),
@@ -14931,8 +14936,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		try { badge.setPointerCapture(event.pointerId); } catch {}
 		beginPointerDrag({ clientX: event.clientX, clientY: event.clientY, pointerId: event.pointerId || null });
 		startGlobalDragVisuals();
-		// Toon transform buttons direct bij het blok
-		addCardControlButtons();
+		// Delay transform buttons (mirror) for touch bonus drags; they'll appear on release
+		activeBonusPlacement.delayedControls = true;
 
 			// Ensure correct sizing after any zoom/lift finishes
 			requestAnimationFrame(() => {
@@ -18704,8 +18709,41 @@ document.addEventListener('pointermove', ev => {
 
 		// Ensure the rotate/mirror controls are available.
 		if (rotateButton) rotateButton.disabled = false;
-		if (mirrorButton) mirrorButton.disabled = false;
+		if (mirrorButton) {
+			// Only enable mirror now if controls were not intentionally delayed
+			if (!activeBonusPlacement || !activeBonusPlacement.delayedControls) {
+				mirrorButton.disabled = false;
+			}
+		}
 		addCardControlButtons();
+		// If mirror was delayed for this bonus drag, reveal it now and re-position
+		try {
+			if (activeBonusPlacement && activeBonusPlacement.delayedControls) {
+				const mb = document.querySelector('.card-control-mirror');
+				if (mb) {
+					mb.disabled = false;
+					mb.classList.add('visible');
+					mb.removeAttribute('data-delayed');
+					// Re-run positioning logic for touch
+					if (('ontouchstart' in window || navigator.maxTouchPoints > 0) && draggedBlock) {
+						const rect = draggedBlock.getBoundingClientRect();
+						const centerX = rect.left + (rect.width / 2);
+						const spacing = 56;
+						const startX = centerX - spacing;
+						const y = rect.bottom + 8;
+						const clampX = (x, w=44) => Math.max(8, Math.min((window.innerWidth - (w + 8)), Math.round(x)));
+						const cancelBtn = document.querySelector('.card-control-cancel');
+						const rotateBtn = document.querySelector('.card-control-rotate');
+						if (cancelBtn) cancelBtn.style.left = clampX(startX - spacing) + 'px';
+						if (rotateBtn) rotateBtn.style.left = clampX(startX) + 'px';
+						mb.style.left = clampX(startX + spacing) + 'px';
+						if (cancelBtn) cancelBtn.style.top = rotateBtn.style.top = mb.style.top = y + 'px';
+						if (cancelBtn) cancelBtn.style.bottom = rotateBtn.style.bottom = mb.style.bottom = '';
+					}
+				}
+				activeBonusPlacement.delayedControls = false;
+			}
+		} catch (e) {}
 	}
 
 	function findCellInZone(zone, clientX, clientY) {
@@ -19555,8 +19593,28 @@ document.addEventListener('pointermove', ev => {
 	  const hasActive = zoneHasActiveCells(zone);
 	  // If no active cells exist yet, allow placement when it touches floor OR a bold start cell
 	  if (!hasActive) return touchesFloor || touchesBold;
-	  // If there are active cells, touching floor or bold-cell is acceptable
-	  if (touchesFloor || touchesBold) return true;
+	// If there are active cells, touching floor or bold-cell is acceptable
+	if (touchesFloor || touchesBold) {
+		// Extra safety: ensure any touched bold-cell is actually on the zone's bottom row
+		// when this is NOT an editor-applied board. This prevents stray bold-cells
+		// elsewhere in the DOM from being treated as valid starts.
+		try {
+			if (!isEditorApplied && touchesBold) {
+				const zoneMetrics = getZoneMetrics(zone);
+				if (zoneMetrics && Number.isFinite(zoneMetrics.maxY)) {
+					const bottomY = zoneMetrics.maxY;
+					const pendingTouchesBottom = pendingCells.some(cell => {
+						return cell && cell.classList && cell.classList.contains('bold-cell') && Number(cell.dataset.y) === bottomY;
+					});
+					if (!pendingTouchesBottom) {
+						// No touched bold-cell is on the true bottom row - disallow.
+						return pendingCells.some(cell => hasAdjacentActiveCell(zone, cell));
+					}
+				}
+			}
+		} catch (e) {}
+		return true;
+	}
 	  return pendingCells.some(cell => hasAdjacentActiveCell(zone, cell));
 	}
 
@@ -24947,10 +25005,20 @@ document.addEventListener('pointerdown', ev => {
 			document.body.appendChild(cancelBtn);
 		}
 		
-		// Maak buttons zichtbaar
-		rotateBtn.classList.add('visible');
-		mirrorBtn.classList.add('visible');
-		cancelBtn.classList.add('visible');
+				// Maak buttons zichtbaar. For touch-initiated bonus drags we may delay
+				// the mirror button until release (activeBonusPlacement.delayedControls).
+				rotateBtn.classList.add('visible');
+				cancelBtn.classList.add('visible');
+				const isDelayingMirror = !!(activeBonusPlacement && activeBonusPlacement.delayedControls && isTouchDevice);
+				if (!isDelayingMirror) {
+					mirrorBtn.classList.add('visible');
+					mirrorBtn.disabled = false;
+				} else {
+					// Keep mirror hidden and disabled until later
+					mirrorBtn.classList.remove('visible');
+					mirrorBtn.disabled = true;
+					mirrorBtn.dataset.delayed = 'true';
+				}
 
 		// Position buttons for touch devices:
 		if (isTouchDevice) {
