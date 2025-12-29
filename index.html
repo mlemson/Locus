@@ -17535,9 +17535,11 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		// be eligible for placement/scoring. If this board was loaded from the
 		// external editor (custom level metadata present) allow all bold rows.
 		const isBlueGrid = String(gridId || '').toLowerCase().indexOf('blue') !== -1;
-		const isCustomBoard = !!(window && (
-			(window.loadedCustomLevelMeta && (window.loadedCustomLevelMeta.name || window.loadedCustomLevelMeta.objective || window.loadedCustomLevelMetaCompleted)) || window._locusEditorApplied
-		));
+		// Treat a board as "editor-applied" only when explicitly marked by
+		// the editor flow (window._locusEditorApplied) or the zone itself.
+		// Do NOT assume a board is custom just because some global metadata
+		// exists; that caused all bold rows to be treated as start anchors.
+		const isCustomBoard = !!(window && window._locusEditorApplied);
 		let visualRowsToProcess = allVisualRows;
 		if (isBlueGrid && !isCustomBoard && allVisualRows.length > 0) {
 			const bottom = Math.max(...allVisualRows);
@@ -18979,8 +18981,18 @@ document.addEventListener('pointermove', ev => {
 	}
 
 	function renderBlock(block, shape, color, useActualCellSize = true) {
-	  block.innerHTML = '';
-	  block.style.display = 'grid';
+	block.innerHTML = '';
+	block.style.display = 'grid';
+	// Ensure floating/draggable previews remain visible on top when rotated
+	try {
+		const isFloatingPreview = (block.id === 'floating-preview' || block.id === 'purchased-block-preview' || (block.classList && (block.classList.contains('draggable') || block.classList.contains('bonus-draggable'))));
+		if (isFloatingPreview) {
+			if (!block.style.position) block.style.position = 'fixed';
+			block.style.zIndex = block.style.zIndex || '10000';
+			const overlay = document.getElementById('drag-overlay') || document.body;
+			if (overlay && !overlay.contains(block)) overlay.appendChild(block);
+		}
+	} catch (e) {}
 	  
 	  // Bepaal de cel-grootte: gebruik de werkelijke speelveld cel-grootte als niet ingezoomd
 	  const isZoomed = document.body.classList.contains('zoomed-in');
@@ -19517,21 +19529,29 @@ document.addEventListener('pointermove', ev => {
 	  // Determine whether pendingCells touch an allowed bold-cell start.
 	  // Prefer a per-zone mark set during import (`data-editor-applied`) to detect
 	  // editor-applied boards. Fall back to global flags for backward compat.
-	  const isEditorApplied = !!(
+	const isEditorApplied = !!(
 		(zone && zone.dataset && String(zone.dataset.editorApplied) === 'true') ||
-		(window && (window._locusEditorApplied || window.loadedCustomLevelMeta))
-	  );
+		(window && window._locusEditorApplied)
+	);
 
- 	  const allBoldCells = Array.from(zone.querySelectorAll('.cell.bold-cell:not(.void-cell)'));
- 	  let touchesBold = false;
- 	  if (isEditorApplied || !allBoldCells.length) {
- 		// Allow any bold-cell (or no explicit bold-cells exist)
- 		touchesBold = pendingCells.some(cell => cell.classList && cell.classList.contains('bold-cell'));
- 	  } else {
- 		// Restrict to bold-cells on the bottom-most bold row only
- 		const maxBoldY = Math.max(...allBoldCells.map(c => Number(c.dataset.y)));
- 		touchesBold = pendingCells.some(cell => cell.classList && cell.classList.contains('bold-cell') && Number(cell.dataset.y) === maxBoldY);
- 	  }
+	const allBoldCells = Array.from(zone.querySelectorAll('.cell.bold-cell:not(.void-cell)'));
+	let touchesBold = false;
+	try {
+		// Compute only finite numeric Y values to avoid NaN pollution
+		const boldYs = allBoldCells.map(c => Number(c.dataset.y)).filter(v => Number.isFinite(v));
+		if (isEditorApplied || boldYs.length === 0) {
+			// Allow any bold-cell (or no explicit bold-cells exist)
+			touchesBold = pendingCells.some(cell => cell.classList && cell.classList.contains('bold-cell'));
+		} else {
+			// Restrict to bold-cells on the bottom-most bold row only
+			const maxBoldY = Math.max(...boldYs);
+			touchesBold = pendingCells.some(cell => cell.classList && cell.classList.contains('bold-cell') && Number(cell.dataset.y) === maxBoldY);
+		}
+	} catch (e) {
+		// Fallback conservative behavior: require explicit bottom-most check via dataset
+		touchesBold = pendingCells.some(cell => cell.classList && cell.classList.contains('bold-cell'));
+	}
+	try { console.debug('validateBluePlacement', { zoneId: zone.id, isEditorApplied, allBoldCount: allBoldCells.length, boldYs: allBoldCells.map(c=>c.dataset.y), touchesBold }); } catch(e){}
 	  const hasActive = zoneHasActiveCells(zone);
 	  // If no active cells exist yet, allow placement when it touches floor OR a bold start cell
 	  if (!hasActive) return touchesFloor || touchesBold;
