@@ -19569,9 +19569,17 @@ document.addEventListener('pointermove', ev => {
 	  const metrics = getZoneMetrics(zone);
 	  const floorY = Number.isFinite(metrics.maxY) ? metrics.maxY : null;
 	  const touchesFloor = floorY !== null && pendingCells.some(cell => Number(cell.dataset.y) === floorY);
-	  // Blue: allow starting/anchoring from ANY bold-cell (not only the bottom row).
-	  // This matches the request to be able to place from any bold-cell without breaking scoring.
-	  const touchesBold = pendingCells.some(cell => cell && cell.classList && cell.classList.contains('bold-cell'));
+	  // Blue: only allow starting from the bottom-most bold row (the start / latest generated bold-cells).
+	  // Do NOT allow starting from any arbitrary bold-cell higher up in the river.
+	  let bottomBoldY = null;
+	  try {
+		const boldCells = Array.from(zone.querySelectorAll('.cell.bold-cell:not(.void-cell)'));
+		const boldYs = boldCells.map(c => Number(c.dataset.y)).filter(v => Number.isFinite(v));
+		if (boldYs.length) bottomBoldY = Math.max(...boldYs);
+	  } catch (e) {}
+	  const touchesBold = bottomBoldY !== null && pendingCells.some(cell => {
+		return cell && cell.classList && cell.classList.contains('bold-cell') && Number(cell.dataset.y) === bottomBoldY;
+	  });
 	  const hasActive = zoneHasActiveCells(zone);
 	  // If no active cells exist yet, allow placement when it touches floor OR a bold start cell
 	  if (!hasActive) return touchesFloor || touchesBold;
@@ -19674,6 +19682,12 @@ document.addEventListener('pointermove', ev => {
 		const metrics = getZoneMetrics(zone);
 		if (!metrics || metrics.maxY < metrics.minY) return baseY;
 		const floorY = Number.isFinite(metrics.maxY) ? metrics.maxY : null;
+		let bottomBoldY = null;
+		try {
+			const boldCells = Array.from(zone.querySelectorAll('.cell.bold-cell:not(.void-cell)'));
+			const boldYs = boldCells.map(c => Number(c.dataset.y)).filter(v => Number.isFinite(v));
+			if (boldYs.length) bottomBoldY = Math.max(...boldYs);
+		} catch (e) {}
 		
 		// GEEN magnetisch effect meer - alleen checken of positie geldig is
 		// Een positie is geldig als:
@@ -19695,8 +19709,8 @@ document.addEventListener('pointermove', ev => {
 				if (floorY !== null && cell && Number(cell.dataset.y) === floorY) {
 					touchesFloor = true;
 				}
-				// Check of deze cel een bold start/anker raakt
-				if (cell && cell.classList.contains('bold-cell')) {
+				// Check bold start/anker: ONLY bottom-most bold row
+				if (bottomBoldY !== null && cell && cell.classList.contains('bold-cell') && Number(cell.dataset.y) === bottomBoldY) {
 					touchesFloor = true;
 				}
 				
