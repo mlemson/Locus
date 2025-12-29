@@ -14910,6 +14910,16 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		const touchOffsetY = 60;
 		block.style.left = `${event.clientX - offsetX}px`;
 		block.style.top = `${event.clientY - offsetY - touchOffsetY}px`;
+
+		// Ensure block immediately matches zoomed cell size if a zoom/lift occurred
+		requestAnimationFrame(() => {
+			try {
+				renderBlock(block, block._shape || shape, colorObj);
+				({ offsetX, offsetY } = computeShapeCenterOffsets(block._shape || shape));
+				block.style.left = `${event.clientX - offsetX}px`;
+				block.style.top = `${event.clientY - offsetY - touchOffsetY}px`;
+			} catch (e) {}
+		});
 		const overlay = document.getElementById('drag-overlay');
 		if (overlay && !overlay.contains(block)) {
 			overlay.appendChild(block);
@@ -14923,6 +14933,17 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		startGlobalDragVisuals();
 		// Toon transform buttons direct bij het blok
 		addCardControlButtons();
+
+			// Ensure correct sizing after any zoom/lift finishes
+			requestAnimationFrame(() => {
+				try {
+					renderBlock(block, block._shape || shape, colorObj);
+					({ offsetX, offsetY } = computeShapeCenterOffsets(block._shape || shape));
+					const touchOffsetY2 = 60;
+					block.style.left = `${event.clientX - offsetX}px`;
+					block.style.top = `${event.clientY - offsetY - touchOffsetY2}px`;
+				} catch (e) {}
+			});
 		return;
 	} else if (window.innerWidth <= MOBILE_BREAKPOINT) {
 		// Niet-touch mobiel: maak blok direct draggable
@@ -14956,7 +14977,16 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		block.style.top = `${event.clientY - offsetY}px`;
 		// visuals handled by startGlobalDragVisuals()
 		if (overlay) overlay.style.display = 'block';
-		return;
+			// After possible zoom/DOM-lift, re-render to pick up zoomed cell size
+			requestAnimationFrame(() => {
+				try {
+					renderBlock(block, block._shape || shape, colorObj);
+					({ offsetX, offsetY } = computeShapeCenterOffsets(block._shape || shape));
+					block.style.left = `${event.clientX - offsetX}px`;
+					block.style.top = `${event.clientY - offsetY}px`;
+				} catch (e) {}
+			});
+			return;
 	}
 		// Desktop (mouse): click-to-pickup -> hover-follow -> click-to-drop
 		const isMobileLayout = window.innerWidth <= MOBILE_BREAKPOINT;
@@ -18920,6 +18950,14 @@ document.addEventListener('pointermove', ev => {
 		// (of het globale speelveld als geen root gegeven). Dit houdt rekening met
 		// board/zone scaling and any DOM lifts performed during mobile zoom.
 		try {
+			// Mobile behaviour: always prefer the unscaled CSS cell size (the
+			// "zoomed-in" visual size) for mobile layouts so previews match the
+			// zoomed experience even before the zone is opened.
+			if (window && typeof window.innerWidth === 'number' && window.innerWidth <= (typeof MOBILE_BREAKPOINT !== 'undefined' ? MOBILE_BREAKPOINT : 650)) {
+				const cssSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')) || 26;
+				return cssSize;
+			}
+
 			let sampleCell = null;
 			if (root instanceof Element) {
 				sampleCell = root.querySelector('.grid .cell:not(.void-cell)');
@@ -20133,6 +20171,25 @@ function getCollectedCoinCount(scores) {
 	  if (window.hasPurchasedPlacement) {
 		btn.style.display = 'none';
 		if (preview) preview.style.display = 'flex';
+		// Ensure preview cell matches zoomed cell size when zoomed
+		try {
+			if (document.body.classList.contains('zoomed-in')) {
+				const cellSize = Math.round(getActualCellSize(typeof activeZoomZone !== 'undefined' && activeZoomZone ? activeZoomZone : null));
+				const cellEl = preview.querySelector('.purchased-block-cell');
+				if (cellEl && Number.isFinite(cellSize) && cellSize > 6) {
+					cellEl.style.width = cellEl.style.height = `${cellSize}px`;
+					cellEl.style.borderRadius = `${Math.min(8, Math.round(cellSize / 4))}px`;
+				}
+			} else {
+				// restore default CSS sizing
+				const cellEl = preview.querySelector('.purchased-block-cell');
+				if (cellEl) {
+					cellEl.style.removeProperty('width');
+					cellEl.style.removeProperty('height');
+					cellEl.style.removeProperty('border-radius');
+				}
+			}
+		} catch (e) {}
 		return;
 	  }
 	  
@@ -20218,6 +20275,17 @@ function getCollectedCoinCount(scores) {
 	  const touchOffsetY = isTouchDevice ? 60 : 0; // Offset zodat vinger het blok niet bedekt
 	  draggedBlock.style.left = `${startX - offsetX}px`;
 	  draggedBlock.style.top = `${startY - offsetY - touchOffsetY}px`;
+
+	// Ensure the purchased draggable immediately measures zoomed cell size
+	// (in case zoom/lift just occurred). Re-render on next frame.
+	requestAnimationFrame(() => {
+		try {
+			renderBlock(block, block._shape || shape, colorObj);
+			({ offsetX, offsetY } = computeShapeCenterOffsets(block._shape || shape));
+			block.style.left = `${startX - offsetX}px`;
+			block.style.top = `${startY - offsetY - touchOffsetY}px`;
+		} catch (e) {}
+	});
 	  
 	  activeBonusPlacement = {
 		colorKey: 'purchased',
@@ -21661,6 +21729,18 @@ function getCollectedCoinCount(scores) {
 			if (rotateButton) rotateButton.disabled = false;
 			if (mirrorButton) mirrorButton.disabled = false;
 			addCardControlButtons();
+
+			// Re-render on next frame so the draggable measures the correct cell size
+			// if a zoom/lift was triggered via autoZoomToColorZone().
+			requestAnimationFrame(() => {
+				try {
+					renderBlock(freeBlock, freeBlock._shape || shape, colorObj);
+					({ offsetX, offsetY } = computeShapeCenterOffsets(freeBlock._shape || shape));
+					const touchOffsetY2 = 60;
+					freeBlock.style.left = `${event.clientX - offsetX}px`;
+					freeBlock.style.top = `${event.clientY - offsetY - touchOffsetY2}px`;
+				} catch (e) {}
+			});
 		} else {
 			if (rotateButton) rotateButton.disabled = true;
 			if (mirrorButton) mirrorButton.disabled = true;
@@ -24851,12 +24931,50 @@ document.addEventListener('pointerdown', ev => {
 		rotateBtn.classList.add('visible');
 		mirrorBtn.classList.add('visible');
 		cancelBtn.classList.add('visible');
+
+		// Position buttons for touch devices:
+		if (isTouchDevice) {
+			// Helper to clamp horizontal positions within viewport
+			const clampX = (x, w=44) => Math.max(8, Math.min((window.innerWidth - (w + 8)), Math.round(x)));
+			if (draggedBlock) {
+				// Place controls directly under the dragged block (centered)
+				try {
+					const rect = draggedBlock.getBoundingClientRect();
+					const centerX = rect.left + (rect.width / 2);
+					const spacing = 56; // horizontal spacing between buttons
+					const startX = centerX - spacing;
+					const y = rect.bottom + 8;
+					cancelBtn.style.left = clampX(startX - spacing) + 'px';
+					rotateBtn.style.left = clampX(startX) + 'px';
+					mirrorBtn.style.left = clampX(startX + spacing) + 'px';
+					cancelBtn.style.top = rotateBtn.style.top = mirrorBtn.style.top = y + 'px';
+					cancelBtn.style.bottom = rotateBtn.style.bottom = mirrorBtn.style.bottom = '';
+				} catch (e) {}
+			} else {
+				// Desktop touch: anchor controls to bottom center for both portrait and landscape
+				const centerX = Math.round(window.innerWidth / 2);
+				const spacing = 56;
+				const startX = centerX - spacing;
+				const bottomVal = 'calc(var(--bottom-bar-height) + 10px)';
+				cancelBtn.style.left = clampX(startX - spacing) + 'px';
+				rotateBtn.style.left = clampX(startX) + 'px';
+				mirrorBtn.style.left = clampX(startX + spacing) + 'px';
+				cancelBtn.style.bottom = rotateBtn.style.bottom = mirrorBtn.style.bottom = bottomVal;
+				cancelBtn.style.top = rotateBtn.style.top = mirrorBtn.style.top = '';
+			}
+		}
 	}
 
 	function removeCardControlButtons() {
 		// Verberg alle card control buttons
-		const buttons = document.querySelectorAll('.card-control-btn');
-		buttons.forEach(btn => btn.classList.remove('visible'));
+			const buttons = document.querySelectorAll('.card-control-btn');
+			buttons.forEach(btn => {
+				btn.classList.remove('visible');
+				// Clear any inline positioning applied for touch mode so CSS can take over again.
+				btn.style.removeProperty('left');
+				btn.style.removeProperty('top');
+				btn.style.removeProperty('bottom');
+			});
 	}
 
 	function rotateSelectedCard() {
@@ -25066,17 +25184,35 @@ function showFloatingPreview(shape, color, options = {}) {
 		// Clear oude pattern
 		patternContainer.innerHTML = '';
 
-		// Bereken cell size op basis van shape dimensies
+		// Bereken cell size: als we gezoomd zijn of dit een bonus-preview is,
+		// meet de werkelijke celgrootte uit de actieve zoomzone en gebruik die
+		// zodat de preview overeenkomt met wat de gebruiker ziet op het bord.
 		const rows = shape.length;
 		const cols = shape[0].length;
-		const maxDim = Math.max(rows, cols);
-		const containerSize = 76; // 100px - 24px padding
-		const cellSize = Math.floor(containerSize / maxDim) - 2;
+		let cellSize = 0;
+		let gapPx = 2;
+		try {
+			if (document.body.classList.contains('zoomed-in') && typeof activeZoomZone !== 'undefined' && activeZoomZone) {
+				cellSize = Math.round(getActualCellSize(activeZoomZone));
+				const metrics = getBoardCellMetrics();
+				gapPx = metrics.gap || 2;
+			}
+		} catch (e) {
+			cellSize = 0;
+		}
+
+		// Fallback: keep the old small container-based sizing when not zoomed
+		if (!cellSize || !Number.isFinite(cellSize) || cellSize <= 8) {
+			const maxDim = Math.max(rows, cols);
+			const containerSize = 76; // 100px - 24px padding
+			cellSize = Math.max(8, Math.floor(containerSize / maxDim) - 2);
+			gapPx = 2;
+		}
 
 		// Maak grid voor het pattern
 		const grid = document.createElement('div');
 		grid.style.display = 'grid';
-		grid.style.gap = '2px';
+		grid.style.gap = `${gapPx}px`;
 		grid.style.gridTemplateColumns = `repeat(${cols}, ${cellSize}px)`;
 		grid.style.gridTemplateRows = `repeat(${rows}, ${cellSize}px)`;
 
@@ -27474,11 +27610,23 @@ body { background: transparent !important; }
 	}
  
 	function getCardSizing() {
-	  const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
-	  return {
-		cardSize: isMobile ? 140 : 110,
-		cellSize: isMobile ? 14 : 20
-	  };
+		const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
+		// If we're in a zoomed-in mobile view, prefer measuring the actual
+		// rendered cell size from the active zoom zone so card previews use
+		// the same cell size as the board.
+		try {
+			if (document.body.classList.contains('zoomed-in') && typeof activeZoomZone !== 'undefined' && activeZoomZone) {
+				const measured = Math.round(getActualCellSize(activeZoomZone));
+				return {
+					cardSize: isMobile ? 140 : 110,
+					cellSize: Number.isFinite(measured) && measured > 6 ? measured : (isMobile ? 14 : 20)
+				};
+			}
+		} catch (e) {}
+		return {
+			cardSize: isMobile ? 140 : 110,
+			cellSize: isMobile ? 14 : 20
+		};
 	}
 
 	function applyCardSizing() {
