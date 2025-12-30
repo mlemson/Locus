@@ -13,19 +13,22 @@
 		*/
 		(function preloadThemeClass() {
 			try {
-				var storedTheme = localStorage.getItem('theme');
-				if (!storedTheme) {
-					var legacy = localStorage.getItem('darkMode');
-					if (legacy === 'true') storedTheme = 'dark';
-					else if (legacy === 'false') storedTheme = 'light';
-				}
-				// Default: dark mode on (unless user explicitly chose light before).
-				if (!storedTheme) storedTheme = 'dark';
-				if (storedTheme === 'dark') {
-					document.documentElement.classList.add('dark-mode');
-				}
+				// Force dark mode as the default. We still keep the DOMContentLoaded
+				// handler as the source-of-truth for toggles, but ensure the page
+				// renders in dark immediately to avoid a flash of the wrong theme.
+				document.documentElement.classList.add('dark-mode');
+				// Also inject a minimal inline style to ensure immediate dark background
+				// and text color before external/embedded CSS parses fully.
+				var _s = document.createElement('style');
+				_s.setAttribute('data-locus-theme-preload','true');
+				_s.textContent = 'html,body { background: #1b1d22 !important; color: #e5e5e5 !important; }\n'
+					+ '#menu-toggle { background: #2f3546 !important; border-color: rgba(255,255,255,0.12) !important; }\n'
+					+ '#menu-toggle span { background: rgba(255,255,255,0.88) !important; }\n'
+					+ '#mobile-objective-banner, #ml-objective-top, #objective-zone { background: rgba(34,37,43,0.95) !important; color: #e5e5e5 !important; }\n'
+					+ '.card { background: #333 !important; color: inherit !important; }';
+				document.head.appendChild(_s);
 			} catch (e) {
-				// Ignore storage errors (private mode / blocked storage).
+				// Ignore storage or DOM errors (private mode / blocked storage).
 			}
 		})();
 	</script>
@@ -44,7 +47,7 @@
 			/* === Shared defaults (desktop look from 22-10 + mobile HUD from 23-10-3) === */
 			html {
 				min-height: 100%;
-				background: #f6f8fb;
+				background: #1b1d22;
 				overflow-y: hidden;
 				overflow-x: hidden;
 				overscroll-behavior: contain;
@@ -58,7 +61,7 @@
 				padding: 10px;
 				min-height: 100%;
 				width: 100%;
-				background: #f6f8fb;
+				background: #1b1d22;
 				/*
 					IMPORTANT (mobile/iOS): never put emoji fonts before system UI fonts.
 					Otherwise digits can render in Apple Color Emoji, which looks "weird".
@@ -69,15 +72,12 @@
 				/*
 					EN:
 					- STATE: sets the page base typography + background.
-					- LEGACY/BUG-PRONE: `gap`, `grid-template-columns`, `justify-content`, `align-items`
-					  have no effect unless `display: grid` or `display: flex` is set on body.
-					  If layout is controlled elsewhere (e.g. a `.layout` wrapper), these may be leftovers.
 				*/
-					gap: 10px;
+				gap: 10px;
 				grid-template-columns: auto;
 				justify-content: center;
 				align-items: start;
-				color: #222;
+				color: #e5e5e5;
 				transition: background-color 0.3s, color 0.3s;
 			}
 
@@ -109,13 +109,7 @@
 			--z-score: 700;       /* transient score / sparkle popups */
 			--z-draggable: 600;   /* draggable block default */
 
-			/* Colors - Light mode */
-			--main-bg-light: #f6f8fb;
-			--panel-bg-light: #ffffff;
-			--score-bg-light: rgba(255,255,255,0.9);
-			--card-bg-light: #ffffff;
-			--coin-color: #ffd700;
-			--coin-border: #b8860b;
+
 
 			/* Colors - Dark mode */
 			--main-bg-dark: #1a1a1a;
@@ -653,18 +647,14 @@
 			display: flex !important;
 			width: 100%;
 			padding: 2px 6px;
-			background: rgba(255, 251, 234, 0.95);
+			background: rgba(34, 37, 43, 0.95);
+			color: #e5e5e5;
 			border-radius: 6px;
 			font-size: 0.65rem;
 			text-align: center;
 			justify-content: center;
 			align-items: center;
 			flex-shrink: 0;
-		}
-
-		body.dark-mode.mobile-sidebar-layout #ml-objective-top {
-			background: rgba(34, 37, 43, 0.95);
-			color: #e5e5e5;
 		}
 
 		body.mobile-sidebar-layout #ml-objective-top #objective-zone {
@@ -1493,10 +1483,9 @@
 		body.classic-mode #objective-zone,
 		body.classic-mode #mobile-objective-banner,
 		body.classic-mode #buy-placement-container,
-		body.classic-mode #original-coins-zone,
-		body.classic-mode #gold-zone,
-		body.classic-mode #dark-mode-toggle,
-		body.classic-mode .zone-info-btn,
+			body.classic-mode #original-coins-zone,
+			body.classic-mode #gold-zone,
+			body.classic-mode .zone-info-btn,
 		body.classic-mode .zone-info-popover {
 			display: none !important;
 		}
@@ -6348,8 +6337,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			height: 30px;
 			padding: 6px;
 			border-radius: 6px;
-			background: linear-gradient(145deg, #ffd560, #ffb23c);
-			border: 1px solid rgba(255,255,255,0.35);
+			background: linear-gradient(145deg, #2f3546, #1c2233);
+			border: 1px solid rgba(255,255,255,0.12);
 			box-shadow: 0 4px 10px rgba(0,0,0,0.28);
 			cursor: pointer;
 			transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -6365,7 +6354,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			display: block;
 			width: 14px;
 			height: 2px;
-			background: #1c1c1c;
+			background: rgba(255,255,255,0.88);
 			border-radius: 2px;
 			transition: transform 0.28s ease, opacity 0.28s ease;
 		}
@@ -6374,14 +6363,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		#menu-toggle.active span:nth-child(2) { opacity: 0; }
 		#menu-toggle.active span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
 
-		body.dark-mode #menu-toggle {
-			background: linear-gradient(145deg, #2f3546, #1c2233);
-			border-color: rgba(255,255,255,0.12);
-		}
-
-		body.dark-mode #menu-toggle span {
-			background: rgba(255,255,255,0.88);
-		}
+		/* Styling is dark by default now. */
 
 		/* ============================================
 		   CONTROLS MENU (MOBIEL)
@@ -6460,18 +6442,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			background: rgba(255,255,255,0.12);
 		}
 
-		/* Dark mode toggle binnen het menu (alleen mobiel) */
-		#mobile-dark-mode-toggle {
-			margin-top: 0;
-		}
 
-		body.dark-mode #mobile-dark-mode-toggle::before {
-			content: '☀️ ';
-		}
-
-		body.dark-mode #mobile-dark-mode-toggle {
-			background: rgba(255,255,255,0.12);
-		}
 
 		/* ============================================
 		   BOTTOM BAR (MOBIEL)
@@ -7893,48 +7864,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 }
 
 
-	/* ============================================
-	   DARK MODE TOGGLE BUTTON (DESKTOP)
-	   ============================================
-	   Ronde knop rechtsboven voor dark/light mode wisselen
-	   Alleen zichtbaar op desktop (>650px)
-	   Op mobiel zit dark mode toggle in hamburger menu
-	*/
-	#dark-mode-toggle {
-	  position: fixed;
-	  top: 15px;
-	  right: 15px;
-	  background: #fff;
-	  color: #333;
-	  border: none;
-	  border-radius: 50%;
-	  width: 40px;
-	  height: 40px;
-	  font-size: 20px;
-	  cursor: pointer;
-	  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-	  transition: background 0.3s, transform 0.2s;
-	  z-index: 2000;
-	}
-	/* Dark/light is available in the hamburger menu; hide this floating button to save top space. */
-	#dark-mode-toggle { display: none !important; }
 
-	@media (max-width: 650px) {
-	  #dark-mode-toggle {
-		display: none; /* Op mobiel gebruiken we de knop in het menu */
-	  }
-	}
 
-	#dark-mode-toggle:hover {
-	  transform: scale(1.1);
-	}
-
-	/* ============================================
-	   DARK MODE ALGEMEEN - DESKTOP/SHARED
-	   ============================================
-	   Extra dark mode styling voor desktop elementen
-	   Basis dark mode staat bovenaan in het bestand
-	*/
 
 	/* Titels krijgen lichtblauwe gloed voor betere zichtbaarheid */
 	body.dark-mode h1, 
@@ -8017,12 +7948,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		color: #e5e5e5;
 	}
 
-	/* Dark mode knop zelf krijgt ook dark styling */
-	body.dark-mode #dark-mode-toggle {
-	  background: #2d2f35;
-	  color: #f0f3ff;
-	  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
-	}
+
 
 	/* ============================================
 	   KAART SYSTEEM - BASIS
@@ -8032,14 +7958,9 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	*/
 	.card {
 	  display: grid;
-	  background: #f0f0f0;
+	  background: #333;
 	  border-radius: 8px;
 	  transition: transform 0.2s, box-shadow 0.2s;
-	}
-	
-	/* kaarten */
-	body.dark-mode .card {
-	  background: #333;
 	}
 	
 	.card:hover {
@@ -9792,7 +9713,6 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  body.classic-mode #original-coins-zone,
 	  body.classic-mode #gold-zone,
 	  body.classic-mode #collected-coins,
-	  body.classic-mode #dark-mode-toggle,
 	  body.classic-mode .zone-info-btn,
 	  body.classic-mode .zone-info-popover {
 		display: none !important;
@@ -9971,10 +9891,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		display: none !important;
 	  }
 
-	  /* Dark mode toggle is accessible via the hamburger menu; hide the standalone top-right button. */
-	  #dark-mode-toggle {
-		display: none !important;
-	  }
+	/* Dark mode toggle is removed; no standalone button present. */
 
 	  /* Desktop request: remove rotate/mirror buttons from the UI. */
 	  #rotate-card-btn,
@@ -10824,8 +10741,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  .zone { page-break-inside: avoid; }
 	  .layout { display: block; }
 
-	  /* Print must contain only the board (and keep hamburger if present). */
-	  #dark-mode-toggle,
+	/* Print must contain only the board (and keep hamburger if present). */
 	  .blur-overlay,
 	  #drag-overlay,
 	  #floating-preview,
@@ -11240,7 +11156,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
   <div id="zoom-lens-content"></div>
 </div>
 
-  <button id="dark-mode-toggle" title="Schakel donker/licht thema">🌙</button>
+	<!-- dark-mode toggle removed: app now uses dark-only theme -->
 	<button id="menu-toggle" class="menu-toggle" title="Menu" aria-label="Menu">
     <span></span>
     <span></span>
@@ -11397,7 +11313,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			<button id="print-btn" type="button">Print</button>
 			<button id="menu-editor-btn" type="button">🛠️ Editor</button>
 			<button id="menu-open-levels-btn" type="button" onclick="showSavedLevelsModal()">Open level</button>
-			<button id="mobile-dark-mode-toggle" type="button">🌙 Nacht</button>
+			<!-- mobile dark-mode toggle removed: dark-only theme -->
 			<button id="menu-rules-btn" onclick="showRulesModal()">📖 Spelregels</button>
 			<button id="menu-highscore-btn" onclick="showHighScoreModal()">🏆 High Score</button>
 		</div>
@@ -11495,10 +11411,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 					</div>
 					<div class="shop-section" style="min-width: 0;">
 						<h3 class="shop-section-title">Opties</h3>
-						<label style="display:flex; gap:8px; align-items:center; margin: 6px 0;">
-							<input id="print-opt-light" type="checkbox" checked>
-							<span>Lichte modus</span>
-						</label>
+
 						<label style="display:flex; gap:8px; align-items:center; margin: 6px 0;">
 							<input id="print-opt-no-bonuses" type="checkbox" checked>
 							<span>Zonder bonussen/symbolen (minder inkt)</span>
@@ -15091,46 +15004,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		markActiveBonusButton(colorKey);
 	}
 	
-	// --- Dark mode toggle ---
+	// --- Dark mode: force dark-only behavior ---
 	document.addEventListener('DOMContentLoaded', () => {
-	  const toggleBtn = document.getElementById('dark-mode-toggle');
-	  const mobileToggleBtn = document.getElementById('mobile-dark-mode-toggle');
-	  const root = document.documentElement;
-	  const body = document.body;
-	  if (!body) return;
-
-	  /*
-		EN:
-		- STATE: source of truth for dark/light theme is localStorage key `theme` + the `dark-mode` class on <html>/<body>.
-		- OVERRIDE: This handler runs on DOMContentLoaded and can overwrite earlier theme decisions (e.g. head preload script).
-		- DUPLICATE: Theme is handled in two places (head preload + here). If you keep both, ensure they do the same thing.
-	*/
-	  const savedTheme = localStorage.getItem('theme');
-	  const preferDark = (savedTheme ? (savedTheme === 'dark') : true) || root.classList.contains('dark-mode');
-
-	  function applyTheme(isDark) {
-		/*
-			EN:
-			- STATE: toggles classes, updates button labels, persists to localStorage.
-			- OVERRIDE: button text here overrides any initial HTML labels.
-		*/
-		root.classList.toggle('dark-mode', isDark);
-		body.classList.toggle('dark-mode', isDark);
-		if (toggleBtn) toggleBtn.textContent = isDark ? '☀️' : '🌙';
-		if (mobileToggleBtn) mobileToggleBtn.textContent = isDark ? '☀️ Dag' : '🌙 Nacht';
-		localStorage.setItem('theme', isDark ? 'dark' : 'light');
-	  }
-
-	  applyTheme(preferDark);
-
-	  function handleToggleClick(event) {
-		if (event) event.preventDefault();
-		const willBeDark = !body.classList.contains('dark-mode');
-		applyTheme(willBeDark);
-	  }
-
-	  if (toggleBtn) toggleBtn.addEventListener('click', handleToggleClick);
-	  if (mobileToggleBtn) mobileToggleBtn.addEventListener('click', handleToggleClick);
+		try {
+			document.documentElement.classList.add('dark-mode');
+			document.body && document.body.classList.add('dark-mode');
+			try { localStorage.setItem('theme', 'dark'); } catch (e) {}
+		} catch (e) {}
 	});
 
 
@@ -19191,6 +19071,7 @@ document.addEventListener('pointermove', ev => {
 	function collectPlacementCells(zone, baseX, baseY, shape) {
 	  if (!zone || !Array.isArray(shape) || !shape.length) return null;
 	  const pending = [];
+	  const optionalCells = []; // Track optionele cellen voor adjacency check
 	  window.lastPlacementFailure = null;
 	  
 	  // Gebruik gewoon de normale coördinaten-gebaseerde aanpak
@@ -19213,7 +19094,11 @@ document.addEventListener('pointermove', ev => {
 			return null;
 		  }
 		  if (target.classList.contains('active')) {
-			if (isOptional) continue;
+			if (isOptional) {
+			  // Optionele cel op actieve positie: track voor adjacency check
+			  optionalCells.push(target);
+			  continue;
+			}
 			window.lastPlacementFailure = {
 			  zoneId: zone?.id || null,
 			  reason: 'occupied',
@@ -19224,8 +19109,16 @@ document.addEventListener('pointermove', ev => {
 		  }
 		  
 		  pending.push(target);
+		  if (isOptional) {
+			// Track ook plaatsbare optionele cellen
+			optionalCells.push(target);
+		  }
 		}
 	  }
+	  
+	  // Voeg optionele cellen toe aan pending voor adjacency validatie
+	  // maar markeer ze zodat ze niet verplicht aangrenzend hoeven te zijn
+	  pending.optionalCells = optionalCells;
 	  
 	  return pending;
 	}
@@ -19565,7 +19458,9 @@ document.addEventListener('pointermove', ev => {
 	  const touchesStartColumn = pendingCells.some(cell => cell.classList.contains('bold-cell'));
 	  if (!hasActive) return touchesStartColumn;
 	  if (touchesStartColumn) return true;
-	  return pendingCells.some(cell => hasAdjacentActiveCell(zone, cell));
+	  // Check ook optionele cellen voor adjacency
+	  const allCells = pendingCells.optionalCells ? [...pendingCells, ...pendingCells.optionalCells] : pendingCells;
+	  return allCells.some(cell => hasAdjacentActiveCell(zone, cell));
 	}
 
 	function validateBluePlacement(zone, pendingCells) {
@@ -19588,7 +19483,9 @@ document.addEventListener('pointermove', ev => {
 	  if (!hasActive) return touchesFloor || touchesBold;
 	  // If there are active cells, touching floor or bold-cell is acceptable
 	  if (touchesFloor || touchesBold) return true;
-	  return pendingCells.some(cell => hasAdjacentActiveCell(zone, cell));
+	  // Check ook optionele cellen voor adjacency
+	  const allCells = pendingCells.optionalCells ? [...pendingCells, ...pendingCells.optionalCells] : pendingCells;
+	  return allCells.some(cell => hasAdjacentActiveCell(zone, cell));
 	}
 
 	function validateGreenPlacement(zone, pendingCells) {
@@ -19608,7 +19505,9 @@ document.addEventListener('pointermove', ev => {
 	  if (touchesAnchor) return true;
 	  
 	  // 2. Adjacent to any active cell (including the anchor if it's active)
-	  return pendingCells.some(cell => hasAdjacentActiveCell(zone, cell));
+	  // Check ook optionele cellen voor adjacency
+	  const allCells = pendingCells.optionalCells ? [...pendingCells, ...pendingCells.optionalCells] : pendingCells;
+	  return allCells.some(cell => hasAdjacentActiveCell(zone, cell));
 	}
 
 	function validateRedPlacement(zone, pendingCells) {
@@ -19631,7 +19530,9 @@ document.addEventListener('pointermove', ev => {
 	  }
 	  
 	  // Als er wel actieve cellen zijn, moet je aangrenzend zijn
-	  return pendingCells.some(cell => hasAdjacentActiveCell(zone, cell));
+	  // Check ook optionele cellen voor adjacency
+	  const allCells = pendingCells.optionalCells ? [...pendingCells, ...pendingCells.optionalCells] : pendingCells;
+	  return allCells.some(cell => hasAdjacentActiveCell(zone, cell));
 	}
 
 	// ========================
@@ -26193,7 +26094,6 @@ function showFloatingPreview(shape, color, options = {}) {
 	const printSettingsCancel = document.getElementById('print-settings-cancel');
 	const printSettingsPrint = document.getElementById('print-settings-print');
 	const printSettingsPreview = document.getElementById('print-settings-preview');
-	const printOptLight = document.getElementById('print-opt-light');
 	const printOptNoBonuses = document.getElementById('print-opt-no-bonuses');
 	const editorBtn = document.getElementById('menu-editor-btn');
 
@@ -26212,7 +26112,7 @@ function showFloatingPreview(shape, color, options = {}) {
 		const source = selected ? String(selected.value) : 'current';
 		return {
 			source,
-			lightMode: !!(printOptLight && printOptLight.checked),
+			lightMode: false,
 			noBonuses: !!(printOptNoBonuses && printOptNoBonuses.checked)
 		};
 	}
@@ -27344,7 +27244,7 @@ function monitorScenarioProgress() {
 			alert('Popup geblokkeerd. Sta popups toe om te printen.');
 			return;
 		}
-		const lightMode = !!opts.lightMode;
+		const lightMode = false;
 		const noBonuses = !!opts.noBonuses;
 		const css = `
 .@page { size: A4 landscape; margin: 8mm; }
@@ -27371,7 +27271,7 @@ body { margin: 0; padding: 0; background: ${lightMode ? 'white' : '#111'}; color
 .cell.void-cell { border-color: transparent !important; background: transparent !important; }
 .cell.active { background: ${lightMode ? '#f0f0f0' : '#2a2a2a'}; }
 	.root-cell { border-radius: 4px; }
-/* Zone-specific cell tinting (keeps the board recognizable, but very light). */
+/* Zone-specific cell tinting (keeps the board recognizable, subtle tints). */
 .zone[data-color="geel"] .cell { background: ${lightMode ? (noBonuses ? '#fffef8' : '#fffbe3') : 'transparent'}; }
 
 .zone[data-color="geel"] .cell.active { background: ${lightMode ? (noBonuses ? '#f6f2d8' : '#efe29c') : 'transparent'}; }
@@ -27415,7 +27315,6 @@ body { margin: 0; padding: 0; background: ${lightMode ? 'white' : '#111'}; color
 /* Minimal print overrides: hide UI elements, keep original colors and sizing */
 @page { size: A4 landscape; margin: 8mm; }
 body { background: transparent !important; }
-#dark-mode-toggle,
 .blur-overlay,
 #drag-overlay,
 #floating-preview,
@@ -28852,112 +28751,104 @@ body { background: transparent !important; }
 		#yellow-zone--placeholder, #purple-zone--placeholder,
 		#green-zone--placeholder {
 			/* Wider to accommodate inner grid margins/padding on mobile */
-			width: calc(13 * var(--cell-size) + 40px) !important;
-			min-width: calc(13 * var(--cell-size) + 40px) !important;
-			max-width: calc(13 * var(--cell-size) + 40px) !important;
-			margin: 0 !important;
-			padding: 6px !important;
-			box-sizing: border-box !important;
-			display: flex !important;
-			flex-direction: column !important;
-			align-items: center !important;
-			justify-content: center !important;
+			width: calc(13 * var(--cell-size) + 40px);
+			min-width: calc(13 * var(--cell-size) + 40px);
+			max-width: calc(13 * var(--cell-size) + 40px);
+			margin: 0;
+			padding: 6px;
+			box-sizing: border-box;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
 		}
 
 		/* Red + Green: slightly wider so red can stay 2×2 and green can match the column width. */
 		#red-zone, #green-zone,
 		#red-zone--placeholder, #green-zone--placeholder {
-			width: calc(15 * var(--cell-size) + 60px) !important;
-			min-width: calc(15 * var(--cell-size) + 60px) !important;
-			max-width: calc(15 * var(--cell-size) + 60px) !important;
+			width: calc(15 * var(--cell-size) + 60px);
+			min-width: calc(15 * var(--cell-size) + 60px);
+			max-width: calc(15 * var(--cell-size) + 60px);
 		}
 
 		/* Mobile: keep gaps consistent across zones (zoomed AND unzoomed). */
-		.grid { gap: var(--board-grid-gap, 2px) !important; }
-
-		/* Mobile unzoomed: cap blue height so it's not an extremely tall strip; keep it scrollable. */
-		body:not(.zoomed-in) #blue-zone,
-		body:not(.zoomed-in) #blue-zone--placeholder {
-			height: 400px !important;
-			max-height: 400px !important;
-			overflow: auto !important;
-		}
+		.grid { gap: var(--board-grid-gap, 2px); }
 
 		/* Red MUST remain a 2×2 grid (the rule above sets widths only). */
 		#red-zone.red-group,
 		#red-zone--placeholder.red-group {
-			display: grid !important;
-			grid-template-columns: repeat(2, max-content) !important;
-			justify-content: center !important;
-			gap: 18px !important;
-			align-content: start !important;
+			display: grid;
+			grid-template-columns: repeat(2, max-content);
+			justify-content: center;
+			gap: 18px;
+			align-content: start;
 		}
 		#red-zone.red-group > .zone,
 		#red-zone--placeholder.red-group > .zone {
-			padding: 0 !important;
-			box-sizing: border-box !important;
+			padding: 0;
+			box-sizing: border-box;
 		}
 
 		/* When the board is scaled down to fit the screen, keep spacing consistent. */
-		body.board-scaled .grid { gap: var(--board-grid-gap, 2px) !important; }
-		body.board-scaled .cell { border-radius: 7px !important; }
+		body.board-scaled .grid { gap: var(--board-grid-gap, 2px); }
+		body.board-scaled .cell { border-radius: 7px; }
 
 		/* Mobile: uniform gap between zones in columns, more gap between columns */
 		.board {
-			gap: 8px !important; /* gap between columns */
+			gap: 8px; /* gap between columns */
 		}
 		.column {
-			gap: 6px !important; /* uniform gap between zones */
+			gap: 6px; /* uniform gap between zones */
 		}
 		.zone {
-			margin: 0 !important;
-			padding: 6px !important;
+			margin: 0;
+			padding: 6px;
 		}
 
 		/* 2. SYMMETRICAL HEIGHTS */
 		/* Blue = 750px reference. Gap = 6px between zones. */
 		/* Column 1: Yellow + gap(6) + Purple = 750 → Yellow = 372, Purple = 372 */
 		#yellow-zone, #yellow-zone--placeholder {
-			min-height: 372px !important;
-			height: 372px !important;
+			min-height: 422px;
+			height: 422px;
 		}
 		#purple-zone, #purple-zone--placeholder {
-			min-height: 372px !important;
-			height: 372px !important;
+			min-height: 372px;
+			height: 372px;
 		}
 		/* Column 2: Green + gap(6) + Red = 750 → Green = 410, Red = 334 */
 		#green-zone, #green-zone--placeholder {
-			min-height: 410px !important;
-			height: 410px !important;
+			min-height: 460px;
+			height: 460px;
 		}
 		#red-zone, #red-zone--placeholder {
-			min-height: 334px !important;
-			height: 334px !important;
+			min-height: 334px;
+			height: 334px;
 		}
 
 		/* 3. BLUE ZONE: reference height for column symmetry */
 		/* Blue = 750px. Column 1: 372+6+372=750. Column 2: 410+6+334=750. */
 		#blue-zone, #blue-zone--placeholder {
-			min-height: 750px !important;
-			height: 750px !important;
-			width: 160px !important;
-			margin: 0 !important;
-			padding: 6px !important;
+			min-height: 800px;
+			height: 800px;
+			width: 160px;
+			margin: 0;
+			padding: 6px;
 		}
 
 		/* 4. CARD & HAND ADJUSTMENTS */
 		/* Force Cards to be slightly larger for visibility */
 		:root {
-			--hand-card-width: 58px !important;
-			--hand-card-height: 85px !important;
+			--hand-card-width: 58px;
+			--hand-card-height: 85px;
 		}
 
 		#bottom-bar #card-choice-zone .card-option {
-			width: 58px !important;
-			min-width: 58px !important;
-			max-width: 58px !important;
-			min-height: 85px !important;
-			padding: 4px !important;
+			width: 58px;
+			min-width: 58px;
+			max-width: 58px;
+			min-height: 85px;
+			padding: 4px;
 			/* Key: keep JS preview sizing and CSS in sync */
 			--preview-cell: 14px;
 			--card-cell-size: 14px;
@@ -28966,17 +28857,17 @@ body { background: transparent !important; }
 		/* Adjust card pattern gap */
 		#bottom-bar #card-choice-zone .card-option .card-pattern {
 			/* Actual gap is set dynamically in updateCardPattern(..) */
-			display: grid !important;
+			display: grid;
 		}
 		
 		/* Hamburger Menu: Slightly larger */
 		#menu-toggle {
-			width: 40px !important;
-			height: 40px !important;
-			padding: 8px !important;
+			width: 40px;
+			height: 40px;
+			padding: 8px;
 		}
 		#menu-toggle span {
-			width: 18px !important;
+			width: 18px;
 		}
 	}
 
@@ -28985,19 +28876,19 @@ body { background: transparent !important; }
 	*/
 	@media (min-width: 651px) {
 		body.zoomed-in .zone.zoom-focus {
-			width: 90vw !important;
-			height: 65vh !important;
-			max-width: none !important;
-			max-height: none !important;
-			min-width: 0 !important;
-			min-height: 0 !important;
-			overflow: auto !important;
-			position: fixed !important;
-			top: 50% !important;
-			left: 50% !important;
-			transform: translate(-50%, -50%) !important;
-			z-index: 1000 !important;
-			margin: 0 !important;
+			width: 90vw;
+			height: 65vh;
+			max-width: none;
+			max-height: none;
+			min-width: 0;
+			min-height: 0;
+			overflow: auto;
+			position: fixed;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			z-index: 1000;
+			margin: 0;
 		}
 	}
 
@@ -29005,7 +28896,7 @@ body { background: transparent !important; }
 	@media (min-width: 900px) {
 		#green-zone, #blue-zone {
 			flex-shrink: 0; /* Prevent shrinking */
-			min-width: calc(13 * var(--cell-size)) !important;
+			min-width: calc(13 * var(--cell-size));
 		}
 		#blue-zone {
 			min-height: 600px; /* Ensure it stays long */
