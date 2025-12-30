@@ -14794,7 +14794,12 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 				draggedColor = colorObj;
 				beginPointerDrag({ clientX: event.clientX, clientY: event.clientY, pointerId: event.pointerId || null });
 				startGlobalDragVisuals();
-				({ offsetX, offsetY } = computeShapeCenterOffsets(shape));
+				// MOBILE FIX: Use actual rendered size
+				const blockRect = freeBlock.getBoundingClientRect();
+				const actualCellWidth = blockRect.width / shape[0].length;
+				const actualCellHeight = blockRect.height / shape.length;
+				const actualCellSize = Math.min(actualCellWidth, actualCellHeight);
+				({ offsetX, offsetY } = computeShapeCenterOffsets(shape, actualCellSize));
 				const touchOffsetY = 60;
 				draggedBlock.style.left = `${event.clientX - offsetX}px`;
 				draggedBlock.style.top = `${event.clientY - offsetY - touchOffsetY}px`;
@@ -14871,7 +14876,12 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		block.classList.add('bonus-draggable');
 		const shapeWidth = shape[0].length;
 		const shapeHeight = shape.length;
-		({ offsetX, offsetY } = computeShapeCenterOffsets(shape));
+		// MOBILE FIX: Use actual rendered size
+		const blockRect = block.getBoundingClientRect();
+		const actualCellWidth = blockRect.width / shapeWidth;
+		const actualCellHeight = blockRect.height / shapeHeight;
+		const actualCellSize = Math.min(actualCellWidth, actualCellHeight);
+		({ offsetX, offsetY } = computeShapeCenterOffsets(shape, actualCellSize));
 		const touchOffsetY = 60;
 		block.style.left = `${event.clientX - offsetX}px`;
 		block.style.top = `${event.clientY - offsetY - touchOffsetY}px`;
@@ -14880,7 +14890,11 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		requestAnimationFrame(() => {
 			try {
 				renderBlock(block, block._shape || shape, colorObj);
-				({ offsetX, offsetY } = computeShapeCenterOffsets(block._shape || shape));
+				const afterRect = block.getBoundingClientRect();
+				const cellWidth = afterRect.width / (block._shape || shape)[0].length;
+				const cellHeight = afterRect.height / (block._shape || shape).length;
+				const cellSize = Math.min(cellWidth, cellHeight);
+				({ offsetX, offsetY } = computeShapeCenterOffsets(block._shape || shape, cellSize));
 				block.style.left = `${event.clientX - offsetX}px`;
 				block.style.top = `${event.clientY - offsetY - touchOffsetY}px`;
 			} catch (e) {}
@@ -17945,8 +17959,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
         draggedColor = color;
 		draggedShape = currentShape;
 		
-		// Offsets based on the current shape and actual board cell size.
-		({ offsetX, offsetY } = computeShapeCenterOffsets(currentShape));
+		// Offsets based on the current shape and actual rendered block size.
+		// MOBILE FIX: Calculate using actual rendered cell size for accurate positioning
+		const blockRect = block.getBoundingClientRect();
+		const actualCellWidth = blockRect.width / currentShape[0].length;
+		const actualCellHeight = blockRect.height / currentShape.length;
+		const actualCellSize = Math.min(actualCellWidth, actualCellHeight);
+		({ offsetX, offsetY } = computeShapeCenterOffsets(currentShape, actualCellSize));
 
 		// Voor touch devices: voeg extra upward offset toe zodat blok boven vinger verschijnt
 		const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -18085,6 +18104,17 @@ document.addEventListener('pointermove', ev => {
 	  // ===== Verplaats visueel het draggable blok =====
 	  draggedBlock.style.left = (cursorX - offsetX) + 'px';
 	  draggedBlock.style.top  = (cursorY - offsetY - touchOffsetY) + 'px';
+	  
+	  // DEBUG: Log hover positioning values
+	  if (window.debugHoverPosition) {
+		  console.log('Hover Debug:', {
+			  cursorX, cursorY,
+			  offsetX, offsetY,
+			  touchOffsetY,
+			  resultLeft: (cursorX - offsetX),
+			  resultTop: (cursorY - offsetY - touchOffsetY)
+		  });
+	  }
 
 	// ===== Vind zones en cellen onder ALLE gevulde cellen van het blok =====
 	const blockRect = draggedBlock.getBoundingClientRect();
@@ -18168,6 +18198,18 @@ document.addEventListener('pointermove', ev => {
 	  let hoveredCell = firstHit.gridCell;
 	  let baseX = firstHit.gridX - firstHit.shapeCol;
 	  let baseY = firstHit.gridY - firstHit.shapeRow;
+	  
+	  // DEBUG: Log baseX/baseY calculation
+	  if (window.debugHoverPosition) {
+		  console.log('Base Position:', {
+			  firstHitGridX: firstHit.gridX,
+			  firstHitGridY: firstHit.gridY,
+			  shapeCol: firstHit.shapeCol,
+			  shapeRow: firstHit.shapeRow,
+			  calculatedBaseX: baseX,
+			  calculatedBaseY: baseY
+		  });
+	  }
 
 	const cellZone = hoveredCell.closest('.zone');
 	if (cellZone && !cellZone.classList.contains('zone-placeholder')) {
@@ -24930,6 +24972,8 @@ document.addEventListener('pointerdown', ev => {
 	})();
 
 	// PHASE 3 REFACTOR: Helper function to rotate draggedBlock while preserving visual center
+	// BUG FIX: Also recompute offsetX/offsetY so drag positioning stays correct
+	// MOBILE FIX: Use actual rendered block size for accurate offsets
 	function rotateDraggedBlockInPlace(newShape, color) {
 		if (!draggedBlock) return;
 		try {
@@ -24954,11 +24998,21 @@ document.addEventListener('pointerdown', ev => {
 				if (!overlay.contains(draggedBlock)) overlay.appendChild(draggedBlock);
 				overlay.style.display = 'block';
 			}
+			// CRITICAL: Recompute center offsets so drag positioning matches the rotated shape
+			// Use the actual rendered size for accurate positioning on mobile
+			const actualCellWidth = afterRect.width / nextShape[0].length;
+			const actualCellHeight = afterRect.height / nextShape.length;
+			const actualCellSize = Math.min(actualCellWidth, actualCellHeight);
+			({ offsetX, offsetY } = computeShapeCenterOffsets(nextShape, actualCellSize));
 		} catch (e) {
 			const nextShape = cloneShape(newShape);
 			draggedShape = nextShape;
 			draggedBlock._shape = nextShape;
 			renderBlock(draggedBlock, nextShape, color);
+			// Also recompute in fallback path
+			try {
+				({ offsetX, offsetY } = computeShapeCenterOffsets(nextShape));
+			} catch (e2) {}
 		}
 	}
 
@@ -25005,8 +25059,7 @@ document.addEventListener('pointerdown', ev => {
 	// If a draggable block exists (e.g. sticky preview), always keep it in sync.
 	if (draggedBlock) {
 		rotateDraggedBlockInPlace(newShape, draggedColor || selectedColor);
-		// Recompute center offsets so placement/drag uses the transformed shape correctly.
-		({ offsetX, offsetY } = computeShapeCenterOffsets(draggedShape));
+		// Clear preview since shape changed
 		if (lastZone) {
 			clearPreview(lastZone);
 			lastBaseX = null;
@@ -25064,7 +25117,6 @@ document.addEventListener('pointerdown', ev => {
 	  
 	  if (draggedBlock) {
 		rotateDraggedBlockInPlace(newShape, draggedColor || selectedColor);
-		({ offsetX, offsetY } = computeShapeCenterOffsets(draggedShape));
 		if (lastZone) {
 			clearPreview(lastZone);
 			lastBaseX = null;
@@ -27996,7 +28048,8 @@ body { background: transparent !important; }
 				if (bonus && !mlRight.contains(bonus)) mlRight.appendChild(bonus);
 				
 				// Scale board to fit center
-				requestAnimationFrame(() => {
+				// MOBILE FIX: Use a named function so it can be re-called on resize
+				const scaleMobileBoard = () => {
 					if (!board || !mlCenter) return;
 					const objectiveH = mlObjectiveTop ? mlObjectiveTop.offsetHeight : 0;
 					const availW = mlCenter.clientWidth - 6;
@@ -28008,7 +28061,10 @@ body { background: transparent !important; }
 						board.style.transform = `scale(${Math.max(0.25, scale).toFixed(3)})`;
 						board.style.transformOrigin = 'top center';
 					}
-				});
+				};
+				requestAnimationFrame(scaleMobileBoard);
+				// Store for later re-scaling
+				window._scaleMobileBoard = scaleMobileBoard;
 				
 				placeActionButtons();
 				applyCardSizing();
@@ -28305,6 +28361,10 @@ body { background: transparent !important; }
 		if (worldInfo && (worldInfo.world === 2 || worldInfo.world === 3)) {
 			adjustZoneSizesForWorld2();
 		}
+		// MOBILE FIX: Re-scale mobile board when window resizes
+		if (window._scaleMobileBoard && document.body.classList.contains('mobile-sidebar-layout')) {
+			requestAnimationFrame(window._scaleMobileBoard);
+		}
 	});
 	
 	// Extra listener voor orientation change op mobiel/tablet
@@ -28315,6 +28375,10 @@ body { background: transparent !important; }
 			const worldInfo = typeof getWorldAndSubLevel === 'function' ? getWorldAndSubLevel(currentLevel) : null;
 			if (worldInfo && (worldInfo.world === 2 || worldInfo.world === 3)) {
 				adjustZoneSizesForWorld2();
+			}
+			// MOBILE FIX: Re-scale mobile board after orientation change
+			if (window._scaleMobileBoard && document.body.classList.contains('mobile-sidebar-layout')) {
+				requestAnimationFrame(window._scaleMobileBoard);
 			}
 		}, 100);
 	});
