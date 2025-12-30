@@ -84,7 +84,7 @@
 		:root {
 			/* Base measurements */
 			/* Fixed across all grids; the board itself is scaled to fit the screen. */
-			--cell-size: 26px;
+			--cell-size: 22px;
 			--board-grid-gap: 2px;
 			--preview-gap: 2px;
 			--gap: 10px;
@@ -683,6 +683,18 @@
 
 		body.mobile-sidebar-layout #ml-board-center #board {
 			transform-origin: top center;
+		}
+
+		/* Zorg voor gelijke kolomhoogtes in mobiele sidebar layout */
+		body.mobile-sidebar-layout #ml-board-center #board {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(140px, 1fr));
+			gap: 8px;
+			margin: 0;
+		}
+
+		body.mobile-sidebar-layout #ml-board-center #board .zone {
+			margin: 0;
 		}
 
 		/* Mobile sidebar styling */
@@ -19010,7 +19022,7 @@ document.addEventListener('pointermove', ev => {
 	function collectPlacementCells(zone, baseX, baseY, shape) {
 	  if (!zone || !Array.isArray(shape) || !shape.length) return null;
 	  const pending = [];
-	  const optionalCells = []; // Track optionele cellen voor adjacency check
+		const optionalCells = []; // Track optionele cellen voor adjacency check
 	  window.lastPlacementFailure = null;
 	  
 	  // Gebruik gewoon de normale coördinaten-gebaseerde aanpak
@@ -19023,7 +19035,10 @@ document.addEventListener('pointermove', ev => {
 		  const target = getCell(zone, baseX + x, baseY + y);
 		  
 		  if (!target) {
-			if (isOptional) continue;
+					if (isOptional) {
+						// Optionele cel valt buiten bereik: negeer bij validatie.
+						continue;
+					}
 			window.lastPlacementFailure = {
 			  zoneId: zone?.id || null,
 			  reason: 'missing-cell',
@@ -19032,32 +19047,35 @@ document.addEventListener('pointermove', ev => {
 			};
 			return null;
 		  }
-		  if (target.classList.contains('active')) {
-			if (isOptional) {
-			  // Optionele cel op actieve positie: track voor adjacency check
-			  optionalCells.push(target);
-			  continue;
-			}
-			window.lastPlacementFailure = {
-			  zoneId: zone?.id || null,
-			  reason: 'occupied',
-			  x: baseX + x,
-			  y: baseY + y
-			};
-			return null;
-		  }
-		  
-		  pending.push(target);
-		  if (isOptional) {
-			// Track ook plaatsbare optionele cellen
-			optionalCells.push(target);
-		  }
+				if (target.classList.contains('active')) {
+					if (isOptional) {
+						// Optionele cel mag overlappen met een bestaand blok; wel onthouden voor adjacency.
+						optionalCells.push(target);
+						continue;
+					}
+					window.lastPlacementFailure = {
+						zoneId: zone?.id || null,
+						reason: 'occupied',
+						x: baseX + x,
+						y: baseY + y
+					};
+					return null;
+				}
+
+				if (isOptional) {
+					// Optionele cellen tellen niet mee voor validatie, maar wel voor adjacency.
+					optionalCells.push(target);
+					continue;
+				}
+
+				pending.push(target);
 		}
 	  }
 	  
 	  // Voeg optionele cellen toe aan pending voor adjacency validatie
 	  // maar markeer ze zodat ze niet verplicht aangrenzend hoeven te zijn
-	  pending.optionalCells = optionalCells;
+		pending.optionalCells = optionalCells.filter(Boolean);
+		pending.hasOptionalCells = pending.optionalCells.length > 0;
 	  
 	  return pending;
 	}
@@ -19360,7 +19378,8 @@ document.addEventListener('pointermove', ev => {
 	// ========================
 	function canPlace(zone, baseX, baseY, shape) {
 	  const pendingCells = collectPlacementCells(zone, baseX, baseY, shape);
-	  return !!(pendingCells && pendingCells.length > 0 && passesPlacementRules(zone, pendingCells));
+		const optionalOk = optionalCellsTouchActive(zone, pendingCells);
+		return !!(pendingCells && pendingCells.length > 0 && optionalOk && passesPlacementRules(zone, pendingCells));
 	}
 
 	function passesPlacementRules(zone, pendingCells) {
@@ -19391,6 +19410,14 @@ document.addEventListener('pointermove', ev => {
 	  ];
 	  return neighbors.some(neighbor => neighbor && neighbor.classList.contains('active'));
 	}
+
+function optionalCellsTouchActive(zone, pendingCells) {
+	const optionalList = pendingCells && Array.isArray(pendingCells.optionalCells)
+		? pendingCells.optionalCells.filter(Boolean)
+		: [];
+	if (!optionalList.length) return true;
+	return optionalList.some(cell => cell.classList.contains('active') || hasAdjacentActiveCell(zone, cell));
+}
 
 	function validateYellowPlacement(zone, pendingCells) {
 	  const hasActive = zoneHasActiveCells(zone);
