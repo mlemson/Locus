@@ -19538,6 +19538,11 @@ function optionalCellsTouchActive(zone, pendingCells) {
 		? pendingCells.optionalCells.filter(Boolean)
 		: [];
 	if (!optionalList.length) return true;
+	// Red grids allow free placement; optional bonus cells should never block placement here.
+	try {
+		const zoneId = zone && zone.id ? String(zone.id) : '';
+		if (zoneId.startsWith('red-grid')) return true;
+	} catch (e) {}
 	return optionalList.some(cell => cell.classList.contains('active') || hasAdjacentActiveCell(zone, cell));
 }
 
