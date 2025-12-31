@@ -13754,8 +13754,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	let mirrorButton = null;
 	let startX = 0;
 	let startY = 0;
-	let offsetX = 12; 
-	let offsetY = 12;
+	let offsetX = 0; 
+	let offsetY = 0;
 	let lastZone = null;
 	let lastBaseX = null;
 	let lastBaseY = null;
@@ -13764,6 +13764,19 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	let activeTraps = [];
 	let trapIdCounter = 0;
 	let lastTrapHighlightId = null;
+
+	// Touch UX: lift the dragged block slightly above the finger.
+	// Keep this small; it only applies to real touch/pen pointer events.
+	const TOUCH_FINGER_LIFT_PX = 12;
+	function getFingerLiftOffsetY(ev) {
+		try {
+			const pointerType = ev && ev.pointerType;
+			const isTouchPointer = (pointerType === 'touch' || pointerType === 'pen');
+			return isTouchPointer ? TOUCH_FINGER_LIFT_PX : 0;
+		} catch (e) {
+			return 0;
+		}
+	}
 
 	function getBoardCellMetrics() {
 		// Measure the *rendered* board cell size (accounts for transforms / scaling).
@@ -14810,7 +14823,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 				const actualCellHeight = blockRect.height / shape.length;
 				const actualCellSize = Math.min(actualCellWidth, actualCellHeight);
 				({ offsetX, offsetY } = computeShapeCenterOffsets(shape, actualCellSize));
-				const touchOffsetY = 60;
+				const touchOffsetY = getFingerLiftOffsetY(event);
 				setElPos(draggedBlock, event.clientX - offsetX, event.clientY - offsetY - touchOffsetY);
 				// Controls are delayed for touch bonus drags; they will appear on release.
 				activeBonusPlacement.delayedControls = true;
@@ -14891,7 +14904,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		const actualCellHeight = blockRect.height / shapeHeight;
 		const actualCellSize = Math.min(actualCellWidth, actualCellHeight);
 		({ offsetX, offsetY } = computeShapeCenterOffsets(shape, actualCellSize));
-		const touchOffsetY = 60;
+		const touchOffsetY = getFingerLiftOffsetY(event);
 		setElPos(block, event.clientX - offsetX, event.clientY - offsetY - touchOffsetY);
 
 		// Ensure block immediately matches zoomed cell size if a zoom/lift occurred
@@ -14925,8 +14938,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 				try {
 					renderBlock(block, block._shape || shape, colorObj);
 					({ offsetX, offsetY } = computeShapeCenterOffsets(block._shape || shape));
-					const touchOffsetY2 = 60;
-					setElPos(block, event.clientX - offsetX, event.clientY - offsetY - touchOffsetY2);
+					setElPos(block, event.clientX - offsetX, event.clientY - offsetY - touchOffsetY);
 				} catch (e) {}
 			});
 		return;
@@ -15012,8 +15024,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 		// Compute offsets based on the *actual rendered* board cell size + gap.
 		({ offsetX, offsetY } = computeShapeCenterOffsets(draggedShape));
-		const localTouchDevice = ('ontouchstart' in window || navigator.maxTouchPoints > 0);
-		const touchOffsetY = localTouchDevice ? 60 : 0;
+		const touchOffsetY = getFingerLiftOffsetY(event);
 		setElPos(block, event.clientX - offsetX, event.clientY - offsetY - touchOffsetY);
 		activeBonusPlacement = {
 			colorKey,
@@ -17970,10 +17981,9 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		const actualCellSize = Math.min(actualCellWidth, actualCellHeight);
 		({ offsetX, offsetY } = computeShapeCenterOffsets(currentShape, actualCellSize));
 
-		// For touch pointers only: add upward offset so the block is not under the finger.
-		// IMPORTANT: Do not use navigator.maxTouchPoints here (Windows can report >0 even for mouse use).
-		const isTouchPointer = (ev.pointerType === 'touch' || ev.pointerType === 'pen');
-		const touchOffsetY = (isTouchPointer && window.innerWidth <= MOBILE_BREAKPOINT) ? 60 : 0;
+
+		// For touch pointers only: add a small upward offset so the block is not under the finger.
+		const touchOffsetY = getFingerLiftOffsetY(ev);
 
 		// Start drag direct: plaats blok op cursor positie met offset
 		const overlay = document.getElementById('drag-overlay');
@@ -18101,8 +18111,8 @@ document.addEventListener('pointermove', ev => {
 	  const cursorX = ev.clientX;
 	  const cursorY = ev.clientY;
 
-	  // For touch pointers only: add upward offset
-	  const touchOffsetY = (isTouchPointer && window.innerWidth <= MOBILE_BREAKPOINT) ? 60 : 0;
+	  // For touch pointers only: add a small upward offset
+	  const touchOffsetY = getFingerLiftOffsetY(ev);
 
 	  // ===== Verplaats visueel het draggable blok =====
 	setElPos(draggedBlock, cursorX - offsetX, cursorY - offsetY - touchOffsetY);
@@ -20313,7 +20323,7 @@ function getCollectedCoinCount(scores) {
 	  const startX = event.clientX || window.innerWidth / 2;
 	  const startY = event.clientY || window.innerHeight / 2;
 	  ({ offsetX, offsetY } = computeShapeCenterOffsets(draggedShape));
-	  const touchOffsetY = isTouchDevice ? 60 : 0; // Offset zodat vinger het blok niet bedekt
+	  const touchOffsetY = getFingerLiftOffsetY(event);
 	setElPos(draggedBlock, startX - offsetX, startY - offsetY - touchOffsetY);
 
 	// Ensure the purchased draggable immediately measures zoomed cell size
@@ -21546,7 +21556,7 @@ function getCollectedCoinCount(scores) {
 				if (typeof onSelect === 'function') {
 					onSelect(cardData, card);
 				} else {
-					selectCard(card, card.cardShape, card.cardColor, { clientX: lastX, clientY: lastY, pointerId, forceDrag: true });
+					selectCard(card, card.cardShape, card.cardColor, { clientX: lastX, clientY: lastY, pointerId, pointerType: event.pointerType, forceDrag: true });
 				}
 				// Prevent the subsequent click from toggling selection unexpectedly.
 				suppressCardSelectUntil = Date.now() + 250;
@@ -21610,7 +21620,7 @@ function getCollectedCoinCount(scores) {
 				if (typeof onSelect === 'function') {
 					onSelect(cardData, card);
 				} else {
-					selectCard(card, card.cardShape, card.cardColor, { clientX: lastX, clientY: lastY, pointerId, forceDrag: true });
+					selectCard(card, card.cardShape, card.cardColor, { clientX: lastX, clientY: lastY, pointerId, pointerType: event.pointerType, forceDrag: true });
 				}
 				suppressCardSelectUntil = Date.now() + 400;
 				try { card.setPointerCapture(pointerId); } catch {}
@@ -21706,7 +21716,7 @@ function getCollectedCoinCount(scores) {
 			if (typeof onSelect === 'function') {
 				onSelect(cardData, card);
 			} else {
-				selectCard(card, card.cardShape, card.cardColor, { clientX: lastX, clientY: lastY, pointerId, forceDrag: true });
+				selectCard(card, card.cardShape, card.cardColor, { clientX: lastX, clientY: lastY, pointerId, pointerType: event.pointerType, forceDrag: true });
 			}
 			suppressCardSelectUntil = Date.now() + 400;
 			try {
@@ -21775,8 +21785,7 @@ function getCollectedCoinCount(scores) {
 				try {
 					renderBlock(freeBlock, freeBlock._shape || shape, colorObj);
 					({ offsetX, offsetY } = computeShapeCenterOffsets(freeBlock._shape || shape));
-					const touchOffsetY2 = 60;
-					setElPos(freeBlock, event.clientX - offsetX, event.clientY - offsetY - touchOffsetY2);
+					setElPos(freeBlock, event.clientX - offsetX, event.clientY - offsetY - getFingerLiftOffsetY(event));
 				} catch (e) {}
 			});
 		} else {
@@ -24744,7 +24753,7 @@ function sanitizeBoardHtml(html) {
 		// Force-drag: start at pointer position (mouse or touch long-press).
 		offsetX = centerOffsets.offsetX;
 		offsetY = centerOffsets.offsetY;
-		const touchOffsetY = isTouchDevice ? 60 : 0;
+		const touchOffsetY = getFingerLiftOffsetY(options);
 		setElPos(block, options.clientX - offsetX, options.clientY - offsetY - touchOffsetY);
 		const overlay = document.getElementById('drag-overlay');
 		if (overlay && !overlay.contains(block)) {
@@ -24754,7 +24763,7 @@ function sanitizeBoardHtml(html) {
 	} else if (isMobileLayout) {
 		offsetX = centerOffsets.offsetX;
 		offsetY = centerOffsets.offsetY;
-		const touchOffsetY = isTouchDevice ? 60 : 0;
+		const touchOffsetY = getFingerLiftOffsetY(options);
 		let startX = rect.left + (rect.width / 2);
 		let startY = rect.top + (rect.height / 2);
 		if (hasPointerPos) {
@@ -27756,6 +27765,7 @@ body { background: transparent !important; }
 			onPurchasedBlockPreviewClick({
 				clientX: touch.clientX,
 				clientY: touch.clientY,
+				pointerType: 'touch',
 				pointerId: touch.identifier
 			});
 		}
