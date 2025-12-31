@@ -13851,80 +13851,6 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	let lastZone = null;
 	let lastBaseX = null;
 	let lastBaseY = null;
-	// Touch UX: when a block is released on the board, keep it snapped to that same grid spot
-	// so rotate/mirror can happen without the block "jumping".
-	let lockedPlacement = null; // { zoneId: string, baseX: number, baseY: number }
-
-	function setLockedPlacement(zone, baseX, baseY) {
-		if (!zone || baseX === null || baseY === null || baseX === undefined || baseY === undefined) {
-			lockedPlacement = null;
-			return;
-		}
-		lockedPlacement = {
-			zoneId: zone.id || null,
-			baseX: Number(baseX),
-			baseY: Number(baseY)
-		};
-	}
-	function clearLockedPlacement() {
-		lockedPlacement = null;
-	}
-	function getLockedPlacementZone() {
-		if (!lockedPlacement || !lockedPlacement.zoneId) return null;
-		return document.getElementById(lockedPlacement.zoneId);
-	}
-	function snapDraggedBlockToLockedPlacement() {
-		if (!draggedBlock || !lockedPlacement) return;
-		const zone = getLockedPlacementZone();
-		if (!zone) return;
-		const cell = zone.querySelector(`.cell[data-x="${lockedPlacement.baseX}"][data-y="${lockedPlacement.baseY}"]`);
-		if (!cell) return;
-		const rect = cell.getBoundingClientRect();
-		try { setElPos(draggedBlock, rect.left, rect.top); } catch {}
-	}
-	function refreshLockedPlacementValidity() {
-		if (!draggedBlock || !lockedPlacement || !draggedShape || !draggedColor) return;
-		const zone = getLockedPlacementZone();
-		if (!zone) return;
-		const zoneColor =
-			zone.dataset.color ||
-			zone.closest('.zone')?.dataset.color ||
-			(zone.id && zone.id.startsWith('red-grid') ? 'rood' : null);
-		const colorOk =
-			zoneColor === draggedColor.name ||
-			draggedColor.name === 'multikleur' ||
-			(draggedColor.name === 'rood' && zoneColor === 'rood');
-		const allowed = colorOk && canPlace(zone, lockedPlacement.baseX, lockedPlacement.baseY, draggedShape);
-		try { draggedBlock.style.opacity = allowed ? '1' : '0.3'; } catch {}
-	}
-	function confirmLockedPlacementIfPossible() {
-		if (!lockedPlacement || !draggedShape || !draggedColor || !draggedBlock) return false;
-		const zone = getLockedPlacementZone();
-		if (!zone) return false;
-		const zoneColor =
-			zone.dataset.color ||
-			zone.closest('.zone')?.dataset.color ||
-			(zone.id && zone.id.startsWith('red-grid') ? 'rood' : null);
-		const colorOk =
-			zoneColor === draggedColor.name ||
-			draggedColor.name === 'multikleur' ||
-			(draggedColor.name === 'rood' && zoneColor === 'rood');
-		const allowed = colorOk && canPlace(zone, lockedPlacement.baseX, lockedPlacement.baseY, draggedShape);
-		if (!allowed) return false;
-		const bonusContext = activeBonusPlacement;
-		const coinSnapshotBefore = getCoinStateSnapshot();
-		const placementResult = placeShape(zone, lockedPlacement.baseX, lockedPlacement.baseY, draggedShape, draggedColor);
-		if (bonusContext) {
-			finalizeBonusPlacement(placementResult, coinSnapshotBefore, bonusContext);
-			cleanupDragState({ clearBonus: true, updateInventory: false });
-		} else {
-			finalizeCardPlacement(placementResult, coinSnapshotBefore);
-			cleanupDragState({ clearBonus: false });
-		}
-		try { hideFloatingPreview(); } catch {}
-		try { removeCardControlButtons(); } catch {}
-		return true;
-	}
 	let skipNextZoneClick = false;
 	let bonusCoinMilestones = 0;
 	let activeTraps = [];
@@ -18142,90 +18068,42 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  // ================
 	  // START DRAG
 	  // ================
-	  let deferredTapActive = false;
-	  let deferredTapPointerId = null;
-	  let deferredTapStartX = 0;
-	  let deferredTapStartY = 0;
-	  let deferredTapMoved = false;
-	  const TAP_MOVE_THRESHOLD = 10;
-
-	  const startRealDragFromEvent = (ev) => {
-			// If the block has been rotated/mirrored via buttons, use the updated shape.
-			currentShape = block._shape || currentShape;
-			clearLockedPlacement();
-			beginPointerDrag({ clientX: ev.clientX, clientY: ev.clientY, pointerId: ev.pointerId });
-
-			draggedBlock = block;
-			draggedColor = color;
-			draggedShape = currentShape;
-			
-			// Offsets based on the current shape and actual rendered block size.
-			// MOBILE FIX: Calculate using actual rendered cell size for accurate positioning
-			const blockRect = block.getBoundingClientRect();
-			const actualCellWidth = blockRect.width / currentShape[0].length;
-			const actualCellHeight = blockRect.height / currentShape.length;
-			const actualCellSize = Math.min(actualCellWidth, actualCellHeight);
-			({ offsetX, offsetY } = computeShapeCenterOffsets(currentShape, actualCellSize));
-
-			// For touch pointers only: add a small upward offset so the block is not under the finger.
-			const touchOffsetY = getFingerLiftOffsetY(ev);
-
-			// Start drag direct: plaats blok op cursor positie met offset
-			const overlay = document.getElementById('drag-overlay');
-			if (overlay) {
-				overlay.appendChild(block);
-				overlay.style.display = 'block';
-			}
-			startGlobalDragVisuals();
-
-			// Positioneer blok direct op de pointer positie
-			setElPos(block, ev.clientX - offsetX, ev.clientY - offsetY - touchOffsetY);
-
-			block.setPointerCapture(ev.pointerId);
-			block.style.transition = 'transform 0.1s ease';
-			block.style.opacity = '0.3';
-	  };
-
 	  block.addEventListener('pointerdown', ev => {
         ev.preventDefault();
-		const isMobileLayout = window.innerWidth <= MOBILE_BREAKPOINT;
-		const isTouchPointer = (ev.pointerType === 'touch' || ev.pointerType === 'pen');
-		// When the block is locked/snapped on touch, a *tap* should confirm placement,
-		// while a *drag* should pick it up and move it.
-		if (isMobileLayout && isTouchPointer && lockedPlacement && draggedBlock === block && !isPointerDragging) {
-			deferredTapActive = true;
-			deferredTapPointerId = ev.pointerId;
-			deferredTapStartX = ev.clientX;
-			deferredTapStartY = ev.clientY;
-			deferredTapMoved = false;
-			try { block.setPointerCapture(ev.pointerId); } catch {}
-			return;
-		}
-		startRealDragFromEvent(ev);
-	  });
+		// If the block has been rotated/mirrored via buttons, use the updated shape.
+		currentShape = block._shape || currentShape;
+		beginPointerDrag({ clientX: ev.clientX, clientY: ev.clientY, pointerId: ev.pointerId });
 
-	  block.addEventListener('pointermove', (ev) => {
-		if (!deferredTapActive) return;
-		if (deferredTapPointerId !== null && ev.pointerId !== deferredTapPointerId) return;
-		const dx = Math.abs((Number(ev.clientX) || 0) - deferredTapStartX);
-		const dy = Math.abs((Number(ev.clientY) || 0) - deferredTapStartY);
-		if ((dx + dy) >= TAP_MOVE_THRESHOLD) {
-			deferredTapMoved = true;
-			deferredTapActive = false;
-			startRealDragFromEvent(ev);
-		}
-	  });
+        draggedBlock = block;
+        draggedColor = color;
+		draggedShape = currentShape;
+		
+		// Offsets based on the current shape and actual rendered block size.
+		// MOBILE FIX: Calculate using actual rendered cell size for accurate positioning
+		const blockRect = block.getBoundingClientRect();
+		const actualCellWidth = blockRect.width / currentShape[0].length;
+		const actualCellHeight = blockRect.height / currentShape.length;
+		const actualCellSize = Math.min(actualCellWidth, actualCellHeight);
+		({ offsetX, offsetY } = computeShapeCenterOffsets(currentShape, actualCellSize));
 
-	  block.addEventListener('pointerup', (ev) => {
-		if (!deferredTapActive) return;
-		if (deferredTapPointerId !== null && ev.pointerId !== deferredTapPointerId) return;
-		deferredTapActive = false;
-		const didPlace = (!deferredTapMoved) ? confirmLockedPlacementIfPossible() : false;
-		if (!didPlace) {
-			// Keep snapped + update opacity based on validity.
-			try { snapDraggedBlockToLockedPlacement(); } catch {}
-			try { refreshLockedPlacementValidity(); } catch {}
+
+		// For touch pointers only: add a small upward offset so the block is not under the finger.
+		const touchOffsetY = getFingerLiftOffsetY(ev);
+
+		// Start drag direct: plaats blok op cursor positie met offset
+		const overlay = document.getElementById('drag-overlay');
+		if (overlay) {
+			overlay.appendChild(block);
+			overlay.style.display = 'block';
 		}
+		startGlobalDragVisuals();
+
+		// Positioneer blok direct op de pointer positie
+		setElPos(block, ev.clientX - offsetX, ev.clientY - offsetY - touchOffsetY);
+
+        block.setPointerCapture(ev.pointerId);
+        block.style.transition = 'transform 0.1s ease';
+        block.style.opacity = '0.3';
 	  });
 
 	  // ROTATIE VIA SCROLL
@@ -18626,35 +18504,6 @@ document.addEventListener('pointermove', ev => {
 			return;
 		}
 
-		// Touch UX: dropping should keep the block "lying" on the board at that same cell.
-		// Actual placement is confirmed by tapping the block; cancellation happens via cancel
-		// or by selecting another card/bonus/purchase.
-		if (isMobileLayout && isTouchDevice) {
-			// Purchased placement: dropping on gold-zone/outside should still cancel + refund.
-			if (bonusContext && bonusContext.colorKey === 'purchased') {
-				const goldZone = document.getElementById('gold-zone');
-				const previewDiv = document.getElementById('purchased-block-preview');
-				const clickedOnGoldZone = goldZone && releaseTarget && goldZone.contains(releaseTarget);
-				const clickedOnPreview = previewDiv && releaseTarget && previewDiv.contains(releaseTarget);
-				if (clickedOnGoldZone || clickedOnPreview || !lastZone) {
-					cancelActiveBonusPlacement({ updateInventory: true });
-					return;
-				}
-			}
-
-			if (lastZone && lastBaseX !== null && lastBaseY !== null) {
-				try { clearPreview(lastZone); } catch {}
-				setLockedPlacement(lastZone, lastBaseX, lastBaseY);
-				enterStickyDragPreview();
-				snapDraggedBlockToLockedPlacement();
-				refreshLockedPlacementValidity();
-				return;
-			}
-
-			enterStickyDragPreview();
-			return;
-		}
-
 		if (lastZone && lastBaseX !== null && lastBaseY !== null) {
 			const zoneColor =
 			  lastZone.dataset.color ||
@@ -18904,7 +18753,6 @@ document.addEventListener('pointermove', ev => {
 		draggedColor = null;
 		lastZone = null;
 		lastBaseX = lastBaseY = null;
-		clearLockedPlacement();
 		if (overlay) overlay.style.display = 'none';
 		document.body.classList.remove('dragging');
 		document.body.style.cursor = '';
@@ -25072,9 +24920,9 @@ document.addEventListener('pointerdown', ev => {
 	if (!draggedBlock) return;
 	if (ev.button !== 0) return;
 
-	// On touch: allow tapping another card/bonus/purchase to cancel the current sticky block,
-	// even if the block is visually on top and would otherwise eat the tap.
+	// Prefer desktop/mouse behavior; on touch devices users already have a cancel button.
 	const isTouchDevice = ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+	if (isTouchDevice) return;
 
 	const x = ev.clientX;
 	const y = ev.clientY;
@@ -25085,39 +24933,20 @@ document.addEventListener('pointerdown', ev => {
 	draggedBlock.style.pointerEvents = prevPointerEvents || '';
 
 	const clickedCard = underlying ? underlying.closest('.card-option') : null;
-	const clickedBonus = underlying ? underlying.closest('.bonus-badge') : null;
-	const clickedBuyPlacement = underlying ? underlying.closest('#buy-placement-btn') : null;
-	const clickedPurchasedPreview = underlying ? underlying.closest('#purchased-block-preview') : null;
+	if (!clickedCard) return;
 
-	// Ignore taps on our own control UI.
-	if (underlying && (underlying.closest('button') || underlying.closest('#controls') || underlying.closest('#floating-preview') || underlying.closest('.card-control-btn'))) {
-		return;
-	}
-
-	if (!clickedCard && !clickedBonus && !clickedBuyPlacement && !clickedPurchasedPreview) return;
-
-	// Cancel the current block so the user's tap can act on the underlying UI.
-	if (isTouchDevice) {
-		// If this was a purchased placement, refund on cancel.
-		if (activeBonusPlacement && activeBonusPlacement.colorKey === 'purchased') {
-			cancelActiveBonusPlacement({ updateInventory: true, hidePreview: true });
-			return;
-		}
-		cleanupDragState({ clearBonus: !!activeBonusPlacement, updateInventory: false, hidePreview: true });
-		return;
-	}
-
-	// Desktop behavior remains: clicking a card clears the sticky block.
-	if (clickedCard) {
-		if (selectedCardElement && clickedCard === selectedCardElement) {
-			ev.preventDefault();
-			ev.stopPropagation();
-			cleanupDragState({ clearBonus: false, hidePreview: true });
-			selectCard(clickedCard);
-			return;
-		}
+	// Clicking a card should always clear the sticky block.
+	// If it's the currently selected card, toggle it off (deselect).
+	if (selectedCardElement && clickedCard === selectedCardElement) {
+		ev.preventDefault();
+		ev.stopPropagation();
 		cleanupDragState({ clearBonus: false, hidePreview: true });
+		selectCard(clickedCard);
+		return;
 	}
+
+	// Other card: clear the block but allow the click to continue so the new card selects.
+	cleanupDragState({ clearBonus: false, hidePreview: true });
 }, true);
 	// Whether the touch control buttons should be visible right now.
 	// Keep this conservative to avoid buttons getting "stuck" on-screen.
@@ -25443,10 +25272,6 @@ document.addEventListener('pointerdown', ev => {
 		activeBonusPlacement.shape = cloneShape(newShape);
 		if (draggedBlock) {
 			rotateDraggedBlockInPlace(newShape, draggedColor || selectedColor);
-			if (lockedPlacement) {
-				snapDraggedBlockToLockedPlacement();
-				refreshLockedPlacementValidity();
-			}
 			try { addCardControlButtons(); } catch (e) {}
 		} else if (draggedShape) {
 			draggedShape = cloneShape(newShape);
@@ -25480,10 +25305,6 @@ document.addEventListener('pointerdown', ev => {
 	// If a draggable block exists (e.g. sticky preview), always keep it in sync.
 	if (draggedBlock) {
 		rotateDraggedBlockInPlace(newShape, draggedColor || selectedColor);
-		if (lockedPlacement) {
-			snapDraggedBlockToLockedPlacement();
-			refreshLockedPlacementValidity();
-		}
 		// Clear preview since shape changed
 		if (lastZone) {
 			clearPreview(lastZone);
@@ -25511,10 +25332,6 @@ document.addEventListener('pointerdown', ev => {
 			draggedBlock._shape = nextShape;
 			try { liftToBody(draggedBlock); } catch (e) {}
 			renderBlock(draggedBlock, nextShape, draggedColor || selectedColor);
-			if (lockedPlacement) {
-				snapDraggedBlockToLockedPlacement();
-				refreshLockedPlacementValidity();
-			}
 		} else if (draggedShape) {
 			draggedShape = cloneShape(newShape);
 		}
@@ -25546,10 +25363,6 @@ document.addEventListener('pointerdown', ev => {
 	  
 	  if (draggedBlock) {
 		rotateDraggedBlockInPlace(newShape, draggedColor || selectedColor);
-		if (lockedPlacement) {
-			snapDraggedBlockToLockedPlacement();
-			refreshLockedPlacementValidity();
-		}
 		if (lastZone) {
 			clearPreview(lastZone);
 			lastBaseX = null;
