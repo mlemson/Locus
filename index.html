@@ -28462,7 +28462,21 @@ body { background: transparent !important; }
 	function autoCenterScrollableZones() {
 	  // Only auto-center when the user hasn't scrolled yet (prevents fighting the player).
 	  const greenZone = document.getElementById('green-zone');
-	  if (greenZone && greenZone.scrollTop <= 2 && greenZone.scrollLeft <= 2) {
+	  // World 1: green zone is intentionally non-scrollable (overflow hidden).
+	  // Avoid programmatically scrolling it, because that looks like a late layout shift.
+	  const greenScrollDisabled = (() => {
+		if (!greenZone) return true;
+		if (greenZone.classList.contains('no-scroll')) return true;
+		try {
+			const st = getComputedStyle(greenZone);
+			const ox = st.overflowX;
+			const oy = st.overflowY;
+			return (ox === 'hidden' || ox === 'clip') && (oy === 'hidden' || oy === 'clip');
+		} catch (_) {
+			return false;
+		}
+	  })();
+	  if (greenZone && !greenScrollDisabled && greenZone.scrollTop <= 2 && greenZone.scrollLeft <= 2) {
 		const greenStart = document.querySelector('#green-grid .cell.root-cell')
 		  || document.querySelector('#green-grid .cell.end-cell')
 		  || document.querySelector('#green-grid .cell.active');
@@ -28809,138 +28823,6 @@ body { background: transparent !important; }
 	
   </script>
   <style>
-	/* FINAL CONSOLIDATED MOBILE LAYOUT (CLEANUP & FIXES) */
-	@media (max-width: 650px) {
-		:root {
-			--preview-gap: 2px;
-		}
-		
-		/* 1. UNIFORM ZONE WIDTHS & CENTERING */
-		/* Yellow + Purple keep equal width; Red + Green are slightly wider to allow the 2×2 red layout. */
-		#yellow-zone, #purple-zone, #green-zone,
-		#yellow-zone--placeholder, #purple-zone--placeholder,
-		#green-zone--placeholder {
-			/* Wider to accommodate inner grid margins/padding on mobile */
-			width: calc(13 * var(--cell-size) + 40px);
-			min-width: calc(13 * var(--cell-size) + 40px);
-			max-width: calc(13 * var(--cell-size) + 40px);
-			margin: 0;
-			padding: 6px;
-			box-sizing: border-box;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			justify-content: center;
-		}
-
-		/* Red + Green: slightly wider so red can stay 2×2 and green can match the column width. */
-		#red-zone, #green-zone,
-		#red-zone--placeholder, #green-zone--placeholder {
-			width: calc(15 * var(--cell-size) + 60px);
-			min-width: calc(15 * var(--cell-size) + 60px);
-			max-width: calc(15 * var(--cell-size) + 60px);
-		}
-
-		/* Mobile: keep gaps consistent across zones (zoomed AND unzoomed). */
-		.grid { gap: var(--board-grid-gap, 2px); }
-
-		/* Red MUST remain a 2×2 grid (the rule above sets widths only). */
-		#red-zone.red-group,
-		#red-zone--placeholder.red-group {
-			display: grid;
-			grid-template-columns: repeat(2, max-content);
-			justify-content: center;
-			gap: 18px;
-			align-content: start;
-		}
-		#red-zone.red-group > .zone,
-		#red-zone--placeholder.red-group > .zone {
-			padding: 0;
-			box-sizing: border-box;
-		}
-
-		/* When the board is scaled down to fit the screen, keep spacing consistent. */
-		body.board-scaled .grid { gap: var(--board-grid-gap, 2px); }
-		body.board-scaled .cell { border-radius: 7px; }
-
-		/* Mobile: uniform gap between zones in columns, more gap between columns */
-		.board {
-			gap: 8px; /* gap between columns */
-		}
-		.column {
-			gap: 6px; /* uniform gap between zones */
-		}
-		.zone {
-			margin: 0;
-			padding: 6px;
-		}
-
-		/* 2. SYMMETRICAL HEIGHTS */
-		/* Blue = 750px reference. Gap = 6px between zones. */
-		/* Column 1: Yellow + gap(6) + Purple = 750 → Yellow = 372, Purple = 372 */
-		#yellow-zone, #yellow-zone--placeholder {
-			min-height: 422px;
-			height: 422px;
-		}
-		#purple-zone, #purple-zone--placeholder {
-			min-height: 372px;
-			height: 372px;
-		}
-		/* Column 2: Green + gap(6) + Red = 750 → Green = 410, Red = 334 */
-		#green-zone, #green-zone--placeholder {
-			min-height: 460px;
-			height: 460px;
-		}
-		#red-zone, #red-zone--placeholder {
-			min-height: 334px;
-			height: 334px;
-		}
-
-		/* 3. BLUE ZONE: reference height for column symmetry */
-		/* Blue = 750px. Column 1: 372+6+372=750. Column 2: 410+6+334=750. */
-		#blue-zone, #blue-zone--placeholder {
-			min-height: 800px;
-			height: 800px;
-			width: 160px;
-			margin: 0;
-			padding: 6px;
-		}
-
-		/* 4. CARD & HAND ADJUSTMENTS */
-		/* Force Cards to be slightly larger for visibility */
-		:root {
-			--hand-card-width: 58px;
-			--hand-card-height: 85px;
-		}
-
-		#bottom-bar #card-choice-zone .card-option {
-			width: 58px;
-			min-width: 58px;
-			max-width: 58px;
-			min-height: 85px;
-			padding: 4px;
-			/* Key: keep JS preview sizing and CSS in sync */
-			--preview-cell: 14px;
-			--card-cell-size: 14px;
-		}
-		
-		/* Adjust card pattern gap */
-		#bottom-bar #card-choice-zone .card-option .card-pattern {
-			/* Actual gap is set dynamically in updateCardPattern(..) */
-			display: grid;
-		}
-		
-		/* Hamburger Menu: Slightly larger */
-		#menu-toggle {
-			width: 40px;
-			height: 40px;
-			padding: 8px;
-		}
-		#menu-toggle span {
-			width: 18px;
-		}
-	}
-
 	/* Zoomed In Uniformity (non-mobile): Force all zoomed zones to be the same size.
 	   IMPORTANT: mobile zoom sizing/placement is handled by the dedicated @media (max-width: 650px) block above.
 	*/
