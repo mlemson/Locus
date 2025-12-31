@@ -1348,9 +1348,13 @@
 		min-height: var(--hand-card-height);
 		align-self: flex-start;
 		--preview-cell: 6px;
-		border-radius: 8px;
+		border-radius: 6px;
 		padding: 2px 3px 3px;
 		gap: 2px;
+	}
+
+	#bottom-bar #card-choice-zone .card-option .card-cell {
+		border-radius: 1px;
 	}
 
 	  #bottom-bar #new-cards-btn {
@@ -1398,7 +1402,7 @@
 
 	  #bottom-bar-cards {
 		margin-top: 0;
-		height: 80px;
+		height: calc(var(--hand-card-height) + 20px);
 	  }
 
 	  #bottom-bar #card-options {
@@ -1442,10 +1446,45 @@
 		min-height: var(--hand-card-height);
 		align-self: flex-start;
 		--preview-cell: 6px;
-		border-radius: 8px;
+		border-radius: 6px;
 		padding: 3px 4px 5px;
 		gap: 2px;
 	  }
+
+	  #bottom-bar #card-choice-zone .card-option .card-cell {
+		border-radius: 1px;
+	  }
+
+	/* Mobile: scale hand cards up on wider phones (use extra space).
+	   Base (<=290px): 40x80
+	   >290px: +33%
+	   >340px: +66%
+	   >390px: +100% (2x)
+	*/
+	@media (max-width: 650px) and (min-width: 291px) {
+		:root {
+			--hand-card-width: 53px;
+			--hand-card-height: 90px;
+			--bottom-bar-height: 170px;
+		}
+		#bottom-bar #card-choice-zone .card-option { --preview-cell: 8px; }
+	}
+	@media (max-width: 650px) and (min-width: 341px) {
+		:root {
+			--hand-card-width: 66px;
+			--hand-card-height: 115px;
+			--bottom-bar-height: 200px;
+		}
+		#bottom-bar #card-choice-zone .card-option { --preview-cell: 10px; }
+	}
+	@media (max-width: 650px) and (min-width: 391px) {
+		:root {
+			--hand-card-width: 80px;
+			--hand-card-height: 140px;
+			--bottom-bar-height: 230px;
+		}
+		#bottom-bar #card-choice-zone .card-option { --preview-cell: 12px; }
+	}
 
 	  #bottom-bar #card-choice-zone .card-option .card-cell {
 		width: 8px;
@@ -6546,8 +6585,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			background: transparent;
 			border: none;
 			flex: 0 0 auto;
-			height: 100px;
-			min-height: 80px;
+			height: calc(var(--hand-card-height) + 20px);
+			min-height: calc(var(--hand-card-height) + 20px);
 			position: relative;
 			z-index: 10;
 			clip-path: none;
@@ -27910,8 +27949,8 @@ body { background: transparent !important; }
 		if (!(available > 0)) return;
 
 		const targetWidth = Math.floor((available - (cardGap * Math.max(0, cardCount - 1))) / cardCount);
-		// Keep the desired mobile width by default (40px), but allow shrinking if needed.
-		const desired = 40;
+		// Keep the desired mobile width from CSS (changes with screen width), but allow shrinking if needed.
+		const desired = parseFloat(rootStyles.getPropertyValue('--hand-card-width')) || 40;
 		const fitted = Math.max(32, Math.min(targetWidth, desired));
 		bottomBar.style.setProperty('--hand-card-width', `${fitted}px`);
 	}
