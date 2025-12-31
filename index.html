@@ -1274,9 +1274,9 @@
 			--bottom-bar-gap: 4px;
 			--bottom-bar-bottom-offset: -16px;
 			--card-hand-lift: 0px;
-			--hand-card-width: 34px;
+			--hand-card-width: 32px;
 			--hand-card-gap: 4px;
-			--hand-card-height: 40px;
+			--hand-card-height: 80px;
 		}
 
 		#bottom-bar {
@@ -1344,7 +1344,10 @@
 	#bottom-bar #card-choice-zone .card-option {
 		width: var(--hand-card-width);
 		max-width: var(--hand-card-width);
+		height: var(--hand-card-height);
 		min-height: var(--hand-card-height);
+		align-self: flex-start;
+		--preview-cell: 6px;
 		padding: 2px 3px 3px;
 		gap: 2px;
 	}
@@ -1383,7 +1386,7 @@
 		--card-hand-lift: 0px;
 		--hand-card-width: 32px;
 		--hand-card-gap: 4px;
-		--hand-card-height: 32px;
+		--hand-card-height: 80px;
 	  }
 
 	  #bottom-bar {
@@ -1400,7 +1403,7 @@
 	  #bottom-bar #card-options {
 		display: flex;
 		gap: 4px;
-		align-items: stretch;
+		align-items: flex-start;
 		justify-content: flex-start;
 		flex-wrap: nowrap;
 		scroll-snap-type: x proximity;
@@ -1434,7 +1437,10 @@
 
 	  #bottom-bar #card-choice-zone .card-option {
 		width: var(--hand-card-width);
+		height: var(--hand-card-height);
 		min-height: var(--hand-card-height);
+		align-self: flex-start;
+		--preview-cell: 6px;
 		padding: 3px 4px 5px;
 		gap: 2px;
 	  }
@@ -6789,7 +6795,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		#bottom-bar #card-options {
 			display: flex;
 			gap: 6px;
-			align-items: stretch;
+			align-items: flex-start;
 			justify-content: flex-start;
 			flex-wrap: nowrap;
 			scroll-snap-type: x proximity;
@@ -27877,6 +27883,12 @@ body { background: transparent !important; }
 		const cards = cardOptions.querySelectorAll('.card-option');
 		const cardCount = cards.length;
 		if (cardCount < 1) {
+			bottomBar.style.removeProperty('--hand-card-width');
+			return;
+		}
+		// Only auto-fit when the hand is too wide (e.g. 5+ cards).
+		// For 3–4 cards we keep the CSS value (so width stays at the requested 32px).
+		if (cardCount <= 4) {
 			bottomBar.style.removeProperty('--hand-card-width');
 			return;
 		}
