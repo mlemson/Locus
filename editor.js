@@ -873,9 +873,13 @@
   /* Use mm for cell size so printer renders physical dimensions reliably */
   /* cell/ gap in mm so print renders physical sizes reliably */
   :root { --cell-size: 6.88mm; --board-grid-gap: 0.53mm; }
-html, body { height: 100%; }
+html, body { height: 100%; width: 100%; }
 body { margin: 0; padding: 0; background: white; color: #111; font-family: Arial, sans-serif; }
-.boardHost { width: fit-content; margin: 0 auto; max-width: calc(297mm - 16mm); }
+/* Center the board on the printable page area. */
+.printCenter { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: visible; }
+/* Wrapper we can scale without affecting the inner layout. */
+.boardScale { display: inline-block; transform-origin: top left; }
+.boardHost { display: inline-block; }
 .board { display: flex; gap: 12px; align-items: flex-start; transform: none !important; }
 .column { display: flex; flex-direction: column; gap: 12px; }
 .zone { position: relative; border-radius: 10px; border: 1px solid rgba(0,0,0,0.12); box-shadow: 0 2px 6px rgba(0,0,0,0.12); padding: 10px; }
@@ -933,7 +937,35 @@ body { margin: 0; padding: 0; background: white; color: #111; font-family: Arial
 .cell.portal-cell::after { font-size: 12px; }
       `;
     }
-    const doc = `<!doctype html><html lang="nl"><head><meta charset="utf-8"><title>Print</title><style>${css}</style></head><body><div class="boardHost">${boardHtml}</div><script>window.addEventListener('load',()=>setTimeout(()=>window.print(),150));</script></body></html>`;
+    const doc = `<!doctype html><html lang="nl"><head><meta charset="utf-8"><title>Print</title><style>${css}</style></head><body>
+<div class="printCenter"><div class="boardScale"><div class="boardHost">${boardHtml}</div></div></div>
+<script>
+  window.addEventListener('load', () => {
+    try {
+      const scaleEl = document.querySelector('.boardScale');
+      const host = document.querySelector('.boardHost');
+      const target = scaleEl || host;
+      if (target) {
+        // Try to fit both width and height of the current page viewport.
+        // This prevents clipping when a custom board is wider than A4-landscape.
+        const pageW = document.documentElement.clientWidth || window.innerWidth;
+        const pageH = document.documentElement.clientHeight || window.innerHeight;
+        const rect = target.getBoundingClientRect();
+        const pad = 12; // px safety padding inside margins
+        const sx = rect.width > 0 ? (pageW - pad) / rect.width : 1;
+        const sy = rect.height > 0 ? (pageH - pad) / rect.height : 1;
+        const s = Math.min(1, sx, sy);
+        if (s > 0 && s < 1) {
+          // Prefer zoom (affects layout in Chromium print); fallback to transform.
+          try { target.style.zoom = String(s); } catch (e) {}
+          try { target.style.transform = 'scale(' + s + ')'; } catch (e) {}
+        }
+      }
+    } catch (e) {}
+    setTimeout(() => window.print(), 150);
+  });
+</script>
+</body></html>`;
     w.document.open();
     w.document.write(doc);
     w.document.close();
