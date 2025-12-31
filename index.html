@@ -1274,7 +1274,7 @@
 			--bottom-bar-gap: 4px;
 			--bottom-bar-bottom-offset: -16px;
 			--card-hand-lift: 0px;
-			--hand-card-width: 32px;
+			--hand-card-width: 40px;
 			--hand-card-gap: 4px;
 			--hand-card-height: 80px;
 		}
@@ -1348,6 +1348,7 @@
 		min-height: var(--hand-card-height);
 		align-self: flex-start;
 		--preview-cell: 6px;
+		border-radius: 8px;
 		padding: 2px 3px 3px;
 		gap: 2px;
 	}
@@ -1384,7 +1385,7 @@
 		--bottom-bar-height: 120px;
 		--bottom-bar-gap: 4px;
 		--card-hand-lift: 0px;
-		--hand-card-width: 32px;
+		--hand-card-width: 40px;
 		--hand-card-gap: 4px;
 		--hand-card-height: 80px;
 	  }
@@ -1441,6 +1442,7 @@
 		min-height: var(--hand-card-height);
 		align-self: flex-start;
 		--preview-cell: 6px;
+		border-radius: 8px;
 		padding: 3px 4px 5px;
 		gap: 2px;
 	  }
@@ -6298,7 +6300,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		#mobile-objective-banner {
 			display: flex;
 			position: fixed;
-			top: calc(env(safe-area-inset-top, 0px) + 4px);
+			top: calc(env(safe-area-inset-top, 0px) + 0px);
 			left: 10px;
 			right: 10px;
 			z-index: calc(var(--z-blur) + 20);
@@ -27908,9 +27910,10 @@ body { background: transparent !important; }
 		if (!(available > 0)) return;
 
 		const targetWidth = Math.floor((available - (cardGap * Math.max(0, cardCount - 1))) / cardCount);
-		// Clamp so cards remain tappable on narrow screens.
-		const clamped = Math.max(32, Math.min(targetWidth, 132));
-		bottomBar.style.setProperty('--hand-card-width', `${clamped}px`);
+		// Keep the desired mobile width by default (40px), but allow shrinking if needed.
+		const desired = 40;
+		const fitted = Math.max(32, Math.min(targetWidth, desired));
+		bottomBar.style.setProperty('--hand-card-width', `${fitted}px`);
 	}
 
 	function scaleBoardForDesktop() {
