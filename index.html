@@ -1913,6 +1913,13 @@
 	}
 	#green-zone,
 	#green-zone--placeholder { background:#a8d5a2; }
+	/* Mobile layout: keep green aligned with red (same outer margin). */
+	@media (max-width: 650px) {
+		#green-zone,
+		#green-zone--placeholder {
+			margin: 15px;
+		}
+	}
 	/* World 2: keep green zone square (same width, more height). */
 	body.world-2:not(.zoomed-in) #green-zone,
 	body.world-2:not(.zoomed-in) #green-zone--placeholder {
@@ -13772,7 +13779,18 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		try {
 			const pointerType = ev && ev.pointerType;
 			const isTouchPointer = (pointerType === 'touch' || pointerType === 'pen');
-			return isTouchPointer ? TOUCH_FINGER_LIFT_PX : 0;
+			if (isTouchPointer) return TOUCH_FINGER_LIFT_PX;
+
+			// Fallback: some mobile browsers can surface touch interactions as mouse-like events.
+			// Guard this strongly so Windows desktops with touch support don't get the lift.
+			const isMobileLayout = (typeof MOBILE_BREAKPOINT !== 'undefined')
+				? (window.innerWidth <= MOBILE_BREAKPOINT)
+				: (window.innerWidth <= 650);
+			const touchCapable = (('ontouchstart' in window) || (navigator && navigator.maxTouchPoints > 0));
+			let coarse = false;
+			try { coarse = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches); } catch (e) { coarse = false; }
+			if (isMobileLayout && touchCapable && coarse) return TOUCH_FINGER_LIFT_PX;
+			return 0;
 		} catch (e) {
 			return 0;
 		}
@@ -15827,6 +15845,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		// Allow zoom in mobile portrait AND mobile landscape sidebar mode
 		const isMobileSidebarMode = document.body.classList.contains('mobile-sidebar-layout');
 		if (window.innerWidth > MOBILE_BREAKPOINT && !isMobileSidebarMode) return;
+		// Clicking the zone-info UI should not trigger zoom (prevents layout jump).
+		if (e.target && e.target.closest && (e.target.closest('.zone-info-btn') || e.target.closest('.zone-info-popover'))) return;
 		if (skipNextZoneClick) {
 		  skipNextZoneClick = false;
 		  return;
