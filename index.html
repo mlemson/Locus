@@ -19500,8 +19500,9 @@ function clearElPos(el) {
 	// ========================
 	function canPlace(zone, baseX, baseY, shape) {
 	  const pendingCells = collectPlacementCells(zone, baseX, baseY, shape);
-		const optionalOk = optionalCellsTouchActive(zone, pendingCells);
-		return !!(pendingCells && pendingCells.length > 0 && optionalOk && passesPlacementRules(zone, pendingCells));
+	  // Optional cells (value 2) are allowed to be out-of-bounds or overlap active cells;
+	  // they must never block placing the required cells.
+	  return !!(pendingCells && pendingCells.length > 0 && passesPlacementRules(zone, pendingCells));
 	}
 
 	function passesPlacementRules(zone, pendingCells) {
@@ -19538,11 +19539,6 @@ function optionalCellsTouchActive(zone, pendingCells) {
 		? pendingCells.optionalCells.filter(Boolean)
 		: [];
 	if (!optionalList.length) return true;
-	// Red grids allow free placement; optional bonus cells should never block placement here.
-	try {
-		const zoneId = zone && zone.id ? String(zone.id) : '';
-		if (zoneId.startsWith('red-grid')) return true;
-	} catch (e) {}
 	return optionalList.some(cell => cell.classList.contains('active') || hasAdjacentActiveCell(zone, cell));
 }
 
