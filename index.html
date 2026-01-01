@@ -12332,9 +12332,9 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		1: [ // Level 1: Simple totals and single colors
 			{
 				id: 'level-1-total-10',
-				description: 'Haal 10 punten totaal.',
-				short: 'Level 1 - 10 punten totaal',
-				check: scores => scores.total >= 10
+				description: 'Haal 12 punten totaal.',
+				short: 'Level 1 - 12 punten totaal',
+				check: scores => scores.total >= 12
 			},
 			{
 				id: 'level-1-blue-8',
@@ -12356,7 +12356,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			},
 			{
 				id: 'level-1-purple-6',
-				description: 'Scoor 6 punten in paars.',
+				description: 'Scoor 8 punten in paars.',
 				short: 'Level 1 - 8 punten paars',
 				check: scores => scores.purple >= 8
 			}
@@ -14118,7 +14118,89 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			return p;
 		}
 
+		// Objective-driven bonus bias:
+		// If the current objective focuses on a color (e.g. "Scoor 15 punten in rood"),
+		// increase the chance that bonus symbols of that color appear across the grids.
+		function computeObjectiveDrivenBonusColorChances() {
+			try {
+				const colors = ['blue', 'green', 'red', 'purple', 'yellow'];
+				const defaultChances = colors.map(c => ({ color: c, weight: 1 }));
+				const getObjectiveText = () => {
+					// Prefer a loaded custom objective when present.
+					try {
+						if (window && window.loadedCustomObjectiveCompiled) {
+							return String(window.loadedCustomObjectiveCompiled.description || window.loadedCustomObjectiveCompiled.short || '').trim();
+						}
+					} catch (_) {}
+					const obj = (typeof getObjectiveById === 'function' ? getObjectiveById(currentObjectiveId) : null)
+						|| (typeof getObjectiveForLevel === 'function' ? getObjectiveForLevel(currentLevel) : null);
+					return obj ? String(obj.description || obj.short || '').trim() : '';
+				};
+
+				const raw = getObjectiveText();
+				if (!raw) return null;
+				const s = raw.toLowerCase();
+
+				// If objective is explicitly "all colors" / rainbow / multicolor: do NOT bias.
+				if (/(?:alle\s+kleur|alle\s+kleuren|elke\s+kleur|regenboog|multikleur)/i.test(s)) return null;
+
+				// Detect mentioned colors (Dutch base + common adjective forms).
+				const mentioned = new Set();
+				const patterns = [
+					{ key: 'yellow', re: /\b(?:geel|gele)\b/i },
+					{ key: 'red', re: /\b(?:rood|rode)\b/i },
+					{ key: 'green', re: /\b(?:groen|groene)\b/i },
+					{ key: 'purple', re: /\b(?:paars|paarse)\b/i },
+					{ key: 'blue', re: /\b(?:blauw|blauwe)\b/i }
+				];
+				for (const p of patterns) {
+					if (p.re.test(s)) mentioned.add(p.key);
+				}
+
+				// If objective is diagonal/column-based and no color is mentioned (fallback): assume yellow.
+				if (mentioned.size === 0 && /diagona|kolom|segment/i.test(s)) {
+					mentioned.add('yellow');
+				}
+
+				// No clear color focus (e.g. total score / coins / collect bonuses): keep uniform.
+				if (mentioned.size === 0) return null;
+				// If it's basically "many colors", biasing is not helpful.
+				if (mentioned.size >= 4) return null;
+
+				const boost = (mentioned.size === 1) ? 3 : (mentioned.size === 2) ? 2.3 : 1.8;
+				const weights = {
+					blue: 1,
+					green: 1,
+					red: 1,
+					purple: 1,
+					yellow: 1
+				};
+				for (const k of mentioned) {
+					if (weights[k] != null) weights[k] = weights[k] * boost;
+				}
+
+				const out = defaultChances.map(entry => ({ color: entry.color, weight: weights[entry.color] || 1 }));
+				// Sanity clamp
+				return out.map(e => ({ color: e.color, weight: Math.max(0.01, Number(e.weight) || 1) }));
+			} catch (e) {
+				return null;
+			}
+		}
+
+		function refreshObjectiveDrivenBonusBias() {
+			try {
+				const chances = computeObjectiveDrivenBonusColorChances();
+				if (typeof window !== 'undefined') {
+					window.__objectiveBonusColorChances = Array.isArray(chances) ? chances : null;
+				}
+			} catch (_) {
+				try { if (typeof window !== 'undefined') window.__objectiveBonusColorChances = null; } catch (e) {}
+			}
+		}
+
 		function renderObjectivePanel(snapshot = latestScoreSnapshot) {
+			// Keep objective-driven bonus bias in sync whenever the objective UI is rendered.
+			refreshObjectiveDrivenBonusBias();
 			// If a custom board with metadata was loaded, show a compiled objective and its progress
 			if (window && window.loadedCustomLevelMeta && (window.loadedCustomLevelMeta.name || window.loadedCustomLevelMeta.objective)) {
 				const titleEl = document.querySelector('#objective-zone h2');
@@ -15523,9 +15605,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 						{ color: 'purple', weight: 1 },
 						{ color: 'yellow', weight: 1 }
 					];
-					const totalWeight = colorChances.reduce((sum, entry) => sum + entry.weight, 0) || 1;
+					const globalObjectiveChances = (typeof window !== 'undefined' && window && Array.isArray(window.__objectiveBonusColorChances))
+						? window.__objectiveBonusColorChances
+						: null;
+					const effectiveColorChances = options.colorChances || globalObjectiveChances || colorChances;
+					const totalWeight = effectiveColorChances.reduce((sum, entry) => sum + (Number(entry.weight) || 0), 0) || 1;
 					let roll = Math.random() * totalWeight;
-					for (const entry of colorChances) {
+					for (const entry of effectiveColorChances) {
 						if (roll < entry.weight) {
 							sym.classList.add(entry.color);
 							sym.style.setProperty('--symbol.color', entry.color);
@@ -16015,14 +16101,18 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  const clusterMap = {};
 	  const dirs = [{r:-1,c:0},{r:1,c:0},{r:0,c:-1},{r:0,c:1}];
 
-	  const colorChances = [
-		{color:'blue', weight:1},
-		{color:'green', weight:3},
-		{color:'red', weight:1},
-		{color:'purple', weight:1},
-		{color:'yellow', weight:1}
+	  const defaultColorChances = [
+		{ color: 'blue', weight: 1 },
+		{ color: 'green', weight: 1 },
+		{ color: 'red', weight: 1 },
+		{ color: 'purple', weight: 1 },
+		{ color: 'yellow', weight: 1 }
 	  ];
-	  const totalWeight = colorChances.reduce((s,o)=>s+o.weight,0);
+	  const objectiveColorChances = (typeof window !== 'undefined' && window && Array.isArray(window.__objectiveBonusColorChances))
+		? window.__objectiveBonusColorChances
+		: null;
+	  const colorChances = objectiveColorChances || defaultColorChances;
+	  const totalWeight = colorChances.reduce((s, o) => s + (Number(o.weight) || 0), 0) || 1;
 
 	  const centerR = Math.floor(rows/2);
 	  const centerC = Math.floor(cols/2);
@@ -23208,14 +23298,14 @@ function openShopModal(callback) {
 	  const blackHoleOnlyMaxTraps = hasBlackHoleUpgrade && !shouldGenerateTraps ? 1 : 0;
 
 	  const boardConfigs = [
-		() => createGrid('yellow-grid', yellowRows, yellowCols, { goldCells: true, symbols: true, minSymbols: 12, maxSymbols: 14, coinChance: 0.22, maxCoins: 17, rowLengths: yellowRowPattern, rowOffsets: yellowRowOffsets, boldColumns: [0], pointsPerColumn: yellowColumnPoints, trapChance: trapChance || blackHoleOnlyChance, maxTraps: maxTraps || blackHoleOnlyMaxTraps, blackHoleChance: hasBlackHoleUpgrade ? 1.0 : 0 }),
-		() => createGrid('purple-grid', 9, 9, { symbols: true, goldCells: true, minSymbols: 8, maxSymbols: 10, coinChance: 0.03, maxCoins: 4, randomBoldCount: 8, avoidAdjacentBold: true, trapChance: (shouldGenerateTraps ? 0.08 : 0) || blackHoleOnlyChance, maxTraps: shouldGenerateTraps ? 7 : 0, blackHoleChance: hasBlackHoleUpgrade && shouldGenerateTraps ? 0.3 : 0 }),
-		() => createGrid('blue-grid', blueRows, blueCols, { boldBottom: true, goldCells: true, symbols: true, minSymbols: 12, maxSymbols: 16, coinChance: 0.07, maxCoins: 8, rowLengths: blueRowPattern, rowOffsets: blueRowOffsets, trapChance: (shouldGenerateTraps ? 0.04 : 0), maxTraps: shouldGenerateTraps ? 4 : 0, blackHoleChance: 0 }),
+		() => createGrid('yellow-grid', yellowRows, yellowCols, { goldCells: true, symbols: true, minSymbols: 8, maxSymbols: 8, coinChance: 0.22, maxCoins: 17, rowLengths: yellowRowPattern, rowOffsets: yellowRowOffsets, boldColumns: [0], pointsPerColumn: yellowColumnPoints, trapChance: trapChance || blackHoleOnlyChance, maxTraps: maxTraps || blackHoleOnlyMaxTraps, blackHoleChance: hasBlackHoleUpgrade ? 1.0 : 0 }),
+		() => createGrid('purple-grid', 9, 9, { symbols: true, goldCells: true, minSymbols: 8, maxSymbols: 8, coinChance: 0.03, maxCoins: 4, randomBoldCount: 8, avoidAdjacentBold: true, trapChance: (shouldGenerateTraps ? 0.08 : 0) || blackHoleOnlyChance, maxTraps: shouldGenerateTraps ? 7 : 0, blackHoleChance: hasBlackHoleUpgrade && shouldGenerateTraps ? 0.3 : 0 }),
+		() => createGrid('blue-grid', blueRows, blueCols, { boldBottom: true, goldCells: true, symbols: true, minSymbols: 8, maxSymbols: 8, coinChance: 0.07, maxCoins: 8, rowLengths: blueRowPattern, rowOffsets: blueRowOffsets, trapChance: (shouldGenerateTraps ? 0.04 : 0), maxTraps: shouldGenerateTraps ? 4 : 0, blackHoleChance: 0 }),
 		() => generateRoots('green-grid', 15, 15, 40, 0.25, 0.06, 12, 16, 4, false, (shouldGenerateTraps ? 0.07 : 0), shouldGenerateTraps ? 5 : 0, 0),
-		() => generateRoots('red-grid1', 4, 4, 10, 0.3, 0.04, 2, 4, 2, true, 0.00, 0, 0),
-		() => generateRoots('red-grid2', 4, 5, 10, 0.3, 0.04, 2, 4, 2, true, 0.00, 0, 0),
-		() => generateRoots('red-grid3', 5, 5, 12, 0.3, 0.06, 3, 5, 2, true, 0.00, 0, 0),
-		() => generateRoots('red-grid4', 5, 5, 12, 0.3, 0.06, 3, 5, 2, true, 0.00, 0, 0)
+		() => generateRoots('red-grid1', 4, 4, 10, 0.3, 0.04, 2, 2, 2, true, 0.00, 0, 0),
+		() => generateRoots('red-grid2', 4, 5, 10, 0.3, 0.04, 2, 2, 2, true, 0.00, 0, 0),
+		() => generateRoots('red-grid3', 5, 5, 12, 0.3, 0.06, 3, 3, 2, true, 0.00, 0, 0),
+		() => generateRoots('red-grid4', 5, 5, 12, 0.3, 0.06, 3, 3, 2, true, 0.00, 0, 0)
 	  ];
 	  boardConfigs.forEach(fn => fn());
 	  updateScore();
@@ -24283,11 +24373,22 @@ function openShopModal(callback) {
 	// ========== SAVE/LOAD SYSTEM ==========
 	function saveGameState() {
 	  try {
+		// Only persist a board snapshot/world override when a custom board is active (editor/scenario).
+		// For normal runs we want the world to be derived from the level mapping on each load.
+		const isCustomBoardSession = (() => {
+			try {
+				if (window && window._locusEditorApplied) return true;
+				if (window && window.loadedCustomLevelMeta) return true;
+				if (window && Array.isArray(window.scenarioAllowedColors) && window.scenarioAllowedColors.length) return true;
+			} catch (e) {}
+			return false;
+		})();
+
 		const gameState = {
 		  version: '1.0',
 		  timestamp: Date.now(),
 		  currentLevel: currentLevel,
-		  currentWorld: currentWorld,
+		  customBoard: isCustomBoardSession,
 		  // totalTurns/currentStreak removed (unused UI)
 		  
 		  // Coins
@@ -24356,16 +24457,22 @@ function openShopModal(callback) {
 		  portalsActive: portalsActive || false
 		};
 
-		// Include a sanitized snapshot of the current board DOM (without active/placed cells)
-		try {
-			if (typeof getEditorBoardHtml === 'function') {
-				const raw = getEditorBoardHtml();
-				if (raw) gameState.boardHtml = (typeof sanitizeBoardHtml === 'function') ? sanitizeBoardHtml(raw) : raw;
-			} else if (document.getElementById('board')) {
-				const raw = document.getElementById('board').outerHTML;
-				if (raw) gameState.boardHtml = (typeof sanitizeBoardHtml === 'function') ? sanitizeBoardHtml(raw) : raw;
-			}
-		} catch (e) {}
+		// Only for editor/scenario: persist world + board snapshot + meta so it stays stable across reload.
+		if (isCustomBoardSession) {
+			try { gameState.currentWorld = currentWorld; } catch (e) {}
+			try { gameState.scenarioAllowedColors = window.scenarioAllowedColors || null; } catch (e) {}
+			try { gameState.loadedCustomLevelMeta = window.loadedCustomLevelMeta || null; } catch (e) {}
+			// Include a sanitized snapshot of the current board DOM (without active/placed cells)
+			try {
+				if (typeof getEditorBoardHtml === 'function') {
+					const raw = getEditorBoardHtml();
+					if (raw) gameState.boardHtml = (typeof sanitizeBoardHtml === 'function') ? sanitizeBoardHtml(raw) : raw;
+				} else if (document.getElementById('board')) {
+					const raw = document.getElementById('board').outerHTML;
+					if (raw) gameState.boardHtml = (typeof sanitizeBoardHtml === 'function') ? sanitizeBoardHtml(raw) : raw;
+				}
+			} catch (e) {}
+		}
 		
 		localStorage.setItem('locusGameSave', JSON.stringify(gameState));
 		console.log('✅ Game saved successfully at level', currentLevel);
@@ -24431,11 +24538,38 @@ function sanitizeBoardHtml(html) {
 		console.log('📂 Loading saved game from level', gameState.currentLevel);
 		console.log('📂 Full loaded data:', JSON.stringify(gameState, null, 2));
 		
-		// Restore level & world
+		// Determine if this save represents an editor/scenario/custom-board session.
+		// IMPORTANT: Old saves may contain boardHtml snapshots from normal runs; we must ignore those.
+		const isCustomBoardSave = (() => {
+			try {
+				if (gameState.customBoard === true) return true;
+				if (gameState.loadedCustomLevelMeta) return true;
+				if (Array.isArray(gameState.scenarioAllowedColors) && gameState.scenarioAllowedColors.length) return true;
+			} catch (e) {}
+			return false;
+		})();
+		
+		// Restore level (world will be derived from level for normal runs)
 		currentLevel = gameState.currentLevel || 1;
-		currentWorld = gameState.currentWorld || 1;
 		console.log('📂 Set currentLevel to:', currentLevel);
 		turnCount = gameState.turnCount || 0;
+		
+		// Restore scenario/editor meta early so startLevel can filter decks if needed
+		try { window.scenarioAllowedColors = isCustomBoardSave ? (gameState.scenarioAllowedColors || null) : null; } catch (e) {}
+		try {
+			if (isCustomBoardSave && gameState.loadedCustomLevelMeta) {
+				window.loadedCustomLevelMeta = gameState.loadedCustomLevelMeta;
+				window.loadedCustomObjectiveCompiled = null;
+				window.loadedCustomLevelMetaCompleted = false;
+				if (window.loadedCustomLevelMeta && window.loadedCustomLevelMeta.objective) {
+					try { window.loadedCustomObjectiveCompiled = parseObjectiveTextToObjective(String(window.loadedCustomLevelMeta.objective || '').trim()); } catch (e) { window.loadedCustomObjectiveCompiled = null; }
+				}
+			} else {
+				window.loadedCustomLevelMeta = null;
+				window.loadedCustomObjectiveCompiled = null;
+				window.loadedCustomLevelMetaCompleted = false;
+			}
+		} catch (e) {}
 		
 		// Restore upgrades
 		if (gameState.upgrades) {
@@ -24568,13 +24702,27 @@ function sanitizeBoardHtml(html) {
 		// Start the loaded level (zal savedDeckState gebruiken)
 		isLoadingGame = true;
 		startLevel(currentLevel);
-		// If the save includes a board snapshot, apply it (sanitized) so structure is restored
-		try {
-			if (gameState.boardHtml) {
-				const htmlToApply = (typeof sanitizeBoardHtml === 'function') ? sanitizeBoardHtml(gameState.boardHtml) : gameState.boardHtml;
-				applyBoardHtmlToGame(htmlToApply);
-			}
-		} catch (e) { console.error('Failed to apply saved board snapshot after startLevel', e); }
+		// Only restore the board snapshot for editor/scenario saves.
+		// Normal runs should rebuild the board from the level/world mapping.
+		if (isCustomBoardSave) {
+			try {
+				if (gameState.boardHtml) {
+					const htmlToApply = (typeof sanitizeBoardHtml === 'function') ? sanitizeBoardHtml(gameState.boardHtml) : gameState.boardHtml;
+					applyBoardHtmlToGame(htmlToApply);
+				}
+				// Restore world override for custom boards (do after startLevel which rebuilds world from level)
+				if (gameState.currentWorld) {
+					currentWorld = Number(gameState.currentWorld) || currentWorld;
+					document.body.classList.toggle('world-2', currentWorld === 2);
+					document.body.classList.toggle('world-1', currentWorld === 1);
+					document.body.classList.toggle('world-3', currentWorld === 3);
+				}
+				// Re-apply custom title/objective text in UI
+				if (gameState.loadedCustomLevelMeta && typeof setLoadedLevelMeta === 'function') {
+					setLoadedLevelMeta(gameState.loadedCustomLevelMeta.name, gameState.loadedCustomLevelMeta.objective);
+				}
+			} catch (e) { console.error('Failed to restore custom board after startLevel', e); }
+		}
 		isLoadingGame = false;
 		savedDeckState = null; // Clear na gebruik
 		
