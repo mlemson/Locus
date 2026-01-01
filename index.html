@@ -1953,9 +1953,10 @@
 	*/
 	#yellow-zone,
 	#yellow-zone--placeholder { background:#f0dc7d; height: 450px; min-width: 300px; padding: 14px; }
-	/* World 3: yellow zone should not stretch to the (wide) column; match grid/purple width. */
-	body.world-3 #yellow-zone,
-	body.world-3 #yellow-zone--placeholder {
+	/* World 3: yellow zone should not stretch to the (wide) column; match grid/purple width.
+	   IMPORTANT: keep zoomed-in view consistent across worlds, so apply only when NOT zoomed. */
+	body.world-3:not(.zoomed-in) #yellow-zone,
+	body.world-3:not(.zoomed-in) #yellow-zone--placeholder {
 		min-width: 0;
 		width: fit-content;
 		align-self: center;
@@ -1993,9 +1994,10 @@
 			justify-content: center;
 		}
 
-		/* World 2 (mobile): make blue zone a bit taller (+50px). */
-		body.world-2 #blue-zone,
-		body.world-2 #blue-zone--placeholder {
+		/* World 2 (mobile): make blue zone a bit taller (+50px).
+		   IMPORTANT: keep zoomed-in view consistent across worlds, so apply only when NOT zoomed. */
+		body.world-2:not(.zoomed-in) #blue-zone,
+		body.world-2:not(.zoomed-in) #blue-zone--placeholder {
 			height: 841px;
 		}
 	}
@@ -2241,10 +2243,10 @@
 		margin-top: 20px;
 		margin-bottom: 20px;
 	}
-	body.world-2 #purple-zone #purple-grid.grid,
-	body.world-2 #purple-zone--placeholder #purple-grid.grid,
-	body.world-3 #purple-zone #purple-grid.grid,
-	body.world-3 #purple-zone--placeholder #purple-grid.grid {
+	body.world-2:not(.zoomed-in) #purple-zone #purple-grid.grid,
+	body.world-2:not(.zoomed-in) #purple-zone--placeholder #purple-grid.grid,
+	body.world-3:not(.zoomed-in) #purple-zone #purple-grid.grid,
+	body.world-3:not(.zoomed-in) #purple-zone--placeholder #purple-grid.grid {
 		margin-top: 0;
 		margin-bottom: 0;
 	}
@@ -20341,11 +20343,20 @@ function optionalCellsTouchActive(zone, pendingCells) {
 		
 		for (let y = 0; y < shape.length; y++) {
 			for (let x = 0; x < shape[0].length; x++) {
-				if (!isSolidShapeCell(shape[y][x])) continue;
+				const cellVal = shape[y][x];
+				if (!cellVal) continue;
+				const isOptional = isOptionalShapeCell(cellVal);
+				if (!isSolidShapeCell(cellVal) && !isOptional) continue;
 				
 				const cellX = baseX + x;
 				const cellY = baseY + y;
 				const cell = getCell(zone, cellX, cellY);
+				// Optional cell outside grid shouldn't block nor help validity.
+				if (!cell && isOptional) continue;
+				// If an optional cell overlaps an active cell, it counts as touching.
+				if (cell && cell.classList.contains('active')) {
+					touchesActiveBlock = true;
+				}
 				
 				// Check of deze cel de bodem raakt (echte floor row)
 				if (floorY !== null && cell && Number(cell.dataset.y) === floorY) {
@@ -20412,15 +20423,25 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	  
 	  for (let row = 0; row < shape.length; row++) {
 		for (let col = 0; col < shape[0].length; col++) {
-		  if (isSolidShapeCell(shape[row][col])) {
+		  const cellVal = shape[row][col];
+		  if (!cellVal) continue;
+		  const isOptional = isOptionalShapeCell(cellVal);
+		  if (!isSolidShapeCell(cellVal) && !isOptional) continue;
 			const cellX = baseX + col;
 			const cellY = baseY + row;
 			const cell = getCell(zone, cellX, cellY);
+			// Optional cell outside the grid should not count (positive-only).
+			if (!cell && isOptional) continue;
 			
 			// Check bold-cell
 			if (cell && cell.classList.contains('bold-cell')) {
 			  touchesBoldCell = true;
 			  break;
+			}
+			// Optional cell overlapping an active cell should count as touching.
+			if (cell && cell.classList.contains('active')) {
+				adjacentToActive = true;
+				break;
 			}
 			
 			// Check aangrenzende cellen (boven, onder, links, rechts)
@@ -20440,7 +20461,6 @@ function optionalCellsTouchActive(zone, pendingCells) {
 			}
 			
 			if (adjacentToActive) break;
-		  }
 		}
 		if (touchesBoldCell || adjacentToActive) break;
 	  }
