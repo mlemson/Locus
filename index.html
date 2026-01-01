@@ -16084,6 +16084,15 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		zone.classList.add('zoom-focus');
 		zone.setAttribute('data-zoom-active', 'true');
 		activeZoomZone = zone;
+		// Blue zone: remove inline width constraints so CSS 100vw can take effect.
+		if (zone.id === 'blue-zone') {
+			zone._savedInlineWidth = zone.style.getPropertyValue('width');
+			zone._savedInlineMinWidth = zone.style.getPropertyValue('min-width');
+			zone._savedInlineMaxWidth = zone.style.getPropertyValue('max-width');
+			zone.style.removeProperty('width');
+			zone.style.removeProperty('min-width');
+			zone.style.removeProperty('max-width');
+		}
 		addZoneNavArrows();
 		bindMobileZoomResizeHandler();
 		applyMobileZoomSizing(zone);
@@ -16106,6 +16115,15 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		placeholderSyncQueue.delete(zone);
 		zone.classList.remove('zoom-focus');
 		zone.removeAttribute('data-zoom-active');
+		// Blue zone: restore inline width constraints that were removed during zoom.
+		if (zone.id === 'blue-zone') {
+			if (zone._savedInlineWidth) zone.style.setProperty('width', zone._savedInlineWidth, 'important');
+			if (zone._savedInlineMinWidth) zone.style.setProperty('min-width', zone._savedInlineMinWidth, 'important');
+			if (zone._savedInlineMaxWidth) zone.style.setProperty('max-width', zone._savedInlineMaxWidth, 'important');
+			delete zone._savedInlineWidth;
+			delete zone._savedInlineMinWidth;
+			delete zone._savedInlineMaxWidth;
+		}
 		restoreFromBody(zone);
 		activeZoomZone = null;
 		document.body.classList.remove('zoomed-in');
