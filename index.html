@@ -1953,6 +1953,14 @@
 	*/
 	#yellow-zone,
 	#yellow-zone--placeholder { background:#f0dc7d; height: 450px; min-width: 300px; padding: 14px; }
+	/* World 3: yellow zone should not stretch to the (wide) column; match grid/purple width. */
+	body.world-3 #yellow-zone,
+	body.world-3 #yellow-zone--placeholder {
+		min-width: 0;
+		width: fit-content;
+		align-self: center;
+		padding: 10px;
+	}
 	/* Yellow (World 2): keep the generated grid visually centered (equal top/bottom spacing). */
 	#yellow-zone,
 	#yellow-zone--placeholder {
@@ -1983,6 +1991,12 @@
 			flex-direction: column;
 			align-items: center;
 			justify-content: center;
+		}
+
+		/* World 2 (mobile): make blue zone a bit taller (+50px). */
+		body.world-2 #blue-zone,
+		body.world-2 #blue-zone--placeholder {
+			height: calc(791px + 50px);
 		}
 	}
 	/* World 2: keep green zone square (same width, more height). */
