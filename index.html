@@ -11198,19 +11198,19 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		body.zoomed-in #purple-zone.zoom-focus,
 		body.zoomed-in #red-zone.zoom-focus {
 			position: fixed !important;
-			left: 50% !important;
-			right: auto !important;
-			width: auto !important;
-			max-width: 92vw !important; /* uniforme breedte voor alle zones in zoom (incl. world 2/3) */
+			left: 0 !important;
+			right: 0 !important;
+			width: 100vw !important;
+			max-width: 100vw !important;
 			min-height: var(--mobile-zoom-height, 57svh) !important;
 			max-height: var(--mobile-zoom-height, 57svh) !important;
 			min-width: 0 !important;
-			margin: 0 auto !important;
+			margin: 0 !important;
 
 			/* Center position matches existing yellow-ish placement; JS clamps to avoid objective/bottom-bar overlap. */
 			top: var(--mobile-zoom-center, calc(25% + 30px)) !important;
 			height: var(--mobile-zoom-height, 57svh) !important;
-			transform: translate(-50%, -50%) !important;
+			transform: translateY(-50%) !important;
 			z-index: var(--z-zoom) !important;
 			box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
 		}
