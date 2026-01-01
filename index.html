@@ -13112,7 +13112,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 				description: 'Level 16: Verzamel 25 bonuspunten.',
 				short: 'Level 16 - Bonus legende',
 				check: scores => scores.bonus >= 25,
-				progress: scores => (scores.bonus >= 25 ? '⭐✔' : `⭐${Math.max(0, scores.bonus)}/25`)
+				progress: scores => (scores.bonus >= 25 ? '✔' : `${Math.max(0, scores.bonus)}/25`)
 			}
 		],
 		17: [
@@ -13191,7 +13191,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 				description: 'Level 18: Verzamel 30 bonuspunten.',
 				short: 'Level 18 - Bonus titaan',
 				check: scores => scores.bonus >= 30,
-				progress: scores => (scores.bonus >= 30 ? '⭐✔' : `⭐${Math.max(0, scores.bonus)}/30`)
+				progress: scores => (scores.bonus >= 30 ? '✔' : `${Math.max(0, scores.bonus)}/30`)
 			}
 		],
 		19: [
@@ -13263,7 +13263,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 				description: 'Level 20: Verzamel 30 bonuspunten.',
 				short: 'Level 20 - Bonus god',
 				check: scores => scores.bonus >= 30,
-				progress: scores => (scores.bonus >= 30 ? '⭐✔' : `⭐${Math.max(0, scores.bonus)}/30`)
+				progress: scores => (scores.bonus >= 30 ? '✔' : `${Math.max(0, scores.bonus)}/30`)
 			},
 			{
 				id: 'level-20-complete-all',
@@ -13303,7 +13303,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 						(scores.green >= 50 ? '✔groen' : 'groen'),
 						(scores.purple >= 50 ? '✔paars' : 'paars'),
 						(scores.blue >= 50 ? '✔blauw' : 'blauw'),
-						(scores.bonus >= 25 ? '⭐✔' : '⭐' + scores.bonus)
+						(scores.bonus >= 25 ? '✔' : scores.bonus)
 					];
 					return parts.join(', ');
 				}
@@ -13347,7 +13347,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			},
 			{
 				id: 'level-21-bonus-hunter',
-				description: 'Level 21: Verzamel 24+ bonuspunten.',
+				description: 'Level 21: Verzamel 24 bonuspunten.',
 				short: 'Level 21 - Bonus jager',
 				check: scores => scores.bonus >= 24,
 				progress: scores => (scores.bonus >= 24 ? '✔' : `${Math.max(0, scores.bonus)}/24`)
@@ -13637,10 +13637,10 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			},
 			{
 				id: 'level-27-bonus-god',
-				description: 'Level 27: Verzamel 30+ bonuspunten.',
+				description: 'Level 27: Verzamel 30 bonuspunten.',
 				short: 'Level 27 - Bonus god',
 				check: scores => scores.bonus >= 30,
-				progress: scores => (scores.bonus >= 30 ? '⭐✔' : `⭐${Math.max(0, scores.bonus)}/30`)
+				progress: scores => (scores.bonus >= 30 ? '✔' : `${Math.max(0, scores.bonus)}/30`)
 			},
 			{
 				id: 'level-27-red-perfection',
@@ -13753,7 +13753,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 				description: 'Level 29: Verzamel 40+ bonuspunten.',
 				short: 'Level 29 - Bonus meester',
 				check: scores => scores.bonus >= 40,
-				progress: scores => (scores.bonus >= 40 ? '⭐✔' : `⭐${Math.max(0, scores.bonus)}/40`)
+				progress: scores => (scores.bonus >= 40 ? '✔' : `${Math.max(0, scores.bonus)}/40`)
 			}
 		],
 		30: [
@@ -24335,7 +24335,11 @@ function openShopModal(callback) {
 		boldCells: [[0,1], [0,2], [5,0], [5,13], [6,0], [6,13], [11,1], [11,2], [3,6], [3,7], [8,6], [8,7]]
 	  };
 	  const yellowRows = yellowShape.pattern.length;
-	  const yellowCols = Math.max(...yellowShape.pattern) + Math.max(...yellowShape.offsets);
+	  // Use the true bounding width (max(offset + length)), not max(length)+max(offset).
+	  // This prevents extra empty columns that can cause the diamond to appear shifted/clipped.
+	  const yellowCols = Math.max(
+		...yellowShape.pattern.map((len, i) => (Number(len) || 0) + (Number(yellowShape.offsets[i]) || 0))
+	  );
 	  
 	  // World 3: Hogere punten per kolom/diagonaal
 	  const yellowPointsArray = [10, 15, 20, 28, 36, 44, 52, 60, 68, 76, 84, 92, 100];
@@ -24538,6 +24542,7 @@ function openShopModal(callback) {
 			pointsPerColumn: yellowColumnPoints,
 			diagonalShading: true,
 			diagonalLegend: true,
+			trimRight: true,
 			trapChance: trapChance,
 			maxTraps: maxTraps,
 			blackHoleChance: blackHoleChance
