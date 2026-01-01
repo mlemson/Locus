@@ -24716,12 +24716,19 @@ function openShopModal(callback) {
 	  try {
 		const worldInfo = typeof getWorldAndSubLevel === 'function' ? getWorldAndSubLevel(currentLevel) : null;
 		if (worldInfo && (worldInfo.world === 2 || worldInfo.world === 3) && yellowZone && purpleZone) {
-			const purpleW = parseFloat(purpleZone.style.width || '') || purpleZone.offsetWidth || 0;
-			const yellowW = parseFloat(yellowZone.style.width || '') || yellowZone.offsetWidth || 0;
-			const desired = Math.max(1, Math.max(purpleW, yellowW));
-			const targetWidth = `${Math.round(desired)}px`;
-			yellowZone.style.width = targetWidth;
-			yellowZone.style.minWidth = targetWidth;
+			// IMPORTANT: Yellow must FOLLOW Purple width (not the other way around).
+			// Do NOT use max(purple,yellow) here; that makes yellow only grow and never shrink.
+			const purpleW = (
+				parseFloat(purpleZone.style.width || '') ||
+				(purpleZone.getBoundingClientRect ? purpleZone.getBoundingClientRect().width : 0) ||
+				purpleZone.offsetWidth ||
+				0
+			);
+			const targetWidthPx = Math.max(1, Math.round(purpleW));
+			const targetWidth = `${targetWidthPx}px`;
+			yellowZone.style.setProperty('width', targetWidth);
+			yellowZone.style.setProperty('min-width', targetWidth);
+			yellowZone.style.setProperty('max-width', targetWidth);
 			
 		}
 	  } catch (_) {}
