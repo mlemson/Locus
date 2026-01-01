@@ -23998,6 +23998,9 @@ function openShopModal(callback) {
 	  
 	  // BLAUW: Lange continue rivier (60+ rijen) die kronkelt en soms breed wordt
 	  // Blauw grid: Continue rivier die altijd doorloopt, met extra tak tijdens split
+	  // World 2 request (UX): keep the river within the zone width (no horizontal scrolling needed).
+	  // Match the purple grid width (13 cols) and clamp offsets to stay inside.
+	  const blueCols = 13;
 	  const blueRowPattern = [];
 	  const blueRowOffsets = [];
 	  const blueSplitData = []; // Voor tracking split info
@@ -24035,9 +24038,11 @@ function openShopModal(callback) {
 			newOffset += (Math.random() > 0.5 ? 1 : -1);
 		  }
 		  
-		  // Beperk binnen overlap range
-		  newOffset = Math.max(minOffset, Math.min(maxOffset, newOffset));
-		  newOffset = Math.max(0, Math.min(10, newOffset));
+		  const mainMaxOffset = Math.max(0, blueCols - currentWidth);
+		  // Beperk binnen overlap range én binnen de grid-breedte
+		  const boundedMinOffset = Math.max(0, Math.min(mainMaxOffset, minOffset));
+		  const boundedMaxOffset = Math.max(0, Math.min(mainMaxOffset, maxOffset));
+		  newOffset = Math.max(boundedMinOffset, Math.min(boundedMaxOffset, newOffset));
 		  currentOffset = newOffset;
 		}
 		
@@ -24082,6 +24087,11 @@ function openShopModal(callback) {
 			
 			// EERST: beperk binnen overlap range van eigen vorige rij
 			splitOffset = Math.max(minSplitOffset, Math.min(maxSplitOffset, newSplitOffset));
+			// DAN: clamp binnen grid-breedte
+			{
+				const splitMaxOffset = Math.max(0, blueCols - splitWidth);
+				splitOffset = Math.max(0, Math.min(splitMaxOffset, splitOffset));
+			}
 		  }
 		  
 		  // Positioneer split relatief aan main
@@ -24117,6 +24127,11 @@ function openShopModal(callback) {
 			  // Anders: behoud huidige offset (heeft overlap met vorige split rij)
 			}
 		  }
+		  // Ensure split stays inside the available width.
+		  {
+			const splitMaxOffset = Math.max(0, blueCols - splitWidth);
+			splitOffset = Math.max(0, Math.min(splitMaxOffset, splitOffset));
+		  }
 		  
 		  // COMBINEER main en split in één row inclusief de gap
 		  const combinedStart = Math.min(currentOffset, splitOffset);
@@ -24150,7 +24165,6 @@ function openShopModal(callback) {
 	  }
 	  
 	  const blueRows = 60;
-	  const blueCols = 18; // Smaller: genoeg voor main + split + gap
 	  
 	  console.log(`🌊 Blue grid: ${blueRows} rows, ${blueCols} cols, ${blueSplitData.length} split cells prepared`);
 	  
@@ -24363,6 +24377,9 @@ function openShopModal(callback) {
 	  };
 	  
 	  // BLAUW: Ultra lange rivier met meerdere splits (80 rijen!)
+	  // World 3 request (UX): keep the river within the zone width (no horizontal scrolling needed).
+	  // Match the purple grid width (14 cols) and clamp offsets to stay inside.
+	  const blueCols = 14;
 	  const blueRowPattern = [];
 	  const blueRowOffsets = [];
 	  const blueGapCells = new Set();
@@ -24399,8 +24416,10 @@ function openShopModal(callback) {
 			newOffset += (Math.random() > 0.5 ? 1 : -1);
 		  }
 		  
-		  newOffset = Math.max(minOffset, Math.min(maxOffset, newOffset));
-		  newOffset = Math.max(0, Math.min(12, newOffset));
+		  const mainMaxOffset = Math.max(0, blueCols - currentWidth);
+		  const boundedMinOffset = Math.max(0, Math.min(mainMaxOffset, minOffset));
+		  const boundedMaxOffset = Math.max(0, Math.min(mainMaxOffset, maxOffset));
+		  newOffset = Math.max(boundedMinOffset, Math.min(boundedMaxOffset, newOffset));
 		  currentOffset = newOffset;
 		}
 		
@@ -24438,6 +24457,10 @@ function openShopModal(callback) {
 			}
 			
 			splitOffset = Math.max(minSplitOffset, Math.min(maxSplitOffset, newSplitOffset));
+			{
+				const splitMaxOffset = Math.max(0, blueCols - splitWidth);
+				splitOffset = Math.max(0, Math.min(splitMaxOffset, splitOffset));
+			}
 		  }
 		  
 		  const mainStart = currentOffset;
@@ -24464,6 +24487,10 @@ function openShopModal(callback) {
 				splitOffset = desiredSplitOffset;
 			  }
 			}
+		  }
+		  {
+			const splitMaxOffset = Math.max(0, blueCols - splitWidth);
+			splitOffset = Math.max(0, Math.min(splitMaxOffset, splitOffset));
 		  }
 		  
 		  const combinedStart = Math.min(currentOffset, splitOffset);
@@ -24492,7 +24519,6 @@ function openShopModal(callback) {
 	  }
 	  
 	  const blueRows = 80;
-	  const blueCols = 22;
 	  
 	  // PAARS: Mega grid (14x14) met extra bold cells in het midden
 	  const purpleSize = 14;
@@ -24590,6 +24616,8 @@ function openShopModal(callback) {
 			rowLengths: blueRowPattern,
 			rowOffsets: blueRowOffsets,
 			voidCells: blueGapCells,
+			trimLeft: true,
+			trimRight: true,
 			trapChance: trapChance * 0.9,
 			maxTraps: Math.floor(maxTraps * 0.9),
 			blackHoleChance: 0
