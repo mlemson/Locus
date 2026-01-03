@@ -1,14 +1,1000 @@
 (function () {
   const STORAGE_KEY = 'locusEditorBoardHtml';
 
+  // Scenario settings (shared links + starting state)
+  let editorCatalog = { cards: [], upgrades: [], meta: {} };
+  let scenarioSettings = {
+    coins: 0,
+    deckTemplateIds: [],
+    upgradeIds: [],
+    world: null
+  };
+  let deckPickerState = null;
+
   const boardHost = document.getElementById('board-host');
   const refreshBtn = document.getElementById('refresh-board');
   const printBtn = document.getElementById('print-board');
   const statusEl = document.getElementById('status');
 
+  // NOTE: Do not persist these settings. A page refresh should reset them.
+  function saveScenarioSettings() {}
+
+  function scenarioBase64UrlEncode(text) {
+    try {
+      if (typeof TextEncoder !== 'undefined') {
+        const bytes = new TextEncoder().encode(String(text || ''));
+        let bin = '';
+        for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+        return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+      }
+      return btoa(unescape(encodeURIComponent(String(text || '')))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+    } catch (e) {
+      return '';
+    }
+  }
+
+  // Lightweight, synchronous LZ-style compression for URLs (keeps links much shorter).
+  // Compatible with the decompressor in index.html - uses LSB-first bit packing.
+  const LZ_URL_KEY = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$";
+  function lzCompressToUrlSafe(input) {
+    try {
+      const str = String(input || '');
+      if (!str) return '';
+      const dict = {};
+      const dictToCreate = {};
+      let c = '';
+      let wc = '';
+      let w = '';
+      let dictSize = 3;
+      let numBits = 2;
+      let data = [];
+      let dataVal = 0;
+      let dataPos = 0;
+      let enlargeIn = 2;
+
+      // LSB-first bit writing (matches decompressor)
+      const writeBit = (bit) => {
+        dataVal = dataVal | (bit << dataPos);
+        dataPos++;
+        if (dataPos === 6) {
+          dataPos = 0;
+          data.push(LZ_URL_KEY.charAt(dataVal));
+          dataVal = 0;
+        }
+      };
+      const writeBits = (num, value) => {
+        for (let i = 0; i < num; i++) {
+          writeBit(value & 1);
+          value >>= 1;
+        }
+      };
+
+      for (let i = 0; i < str.length; i++) {
+        c = str.charAt(i);
+        if (dict[c] === undefined) {
+          dict[c] = dictSize++;
+          dictToCreate[c] = true;
+        }
+        wc = w + c;
+        if (dict[wc] !== undefined) {
+          w = wc;
+        } else {
+          if (dictToCreate[w]) {
+            const charCode = w.charCodeAt(0);
+            if (charCode < 256) {
+              writeBits(numBits, 0);
+              writeBits(8, charCode);
+            } else {
+              writeBits(numBits, 1);
+              writeBits(16, charCode);
+            }
+            enlargeIn--;
+            if (enlargeIn === 0) { enlargeIn = 1 << numBits; numBits++; }
+            delete dictToCreate[w];
+          } else {
+            writeBits(numBits, dict[w]);
+          }
+          enlargeIn--;
+          if (enlargeIn === 0) { enlargeIn = 1 << numBits; numBits++; }
+          dict[wc] = dictSize++;
+          w = c;
+        }
+      }
+
+      if (w !== '') {
+        if (dictToCreate[w]) {
+          const charCode = w.charCodeAt(0);
+          if (charCode < 256) {
+            writeBits(numBits, 0);
+            writeBits(8, charCode);
+          } else {
+            writeBits(numBits, 1);
+            writeBits(16, charCode);
+          }
+          enlargeIn--;
+          if (enlargeIn === 0) { enlargeIn = 1 << numBits; numBits++; }
+          delete dictToCreate[w];
+        } else {
+          writeBits(numBits, dict[w]);
+        }
+        enlargeIn--;
+        if (enlargeIn === 0) { enlargeIn = 1 << numBits; numBits++; }
+      }
+
+      // End of stream marker
+      writeBits(numBits, 2);
+      // Flush remaining bits
+      while (dataPos !== 0) {
+        dataVal = dataVal | (0 << dataPos);
+        dataPos++;
+        if (dataPos === 6) {
+          data.push(LZ_URL_KEY.charAt(dataVal));
+          break;
+        }
+      }
+      return data.join('');
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function encodeScenarioPayload(payloadObj) {
+    try {
+      const json = JSON.stringify(payloadObj || {});
+      const compressed = lzCompressToUrlSafe(json);
+      if (compressed) return `lz:${compressed}`;
+      return scenarioBase64UrlEncode(json);
+    } catch (e) { return ''; }
+  }
+
+  function requestCatalogFromGame() {
+    try {
+      if (window.opener && typeof window.opener.postMessage === 'function') {
+        window.opener.postMessage({ type: 'LOCUS_EDITOR_REQUEST_CATALOG' }, '*');
+      }
+    } catch (e) {}
+  }
+  requestCatalogFromGame();
+  setTimeout(requestCatalogFromGame, 250);
+  setTimeout(requestCatalogFromGame, 1200);
+
+  function requestStarterDeckFromGame() {
+    try {
+      if (window.opener && typeof window.opener.postMessage === 'function') {
+        window.opener.postMessage({ type: 'LOCUS_EDITOR_REQUEST_STARTER_DECK' }, '*');
+        setStatus('Begindeck ophalen…');
+      }
+    } catch (e) {}
+  }
+
   function setStatus(msg) {
     if (!statusEl) return;
     statusEl.textContent = msg || '';
+  }
+
+  function getCurrentBoardHtmlForScenario() {
+    if (!boardHost) return '';
+    const board = boardHost.querySelector('.board');
+    if (!board) return '';
+    try { return normalizeBoardForExport(board); } catch (e) { return board.outerHTML; }
+  }
+
+  function serializeBoardFromRoot(root) {
+    try {
+      const board = root ? (root.querySelector ? (root.querySelector('.board') || root) : null) : null;
+      if (!board) return null;
+      const data = { v: 1, zones: {}, red: null };
+      const readGrid = (zoneEl) => (zoneEl ? (zoneEl.querySelector(':scope > .grid') || zoneEl.querySelector('.grid')) : null);
+      const readInt = (v) => {
+        const n = parseInt(String(v || ''), 10);
+        return Number.isFinite(n) && n > 0 ? n : 0;
+      };
+      const pickXY = (cell) => {
+        const x = Number(cell?.dataset?.x ?? cell?.dataset?.c);
+        const y = Number(cell?.dataset?.y ?? cell?.dataset?.r);
+        return { x, y };
+      };
+      const readSymbolColor = (cell) => {
+        try {
+          const sym = cell.querySelector('.symbol:not(.trap-symbol)');
+          if (!sym) return '';
+          const cls = Array.from(sym.classList || []).find(c => c && c !== 'symbol');
+          return cls || '';
+        } catch (e) { return ''; }
+      };
+      const readTrapType = (cell) => {
+        try {
+          if (cell?.dataset?.trapType) return String(cell.dataset.trapType);
+          const hasBH = !!cell.querySelector('.trap-symbol--black-hole');
+          if (hasBH) return 'blackHole';
+          const hasTrap = !!cell.querySelector('.trap-symbol') || (cell.classList && cell.classList.contains('trap-cell'));
+          return hasTrap ? 'pit' : '';
+        } catch (e) { return ''; }
+      };
+      const serializeZone = (colorName) => {
+        const zone = board.querySelector(`.zone[data-color="${colorName}"]`);
+        if (!zone) return null;
+        const grid = readGrid(zone);
+        const container = grid || zone;
+        const cells = Array.from(container.querySelectorAll(':scope > .cell')).length
+          ? Array.from(container.querySelectorAll(':scope > .cell'))
+          : Array.from(container.querySelectorAll('.cell'));
+        let rows = readInt(container?.dataset?.rows);
+        let cols = readInt(container?.dataset?.cols);
+        if (!rows || !cols) {
+          let maxX = -1, maxY = -1;
+          cells.forEach(c => {
+            const { x, y } = pickXY(c);
+            if (Number.isFinite(x)) maxX = Math.max(maxX, x);
+            if (Number.isFinite(y)) maxY = Math.max(maxY, y);
+          });
+          cols = cols || (maxX >= 0 ? maxX + 1 : 0);
+          rows = rows || (maxY >= 0 ? maxY + 1 : 0);
+        }
+        const outCells = [];
+        cells.forEach(cell => {
+          const { x, y } = pickXY(cell);
+          if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+          const flags = {
+            v: cell.classList.contains('void-cell') ? 1 : 0,
+            b: cell.classList.contains('bold-cell') ? 1 : 0,
+            e: cell.classList.contains('end-cell') ? 1 : 0,
+            g: cell.classList.contains('gold-cell') ? 1 : 0,
+            p: cell.classList.contains('portal-cell') ? 1 : 0
+          };
+          const sym = readSymbolColor(cell);
+          const trap = readTrapType(cell);
+          if (flags.v || flags.b || flags.e || flags.g || flags.p || sym || trap) {
+            outCells.push({ x, y, ...flags, s: sym || undefined, t: trap || undefined });
+          }
+        });
+        return { rows, cols, cells: outCells };
+      };
+
+    ['groen','geel','paars','blauw'].forEach(c => {
+      const z = serializeZone(c);
+      if (z) data.zones[c] = z;
+    });
+
+    // Red group
+    const redRoot = board.querySelector('.zone.red-group') || board.querySelector('.zone[data-color="rood"]');
+    if (redRoot) {
+      const subs = Array.from(redRoot.querySelectorAll(':scope > .zone'));
+      if (subs.length) {
+        data.red = { subs: subs.map(sub => {
+          const cells = Array.from(sub.querySelectorAll(':scope > .cell')).length
+            ? Array.from(sub.querySelectorAll(':scope > .cell'))
+            : Array.from(sub.querySelectorAll('.cell'));
+          let rows = readInt(sub.dataset?.rows);
+          let cols = readInt(sub.dataset?.cols);
+          if (!rows || !cols) {
+            let maxX = -1, maxY = -1;
+            cells.forEach(c => {
+              const { x, y } = pickXY(c);
+              if (Number.isFinite(x)) maxX = Math.max(maxX, x);
+              if (Number.isFinite(y)) maxY = Math.max(maxY, y);
+            });
+            cols = cols || (maxX >= 0 ? maxX + 1 : 0);
+            rows = rows || (maxY >= 0 ? maxY + 1 : 0);
+          }
+          const outCells = [];
+          cells.forEach(cell => {
+            const { x, y } = pickXY(cell);
+            if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+            const flags = {
+              v: cell.classList.contains('void-cell') ? 1 : 0,
+              b: cell.classList.contains('bold-cell') ? 1 : 0,
+              e: cell.classList.contains('end-cell') ? 1 : 0,
+              g: cell.classList.contains('gold-cell') ? 1 : 0,
+              p: cell.classList.contains('portal-cell') ? 1 : 0
+            };
+            const sym = readSymbolColor(cell);
+            const trap = readTrapType(cell);
+            if (flags.v || flags.b || flags.e || flags.g || flags.p || sym || trap) {
+              outCells.push({ x, y, ...flags, s: sym || undefined, t: trap || undefined });
+            }
+          });
+          return { id: String(sub.id || ''), rows, cols, cells: outCells };
+        }) };
+      } else {
+        data.red = { subs: [] };
+      }
+    }
+
+    return data;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function serializeBoardForScenario() {
+    try {
+      return serializeBoardFromRoot(boardHost);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function showShareLinkModal(link) {
+    try {
+      ensureScenarioPickerStyles();
+      const overlay = document.createElement('div');
+      overlay.className = 'scenario-picker__overlay';
+      const box = document.createElement('div');
+      box.className = 'scenario-picker__box';
+      const title = document.createElement('h3');
+      title.className = 'scenario-picker__title';
+      title.textContent = 'Deellink';
+      const p = document.createElement('div');
+      p.style.opacity = '0.85';
+      p.style.fontSize = '12px';
+      p.style.margin = '0 0 10px 0';
+      const linkLen = String(link || '').length;
+      if (linkLen > 8000) {
+        p.innerHTML = '<strong style="color:#c00">⚠️ Link is erg lang (' + linkLen + ' tekens).</strong> Mogelijk werkt deze niet in alle browsers. Probeer het speelveld kleiner te maken of minder kaarten/upgrades te selecteren.';
+      } else if (linkLen > 2000) {
+        p.innerHTML = 'Link is ' + linkLen + ' tekens. <span style="color:#a60">Dit is lang maar zou moeten werken.</span>';
+      } else {
+        p.textContent = 'Kopieer de link of open hem direct. (' + linkLen + ' tekens)';
+      }
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = String(link || '');
+      input.style.width = '100%';
+      input.style.padding = '8px';
+      input.addEventListener('focus', () => { try { input.select(); } catch (e) {} });
+      const a = document.createElement('a');
+      a.href = String(link || '');
+      a.textContent = 'Open scenario';
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.style.display = 'inline-block';
+      a.style.marginTop = '10px';
+      const actions = document.createElement('div');
+      actions.style.display = 'flex';
+      actions.style.gap = '8px';
+      actions.style.justifyContent = 'flex-end';
+      actions.style.marginTop = '12px';
+      const copy = document.createElement('button');
+      copy.textContent = 'Kopieer';
+      copy.addEventListener('click', async () => {
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(String(link || ''));
+            setStatus('Deellink gekopieerd naar klembord.');
+          }
+        } catch (e) {}
+        try { input.focus(); input.select(); } catch (e) {}
+      });
+      const close = document.createElement('button');
+      close.textContent = 'Sluit';
+      close.addEventListener('click', () => overlay.remove());
+      actions.append(copy, close);
+      box.append(title, p, input, a, actions);
+      overlay.appendChild(box);
+      document.body.appendChild(overlay);
+      overlay.addEventListener('click', (e) => { if (e && e.target === overlay) overlay.remove(); });
+      setTimeout(() => { try { input.focus(); input.select(); } catch (e) {} }, 60);
+    } catch (e) {
+      window.prompt('Deellink (kopieer):', String(link || ''));
+    }
+  }
+
+  function getScenarioWorldGuess() {
+    try {
+      const w = scenarioSettings.world;
+      if (w === 1 || w === 2 || w === 3) return w;
+      const metaW = Number(editorCatalog && editorCatalog.meta ? editorCatalog.meta.currentWorld : 0);
+      if (metaW === 1 || metaW === 2 || metaW === 3) return metaW;
+    } catch (e) {}
+    return 1;
+  }
+
+  function buildScenarioShareUrl(payload) {
+    const token = encodeScenarioPayload(payload);
+    if (!token) return '';
+    let base = '';
+    try {
+      // Try to get the game URL from opener
+      if (window.opener && window.opener.location && window.opener.location.href) {
+        const u = new URL(String(window.opener.location.href));
+        u.hash = '';
+        u.search = '';
+        // Ensure we point to index.html in the same folder
+        const path = u.pathname;
+        const lastSlash = path.lastIndexOf('/');
+        u.pathname = (lastSlash >= 0 ? path.substring(0, lastSlash + 1) : '/') + 'index.html';
+        base = u.toString();
+      }
+    } catch (e) {}
+    // Fallback: try to construct from current editor URL
+    if (!base) {
+      try {
+        const u = new URL(window.location.href);
+        u.hash = '';
+        u.search = '';
+        const path = u.pathname;
+        const lastSlash = path.lastIndexOf('/');
+        u.pathname = (lastSlash >= 0 ? path.substring(0, lastSlash + 1) : '/') + 'index.html';
+        base = u.toString();
+      } catch (e) {
+        base = 'index.html';
+      }
+    }
+    return `${base}#scenario=${token}`;
+  }
+
+  function ensureScenarioPickerStyles() {
+    if (document.getElementById('scenario-picker-styles')) return;
+    const css = `
+      .scenario-picker__overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999999;display:flex;align-items:center;justify-content:center;}
+      .scenario-picker__box{width:820px;max-width:96vw;max-height:84vh;overflow:auto;background:#fff;padding:12px;border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+      .scenario-picker__title{margin:0 0 10px 0}
+      .scenario-picker__list{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+      @media (max-width: 780px){.scenario-picker__list{grid-template-columns:1fr}}
+      .scenario-picker__item{display:flex;gap:10px;align-items:center;border:1px solid rgba(0,0,0,.12);border-radius:10px;padding:8px;cursor:pointer;user-select:none}
+      .scenario-picker__item:hover{border-color:rgba(0,0,0,.22)}
+      .scenario-picker__item input{width:16px;height:16px}
+      .scenario-picker__meta{min-width:0;flex:1}
+      .scenario-picker__headline{font-weight:700;font-size:13px;line-height:1.2}
+      .scenario-picker__sub{opacity:.8;font-size:12px;line-height:1.2;margin-top:2px}
+      .scenario-picker__badge{display:inline-block;font-size:11px;opacity:.9;border:1px solid rgba(0,0,0,.18);border-radius:999px;padding:2px 8px;margin-right:6px}
+
+      /* Card preview */
+      .scenario-cardPreview{width:68px;height:48px;border-radius:10px;border:1px solid rgba(0,0,0,.18);background:linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.06));display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+      .scenario-cardPreview.isGolden{border-width:2px}
+      .scenario-cardPreview__matrix{display:grid;grid-auto-rows:7px;gap:2px}
+      .scenario-cardPreview__cell{width:7px;height:7px;border-radius:2px;background:rgba(0,0,0,.12)}
+      .scenario-cardPreview[data-accent]{border-color:var(--scenario-accent, rgba(0,0,0,.18))}
+      .scenario-cardPreview .scenario-cardPreview__cell.on{background:var(--scenario-accent, rgba(0,0,0,.28))}
+
+      /* Upgrade icon chip */
+      .scenario-upgradeIcon{width:44px;height:44px;border-radius:12px;border:1px solid rgba(0,0,0,.18);background:linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.06));display:flex;align-items:center;justify-content:center;font-weight:700;opacity:.9;flex:0 0 auto}
+    `;
+    const s = document.createElement('style');
+    s.id = 'scenario-picker-styles';
+    s.textContent = css;
+    document.head.appendChild(s);
+  }
+
+  function toCssColorMaybe(colorCode) {
+    const c = String(colorCode || '').trim();
+    if (!c) return '';
+    // Accept hex/rgb/hsl or named colors; keep as-is.
+    return c;
+  }
+  function guessAccentFromColorName(colorName) {
+    const n = String(colorName || '').trim().toLowerCase();
+    if (!n) return '';
+    if (n.includes('blauw') || n.includes('blue')) return '#3b7aa4';
+    if (n.includes('geel') || n.includes('yellow')) return '#cfae4a';
+    if (n.includes('paars') || n.includes('purple')) return '#7a5aa8';
+    if (n.includes('groen') || n.includes('green')) return '#5da35d';
+    if (n.includes('rood') || n.includes('red')) return '#b56069';
+    if (n.includes('goud') || n.includes('gold')) return '#b8963c';
+    return '';
+  }
+
+  function renderCardPreview(matrix, accent, isGolden) {
+    const wrap = document.createElement('div');
+    wrap.className = 'scenario-cardPreview' + (isGolden ? ' isGolden' : '');
+    if (accent) {
+      wrap.dataset.accent = '1';
+      wrap.style.setProperty('--scenario-accent', accent);
+    }
+
+    const m = Array.isArray(matrix) ? matrix : [];
+    const rows = Math.max(1, Math.min(6, m.length || 1));
+    const cols = Math.max(1, Math.min(6, (m[0] ? m[0].length : 1) || 1));
+    const grid = document.createElement('div');
+    grid.className = 'scenario-cardPreview__matrix';
+    grid.style.gridTemplateColumns = `repeat(${cols}, 7px)`;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const cell = document.createElement('div');
+        cell.className = 'scenario-cardPreview__cell' + ((m[r] && m[r][c]) ? ' on' : '');
+        grid.appendChild(cell);
+      }
+    }
+    wrap.appendChild(grid);
+    return wrap;
+  }
+
+  function countMatrixBlocks(matrix) {
+    try {
+      const m = Array.isArray(matrix) ? matrix : [];
+      let sum = 0;
+      for (let r = 0; r < m.length; r++) {
+        const row = Array.isArray(m[r]) ? m[r] : [];
+        for (let c = 0; c < row.length; c++) sum += row[c] ? 1 : 0;
+      }
+      return sum;
+    } catch (e) { return 0; }
+  }
+  function calculateCardCostLocal(cardLike) {
+    const blocks = countMatrixBlocks(cardLike && cardLike.matrix ? cardLike.matrix : []);
+    let baseCost = 2;
+    if (blocks === 4) baseCost = 4;
+    else if (blocks === 5) baseCost = 6;
+    else if (blocks === 6) baseCost = 8;
+    else if (blocks >= 7) baseCost = 10;
+    if (cardLike && cardLike.isGolden) baseCost += 2;
+    if (cardLike && cardLike.isBonusBoost) baseCost += 4;
+    return baseCost;
+  }
+
+  function openDeckPicker() {
+    const cards = Array.isArray(editorCatalog.cards) ? editorCatalog.cards : [];
+    if (!cards.length) {
+      setStatus('Kan kaart-catalogus niet laden. Open de editor vanuit het spel.');
+      return;
+    }
+    ensureScenarioPickerStyles();
+    if (deckPickerState && deckPickerState.overlay && deckPickerState.overlay.parentNode) {
+      try { deckPickerState.overlay.remove(); } catch (e) {}
+      deckPickerState = null;
+    }
+
+    const overlay = document.createElement('div');
+    overlay.className = 'scenario-picker__overlay';
+    const box = document.createElement('div');
+    box.className = 'scenario-picker__box';
+    const title = document.createElement('h3');
+    title.className = 'scenario-picker__title';
+    title.textContent = 'Kies kaarten in deck';
+
+    const toolbar = document.createElement('div');
+    toolbar.style.display = 'flex';
+    toolbar.style.flexWrap = 'wrap';
+    toolbar.style.gap = '8px';
+    toolbar.style.alignItems = 'center';
+    toolbar.style.margin = '6px 0 10px 0';
+
+    const starterBtn = document.createElement('button');
+    starterBtn.textContent = 'Kies begindeck';
+    starterBtn.addEventListener('click', () => requestStarterDeckFromGame());
+    const selectAllBtn = document.createElement('button');
+    selectAllBtn.textContent = 'Alles selecteren';
+    const clearAllBtn = document.createElement('button');
+    clearAllBtn.textContent = 'Alles wissen';
+
+    const colorSel = document.createElement('select');
+    const bonusSel = document.createElement('select');
+    const sortSel = document.createElement('select');
+    [colorSel, bonusSel, sortSel].forEach(sel => {
+      sel.style.maxWidth = '260px';
+    });
+
+    const uniqueColors = Array.from(new Set(cards.map(c => String(c.colorName || '').trim()).filter(Boolean))).sort((a,b)=>a.localeCompare(b));
+    colorSel.appendChild(new Option('Alle kleuren', 'all'));
+    uniqueColors.forEach(cn => colorSel.appendChild(new Option(cn, cn)));
+
+    bonusSel.appendChild(new Option('Alle types', 'all'));
+    bonusSel.appendChild(new Option('Normaal', 'normal'));
+    bonusSel.appendChild(new Option('Golden', 'golden'));
+    bonusSel.appendChild(new Option('Bonus Boost', 'bonusBoost'));
+
+    sortSel.appendChild(new Option('Sorteer: naam (A-Z)', 'nameAsc'));
+    sortSel.appendChild(new Option('Sorteer: prijs (laag-hoog)', 'priceAsc'));
+    sortSel.appendChild(new Option('Sorteer: prijs (hoog-laag)', 'priceDesc'));
+    sortSel.appendChild(new Option('Sorteer: blokjes (laag-hoog)', 'blocksAsc'));
+    sortSel.appendChild(new Option('Sorteer: blokjes (hoog-laag)', 'blocksDesc'));
+
+    const list = document.createElement('div');
+    list.className = 'scenario-picker__list';
+
+    const selected = new Set((scenarioSettings.deckTemplateIds || []).map(String));
+
+    const normalizedCards = cards.map(c => {
+      const card = {
+        id: String(c.templateId),
+        shapeName: String(c.shapeName || 'Kaart'),
+        category: String(c.category || ''),
+        colorName: String(c.colorName || ''),
+        colorCode: String(c.colorCode || ''),
+        matrix: c.matrix,
+        isGolden: !!c.isGolden,
+        isBonusBoost: !!c.isBonusBoost,
+        bonusKey: c.bonusKey ? String(c.bonusKey) : ''
+      };
+      card.blocks = countMatrixBlocks(card.matrix);
+      card.cost = calculateCardCostLocal(card);
+      return card;
+    });
+
+    function passesFilters(card) {
+      const colorVal = String(colorSel.value || 'all');
+      if (colorVal !== 'all' && String(card.colorName) !== colorVal) return false;
+      const bonusVal = String(bonusSel.value || 'all');
+      if (bonusVal === 'normal' && (card.isGolden || card.isBonusBoost)) return false;
+      if (bonusVal === 'golden' && !card.isGolden) return false;
+      if (bonusVal === 'bonusBoost' && !card.isBonusBoost) return false;
+      return true;
+    }
+    function compareCards(a, b) {
+      const mode = String(sortSel.value || 'nameAsc');
+      if (mode === 'priceAsc') return (a.cost - b.cost) || (a.blocks - b.blocks) || a.shapeName.localeCompare(b.shapeName);
+      if (mode === 'priceDesc') return (b.cost - a.cost) || (b.blocks - a.blocks) || a.shapeName.localeCompare(b.shapeName);
+      if (mode === 'blocksAsc') return (a.blocks - b.blocks) || (a.cost - b.cost) || a.shapeName.localeCompare(b.shapeName);
+      if (mode === 'blocksDesc') return (b.blocks - a.blocks) || (b.cost - a.cost) || a.shapeName.localeCompare(b.shapeName);
+      return a.shapeName.localeCompare(b.shapeName);
+    }
+
+    function renderList() {
+      list.textContent = '';
+      const view = normalizedCards.filter(passesFilters).sort(compareCards);
+      selectAllBtn.onclick = () => {
+        view.forEach(c => selected.add(String(c.id)));
+        renderList();
+      };
+      clearAllBtn.onclick = () => {
+        view.forEach(c => selected.delete(String(c.id)));
+        renderList();
+      };
+      view.forEach(it => {
+        const row = document.createElement('label');
+        row.className = 'scenario-picker__item';
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = selected.has(it.id);
+        cb.addEventListener('change', () => {
+          if (cb.checked) selected.add(it.id);
+          else selected.delete(it.id);
+        });
+
+        const accent = toCssColorMaybe(it.colorCode) || guessAccentFromColorName(it.colorName);
+        const preview = renderCardPreview(it.matrix, accent, it.isGolden);
+        const meta = document.createElement('div');
+        meta.className = 'scenario-picker__meta';
+        const headline = document.createElement('div');
+        headline.className = 'scenario-picker__headline';
+        headline.textContent = it.shapeName;
+        const sub = document.createElement('div');
+        sub.className = 'scenario-picker__sub';
+        const badges = [];
+        if (it.isGolden) badges.push('Golden');
+        if (it.isBonusBoost) badges.push('Bonus Boost');
+        if (it.category) badges.push(it.category);
+        if (it.colorName) badges.push(it.colorName);
+        sub.textContent = [...badges, `Blokjes: ${it.blocks}`, `Prijs: ${it.cost}`].join(' • ');
+        meta.appendChild(headline);
+        meta.appendChild(sub);
+
+        row.appendChild(cb);
+        row.appendChild(preview);
+        row.appendChild(meta);
+        list.appendChild(row);
+      });
+    }
+    colorSel.addEventListener('change', renderList);
+    bonusSel.addEventListener('change', renderList);
+    sortSel.addEventListener('change', renderList);
+
+    toolbar.appendChild(starterBtn);
+    toolbar.appendChild(selectAllBtn);
+    toolbar.appendChild(clearAllBtn);
+    toolbar.appendChild(colorSel);
+    toolbar.appendChild(bonusSel);
+    toolbar.appendChild(sortSel);
+
+    const actions = document.createElement('div');
+    actions.style.display = 'flex';
+    actions.style.gap = '8px';
+    actions.style.justifyContent = 'flex-end';
+    actions.style.marginTop = '12px';
+    const cancel = document.createElement('button');
+    cancel.textContent = 'Annuleer';
+    cancel.addEventListener('click', () => overlay.remove());
+    const apply = document.createElement('button');
+    apply.textContent = 'Toepassen';
+    apply.addEventListener('click', () => {
+      scenarioSettings.deckTemplateIds = Array.from(selected);
+      setStatus(`Deck kaarten ingesteld: ${scenarioSettings.deckTemplateIds.length}`);
+      overlay.remove();
+    });
+    actions.append(cancel, apply);
+
+    box.append(title, toolbar, list, actions);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+    renderList();
+
+    deckPickerState = {
+      overlay,
+      applyStarterDeckIds: (ids) => {
+        selected.clear();
+        (Array.isArray(ids) ? ids : []).forEach(x => selected.add(String(x)));
+        renderList();
+        setStatus(`Begindeck geselecteerd: ${selected.size} kaarten.`);
+      }
+    };
+    overlay.addEventListener('click', (e) => {
+      if (e && e.target === overlay) overlay.remove();
+    });
+    overlay.addEventListener('transitionend', () => {});
+    overlay.addEventListener('remove', () => {});
+    const cleanup = () => { if (deckPickerState && deckPickerState.overlay === overlay) deckPickerState = null; };
+    overlay.addEventListener('DOMNodeRemoved', cleanup);
+  }
+
+  function openChecklistModal(titleText, items, selectedSet, onApply, renderItemRow, options = null) {
+    ensureScenarioPickerStyles();
+    const overlay = document.createElement('div');
+    overlay.className = 'scenario-picker__overlay';
+
+    const box = document.createElement('div');
+    box.className = 'scenario-picker__box';
+
+    const title = document.createElement('h3');
+    title.className = 'scenario-picker__title';
+    title.textContent = titleText;
+
+    const list = document.createElement('div');
+    list.className = 'scenario-picker__list';
+
+    let toolbar = null;
+    if (options && options.bulkButtons) {
+      toolbar = document.createElement('div');
+      toolbar.style.display = 'flex';
+      toolbar.style.gap = '8px';
+      toolbar.style.flexWrap = 'wrap';
+      toolbar.style.alignItems = 'center';
+      toolbar.style.margin = '6px 0 10px 0';
+      const selectAllBtn = document.createElement('button');
+      selectAllBtn.textContent = 'Alles selecteren';
+      selectAllBtn.addEventListener('click', () => {
+        (items || []).forEach(it => selectedSet.add(String(it.id)));
+        // re-render by reopening is not needed; checkboxes are managed via inputs,
+        // but we can best-effort update all checkboxes in the DOM
+        try { overlay.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true); } catch (e) {}
+      });
+      const clearAllBtn = document.createElement('button');
+      clearAllBtn.textContent = 'Alles wissen';
+      clearAllBtn.addEventListener('click', () => {
+        (items || []).forEach(it => selectedSet.delete(String(it.id)));
+        try { overlay.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false); } catch (e) {}
+      });
+      toolbar.append(selectAllBtn, clearAllBtn);
+    }
+
+    items.forEach(it => {
+      const row = (typeof renderItemRow === 'function') ? renderItemRow(it, selectedSet) : null;
+      if (row) {
+        list.appendChild(row);
+        return;
+      }
+      // fallback: simple checkbox + label
+      const fallback = document.createElement('label');
+      fallback.style.display = 'flex';
+      fallback.style.alignItems = 'center';
+      fallback.style.gap = '8px';
+      fallback.style.padding = '4px 2px';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = selectedSet.has(it.id);
+      cb.addEventListener('change', () => {
+        if (cb.checked) selectedSet.add(it.id);
+        else selectedSet.delete(it.id);
+      });
+      const span = document.createElement('span');
+      span.textContent = it.label;
+      fallback.appendChild(cb);
+      fallback.appendChild(span);
+      list.appendChild(fallback);
+    });
+
+    const actions = document.createElement('div');
+    actions.style.display = 'flex';
+    actions.style.gap = '8px';
+    actions.style.justifyContent = 'flex-end';
+    actions.style.marginTop = '12px';
+    const cancel = document.createElement('button');
+    cancel.textContent = 'Annuleer';
+    cancel.addEventListener('click', () => overlay.remove());
+    const apply = document.createElement('button');
+    apply.textContent = 'Toepassen';
+    apply.addEventListener('click', () => {
+      try { onApply(Array.from(selectedSet)); } catch (e) {}
+      overlay.remove();
+    });
+    actions.append(cancel, apply);
+
+    if (toolbar) box.append(title, toolbar, list, actions);
+    else box.append(title, list, actions);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+  }
+
+
+  function openUpgradePicker() {
+    const upgrades = Array.isArray(editorCatalog.upgrades) ? editorCatalog.upgrades : [];
+    if (!upgrades.length) {
+      setStatus('Kan upgrade-catalogus niet laden. Open de editor vanuit het spel.');
+      return;
+    }
+    const items = upgrades.map(u => ({
+      id: String(u.id),
+      name: String(u.name || u.id),
+      description: String(u.description || ''),
+      cost: Number(u.cost || 0)
+    }));
+    const selected = new Set((scenarioSettings.upgradeIds || []).map(String));
+    openChecklistModal('Kies upgrades', items, selected, (ids) => {
+      scenarioSettings.upgradeIds = Array.isArray(ids) ? ids.map(String) : [];
+      setStatus(`Upgrades ingesteld: ${scenarioSettings.upgradeIds.length}`);
+    }, (it, selectedSet) => {
+      const row = document.createElement('label');
+      row.className = 'scenario-picker__item';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = selectedSet.has(it.id);
+      cb.addEventListener('change', () => {
+        if (cb.checked) selectedSet.add(it.id);
+        else selectedSet.delete(it.id);
+      });
+      const icon = document.createElement('div');
+      icon.className = 'scenario-upgradeIcon';
+      icon.textContent = (it.name || it.id || '?').trim().slice(0, 2).toUpperCase();
+
+      const meta = document.createElement('div');
+      meta.className = 'scenario-picker__meta';
+      const headline = document.createElement('div');
+      headline.className = 'scenario-picker__headline';
+      headline.textContent = it.name;
+      const sub = document.createElement('div');
+      sub.className = 'scenario-picker__sub';
+      const cost = Number.isFinite(it.cost) && it.cost > 0 ? `Kosten: ${it.cost}` : '';
+      const desc = it.description ? it.description : '';
+      sub.textContent = [desc, cost].filter(Boolean).join(' • ');
+      meta.appendChild(headline);
+      meta.appendChild(sub);
+
+      row.appendChild(cb);
+      row.appendChild(icon);
+      row.appendChild(meta);
+      return row;
+    }, { bulkButtons: true });
+  }
+
+  function generateShareLinkForCurrentBoard() {
+    const boardData = serializeBoardForScenario();
+    if (!boardData) {
+      setStatus('Geen speelveld om te delen.');
+      return;
+    }
+    const name = String(window.prompt('Naam van scenario (optioneel):', '') || '').trim();
+    let objective = window.prompt('Doelstelling (optioneel):', 'Haal 100 punten');
+    if (objective == null) objective = '';
+    objective = String(objective || '').trim();
+    const payload = {
+      v: 1,
+      world: getScenarioWorldGuess(),
+      name,
+      objective,
+      boardData,
+      coins: Math.max(0, Math.min(99, Math.floor(Number(scenarioSettings.coins) || 0))),
+      upgradeIds: Array.isArray(scenarioSettings.upgradeIds) ? scenarioSettings.upgradeIds : [],
+      deckTemplateIds: Array.isArray(scenarioSettings.deckTemplateIds) ? scenarioSettings.deckTemplateIds : []
+    };
+    const link = buildScenarioShareUrl(payload);
+    if (!link) {
+      setStatus('Kon geen deellink maken.');
+      return;
+    }
+    // Warn if link is very long (may not work in all browsers)
+    if (link.length > 8000) {
+      setStatus('⚠️ Link is erg lang (' + link.length + ' tekens). Mogelijk werkt deze niet in alle browsers.');
+    } else if (link.length > 2000) {
+      setStatus('Link is lang (' + link.length + ' tekens) maar zou moeten werken.');
+    }
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(link);
+        if (link.length <= 2000) setStatus('Deellink gekopieerd naar klembord.');
+      } else {
+        if (link.length <= 2000) setStatus('Deellink aangemaakt.');
+      }
+    } catch (e) { if (link.length <= 2000) setStatus('Deellink aangemaakt.'); }
+    showShareLinkModal(link);
+  }
+
+  function ensureScenarioControls() {
+    try {
+      const container = (printBtn && printBtn.parentNode) ? printBtn.parentNode : document.body;
+      if (!container) return;
+      if (document.getElementById('scenario-coins-input')) return;
+
+      const wrap = document.createElement('span');
+      wrap.style.display = 'inline-flex';
+      wrap.style.alignItems = 'center';
+      wrap.style.gap = '8px';
+      wrap.style.marginLeft = '8px';
+
+      const coinsLabel = document.createElement('label');
+      coinsLabel.textContent = 'Munten:';
+      coinsLabel.style.fontSize = '12px';
+      coinsLabel.style.opacity = '0.9';
+      const coinsInput = document.createElement('input');
+      coinsInput.type = 'number';
+      coinsInput.id = 'scenario-coins-input';
+      coinsInput.min = '0';
+      coinsInput.max = '99';
+      coinsInput.value = String(Math.max(0, Math.min(99, Math.floor(Number(scenarioSettings.coins) || 0))));
+      coinsInput.style.width = '70px';
+      coinsInput.addEventListener('change', () => {
+        scenarioSettings.coins = Math.max(0, Math.min(99, Math.floor(Number(coinsInput.value) || 0)));
+        coinsInput.value = String(scenarioSettings.coins);
+      });
+
+      const deckBtn = document.createElement('button');
+      deckBtn.textContent = 'Deck kiezen';
+      deckBtn.addEventListener('click', openDeckPicker);
+      const upgradesBtn = document.createElement('button');
+      upgradesBtn.textContent = 'Upgrades kiezen';
+      upgradesBtn.addEventListener('click', openUpgradePicker);
+      const exportBtn = document.createElement('button');
+      exportBtn.textContent = '📥 Exporteer';
+      exportBtn.title = 'Download scenario als bestand';
+      exportBtn.addEventListener('click', exportScenarioFile);
+
+      // Match styling of existing buttons if possible
+      const styleSource = printBtn || refreshBtn || null;
+      if (styleSource && styleSource.className) {
+        deckBtn.className = styleSource.className;
+        upgradesBtn.className = styleSource.className;
+        exportBtn.className = styleSource.className;
+      }
+
+      wrap.append(coinsLabel, coinsInput, deckBtn, upgradesBtn, exportBtn);
+      container.appendChild(wrap);
+    } catch (e) {}
+  }
+
+  // === SCENARIO FILE EXPORT/IMPORT ===
+  function exportScenarioFile() {
+    const boardHtml = getCurrentBoardHtmlForScenario();
+    const boardData = serializeBoardForScenario();
+    // For file export we can safely include HTML as a robust fallback.
+    if (!boardData && !boardHtml) {
+      setStatus('Geen speelveld om te exporteren.');
+      return;
+    }
+    const name = String(window.prompt('Naam van scenario:', 'Mijn Scenario') || 'Mijn Scenario').trim();
+    let objective = window.prompt('Doelstelling:', 'Haal 100 punten');
+    if (objective == null) objective = 'Haal 100 punten';
+    objective = String(objective || '').trim();
+
+    const scenario = {
+      _type: 'locus-scenario',
+      _version: 1,
+      name,
+      objective,
+      world: getScenarioWorldGuess(),
+      coins: Math.max(0, Math.min(99, Math.floor(Number(scenarioSettings.coins) || 0))),
+      upgradeIds: Array.isArray(scenarioSettings.upgradeIds) ? scenarioSettings.upgradeIds : [],
+      deckTemplateIds: Array.isArray(scenarioSettings.deckTemplateIds) ? scenarioSettings.deckTemplateIds : [],
+      boardData: boardData || null,
+      boardHtml: boardHtml || ''
+    };
+
+    const json = JSON.stringify(scenario, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (name.replace(/[^a-zA-Z0-9_\-\s]/g, '').replace(/\s+/g, '_') || 'scenario') + '.locus.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setStatus(`Scenario "${name}" geëxporteerd als bestand.`);
+  }
+
+  function syncScenarioControlsUI() {
+    try {
+      const coinsInput = document.getElementById('scenario-coins-input');
+      if (coinsInput) coinsInput.value = String(Math.max(0, Math.min(99, Math.floor(Number(scenarioSettings.coins) || 0))));
+    } catch (e) {}
   }
 
   function getSelectedTool() {
@@ -789,6 +1775,43 @@
       try {
         const liveGrids = boardEl.querySelectorAll('.grid');
         const clonedGrids = clone.querySelectorAll('.grid');
+
+      const parsePx = (v) => {
+        const n = parseFloat(String(v || '').replace('px', ''));
+        return Number.isFinite(n) ? n : NaN;
+      };
+      const inferXYFromLiveCell = (liveCell, idx, colsGuess) => {
+        try {
+          if (!liveCell) return null;
+          let x = Number(liveCell.dataset?.x ?? liveCell.dataset?.c);
+          let y = Number(liveCell.dataset?.y ?? liveCell.dataset?.r);
+          if (Number.isFinite(x) && Number.isFinite(y)) return { x: Math.floor(x), y: Math.floor(y) };
+          // Try to infer from inline left/top if present
+          const left = parsePx(liveCell.style?.left);
+          const top = parsePx(liveCell.style?.top);
+          if (Number.isFinite(left) && Number.isFinite(top)) {
+            let w = 0;
+            let h = 0;
+            try {
+              const cs = window.getComputedStyle(liveCell);
+              w = parsePx(cs.width);
+              h = parsePx(cs.height);
+            } catch (_) {}
+            if (!w || !Number.isFinite(w)) w = 0;
+            if (!h || !Number.isFinite(h)) h = w;
+            if (w > 0 && h > 0) {
+              return { x: Math.max(0, Math.round(left / w)), y: Math.max(0, Math.round(top / h)) };
+            }
+          }
+          // Final fallback: DOM order
+          const cols = Number(colsGuess) || 1;
+          return { x: idx % cols, y: Math.floor(idx / cols) };
+        } catch (e) {
+          const cols = Number(colsGuess) || 1;
+          return { x: idx % cols, y: Math.floor(idx / cols) };
+        }
+      };
+
         for (let i = 0; i < clonedGrids.length; i++) {
           const live = liveGrids[i];
           const cg = clonedGrids[i];
@@ -810,19 +1833,35 @@
             // Ensure all cells in green/red grids have data-x and data-y attributes for the game
             const liveCells = live ? Array.from(live.querySelectorAll(':scope > .cell')) : [];
             const cloneCells = Array.from(cg.querySelectorAll(':scope > .cell'));
-            const cols = parseInt(cg.dataset.cols || '0', 10) || Math.ceil(Math.sqrt(cloneCells.length)) || 1;
-            const rows = parseInt(cg.dataset.rows || '0', 10) || Math.ceil(cloneCells.length / cols) || 1;
+            const cols = parseInt(cg.dataset.cols || '0', 10) || parseInt((live && live.dataset && live.dataset.cols) ? live.dataset.cols : '0', 10) || Math.ceil(Math.sqrt(cloneCells.length)) || 1;
+            // If rows/cols not provided, infer from actual coordinates (preferred) or fallback heuristic
+            let maxX = -1;
+            let maxY = -1;
+            cloneCells.forEach((cell, idx) => {
+			  if (!cell || !cell.dataset) return;
+			  // Preserve existing coordinates if already present.
+			  const existingX = Number(cell.dataset.x ?? cell.dataset.c);
+			  const existingY = Number(cell.dataset.y ?? cell.dataset.r);
+			  if (Number.isFinite(existingX) && Number.isFinite(existingY)) {
+				  maxX = Math.max(maxX, Math.floor(existingX));
+				  maxY = Math.max(maxY, Math.floor(existingY));
+				  return;
+			  }
+			  // Only infer when missing.
+			  const liveCell = liveCells[idx] || null;
+			  const inferred = inferXYFromLiveCell(liveCell, idx, cols);
+			  if (inferred) {
+				  if (!Number.isFinite(existingX)) cell.dataset.x = String(inferred.x);
+				  if (!Number.isFinite(existingY)) cell.dataset.y = String(inferred.y);
+				  maxX = Math.max(maxX, inferred.x);
+				  maxY = Math.max(maxY, inferred.y);
+			  }
+            });
+            const rows = parseInt(cg.dataset.rows || '0', 10)
+              || parseInt((live && live.dataset && live.dataset.rows) ? live.dataset.rows : '0', 10)
+              || (maxY >= 0 ? (maxY + 1) : (Math.ceil(cloneCells.length / cols) || 1));
             if (!cg.dataset.cols) cg.dataset.cols = String(cols);
             if (!cg.dataset.rows) cg.dataset.rows = String(rows);
-            cloneCells.forEach((cell, idx) => {
-              // Derive coordinates from DOM order if not already set
-              if (cell.dataset.x == null || cell.dataset.x === '') {
-                cell.dataset.x = String(idx % cols);
-              }
-              if (cell.dataset.y == null || cell.dataset.y === '') {
-                cell.dataset.y = String(Math.floor(idx / cols));
-              }
-            });
             continue;
           }
           // Determine columns: prefer dataset.cols on the live grid, else try computed style, else fallback to sqrt heuristic
@@ -858,6 +1897,55 @@
           } catch (e) {}
         }
       } catch (e) {}
+
+    // Also ensure red subgrids that are NOT wrapped in a .grid (cells directly inside the zone)
+    // keep stable coordinates. The game reconstructs absolute positions from data-x/y.
+    try {
+      const liveRedSubs = Array.from(boardEl.querySelectorAll('.zone.red-group > .zone, .zone[data-color="rood"] > .zone'));
+      const cloneRedSubs = Array.from(clone.querySelectorAll('.zone.red-group > .zone, .zone[data-color="rood"] > .zone'));
+      for (let i = 0; i < cloneRedSubs.length; i++) {
+        const liveSub = liveRedSubs[i];
+        const sub = cloneRedSubs[i];
+        if (!sub) continue;
+        // Determine cols/rows if possible
+        let cols = parseInt(String(sub.dataset?.cols || ''), 10) || parseInt(String(liveSub?.dataset?.cols || ''), 10) || 0;
+        let rows = parseInt(String(sub.dataset?.rows || ''), 10) || parseInt(String(liveSub?.dataset?.rows || ''), 10) || 0;
+        const liveCells = liveSub ? Array.from(liveSub.querySelectorAll(':scope > .cell')) : [];
+        const cells = Array.from(sub.querySelectorAll(':scope > .cell'));
+        if (!cols) {
+          // Try infer from coords on live cells
+          let maxX = -1;
+          liveCells.forEach(c => {
+            const x = Number(c?.dataset?.x ?? c?.dataset?.c);
+            if (Number.isFinite(x)) maxX = Math.max(maxX, Math.floor(x));
+          });
+          cols = maxX >= 0 ? (maxX + 1) : (Math.ceil(Math.sqrt(Math.max(1, cells.length))) || 1);
+        }
+        let maxX2 = -1;
+        let maxY2 = -1;
+        cells.forEach((cell, idx) => {
+          if (!cell || !cell.dataset) return;
+          const ex = Number(cell.dataset.x ?? cell.dataset.c);
+          const ey = Number(cell.dataset.y ?? cell.dataset.r);
+          if (Number.isFinite(ex) && Number.isFinite(ey)) {
+            maxX2 = Math.max(maxX2, Math.floor(ex));
+            maxY2 = Math.max(maxY2, Math.floor(ey));
+            return;
+          }
+          const liveCell = liveCells[idx] || null;
+          const inferred = inferXYFromLiveCell(liveCell, idx, cols);
+          if (inferred) {
+            if (!Number.isFinite(ex)) cell.dataset.x = String(inferred.x);
+            if (!Number.isFinite(ey)) cell.dataset.y = String(inferred.y);
+            maxX2 = Math.max(maxX2, inferred.x);
+            maxY2 = Math.max(maxY2, inferred.y);
+          }
+        });
+        if (!rows) rows = maxY2 >= 0 ? (maxY2 + 1) : (Math.ceil(cells.length / cols) || 1);
+        if (!sub.dataset.cols) sub.dataset.cols = String(cols);
+        if (!sub.dataset.rows) sub.dataset.rows = String(rows);
+      }
+    } catch (e) {}
     } catch (e) {}
     return clone.outerHTML;
   }
@@ -1085,6 +2173,40 @@ body { margin: 0; padding: 0; background: white; color: #111; font-family: Arial
     const data = event.data || {};
     if (data.type === 'LOCUS_EDITOR_BOARD' && typeof data.boardHtml === 'string') {
       setBoardHtml(data.boardHtml);
+      // If the game provides scenario settings, adopt them so the editor matches.
+      if (data.scenarioSettings && typeof data.scenarioSettings === 'object') {
+        try {
+          const s = data.scenarioSettings;
+          if (s.coins != null) scenarioSettings.coins = Math.max(0, Math.min(99, Math.floor(Number(s.coins) || 0)));
+          scenarioSettings.deckTemplateIds = Array.isArray(s.deckTemplateIds) ? s.deckTemplateIds.map(String) : [];
+          scenarioSettings.upgradeIds = Array.isArray(s.upgradeIds) ? s.upgradeIds.map(String) : [];
+          if (s.world != null) {
+            const w = Number(s.world);
+            if (w === 1 || w === 2 || w === 3) scenarioSettings.world = w;
+          }
+          try { syncScenarioControlsUI(); } catch (e) {}
+        } catch (e) {}
+      }
+    }
+    if (data.type === 'LOCUS_EDITOR_CATALOG') {
+      const cards = Array.isArray(data.cards) ? data.cards : (data.catalog && Array.isArray(data.catalog.cards) ? data.catalog.cards : []);
+      const upgrades = Array.isArray(data.upgrades) ? data.upgrades : (data.catalog && Array.isArray(data.catalog.upgrades) ? data.catalog.upgrades : []);
+      const meta = (data.meta && typeof data.meta === 'object') ? data.meta : (data.catalog && data.catalog.meta && typeof data.catalog.meta === 'object' ? data.catalog.meta : {});
+      editorCatalog = { cards, upgrades, meta };
+      try {
+        const w = Number(meta.currentWorld);
+        if (w === 1 || w === 2 || w === 3) scenarioSettings.world = w;
+      } catch (e) {}
+      setStatus(`Catalogus geladen (${cards.length} kaarten, ${upgrades.length} upgrades).`);
+    }
+    if (data.type === 'LOCUS_EDITOR_STARTER_DECK') {
+      const ids = Array.isArray(data.deckTemplateIds) ? data.deckTemplateIds : [];
+      if (deckPickerState && typeof deckPickerState.applyStarterDeckIds === 'function') {
+        deckPickerState.applyStarterDeckIds(ids);
+      } else {
+        scenarioSettings.deckTemplateIds = ids.map(String);
+        setStatus(`Begindeck ontvangen: ${scenarioSettings.deckTemplateIds.length} kaarten.`);
+      }
     }
   });
 
@@ -1154,7 +2276,13 @@ body { margin: 0; padding: 0; background: white; color: #111; font-family: Arial
     if (!board) return false;
     const html = normalizeBoardForExport(board);
     const saved = getSavedBoards();
-    saved[name] = { html, name, ts: Date.now(), objective: objective || null };
+		const scenarioSnapshot = {
+			coins: Math.max(0, Math.min(99, Math.floor(Number(scenarioSettings.coins) || 0))),
+			deckTemplateIds: Array.isArray(scenarioSettings.deckTemplateIds) ? scenarioSettings.deckTemplateIds.map(String) : [],
+			upgradeIds: Array.isArray(scenarioSettings.upgradeIds) ? scenarioSettings.upgradeIds.map(String) : [],
+			world: getScenarioWorldGuess()
+		};
+    saved[name] = { html, name, ts: Date.now(), objective: objective || null, scenarioSettings: scenarioSnapshot };
     writeSavedBoards(saved);
     setStatus(`Speelveld opgeslagen als "${name}".`);
     return true;
@@ -1177,7 +2305,20 @@ body { margin: 0; padding: 0; background: white; color: #111; font-family: Arial
     if (saveCurrentBoardWithName(name, objective)) {
       // Also notify opener/game if present
       if (window.opener && typeof window.opener.postMessage === 'function') {
-        try { window.opener.postMessage({ type: 'LOCUS_EDITOR_SAVED_BOARD', name, boardHtml: normalizeBoardForExport(boardHost.querySelector('.board')), objective }, '*'); } catch (e) {}
+        try {
+          window.opener.postMessage({
+            type: 'LOCUS_EDITOR_SAVED_BOARD',
+            name,
+            boardHtml: normalizeBoardForExport(boardHost.querySelector('.board')),
+            objective,
+            scenarioSettings: {
+              coins: Math.max(0, Math.min(99, Math.floor(Number(scenarioSettings.coins) || 0))),
+              deckTemplateIds: Array.isArray(scenarioSettings.deckTemplateIds) ? scenarioSettings.deckTemplateIds : [],
+              upgradeIds: Array.isArray(scenarioSettings.upgradeIds) ? scenarioSettings.upgradeIds : [],
+              world: getScenarioWorldGuess()
+            }
+          }, '*');
+        } catch (e) {}
       }
     }
   }
@@ -1210,11 +2351,37 @@ body { margin: 0; padding: 0; background: white; color: #111; font-family: Arial
       objText.textContent = saved[n].objective ? saved[n].objective : 'Geen doel (standaard: Haal 100 punten)';
       label.appendChild(titleText); label.appendChild(objText);
       const loadBtn = document.createElement('button'); loadBtn.textContent = 'Laad';
-      loadBtn.addEventListener('click', () => { setBoardHtml(saved[n].html); overlay.remove(); });
+      loadBtn.addEventListener('click', () => {
+        setBoardHtml(saved[n].html);
+        if (saved[n].scenarioSettings && typeof saved[n].scenarioSettings === 'object') {
+          const s = saved[n].scenarioSettings;
+          scenarioSettings.coins = Math.max(0, Math.min(99, Math.floor(Number(s.coins) || 0)));
+          scenarioSettings.deckTemplateIds = Array.isArray(s.deckTemplateIds) ? s.deckTemplateIds.map(String) : [];
+          scenarioSettings.upgradeIds = Array.isArray(s.upgradeIds) ? s.upgradeIds.map(String) : [];
+          if (s.world != null) scenarioSettings.world = Number(s.world);
+          syncScenarioControlsUI();
+        }
+        overlay.remove();
+      });
       const exportBtn = document.createElement('button'); exportBtn.textContent = 'Naar spel';
       exportBtn.addEventListener('click', () => {
         if (window.opener && typeof window.opener.postMessage === 'function') {
-          try { window.opener.postMessage({ type: 'LOCUS_EDITOR_BOARD', boardHtml: saved[n].html, name: n, objective: saved[n].objective || null }, '*'); setStatus(`Speelveld "${n}" naar spel verzonden.`); } catch (e) { setStatus('Versturen mislukt.'); }
+            try {
+              const ss = (saved[n].scenarioSettings && typeof saved[n].scenarioSettings === 'object') ? saved[n].scenarioSettings : null;
+              window.opener.postMessage({
+                type: 'LOCUS_EDITOR_BOARD',
+                boardHtml: saved[n].html,
+                name: n,
+                objective: saved[n].objective || null,
+                scenarioSettings: {
+                  coins: ss ? Math.max(0, Math.min(99, Math.floor(Number(ss.coins) || 0))) : Math.max(0, Math.min(99, Math.floor(Number(scenarioSettings.coins) || 0))),
+                  deckTemplateIds: ss && Array.isArray(ss.deckTemplateIds) ? ss.deckTemplateIds.map(String) : (Array.isArray(scenarioSettings.deckTemplateIds) ? scenarioSettings.deckTemplateIds : []),
+                  upgradeIds: ss && Array.isArray(ss.upgradeIds) ? ss.upgradeIds.map(String) : (Array.isArray(scenarioSettings.upgradeIds) ? scenarioSettings.upgradeIds : []),
+                  world: ss && ss.world != null ? Number(ss.world) : getScenarioWorldGuess()
+                }
+              }, '*');
+              setStatus(`Speelveld "${n}" naar spel verzonden.`);
+            } catch (e) { setStatus('Versturen mislukt.'); }
         } else setStatus('Geen spel-opener gevonden.');
       });
       const renameBtn = document.createElement('button'); renameBtn.textContent = 'Hernoem';
@@ -1222,7 +2389,7 @@ body { margin: 0; padding: 0; background: white; color: #111; font-family: Arial
         const newName = window.prompt('Nieuwe naam:', n);
         if (!newName) return;
         const nn = String(newName).trim(); if (!nn) return; const s = getSavedBoards(); if (s[nn] && nn !== n) { if (!confirm('Naam bestaat al. Overschrijven?')) return; }
-        s[nn] = { ...s[n], name: nn, ts: Date.now() };
+			s[nn] = { ...s[n], name: nn, ts: Date.now() };
         if (nn !== n) delete s[n]; writeSavedBoards(s); overlay.remove(); createSavedBoardsModal();
       });
       const delBtn = document.createElement('button'); delBtn.textContent = 'Verwijder';
@@ -1259,6 +2426,7 @@ body { margin: 0; padding: 0; background: white; color: #111; font-family: Arial
   }
 
   ensureSaveButtons();
+	ensureScenarioControls();
   
   // --- Extra tool buttons (shop/diamond) ---
   function ensureExtraToolButtons() {

@@ -11527,6 +11527,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			<button id="print-btn" type="button">Print</button>
 			<button id="menu-editor-btn" type="button">🛠️ Editor</button>
 			<button id="menu-open-levels-btn" type="button" onclick="showSavedLevelsModal()">Open level</button>
+			<button id="import-scenario-btn" type="button" onclick="importScenarioFile()">📤 Importeer scenario</button>
 			<!-- mobile dark-mode toggle removed: dark-only theme -->
 			<button id="menu-rules-btn" onclick="showRulesModal()">📖 Spelregels</button>
 			<button id="menu-highscore-btn" onclick="showHighScoreModal()">🏆 High Score</button>
@@ -11559,6 +11560,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 				<div class="modal-actions">
 					<button id="round-modal-next">Volgende level</button>
 					<button id="round-modal-restart">Opnieuw spelen</button>
+					<button id="round-modal-current-run" style="display:none;">Terug naar vorig spel</button>
 				</div>
 			</div>
 		</div>
@@ -17154,6 +17156,57 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  }, 0);
 	}
 
+	function getTrapPenaltyBreakdown() {
+	  const out = {
+		yellow: 0,
+		red: 0,
+		green: 0,
+		purple: 0,
+		blue: 0,
+		other: 0,
+		total: 0
+	  };
+	  try {
+		(activeTraps || []).forEach(trap => {
+		  const penalty = Number(trap && trap.penalty) || 0;
+		  if (penalty <= 0) return;
+		  const zoneId = normalizeZoneId(String(trap.zoneId || '')).toLowerCase();
+		  out.total += penalty;
+		  if (zoneId.startsWith('red-grid') || zoneId === 'red-zone') out.red += penalty;
+		  else if (zoneId === 'yellow-grid' || zoneId.indexOf('yellow') !== -1 || zoneId.indexOf('geel') !== -1) out.yellow += penalty;
+		  else if (zoneId === 'green-grid' || zoneId.indexOf('green') !== -1 || zoneId.indexOf('groen') !== -1) out.green += penalty;
+		  else if (zoneId === 'blue-grid' || zoneId.indexOf('blue') !== -1 || zoneId.indexOf('blauw') !== -1) out.blue += penalty;
+		  else if (zoneId === 'purple-grid' || zoneId.indexOf('purple') !== -1 || zoneId.indexOf('paars') !== -1) out.purple += penalty;
+		  else out.other += penalty;
+		});
+	  } catch (e) {}
+	  return out;
+	}
+
+	function showTrapPenaltyAtScoreRow(zoneId = '', penaltyValue = 0) {
+	  const penalty = Number(penaltyValue) || 0;
+	  if (penalty <= 0) return;
+	  const normalized = normalizeZoneId(String(zoneId || '')).toLowerCase();
+	  let scoreElId = null;
+	  if (normalized.startsWith('red-grid') || normalized === 'red-zone') scoreElId = 'red-score';
+	  else if (normalized === 'yellow-grid' || normalized.indexOf('yellow') !== -1 || normalized.indexOf('geel') !== -1) scoreElId = 'yellow-score';
+	  else if (normalized === 'green-grid' || normalized.indexOf('green') !== -1 || normalized.indexOf('groen') !== -1) scoreElId = 'green-score';
+	  else if (normalized === 'blue-grid' || normalized.indexOf('blue') !== -1 || normalized.indexOf('blauw') !== -1) scoreElId = 'blue-score';
+	  else if (normalized === 'purple-grid' || normalized.indexOf('purple') !== -1 || normalized.indexOf('paars') !== -1) scoreElId = 'purple-score';
+	  else scoreElId = 'total-score';
+	  const el = document.getElementById(scoreElId);
+	  if (!el) return;
+	  const rect = el.getBoundingClientRect();
+	  const scrollX = window.scrollX || window.pageXOffset;
+	  const scrollY = window.scrollY || window.pageYOffset;
+	  showScoreAnimation(
+		rect.left + rect.width / 2 + scrollX,
+		rect.top + rect.height / 2 + scrollY,
+		`-${penalty}`,
+		'rgba(196,56,56,0.9)'
+	  );
+	}
+
 	function renderTrapSummary(options = {}) {
 	  const { highlightId = null } = options;
 	  const preview = document.getElementById('scoreboard-trap-preview');
@@ -17299,6 +17352,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		  `-${penaltyValue}`,
 		  'rgba(196,56,56,0.9)'
 		);
+		// Also show the -points near the affected color score row (so it's clearly visible)
+		showTrapPenaltyAtScoreRow(normalizedZone, penaltyValue);
 	  }
 	const trapVisible = !isBlackHole || blackHoleUnlocked;
 	if (silent) renderTrapSummary();
@@ -18002,7 +18057,6 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  window.purpleConnections = connections;
 	}
 	
-	const waarden = [yellow, green, purple, blue, red];
 	// Additional scoring: any active end-cell outside the green grid grants 8 points to its zone's color
 	try {
 		const extraEndCells = Array.from(document.querySelectorAll('.cell.end-cell.active'));
@@ -18026,7 +18080,20 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			else if (colorKey === 'rood' || colorKey === 'red') red += 8;
 		});
 	} catch (e) {}
-	const baseBonus = Math.min(...waarden);
+
+	// Trap penalties should apply to the *affected color* (harder objectives), not only total.
+	// Any penalty that can't be mapped to a color stays as a total-only penalty.
+	const trapPenaltyBreakdown = getTrapPenaltyBreakdown();
+	// IMPORTANT: don't clamp to 0 here.
+	// If a trap triggers early, the player should still get the full -5 counted.
+	yellow = yellow - (trapPenaltyBreakdown.yellow || 0);
+	green = green - (trapPenaltyBreakdown.green || 0);
+	purple = purple - (trapPenaltyBreakdown.purple || 0);
+	blue = blue - (trapPenaltyBreakdown.blue || 0);
+	red = red - (trapPenaltyBreakdown.red || 0);
+	const waarden = [yellow, green, purple, blue, red];
+	// Bonus should never go negative.
+	const baseBonus = Math.max(0, Math.min(...waarden));
 	const totalBonusScore = baseBonus + Math.max(0, blackHoleBonus || 0);
 	bonus = totalBonusScore;
 	trackBonusCoinRewards(totalBonusScore);
@@ -18049,8 +18116,9 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 	// bereken nieuwe total
 	const newScore = (yellow + green + purple + blue + red + totalBonusScore);
-	const trapPenalty = getTotalTrapPenalty();
-	const displayScore = newScore - trapPenalty;
+	const trapPenaltyOther = Number(trapPenaltyBreakdown.other) || 0;
+	const trapPenaltyTotal = Number(trapPenaltyBreakdown.total) || 0;
+	const displayScore = newScore - trapPenaltyOther;
 
 	// huidige getoonde waarde (als number, fallback 0)
 	const currentScore = Number(totalScoreEl.textContent) || 0;
@@ -18096,8 +18164,17 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  baseBonus,
 	  bonusesCollected: totalBonusesCollected,
 	  total: displayScore,
-	  trapPenalty,
-	  baseTotal: newScore
+	  trapPenalty: trapPenaltyOther,
+	  trapPenaltyTotal,
+	  trapPenaltyByColor: {
+		yellow: Number(trapPenaltyBreakdown.yellow) || 0,
+		red: Number(trapPenaltyBreakdown.red) || 0,
+		green: Number(trapPenaltyBreakdown.green) || 0,
+		purple: Number(trapPenaltyBreakdown.purple) || 0,
+		blue: Number(trapPenaltyBreakdown.blue) || 0,
+		other: trapPenaltyOther
+	  },
+	  baseTotal: newScore + trapPenaltyOther
 	};
 	latestScoreSnapshot = scoreSnapshot;
 	updateObjectives(scoreSnapshot);
@@ -18500,6 +18577,11 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		cell.style.removeProperty('background');
 		delete cell.dataset.clusterScore;
 		delete cell.dataset.clusterPending;
+		// IMPORTANT: undo must also revert trap activation/penalty
+		try {
+		  const zoneId = cell.dataset.zoneId || cell.closest('.grid')?.id || cell.closest('.zone')?.id || '';
+		  ensureTrapState(cell, zoneId, { silent: true });
+		} catch (e) {}
 		syncPlaceholderForCell(cell);
 	  });
 	  restoreCoinState(coinSnapshotBefore);
@@ -22688,7 +22770,8 @@ function getCollectedCoinCount(scores) {
 		// Voltooi ronde - tekst wijzigt naar "Einde beurt"
 		newCardsButton.classList.add('complete-round');
 		newCardsButton.classList.remove('ready-for-next-turn');
-		newCardsButton.disabled = cardsPlayedThisTurn === 0;
+		// Never block progression; warnings are handled on click.
+		newCardsButton.disabled = false;
 		newCardsButton.setAttribute('data-label', 'Einde beurt');
 		newCardsButton.setAttribute('aria-label', 'Einde beurt');
 		return;
@@ -22711,14 +22794,8 @@ function getCollectedCoinCount(scores) {
 	  const hasPlayableCards = currentHand.some(card => card && isCardPlayable(card));
 	  const readyForNextTurn = !hasPlayableCards && !hasUsableBonuses;
 	  newCardsButton.classList.toggle('ready-for-next-turn', readyForNextTurn);
-	  
-	  if (readyForNextTurn) {
-		newCardsButton.disabled = false;
-		return;
-	  }
-
-	  const shouldDisable = hasPlayableCards || hasUsableBonuses;
-	  newCardsButton.disabled = shouldDisable;
+	  // Never disable the button; if the player skips with playable cards, the click handler shows a warning.
+	  newCardsButton.disabled = false;
 	}
 
 	function drawNextHand() {
@@ -22887,6 +22964,7 @@ function getCollectedCoinCount(scores) {
 	const roundModalMessage = document.getElementById('round-modal-message');
 	const roundModalNext = document.getElementById('round-modal-next');
 	const roundModalRestart = document.getElementById('round-modal-restart');
+	const roundModalCurrentRun = document.getElementById('round-modal-current-run');
 	const shopModalLayer = document.getElementById('shop-modal-layer');
 	const shopModalMessage = document.getElementById('shop-modal-message');
 	const shopCardOptions = document.getElementById('shop-card-options');
@@ -23082,9 +23160,13 @@ function getCollectedCoinCount(scores) {
 
 	function showRoundModal(success, score, coins, bonusCoins = 0) {
 		if (!roundModalLayer) return;
-	lastRoundWasSuccess = success;
 	// Prefer a loaded custom objective when present
 	const loadedCustom = (window && window.loadedCustomObjectiveCompiled) ? window.loadedCustomObjectiveCompiled : null;
+	const isScenarioMode = (() => {
+		try { return !!(window && window._locusScenarioMode); } catch (e) { return false; }
+	})();
+	
+	// Prefer a loaded custom objective when present
 	const activeObjective = loadedCustom || getObjectiveById(currentObjectiveId) || getObjectiveForLevel(currentLevel);
 	const objectiveLabel = activeObjective ? (activeObjective.short || activeObjective.description) : null;
 	// Compute cleared state: custom objective exposes .check(scores), otherwise use existing completed set
@@ -23094,20 +23176,31 @@ function getCollectedCoinCount(scores) {
 	} else {
 		objectiveCleared = activeObjective ? isObjectiveCompleted(activeObjective.id) : true;
 	}
+	// Scenario: if the objective is not cleared, treat this as a failed completion.
+	const scenarioObjectiveFailed = !!(isScenarioMode && loadedCustom && !objectiveCleared);
+	const effectiveSuccess = !!(success && !scenarioObjectiveFailed);
+	lastRoundWasSuccess = effectiveSuccess;
 	if (roundModalTitle) {
-		if (loadedCustom && window.loadedCustomLevelMeta && window.loadedCustomLevelMeta.name) {
-			roundModalTitle.textContent = (success ? 'Ronde voltooid' : 'Game Over') + ' — ' + window.loadedCustomLevelMeta.name;
+		if (scenarioObjectiveFailed) {
+			roundModalTitle.textContent = (window.loadedCustomLevelMeta && window.loadedCustomLevelMeta.name)
+				? ('Niet voltooid - ' + window.loadedCustomLevelMeta.name)
+				: 'Niet voltooid -';
+		} else if (loadedCustom && window.loadedCustomLevelMeta && window.loadedCustomLevelMeta.name) {
+			roundModalTitle.textContent = (effectiveSuccess ? 'Ronde voltooid' : 'Game Over') + ' — ' + window.loadedCustomLevelMeta.name;
 		} else {
-			roundModalTitle.textContent = success ? 'Ronde voltooid' : 'Game Over';
+			roundModalTitle.textContent = effectiveSuccess ? 'Ronde voltooid' : 'Game Over';
 		}
 	}
-	  if (success) {
+	  if (effectiveSuccess) {
 		if (objectiveLabel) {
 			roundModalMessage.textContent = `Doel behaald: ${objectiveLabel}. Kies wat je nu wilt doen.`;
 		} else {
 			roundModalMessage.textContent = 'Je hebt het level gehaald! Maak je keuze hieronder.';
 		}
 	  } else {
+		if (scenarioObjectiveFailed) {
+			roundModalMessage.textContent = 'Helaas.. Doel niet behaald';
+		} else {
 		switch (lastRoundFailureReason) {
 			case 'objective':
 				roundModalMessage.textContent = objectiveLabel ? `Doel nog niet gehaald: ${objectiveLabel}.` : 'Er is nog een leveldoel dat niet gehaald is.';
@@ -23115,6 +23208,7 @@ function getCollectedCoinCount(scores) {
 			default:
 				roundModalMessage.textContent = 'Niet gehaald... Je deck wordt teruggezet naar de standaard set.';
 				break;
+		}
 		}
 	  }
 		if (roundModalSummary) {
@@ -23127,11 +23221,17 @@ function getCollectedCoinCount(scores) {
 		roundModalSummary.innerHTML = summaryHTML;
 	}
 	  if (roundModalNext) {
-		roundModalNext.textContent = success ? `Naar level ${currentLevel + 1}` : 'Opnieuw proberen';
+		roundModalNext.textContent = effectiveSuccess ? `Naar level ${currentLevel + 1}` : 'Opnieuw proberen';
 		roundModalNext.disabled = false;
+		// Scenario objective fail: no next/continue option.
+		roundModalNext.style.display = scenarioObjectiveFailed ? 'none' : '';
 	  }
 	  if (roundModalRestart) {
-		roundModalRestart.textContent = success ? 'Nieuwe run' : 'Reset deck';
+		roundModalRestart.textContent = effectiveSuccess ? 'Nieuwe run' : 'Reset deck';
+	  }
+	  if (roundModalCurrentRun) {
+		const canReturn = !!(isScenarioMode && hasPreviousNormalRunSnapshot());
+		roundModalCurrentRun.style.display = canReturn ? '' : 'none';
 	  }
 	  roundModalLayer.classList.add('show');
 	}
@@ -23377,9 +23477,13 @@ function purchaseUpgrade(upgradeId) {
 		
 	upgrade.purchased = true;
 	
-	if (upgrade.onPurchase) {
-		upgrade.onPurchase();
-	}
+	// In scenario mode, upgrades should not trigger onPurchase side effects
+	// (which can rebuild boards, open reward modals, or save to localStorage).
+	try {
+		if (!(window && window._locusScenarioMode) && upgrade.onPurchase) {
+			upgrade.onPurchase();
+		}
+	} catch (e) {}
 	
 	if (shopModalMessage) {
 		shopModalMessage.textContent = `${upgrade.icon} ${upgrade.name} aangekocht!`;
@@ -23800,6 +23904,14 @@ function openShopModal(callback) {
 	}
 
 	function rebuildGameBoards() {
+	  // Scenario sessions use an imported board; never regenerate the level boards in that mode.
+	  // This prevents upgrade callbacks (e.g., blackHoleAccess) from overwriting the imported layout.
+	  try {
+		if (window && window._locusScenarioMode && !isLoadingGame) {
+			console.log('🧩 Scenario mode: rebuildGameBoards() skipped');
+			return;
+		}
+	  } catch (e) {}
 	  closeZoom();
 	  resetScoreState();
 	  historyStack.length = 0;
@@ -24896,11 +25008,29 @@ function openShopModal(callback) {
 	}
 
 
-	function startLevel(level) {
+	function startLevel(level, options) {
+	  const opts = (options && typeof options === 'object') ? options : {};
 	  console.log('🎮 startLevel called with level:', level);
+	  // If a scenario is active, never regenerate boards via the normal level pipeline.
+	  // Some UI flows (e.g., shop modal callbacks) historically call startLevel() again.
+	  // In scenario mode we route to startScenarioRun() to avoid overwriting the imported board.
+	  try {
+		if (window && window._locusScenarioMode && !isLoadingGame) {
+			console.log('🧩 Scenario mode active: startLevel() skipped board generation; restarting scenario run.');
+			try { if (typeof startScenarioRun === 'function') startScenarioRun(); } catch (e) {}
+			return;
+		}
+	  } catch (e) {}
+
+	  // Normal mode: ensure scenario flags are cleared.
+	  try { if (window) { window._locusScenarioMode = false; window._locusScenarioLoaded = false; } } catch (e) {}
+
 	  currentLevel = level;
 	  // Clear any previously loaded custom board metadata when starting a normal level
-	  try { window.loadedCustomLevelMeta = null; window.loadedCustomObjectiveCompiled = null; window.loadedCustomLevelMetaCompleted = false; } catch(e){}
+	  // (but preserve it when we are loading a custom-board save).
+	  if (!opts.preserveLoadedCustomMeta) {
+		try { window.loadedCustomLevelMeta = null; window.loadedCustomObjectiveCompiled = null; window.loadedCustomLevelMetaCompleted = false; } catch(e){}
+	  }
 	  lastRoundFailureReason = null;
 		
 	  // Rebuild shape pool zodat nieuwe card categorieën beschikbaar zijn
@@ -25022,6 +25152,12 @@ function openShopModal(callback) {
 	// ========== SAVE/LOAD SYSTEM ==========
 	function saveGameState() {
 	  try {
+		// Scenario-link sessions are meant to be temporary/shareable.
+		// Do NOT overwrite the player's normal save when playing a shared scenario.
+		try {
+			if (window && window._locusScenarioMode) return true;
+		} catch (e) {}
+
 		// Only persist a board snapshot/world override when a custom board is active (editor/scenario).
 		// For normal runs we want the world to be derived from the level mapping on each load.
 		const isCustomBoardSession = (() => {
@@ -25036,6 +25172,8 @@ function openShopModal(callback) {
 		const gameState = {
 		  version: '1.0',
 		  timestamp: Date.now(),
+		  // Explicit run mode so loaders can distinguish normal vs custom/scenario sessions.
+		  runMode: isCustomBoardSession ? 'custom' : 'normal',
 		  currentLevel: currentLevel,
 		  customBoard: isCustomBoardSession,
 		  // totalTurns/currentStreak removed (unused UI)
@@ -25201,6 +25339,15 @@ function sanitizeBoardHtml(html) {
 			} catch (e) {}
 			return false;
 		})();
+		// Apply run mode flags for this session.
+		try {
+			const runMode = String(gameState.runMode || (isCustomBoardSave ? 'custom' : 'normal'));
+			if (window) {
+				window._locusScenarioMode = (runMode === 'scenario');
+				window._locusScenarioLoaded = (runMode === 'scenario');
+				window._locusRunMode = runMode;
+			}
+		} catch (e) {}
 		
 		// Restore level (world will be derived from level for normal runs)
 		currentLevel = gameState.currentLevel || 1;
@@ -25356,7 +25503,7 @@ function sanitizeBoardHtml(html) {
 		
 		// Start the loaded level (zal savedDeckState gebruiken)
 		isLoadingGame = true;
-		startLevel(currentLevel);
+		startLevel(currentLevel, { preserveLoadedCustomMeta: isCustomBoardSave });
 		// Only restore the board snapshot for editor/scenario saves.
 		// Normal runs should rebuild the board from the level/world mapping.
 		if (isCustomBoardSave) {
@@ -25404,6 +25551,62 @@ function sanitizeBoardHtml(html) {
 
 	function startNewRun() {
 	  hideAllModals();
+	  // If a scenario/editor board hid zones and removed their grid containers, restore the normal skeleton.
+	  // This prevents getting "stuck" with only blue/green after clicking Nieuw spel.
+	  try {
+		const boardScope = document.getElementById('board') || document;
+		const ensureZone = (zoneId, color, gridId) => {
+			const zone = document.getElementById(zoneId) || boardScope.querySelector(`.zone[data-color="${color}"]`);
+			if (!zone) return;
+			try { zone.style.display = ''; } catch (e) {}
+			let grid = zone.querySelector(`#${gridId}`) || zone.querySelector(':scope > .grid') || zone.querySelector('.grid');
+			if (!grid) {
+				grid = document.createElement('div');
+				grid.className = 'grid';
+				grid.id = gridId;
+				zone.appendChild(grid);
+			} else {
+				try { grid.classList.add('grid'); } catch (e) {}
+				if (!grid.id) grid.id = gridId;
+			}
+		};
+		ensureZone('purple-zone', 'paars', 'purple-grid');
+		ensureZone('yellow-zone', 'geel', 'yellow-grid');
+		ensureZone('green-zone', 'groen', 'green-grid');
+		ensureZone('blue-zone', 'blauw', 'blue-grid');
+		// Red group
+		const redGroup = document.getElementById('red-zone') || boardScope.querySelector('.zone.red-group') || boardScope.querySelector('.zone[data-color="rood"]');
+		if (redGroup) {
+			try { redGroup.style.display = ''; } catch (e) {}
+			for (let i = 1; i <= 4; i += 1) {
+				const id = `red-grid${i}`;
+				let sub = document.getElementById(id) || redGroup.querySelector(`#${id}`);
+				if (!sub) {
+					sub = document.createElement('div');
+					sub.className = 'zone';
+					sub.id = id;
+					sub.dataset.color = 'rood';
+					sub.dataset.zone = id;
+					sub.dataset.subgrid = String(i);
+					redGroup.appendChild(sub);
+				} else {
+					try { sub.classList.add('zone'); } catch (e) {}
+					try { sub.dataset.color = 'rood'; } catch (e) {}
+					try { sub.dataset.zone = id; } catch (e) {}
+					try { sub.dataset.subgrid = String(i); } catch (e) {}
+					try { sub.style.display = ''; } catch (e) {}
+				}
+			}
+		}
+	  } catch (e) {}
+	  // New run is always the normal game mode.
+	  try {
+		if (window) {
+			window._locusScenarioMode = false;
+			window._locusScenarioLoaded = false;
+			window._locusRunMode = 'normal';
+		}
+	  } catch (e) {}
 	  
 	  // Reset alle upgrades
 	  Object.keys(UPGRADES).forEach(key => {
@@ -27125,6 +27328,53 @@ function showFloatingPreview(shape, color, options = {}) {
 	function applyBoardHtmlToGame(boardHtml) {
 		if (!boardHtml) return;
 		try {
+			const boardRoot = document.getElementById('board');
+			const boardScope = boardRoot || document;
+			const gridIdForColor = (c) => {
+				const cc = String(c || '').toLowerCase();
+				if (cc === 'paars' || cc === 'purple') return 'purple-grid';
+				if (cc === 'geel' || cc === 'yellow') return 'yellow-grid';
+				if (cc === 'groen' || cc === 'green') return 'green-grid';
+				if (cc === 'blauw' || cc === 'blue') return 'blue-grid';
+				return '';
+			};
+			const ensureZoneGridContainer = (zoneEl, gridId) => {
+				if (!zoneEl || !gridId) return null;
+				let grid = zoneEl.querySelector(`#${gridId}`) || zoneEl.querySelector(':scope > .grid') || zoneEl.querySelector('.grid');
+				if (!grid) {
+					grid = document.createElement('div');
+					grid.className = 'grid';
+					grid.id = gridId;
+					zoneEl.appendChild(grid);
+				}
+				try { grid.classList.add('grid'); } catch (e) {}
+				if (!grid.id) grid.id = gridId;
+				return grid;
+			};
+			const ensureRedGroupSkeleton = () => {
+				const destRed = boardScope.querySelector('.zone.red-group') || boardScope.querySelector('.zone[data-color="rood"]') || document.getElementById('red-zone');
+				if (!destRed) return null;
+				// Ensure the 4 subgrids exist (applyBoardHtmlToGame used to delete them)
+				for (let i = 1; i <= 4; i += 1) {
+					const id = `red-grid${i}`;
+					let sub = destRed.querySelector(`#${id}`);
+					if (!sub) {
+						sub = document.createElement('div');
+						sub.className = 'zone';
+						sub.id = id;
+						sub.dataset.color = 'rood';
+						sub.dataset.zone = id;
+						sub.dataset.subgrid = String(i);
+						destRed.appendChild(sub);
+					} else {
+						try { sub.classList.add('zone'); } catch (e) {}
+						try { sub.dataset.color = 'rood'; } catch (e) {}
+						try { sub.dataset.zone = id; } catch (e) {}
+						try { sub.dataset.subgrid = String(i); } catch (e) {}
+					}
+				}
+				return destRed;
+			};
 			const temp = document.createElement('div');
 			temp.innerHTML = boardHtml;
 			// helper: ensure absolute-positioned root grids have a real layout box
@@ -27157,12 +27407,26 @@ function showFloatingPreview(shape, color, options = {}) {
 					cells.forEach((cell, idx) => {
 						try {
 							if (!cell || !cell.style) return;
+									// Normalize away transform-based positioning from the editor export.
+									// The game board expects absolute left/top for green/red cells.
+									try {
+										cell.classList.remove('use-transform-pos');
+										cell.style.removeProperty('--dx');
+										cell.style.removeProperty('--dy');
+									} catch (e) {}
 							// Ensure absolute positioning
 							if (!cell.style.position || cell.style.position === 'relative') {
 								cell.style.position = 'absolute';
 							}
 							let x = Number(cell.dataset.x ?? cell.dataset.c);
 							let y = Number(cell.dataset.y ?? cell.dataset.r);
+									// If coords come from data-c/r, also mirror them into data-x/y
+									if (Number.isFinite(x) && (cell.dataset.x == null || cell.dataset.x === '')) {
+										cell.dataset.x = String(Math.floor(x));
+									}
+									if (Number.isFinite(y) && (cell.dataset.y == null || cell.dataset.y === '')) {
+										cell.dataset.y = String(Math.floor(y));
+									}
 							// Fallback: derive coordinates from DOM order if needed (only if missing)
 							if (!Number.isFinite(x) || !Number.isFinite(y)) {
 								if (fallbackCols > 0) {
@@ -27173,6 +27437,9 @@ function showFloatingPreview(shape, color, options = {}) {
 									cell.dataset.y = String(y);
 								}
 							}
+									// Ensure normalized x/y are always present for game logic
+									if (Number.isFinite(x)) cell.dataset.x = String(Math.floor(x));
+									if (Number.isFinite(y)) cell.dataset.y = String(Math.floor(y));
 							// Ensure zoneId is set for game logic
 							if (zoneId && !cell.dataset.zoneId) {
 								cell.dataset.zoneId = zoneId;
@@ -27266,15 +27533,46 @@ function showFloatingPreview(shape, color, options = {}) {
 				if (srcGrid.dataset && srcGrid.dataset.cols) destGrid.dataset.cols = srcGrid.dataset.cols;
 				// ensure grid template columns/rows match dataset or cell count (only for CSS Grid zones, not absolute-positioned ones)
 				if (!usesAbsolutePositioning) {
-					const cols = parseInt(destGrid.dataset.cols || '', 10) || (destGrid.querySelectorAll(':scope > .cell').length ? Math.max(1, Math.round(Math.sqrt(destGrid.querySelectorAll(':scope > .cell').length))) : 0);
-					if (cols) destGrid.style.gridTemplateColumns = `repeat(${cols}, var(--cell-size))`;
-					destGrid.style.gridAutoRows = 'var(--cell-size)';
+					// IMPORTANT: Do NOT trust existing destGrid.dataset.cols here.
+					// When importing into an already-running game (or after loadGameState), the destination grid may
+					// still carry cols/rows from the current level. That would distort the imported layout.
+					const allCells = Array.from(destGrid.querySelectorAll(':scope > .cell'));
+					let cols = 0;
+					let rows = 0;
+					try {
+						let maxX = -1;
+						let maxY = -1;
+						allCells.forEach(c => {
+							const x = Number(c?.dataset?.x ?? c?.dataset?.c);
+							const y = Number(c?.dataset?.y ?? c?.dataset?.r);
+							if (Number.isFinite(x)) maxX = Math.max(maxX, Math.floor(x));
+							if (Number.isFinite(y)) maxY = Math.max(maxY, Math.floor(y));
+						});
+						if (maxX >= 0) cols = maxX + 1;
+						if (maxY >= 0) rows = maxY + 1;
+					} catch (e) {}
+					if (!cols) {
+						// Prefer source dataset if present
+						cols = parseInt(String(srcGrid?.dataset?.cols || ''), 10) || 0;
+					}
+					if (!rows) {
+						rows = parseInt(String(srcGrid?.dataset?.rows || ''), 10) || 0;
+					}
+					if (!cols && rows && allCells.length) cols = Math.ceil(allCells.length / rows);
+					if (!rows && cols && allCells.length) rows = Math.ceil(allCells.length / cols);
+					if (!cols && allCells.length) cols = Math.max(1, Math.round(Math.sqrt(allCells.length)));
+					if (!rows && cols && allCells.length) rows = Math.max(1, Math.ceil(allCells.length / cols));
+					if (cols) {
+						destGrid.style.gridTemplateColumns = `repeat(${cols}, var(--cell-size))`;
+						destGrid.style.gridAutoRows = 'var(--cell-size)';
+						try { destGrid.dataset.cols = String(cols); } catch (e) {}
+						try { if (rows) destGrid.dataset.rows = String(rows); } catch (e) {}
+					}
 					
 					// CRITICAL: Ensure all cells have data-x, data-y, and data-zone-id for game logic
-					const allCells = Array.from(destGrid.querySelectorAll(':scope > .cell'));
 					allCells.forEach((cell, idx) => {
-						const x = idx % cols;
-						const y = Math.floor(idx / cols);
+						const x = cols ? (idx % cols) : 0;
+						const y = cols ? Math.floor(idx / cols) : idx;
 						cell.dataset.x = String(x);
 						cell.dataset.y = String(y);
 						if (zoneId) cell.dataset.zoneId = zoneId;
@@ -27294,25 +27592,40 @@ function showFloatingPreview(shape, color, options = {}) {
 			const colors = ['paars','geel','groen','blauw'];
 			colors.forEach(color => {
 				const srcZone = temp.querySelector(`.zone[data-color="${color}"]`) || temp.querySelector(`#${color}-zone`);
-				const destZone = document.querySelector(`.zone[data-color="${color}"]`);
+				const destZone = boardScope.querySelector(`.zone[data-color="${color}"]`);
 				if (!destZone) return;
-				if (!srcZone) {
+				// Treat a zone as removed if it doesn't exist OR if it contains no usable cells.
+				// NOTE: Some editor exports may have cells directly under the zone without a .grid wrapper.
+				// In that case, we must copy from the zone itself.
+				const srcGrid = srcZone ? (srcZone.querySelector(':scope > .grid') || srcZone.querySelector('.grid')) : null;
+				const srcContainer = srcGrid || srcZone;
+				const srcCellCount = srcContainer
+					? srcContainer.querySelectorAll('.cell').length
+					: 0;
+				if (!srcZone || !srcCellCount) {
 					// Editor removed this zone — hide it in the game view
 					destZone.style.display = 'none';
-					destZone.innerHTML = '';
+					// IMPORTANT: do not destroy the zone DOM (it breaks future normal runs).
+					// Keep/recreate the grid container so the normal generator can rebuild later.
+					const gid = gridIdForColor(color);
+					const destGridKeep = ensureZoneGridContainer(destZone, gid);
+					if (destGridKeep) destGridKeep.innerHTML = '';
 					return;
 				} else {
 					destZone.style.display = '';
 				}
-				const srcGrid = srcZone.querySelector(':scope > .grid') || srcZone.querySelector('.grid');
-				const destGrid = destZone.querySelector(':scope > .grid') || destZone.querySelector('.grid');
-				copyGridContent(srcGrid, destGrid);
+				const destGrid = ensureZoneGridContainer(destZone, gridIdForColor(color));
+				copyGridContent(srcContainer, destGrid);
 				// Diagnostics: help spot missing grids/cells during editor -> game import
 				try {
-					const srcCount = srcGrid ? srcGrid.querySelectorAll('.cell').length : 0;
+					const srcCount = srcContainer ? srcContainer.querySelectorAll('.cell').length : 0;
 					const dstCount = destGrid ? destGrid.querySelectorAll('.cell').length : 0;
+					const srcNonVoid = srcContainer ? srcContainer.querySelectorAll('.cell:not(.void-cell)').length : 0;
+					const dstNonVoid = destGrid ? destGrid.querySelectorAll('.cell:not(.void-cell)').length : 0;
+					const srcSymbols = srcContainer ? srcContainer.querySelectorAll('.symbol,.trap-symbol,.portal-symbol').length : 0;
+					const dstSymbols = destGrid ? destGrid.querySelectorAll('.symbol,.trap-symbol,.portal-symbol').length : 0;
 					if (String(color).toLowerCase() === 'groen' || String(color).toLowerCase() === 'blauw') {
-						console.log(`📦 import ${color}: srcCells=${srcCount} destCells=${dstCount} srcGrid=${!!srcGrid} destGrid=${!!destGrid}`);
+						console.log(`📦 import ${color}: srcCells=${srcCount}(${srcNonVoid} nonVoid, ${srcSymbols} symbols) destCells=${dstCount}(${dstNonVoid} nonVoid, ${dstSymbols} symbols) srcGrid=${!!srcGrid} destGrid=${!!destGrid}`);
 					}
 				} catch (e) {}
 
@@ -27321,6 +27634,12 @@ function showFloatingPreview(shape, color, options = {}) {
 				// Support older boards where cells may be direct children of the zone (no .grid wrapper)
 				if (String(color).toLowerCase() === 'groen') {
 					try {
+							// IMPORTANT: Green uses absolute-positioned root cells.
+							// The normal generator marks them as .root-cell, and CSS uses that class to shrink+center
+							// them (creating the visible spacing). Ensure imported boards get the same class.
+							const destRoot = (destGrid || destZone);
+							if (destRoot) destRoot.querySelectorAll('.cell').forEach(c => { try { c.classList.add('root-cell'); } catch (e) {} });
+
 						// Remove any lingering start-cell markers in destination (game doesn't use them)
 						const destContainerForStartRemove = destGrid || destZone;
 						if (destContainerForStartRemove) destContainerForStartRemove.querySelectorAll('.cell.start-cell').forEach(n => n.classList.remove('start-cell'));
@@ -27395,7 +27714,7 @@ function showFloatingPreview(shape, color, options = {}) {
 			// enforce that the game uses exactly those positions (avoid bottom-row fallback).
 			try {
 				const srcBlue = temp.querySelector('.zone[data-color="blauw"]') || temp.querySelector('#blauw-zone');
-				const destBlue = document.querySelector('.zone[data-color="blauw"]');
+				const destBlue = boardScope.querySelector('.zone[data-color="blauw"]');
 				if (srcBlue && destBlue) {
 					const srcBold = Array.from(srcBlue.querySelectorAll(':scope > .grid > .cell.bold-cell, :scope > .cell.bold-cell, .cell.bold-cell'));
 					if (srcBold.length > 0) {
@@ -27421,14 +27740,18 @@ function showFloatingPreview(shape, color, options = {}) {
 			// Handle red-group (may contain multiple sub-zones)
 			// NOTE: Red subgrids use absolute positioning (like green), cells are directly in the zone (no .grid child)
 			const srcRed = temp.querySelector('.zone.red-group') || temp.querySelector('.zone[data-color="rood"]');
-			const destRed = document.querySelector('.zone.red-group') || document.querySelector('.zone[data-color="rood"]');
+			const destRed = ensureRedGroupSkeleton() || boardScope.querySelector('.zone.red-group') || boardScope.querySelector('.zone[data-color="rood"]');
 			if (!destRed) {
 				// nothing to do
-			} else if (!srcRed) {
+			} else {
+				const srcRedHasCells = !!(srcRed && srcRed.querySelectorAll('.cell').length);
+				const srcRedHasSubs = !!(srcRed && srcRed.querySelectorAll(':scope > .zone').length);
+				if (!srcRed || (!srcRedHasCells && !srcRedHasSubs)) {
 				// Editor removed red-group entirely — hide it
 				destRed.style.display = 'none';
-				destRed.innerHTML = '';
-			} else {
+				// IMPORTANT: do not destroy red subgrid DOM; just clear cells so normal runs can regenerate.
+				try { destRed.querySelectorAll(':scope > .zone').forEach(z => { try { z.style.display = ''; } catch (e) {} z.querySelectorAll(':scope > .cell').forEach(c => c.remove()); z.innerHTML = z.innerHTML; }); } catch (e) {}
+				} else {
 				const srcSubs = Array.from(srcRed.querySelectorAll(':scope > .zone'));
 				let destSubs = Array.from(destRed.querySelectorAll(':scope > .zone'));
 				// Create missing destination sub-zones if necessary
@@ -27453,6 +27776,7 @@ function showFloatingPreview(shape, color, options = {}) {
 						// Standard case with .grid child on both sides
 						copyGridContent(srcGrid, destGrid);
 							ensureAbsoluteContainerSizing(destGrid, srcGrid);
+								try { (destGrid || destSub).querySelectorAll('.cell').forEach(c => c.classList.add('root-cell')); } catch (e) {}
 					} else if (srcGrid && !destGrid) {
 						// Source has .grid wrapper but destination expects cells directly in the zone
 						stripEditorChrome(srcSub);
@@ -27472,6 +27796,7 @@ function showFloatingPreview(shape, color, options = {}) {
 						if (srcSub.dataset && srcSub.dataset.rows) destSub.dataset.rows = srcSub.dataset.rows;
 						if (srcSub.dataset && srcSub.dataset.cols) destSub.dataset.cols = srcSub.dataset.cols;
 							ensureAbsoluteContainerSizing(destSub, srcGrid);
+								try { destSub.querySelectorAll('.cell').forEach(c => c.classList.add('root-cell')); } catch (e) {}
 					} else if (!srcGrid && destGrid) {
 						// Source has direct cells in the zone but destination expects a .grid child
 						stripEditorChrome(srcSub);
@@ -27488,6 +27813,7 @@ function showFloatingPreview(shape, color, options = {}) {
 						if (srcSub.dataset && srcSub.dataset.rows) destGrid.dataset.rows = srcSub.dataset.rows;
 						if (srcSub.dataset && srcSub.dataset.cols) destGrid.dataset.cols = srcSub.dataset.cols;
 							ensureAbsoluteContainerSizing(destGrid, srcSub);
+								try { destGrid.querySelectorAll('.cell').forEach(c => c.classList.add('root-cell')); } catch (e) {}
 					} else {
 						// Neither side has a .grid wrapper: both expect direct children in the zone
 						stripEditorChrome(srcSub);
@@ -27502,6 +27828,7 @@ function showFloatingPreview(shape, color, options = {}) {
 						if (srcSub.dataset.rows) destSub.dataset.rows = srcSub.dataset.rows;
 						if (srcSub.dataset.cols) destSub.dataset.cols = srcSub.dataset.cols;
 							ensureAbsoluteContainerSizing(destSub, srcSub);
+								try { destSub.querySelectorAll('.cell').forEach(c => c.classList.add('root-cell')); } catch (e) {}
 					}
 				});
 					// Diagnostics for red import
@@ -27510,16 +27837,17 @@ function showFloatingPreview(shape, color, options = {}) {
 						console.log('📦 import rood: subgrid cell counts', dstSubCount);
 					} catch (e) {}
 			}
+		}
 
 			// Ensure any portal cells in the destination are considered start positions by marking them bold
 			try {
-				const allPortalDest = document.querySelectorAll('.portal-cell');
+				const allPortalDest = boardScope.querySelectorAll('.portal-cell');
 				allPortalDest.forEach(pc => { if (!pc.classList.contains('bold-cell')) pc.classList.add('bold-cell'); });
 			} catch (e) { /* ignore */ }
 			// Initialize trap state for imported boards so black-hole and other traps work
 			try {
 				// Find candidate trap cells: explicit dataset, editor trap class, or trap-symbol present
-				const allCells = Array.from(document.querySelectorAll('.cell'));
+				const allCells = Array.from(boardScope.querySelectorAll('.cell'));
 				const importedTraps = allCells.filter(cell => {
 					if (!cell) return false;
 					if (cell.dataset && cell.dataset.trap === 'true') return true;
@@ -27548,7 +27876,7 @@ function showFloatingPreview(shape, color, options = {}) {
 				try { if (typeof renderTrapSummary === 'function') renderTrapSummary(); } catch (e) {}
 			} catch (e) { /* ignore */ }
 			// Final cleanup: remove any lingering editor chrome from DOM
-			document.querySelectorAll('.zone-handle, .grid-resizer, .zone-delete').forEach(n => n.remove());
+			boardScope.querySelectorAll('.zone-handle, .grid-resizer, .zone-delete').forEach(n => n.remove());
 			// Recompute scores and UI
 			if (typeof resetScoreState === 'function') resetScoreState();
 			if (typeof updateScore === 'function') updateScore();
@@ -27559,7 +27887,7 @@ function showFloatingPreview(shape, color, options = {}) {
 			try { window._locusEditorApplied = true; } catch (e) {}
 			try {
 				// Mark every grid element so validation can detect editor-applied boards
-				document.querySelectorAll('.grid').forEach(g => {
+				boardScope.querySelectorAll('.grid').forEach(g => {
 					try { if (g && g.dataset) g.dataset.editorApplied = 'true'; } catch (e) {}
 				});
 			} catch (e) {}
@@ -27951,10 +28279,728 @@ function monitorScenarioProgress() {
 			w.postMessage({ type: 'LOCUS_EDITOR_BOARD', boardHtml }, '*');
 		} catch (e) {}
 	}
+
+	// ---------- Scenario sharing (URL + editor bridge) ----------
+	function scenarioBase64UrlEncode(text) {
+		try {
+			if (typeof TextEncoder !== 'undefined') {
+				const bytes = new TextEncoder().encode(String(text || ''));
+				let bin = '';
+				for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+				return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+			}
+			return btoa(unescape(encodeURIComponent(String(text || '')))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+		} catch (e) {
+			return '';
+		}
+	}
+	function scenarioBase64UrlDecode(token) {
+		try {
+			let t = String(token || '').trim();
+			if (!t) return '';
+			t = t.replace(/-/g, '+').replace(/_/g, '/');
+			while (t.length % 4) t += '=';
+			const bin = atob(t);
+			if (typeof TextDecoder !== 'undefined') {
+				const bytes = new Uint8Array(bin.length);
+				for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+				return new TextDecoder().decode(bytes);
+			}
+			return decodeURIComponent(escape(bin));
+		} catch (e) {
+			return '';
+		}
+	}
+	function encodeScenarioPayload(payloadObj) {
+		try { return scenarioBase64UrlEncode(JSON.stringify(payloadObj || {})); } catch (e) { return ''; }
+	}
+
+	// Compact URL-safe compressor for scenario payloads. Keeps links much shorter.
+	// Uses a small dictionary-based decoder (LZ-style) compatible with the editor.
+	// LSB-first bit reading (matches compressor in editor.js)
+	const LZ_URL_KEY = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$";
+	function lzDecompressFromUrlSafe(input) {
+		try {
+			const str = String(input || '');
+			if (!str) return '';
+			let val = 0;
+			let pos = 6; // Start at 6 to force read on first bit
+			let index = 0;
+			const readBit = () => {
+				if (pos === 6) {
+					if (index >= str.length) return 0;
+					val = LZ_URL_KEY.indexOf(str.charAt(index++));
+					if (val < 0) val = 0;
+					pos = 0;
+				}
+				const bit = (val >> pos) & 1;
+				pos++;
+				return bit;
+			};
+			const readBits = (num) => {
+				let res = 0;
+				for (let i = 0; i < num; i++) {
+					res |= readBit() << i;
+				}
+				return res;
+			};
+
+			const dict = [0, 1, 2];
+			let enlargeIn = 4;
+			let dictSize = 4;
+			let numBits = 3;
+			let entry = '';
+			let result = [];
+			let w;
+
+			let next = readBits(2);
+			if (next === 0) {
+				w = String.fromCharCode(readBits(8));
+			} else if (next === 1) {
+				w = String.fromCharCode(readBits(16));
+			} else {
+				return '';
+			}
+			result.push(w);
+			dict[3] = w;
+
+			while (true) {
+				if (index > str.length) break;
+				next = readBits(numBits);
+				let c;
+				if (next === 0) {
+					c = String.fromCharCode(readBits(8));
+					dict[dictSize++] = c;
+					next = dictSize - 1;
+					enlargeIn--;
+				} else if (next === 1) {
+					c = String.fromCharCode(readBits(16));
+					dict[dictSize++] = c;
+					next = dictSize - 1;
+					enlargeIn--;
+				} else if (next === 2) {
+					return result.join('');
+				}
+
+				if (enlargeIn === 0) {
+					enlargeIn = 1 << numBits;
+					numBits++;
+				}
+
+				if (dict[next] !== undefined) {
+					entry = dict[next];
+				} else if (next === dictSize) {
+					entry = w + w.charAt(0);
+				} else {
+					return '';
+				}
+				result.push(entry);
+
+				// Add new sequence
+				dict[dictSize++] = w + entry.charAt(0);
+				enlargeIn--;
+				w = entry;
+
+				if (enlargeIn === 0) {
+					enlargeIn = 1 << numBits;
+					numBits++;
+				}
+			}
+			return result.join('');
+		} catch (e) {
+			return '';
+		}
+	}
+	function decodeScenarioPayload(token) {
+		try {
+			let t = String(token || '').trim();
+			let txt = '';
+			if (t.startsWith('lz:')) {
+				txt = lzDecompressFromUrlSafe(t.slice(3));
+			} else {
+				txt = scenarioBase64UrlDecode(t);
+			}
+			if (!txt) return null;
+			return JSON.parse(txt);
+		} catch (e) { return null; }
+	}
+
+	function escapeHtml(s) {
+		return String(s == null ? '' : s)
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;')
+			.replace(/'/g, '&#39;');
+	}
+
+	function buildBoardHtmlFromData(boardData) {
+		try {
+			if (!boardData || typeof boardData !== 'object') return '';
+			const v = Number(boardData.v || 0);
+			if (v !== 1) return '';
+			const zones = boardData.zones && typeof boardData.zones === 'object' ? boardData.zones : {};
+			const makeCell = (x, y, flags, symbolClass, trapType) => {
+				const cls = ['cell'];
+				if (flags?.v) cls.push('void-cell');
+				if (flags?.b) cls.push('bold-cell');
+				if (flags?.e) cls.push('end-cell');
+				if (flags?.g) cls.push('gold-cell');
+				if (flags?.p) cls.push('portal-cell');
+				if (trapType) cls.push('trap-cell');
+				const sym = symbolClass ? `<div class="symbol ${escapeHtml(symbolClass)}"></div>` : '';
+				const trap = trapType === 'blackHole'
+					? `<div class="trap-symbol trap-symbol--black-hole"></div>`
+					: (trapType ? `<div class="trap-symbol"></div>` : '');
+				const trapAttr = trapType ? ` data-trap-type="${escapeHtml(trapType)}"` : '';
+				return `<div class="${cls.join(' ')}" data-x="${x}" data-y="${y}"${trapAttr}>${sym}${trap}</div>`;
+			};
+			const buildZone = (colorName, z) => {
+				if (!z || typeof z !== 'object') return '';
+				const rows = Math.max(0, Math.floor(Number(z.rows) || 0));
+				const cols = Math.max(0, Math.floor(Number(z.cols) || 0));
+				if (!rows || !cols) return '';
+				const byKey = new Map();
+				(Array.isArray(z.cells) ? z.cells : []).forEach(c => {
+					if (!c || typeof c !== 'object') return;
+					const x = Math.floor(Number(c.x));
+					const y = Math.floor(Number(c.y));
+					if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+					byKey.set(`${x},${y}`, c);
+				});
+				let cellsHtml = '';
+				for (let y = 0; y < rows; y++) {
+					for (let x = 0; x < cols; x++) {
+						const c = byKey.get(`${x},${y}`);
+						cellsHtml += makeCell(x, y, c, c?.s || '', c?.t || '');
+					}
+				}
+				return `<div class="zone" data-color="${escapeHtml(colorName)}"><div class="grid" data-rows="${rows}" data-cols="${cols}">${cellsHtml}</div></div>`;
+			};
+
+			let html = '<div class="board">';
+			['groen','geel','paars','blauw'].forEach(color => {
+				if (zones[color]) html += buildZone(color, zones[color]);
+			});
+			const red = boardData.red && typeof boardData.red === 'object' ? boardData.red : null;
+			if (red && Array.isArray(red.subs)) {
+				let redHtml = '<div class="zone red-group">';
+				red.subs.forEach(sub => {
+					if (!sub || typeof sub !== 'object') return;
+					const rows = Math.max(0, Math.floor(Number(sub.rows) || 0));
+					const cols = Math.max(0, Math.floor(Number(sub.cols) || 0));
+					if (!rows || !cols) return;
+					const byKey = new Map();
+					(Array.isArray(sub.cells) ? sub.cells : []).forEach(c => {
+						if (!c || typeof c !== 'object') return;
+						const x = Math.floor(Number(c.x));
+						const y = Math.floor(Number(c.y));
+						if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+						byKey.set(`${x},${y}`, c);
+					});
+					let cellsHtml = '';
+					for (let y = 0; y < rows; y++) {
+						for (let x = 0; x < cols; x++) {
+							const c = byKey.get(`${x},${y}`);
+							cellsHtml += makeCell(x, y, c, c?.s || '', c?.t || '');
+						}
+					}
+					const idAttr = sub.id ? ` id="${escapeHtml(sub.id)}"` : '';
+					redHtml += `<div class="zone"${idAttr} data-rows="${rows}" data-cols="${cols}">${cellsHtml}</div>`;
+				});
+				redHtml += '</div>';
+				html += redHtml;
+			}
+			html += '</div>';
+			return html;
+		} catch (e) {
+			console.warn('buildBoardHtmlFromData failed', e);
+			return '';
+		}
+	}
+
+	function buildScenarioCardCatalog() {
+		try {
+			const colors = Array.isArray(NON_WILDCARD_COLORS) ? NON_WILDCARD_COLORS : [];
+			const result = [];
+			const toTemplateId = (category, shapeName, colorName, isGolden) => {
+				const base = `shape:${String(category || '')}:${encodeURIComponent(String(shapeName || ''))}:${encodeURIComponent(String(colorName || ''))}`;
+				return isGolden ? `${base}:golden` : base;
+			};
+			const pushShapeTemplates = (shapeList, category, extras = {}) => {
+				if (!Array.isArray(shapeList) || !shapeList.length) return;
+				shapeList.forEach(shape => {
+					if (!shape || !shape.name || !shape.matrix) return;
+					colors.forEach(col => {
+						if (!col || !col.name) return;
+						const templateId = toTemplateId(category, shape.name, col.name, !!extras.isGolden);
+						result.push({
+							templateId,
+							shapeName: String(shape.name),
+							category,
+							matrix: cloneShape(shape.matrix),
+							colorName: String(col.name),
+							colorCode: String(col.code || ''),
+							isGolden: !!extras.isGolden,
+							isBonusBoost: false
+						});
+					});
+				});
+			};
+
+			pushShapeTemplates(CARD_BLUEPRINTS && CARD_BLUEPRINTS.mini, 'mini');
+			pushShapeTemplates(CARD_BLUEPRINTS && CARD_BLUEPRINTS.standard, 'standard');
+			pushShapeTemplates(CARD_BLUEPRINTS && CARD_BLUEPRINTS.large, 'large');
+			pushShapeTemplates(Array.isArray(XL_6_SHAPES) ? XL_6_SHAPES : [], 'xl');
+			pushShapeTemplates(Array.isArray(EXTRA_LARGE_7_SHAPES) ? EXTRA_LARGE_7_SHAPES : [], 'extraLarge');
+			pushShapeTemplates(CARD_BLUEPRINTS && CARD_BLUEPRINTS.golden, 'golden', { isGolden: true });
+
+			// Bonus Boost: one per bonus color key
+			try {
+				if (Array.isArray(BONUS_ORDER)) {
+					BONUS_ORDER.forEach(key => {
+						const meta = BONUS_COLOR_CONFIG && BONUS_COLOR_CONFIG[key] ? BONUS_COLOR_CONFIG[key] : null;
+						if (!meta || !meta.colorName) return;
+						const templateId = `bonusBoost:${encodeURIComponent(String(key))}`;
+						result.push({
+							templateId,
+							shapeName: 'Bonus Boost',
+							category: 'mini',
+							matrix: [[1],[1]],
+							colorName: String(meta.colorName),
+							colorCode: '',
+							isGolden: false,
+							isBonusBoost: true,
+							bonusKey: String(key)
+						});
+					});
+				}
+			} catch (e) {}
+
+			return result;
+		} catch (e) {
+			return [];
+		}
+	}
+
+	function scenarioTemplateIdFromBlueprint(blueprint) {
+		try {
+			if (!blueprint) return '';
+			if (blueprint.isBonusBoost && blueprint.bonusKey) return `bonusBoost:${encodeURIComponent(String(blueprint.bonusKey))}`;
+			const category = String(blueprint.category || 'standard');
+			const shapeName = String(blueprint.shapeName || '');
+			const colorName = String((blueprint.color && blueprint.color.name) ? blueprint.color.name : '');
+			const isGolden = !!(blueprint.isGolden || blueprint.color?.isGolden);
+			const base = `shape:${category}:${encodeURIComponent(shapeName)}:${encodeURIComponent(colorName)}`;
+			return isGolden ? `${base}:golden` : base;
+		} catch (e) {
+			return '';
+		}
+	}
+
+	function buildScenarioUpgradeCatalog() {
+		try {
+			return Object.keys(UPGRADES || {}).map(id => {
+				const u = UPGRADES[id] || {};
+				return {
+					id,
+					name: String(u.name || id),
+					description: String(u.description || ''),
+					cost: Number(u.cost || 0),
+					purchased: !!u.purchased
+				};
+			});
+		} catch (e) { return []; }
+	}
+
+	function setScenarioCoinCount(count) {
+		try {
+			const n = Math.max(0, Math.min(99, Math.floor(Number(count) || 0)));
+			const container = document.getElementById('collected-coins');
+			if (!container) return;
+			// Ensure we have enough coin elements
+			const coins = Array.from(container.querySelectorAll('.coin'));
+			for (let i = coins.length; i < n; i += 1) {
+				try { container.appendChild(createCoinElement(i)); } catch (e) {}
+			}
+			// Activate first N, deactivate the rest
+			Array.from(container.querySelectorAll('.coin')).forEach((coinEl, idx) => {
+				if (!coinEl || !coinEl.classList) return;
+				coinEl.classList.toggle('active', idx < n);
+				coinEl.classList.remove('used');
+			});
+			try { updateCoinCounter(); } catch (e) {}
+		} catch (e) {}
+	}
+
+	function applyScenarioSettings(settings) {
+		if (!settings || typeof settings !== 'object') return;
+		try { window._locusScenarioMode = true; } catch (e) {}
+
+		// World (optional)
+		try {
+			if (settings.world != null) {
+				const w = Math.floor(Number(settings.world));
+				if (w === 1 || w === 2 || w === 3) {
+					currentWorld = w;
+					document.body.classList.remove('world-1', 'world-2', 'world-3');
+					document.body.classList.add(`world-${w}`);
+				}
+			}
+		} catch (e) {}
+
+		// Coins
+		if (settings.coins != null) {
+			setScenarioCoinCount(settings.coins);
+		}
+
+		// Upgrades (temporary)
+		if (Array.isArray(settings.upgradeIds)) {
+			const desired = new Set(settings.upgradeIds.map(x => String(x)));
+			Object.keys(UPGRADES || {}).forEach(id => {
+				if (!UPGRADES[id]) return;
+				UPGRADES[id].purchased = desired.has(id);
+			});
+			// IMPORTANT: Do NOT run upgrade.onPurchase() here.
+			// onPurchase contains runtime side effects (modals, saveGameState, and even rebuildGameBoards)
+			// which would overwrite the imported scenario board.
+			// If a scenario wants specific content (bonus cards, portals, etc.), it should be encoded in the boardHtml/deckTemplateIds.
+			try {
+				// Keep portalsActive in sync, but do not randomly place portals.
+				portalsActive = desired.has('portals');
+				if (!portalsActive) {
+					try { clearPortals(); } catch (e) {}
+				}
+			} catch (e) {}
+			try { shapePool = buildShapePool(); } catch (e) {}
+		}
+
+		// Deck
+		if (Array.isArray(settings.deckTemplateIds) && settings.deckTemplateIds.length) {
+			const catalog = buildScenarioCardCatalog();
+			const byId = new Map(catalog.map(t => [String(t.templateId), t]));
+			const deck = [];
+			settings.deckTemplateIds.forEach(tidRaw => {
+				const tid = String(tidRaw || '');
+				if (!tid) return;
+				if (tid.startsWith('bonusBoost:')) {
+					const key = decodeURIComponent(tid.slice('bonusBoost:'.length));
+					try { deck.push(createBonusBoostCardBlueprint(key)); } catch (e) {}
+					return;
+				}
+				const tpl = byId.get(tid);
+				if (!tpl) return;
+				const color = { name: tpl.colorName, code: tpl.colorCode || '#ffffff' };
+				const shapeEntry = { name: tpl.shapeName, matrix: cloneShape(tpl.matrix), category: tpl.category };
+				try {
+					deck.push(createCardBlueprint(shapeEntry, color, tpl.isGolden ? { isGolden: true, category: 'golden' } : {}));
+				} catch (e) {}
+			});
+			if (deck.length) {
+				ownedDeckBlueprints = deck;
+			}
+		}
+	}
+
+	// Unified loader for anything that represents a custom/scenario board.
+	// This avoids the historical bug where some load paths applied only the board
+	// while others applied only coins/upgrades/deck.
+	function loadScenarioLikeToGame(raw, options = {}) {
+		try {
+			const src = String(options.source || 'scenario');
+			const scenario = (raw && typeof raw === 'object') ? raw : {};
+
+			// Snapshot the current normal run before switching to a scenario/custom board.
+			// This enables "Terug naar vorig spel" to restore the exact level + deck/upgrades/coins + board.
+			try { capturePreviousNormalRunSnapshot(src); } catch (e) {}
+
+			// Build a normalized settings object.
+			const settings = {
+				world: scenario.world,
+				coins: scenario.coins,
+				upgradeIds: Array.isArray(scenario.upgradeIds) ? scenario.upgradeIds : [],
+				deckTemplateIds: Array.isArray(scenario.deckTemplateIds) ? scenario.deckTemplateIds : []
+			};
+			// Allow callers to pass settings as scenarioSettings (editor bridge / saved boards)
+			if (scenario.scenarioSettings && typeof scenario.scenarioSettings === 'object') {
+				const ss = scenario.scenarioSettings;
+				if (ss.world != null) settings.world = ss.world;
+				if (ss.coins != null) settings.coins = ss.coins;
+				if (Array.isArray(ss.upgradeIds)) settings.upgradeIds = ss.upgradeIds;
+				if (Array.isArray(ss.deckTemplateIds)) settings.deckTemplateIds = ss.deckTemplateIds;
+			}
+
+			// Apply board
+			let boardHtml = '';
+			if (typeof scenario.boardHtml === 'string' && scenario.boardHtml.trim()) {
+				boardHtml = scenario.boardHtml;
+			} else if (scenario.boardData) {
+				try { boardHtml = buildBoardHtmlFromData(scenario.boardData) || ''; } catch (e) { boardHtml = ''; }
+			}
+			if (boardHtml && typeof applyBoardHtmlToGame === 'function') {
+				applyBoardHtmlToGame(boardHtml);
+				try { window._locusEditorApplied = true; } catch (e) {}
+			}
+
+			// Meta
+			try {
+				const name = (scenario.name != null) ? String(scenario.name) : '';
+				const objective = (scenario.objective != null) ? String(scenario.objective) : '';
+				if ((name && name.trim()) || (objective && objective.trim())) {
+					setLoadedLevelMeta(name || '', objective || '');
+				}
+			} catch (e) {}
+
+			// Settings + start fresh run
+			applyScenarioSettings(settings);
+			startScenarioRun();
+			try { window._locusScenarioLoaded = true; } catch (e) {}
+			try { window._locusScenarioMode = true; } catch (e) {}
+
+			try {
+				if (typeof setStatus === 'function' && options.status !== false) {
+					const name = (scenario.name != null) ? String(scenario.name) : '';
+					setStatus(`${src}: ${name ? '"' + name + '"' : 'scenario'} geladen.`);
+				}
+			} catch (e) {}
+			return true;
+		} catch (e) {
+			console.error('loadScenarioLikeToGame failed', e);
+			return false;
+		}
+	}
+
+	const LOCUS_PREV_RUN_SNAPSHOT_KEY = 'locusPrevRunSnapshotV1';
+
+	function hasPreviousNormalRunSnapshot() {
+		try {
+			const raw = localStorage.getItem(LOCUS_PREV_RUN_SNAPSHOT_KEY);
+			if (!raw) return false;
+			const obj = JSON.parse(raw);
+			return !!(obj && obj.gameSave && obj.boardHtmlExact);
+		} catch (e) {
+			return false;
+		}
+	}
+
+	function capturePreviousNormalRunSnapshot(reason = '') {
+		try {
+			if (window && window._locusScenarioMode) return false;
+		} catch (e) {}
+		try {
+			// Ensure the latest run state (including currentLevel/deck/coins/upgrades) is saved.
+			if (typeof saveGameState === 'function') {
+				try { saveGameState(); } catch (e) {}
+			}
+			const gameSave = localStorage.getItem('locusGameSave') || null;
+			const boardEl = document.getElementById('board');
+			const boardHtmlExact = boardEl ? boardEl.outerHTML : null;
+			if (!gameSave || !boardHtmlExact) return false;
+			const snap = {
+				ts: Date.now(),
+				reason: String(reason || ''),
+				level: (typeof currentLevel !== 'undefined') ? currentLevel : null,
+				gameSave,
+				boardHtmlExact
+			};
+			localStorage.setItem(LOCUS_PREV_RUN_SNAPSHOT_KEY, JSON.stringify(snap));
+			return true;
+		} catch (e) {
+			return false;
+		}
+	}
+
+	function rehydrateTrapsFromDOM() {
+		// Rebuild activeTraps list based on DOM (needed after restoring a board snapshot)
+		try {
+			activeTraps = [];
+			trapIdCounter = 0;
+			lastTrapHighlightId = null;
+		} catch (e) {}
+		const triggered = Array.from(document.querySelectorAll('.cell[data-trap-triggered="true"], .cell.trap-triggered'));
+		triggered.forEach(cell => {
+			if (!cell) return;
+			const trapType = cell.dataset.trapType || 'pit';
+			const isBlackHole = trapType === 'blackHole';
+			const penaltyValue = isBlackHole ? 0 : TRAP_PENALTY;
+			const zoneId = normalizeZoneId(cell.dataset.zoneId || cell.closest('.grid')?.id || cell.closest('.zone')?.id || '');
+			const trapId = nextTrapId();
+			cell.dataset.trapTriggered = 'true';
+			cell.dataset.trapInstanceId = trapId;
+			cell.classList.add('trap-triggered');
+			activeTraps.push({
+				id: trapId,
+				cell,
+				zoneId,
+				penalty: penaltyValue,
+				triggeredAt: Date.now(),
+				type: trapType
+			});
+		});
+	}
+
+	function restorePreviousNormalRunSnapshot() {
+		let snap = null;
+		try { snap = JSON.parse(localStorage.getItem(LOCUS_PREV_RUN_SNAPSHOT_KEY) || 'null'); } catch (e) { snap = null; }
+		if (!snap || !snap.gameSave || !snap.boardHtmlExact) return false;
+
+		try {
+			if (window) {
+				window._locusScenarioMode = false;
+				window._locusScenarioLoaded = false;
+				window._locusRunMode = 'normal';
+				window._locusEditorApplied = false;
+				window.scenarioAllowedColors = null;
+				window.loadedCustomLevelMeta = null;
+				window.loadedCustomObjectiveCompiled = null;
+				window.loadedCustomLevelMetaCompleted = false;
+			}
+		} catch (e) {}
+		try { portalsActive = false; clearPortals(); } catch (e) {}
+
+		try { localStorage.setItem('locusGameSave', snap.gameSave); } catch (e) {}
+		let loaded = false;
+		try { if (typeof loadGameState === 'function') loaded = !!loadGameState(); } catch (e) { loaded = false; }
+		if (!loaded) return false;
+
+		const applyExactBoard = () => {
+			try { if (typeof applyBoardHtmlToGame === 'function') applyBoardHtmlToGame(snap.boardHtmlExact); } catch (e) {}
+			try { rehydrateTrapsFromDOM(); } catch (e) {}
+			try { if (typeof updateScore === 'function') updateScore(); } catch (e) {}
+			try { if (typeof renderTrapSummary === 'function') renderTrapSummary(); } catch (e) {}
+			try { requestAnimationFrame(() => requestAnimationFrame(autoCenterScrollableZones)); } catch (e) {}
+		};
+		try { requestAnimationFrame(() => requestAnimationFrame(applyExactBoard)); } catch (e) { setTimeout(applyExactBoard, 80); }
+		return true;
+	}
+
+	function startScenarioRun() {
+		try {
+			lastRoundFailureReason = null;
+			resetScoreState();
+			freePlacementsRemaining = 0;
+			latestScoreSnapshot = { yellow: 0, red: 0, green: 0, purple: 0, blue: 0, bonus: 0, total: 0 };
+			resetObjectives();
+			currentObjectiveId = null;
+			turnCount = 0;
+			selectedCardId = null;
+			selectedCardElement = null;
+			selectedShape = null;
+			selectedColor = null;
+			try { if (rotateButton) rotateButton.disabled = true; } catch (e) {}
+			// Fresh deck from the (scenario) ownedDeckBlueprints
+			drawPile = shuffleArray((ownedDeckBlueprints || []).map(bp => instantiateBlueprint(bp)));
+			discardPile = [];
+			currentHand = [];
+			turnCount = 0;
+			updateDeckPreview();
+			updateTurnCounterDisplay();
+			renderCurrentHand();
+			drawNextHand();
+			updateDeckPreview();
+			try { updateScore(); } catch (e) {}
+			// Ensure upgrades UI is updated to show purchased state
+			try { if (typeof renderUpgradesUI === 'function') renderUpgradesUI(); } catch (e) {}
+			try { if (typeof updateShopUI === 'function') updateShopUI(); } catch (e) {}
+		} catch (e) { console.error(e); }
+	}
+
+	function tryLoadScenarioFromUrl() {
+		try {
+			try {
+				if (window._locusScenarioLoaded) return true;
+			} catch (e) {}
+			const href = String(window.location && window.location.href || '');
+			const url = new URL(href);
+			let token = url.searchParams.get('scenario') || '';
+			if (!token) {
+				// Support hash: #scenario=...
+				const h = String(url.hash || '').replace(/^#/, '');
+				if (h.startsWith('scenario=')) token = h.slice('scenario='.length);
+				else {
+					const m = h.match(/(?:^|&)scenario=([^&]+)/);
+					if (m && m[1]) token = m[1];
+				}
+			}
+			token = String(token || '').trim();
+			if (!token) return false;
+			const payload = decodeScenarioPayload(token);
+			if (!payload || typeof payload !== 'object') return false;
+
+			// Back-compat: some payloads used 'w'
+			if (payload.world == null && payload.w != null) payload.world = payload.w;
+			return loadScenarioLikeToGame(payload, { source: 'URL-scenario' });
+		} catch (e) {
+			console.error('Scenario URL load failed', e);
+			return false;
+		}
+	}
+
+	// === SCENARIO FILE IMPORT ===
+	function importScenarioFile() {
+		const input = document.createElement('input');
+		input.type = 'file';
+		input.accept = '.json,.locus.json';
+		input.style.display = 'none';
+		input.addEventListener('change', async (e) => {
+			try {
+				const file = input.files && input.files[0];
+				if (!file) return;
+				const text = await file.text();
+				const scenario = JSON.parse(text);
+				
+				// Validate scenario format
+				if (!scenario || scenario._type !== 'locus-scenario') {
+					alert('Dit is geen geldig Locus scenario bestand.');
+					return;
+				}
+				
+				loadScenarioLikeToGame(scenario, { source: 'Bestand' });
+				
+				// Close menu if open
+				try {
+					const menuOverlay = document.getElementById('menu-overlay');
+					const menuBtn = document.getElementById('menu-toggle');
+					if (menuOverlay) menuOverlay.classList.remove('open');
+					if (menuBtn) menuBtn.classList.remove('open');
+				} catch (e) {}
+				
+			} catch (err) {
+				console.error('Scenario import failed:', err);
+				alert('Kon scenario niet laden: ' + (err.message || 'onbekende fout'));
+			}
+		});
+		document.body.appendChild(input);
+		input.click();
+		document.body.removeChild(input);
+	}
+	// Make globally available
+	window.importScenarioFile = importScenarioFile;
+
 	window.addEventListener('message', (event) => {
 		// Only respond to the opener/child channel we use.
 		const data = event && event.data ? event.data : {};
 		if (!data) return;
+		// Editor requests catalogs so it can show selectable deck/upgrades.
+		if (data.type === 'LOCUS_EDITOR_REQUEST_CATALOG') {
+			try {
+				const cards = buildScenarioCardCatalog();
+				const upgrades = buildScenarioUpgradeCatalog();
+				const meta = { currentWorld: (typeof currentWorld !== 'undefined') ? currentWorld : null, currentLevel: (typeof currentLevel !== 'undefined') ? currentLevel : null };
+				event.source && event.source.postMessage({ type: 'LOCUS_EDITOR_CATALOG', cards, upgrades, meta }, '*');
+			} catch (e) {}
+			return;
+		}
+		if (data.type === 'LOCUS_EDITOR_REQUEST_STARTER_DECK') {
+			try {
+				const blueprints = buildStandardDeckBlueprint();
+				const deckTemplateIds = Array.isArray(blueprints)
+					? blueprints.map(scenarioTemplateIdFromBlueprint).filter(Boolean)
+					: [];
+				event.source && event.source.postMessage({ type: 'LOCUS_EDITOR_STARTER_DECK', deckTemplateIds }, '*');
+			} catch (e) {}
+			return;
+		}
 		if (data.type === 'LOCUS_EDITOR_REQUEST_BOARD') {
 			const boardHtml = getEditorBoardHtml();
 			try { localStorage.setItem(LOCUS_EDITOR_STORAGE_KEY, boardHtml); } catch (e) {}
@@ -27964,18 +29010,28 @@ function monitorScenarioProgress() {
 		// Accept boards sent from the external editor window
 		if (data.type === 'LOCUS_EDITOR_BOARD' && typeof data.boardHtml === 'string') {
 			try {
-				applyBoardHtmlToGame(data.boardHtml);
-				// If the editor provided name/objective, persist that metadata in the UI
-				if (data.name || data.objective) {
-					setLoadedLevelMeta(data.name || '', data.objective || '');
-					try { if (typeof resetScoreState === 'function') resetScoreState(); } catch(e){}
-					if (typeof updateScore === 'function') setTimeout(()=> updateScore(), 120);
+				// Use unified loader so board + settings + meta always stay in sync.
+				const merged = {
+					boardHtml: data.boardHtml,
+					name: data.name || '',
+					objective: data.objective || '',
+					scenarioSettings: (data.scenarioSettings && typeof data.scenarioSettings === 'object') ? data.scenarioSettings : null
+				};
+				// If no settings were sent, just apply the board (old behavior).
+				if (merged.scenarioSettings || merged.name || merged.objective) {
+					loadScenarioLikeToGame(merged, { source: 'Editor' });
+				} else {
+					applyBoardHtmlToGame(data.boardHtml);
+					try { window._locusEditorApplied = true; } catch (e) {}
+					if (typeof setStatus === 'function') setStatus('Speelveld geladen vanuit editor.');
 				}
-				if (typeof setStatus === 'function') setStatus('Speelveld geladen vanuit editor.');
 			} catch (e) { console.error(e); }
 			return;
 		}
 	});
+
+	// If the page was opened via a scenario share link, we'll load it during initializeGame
+	// to avoid merging with a partially-started run.
 
 	function mulberry32(seed) {
 		let a = seed >>> 0;
@@ -28579,6 +29635,46 @@ body { background: transparent !important; }
 	  roundModalRestart.addEventListener('touchend', (e) => {
 		e.preventDefault();
 		handleRestart();
+	  });
+	}
+	if (roundModalCurrentRun) {
+	  const handleReturnToCurrentRun = () => {
+		hideAllModals();
+		// Restore the exact previous run snapshot (level + cards/upgrades/coins + board).
+		let restored = false;
+		try {
+			if (typeof restorePreviousNormalRunSnapshot === 'function') {
+				restored = !!restorePreviousNormalRunSnapshot();
+			}
+		} catch (e) { restored = false; }
+		if (!restored) {
+			// Fallback to the legacy behavior (best effort)
+			try {
+				if (window) {
+					window._locusScenarioMode = false;
+					window._locusScenarioLoaded = false;
+					window._locusRunMode = 'normal';
+					window._locusEditorApplied = false;
+					window.scenarioAllowedColors = null;
+					window.loadedCustomLevelMeta = null;
+					window.loadedCustomObjectiveCompiled = null;
+					window.loadedCustomLevelMetaCompleted = false;
+				}
+			} catch (e) {}
+			try { portalsActive = false; clearPortals(); } catch (e) {}
+			let loaded = false;
+			try {
+				const hasSave = !!localStorage.getItem('locusGameSave');
+				if (hasSave && typeof loadGameState === 'function') loaded = !!loadGameState();
+			} catch (e) { loaded = false; }
+			if (!loaded) startNewRun();
+			try { requestAnimationFrame(() => requestAnimationFrame(autoCenterScrollableZones)); } catch (e) {}
+		}
+	  };
+	  roundModalCurrentRun.addEventListener('click', handleReturnToCurrentRun);
+	  roundModalCurrentRun.addEventListener('touchend', (e) => {
+		e.preventDefault();
+		handleReturnToCurrentRun();
 	  });
 	}
 	if (shopModalSkip) {
@@ -29427,6 +30523,14 @@ body { background: transparent !important; }
 	// Check EERST of er een save is voordat we iets doen
 	(function initializeGame() {
 		console.log('🔍 Initializing game...');
+		// Scenario links must take full control and stay isolated from saves/current run.
+		try {
+			if (typeof tryLoadScenarioFromUrl === 'function' && tryLoadScenarioFromUrl()) {
+				console.log('🔗 Scenario loaded from URL. Skipping save/new-run init.');
+				requestAnimationFrame(() => requestAnimationFrame(autoCenterScrollableZones));
+				return;
+			}
+		} catch (e) {}
 		const hasSave = localStorage.getItem('locusGameSave');
 		console.log('💾 Save found:', !!hasSave);
 		// By default do NOT auto-restore save on page reload to avoid surprising persistent decks.
@@ -29635,7 +30739,15 @@ body { background: transparent !important; }
 				openEditorBtn.addEventListener('click', ()=>{
 					try { localStorage.setItem('locusEditorBoardHtml', saved[n].html); } catch (e) {}
 					const w = window.open('editor.html', '_blank');
-					if (w) try { w.postMessage({ type:'LOCUS_EDITOR_BOARD', boardHtml: saved[n].html, name: saved[n].name || n, objective: saved[n].objective || null }, '*'); } catch (e) {}
+					if (w) try {
+						w.postMessage({
+							type:'LOCUS_EDITOR_BOARD',
+							boardHtml: saved[n].html,
+							name: saved[n].name || n,
+							objective: saved[n].objective || null,
+							scenarioSettings: (saved[n].scenarioSettings && typeof saved[n].scenarioSettings === 'object') ? saved[n].scenarioSettings : null
+						}, '*');
+					} catch (e) {}
 				});
 				const loadBtn = document.createElement('button'); loadBtn.textContent = 'Laad in spel'; loadBtn.className = 'modal-btn primary';
 				const delBtn = document.createElement('button');
@@ -29672,9 +30784,11 @@ body { background: transparent !important; }
 							try { saveGameState(); } catch (e) { /* ignore save errors */ }
 						}
 						const currentGameSave = localStorage.getItem('locusGameSave') || null;
-						const currentBoardHtmlRaw = (typeof getEditorBoardHtml === 'function') ? getEditorBoardHtml() : (document.getElementById('board') ? document.getElementById('board').outerHTML : null);
-						const currentBoardHtml = (typeof sanitizeBoardHtml === 'function' && currentBoardHtmlRaw) ? sanitizeBoardHtml(currentBoardHtmlRaw) : currentBoardHtmlRaw;
-						const backupObj = { ts: Date.now(), level: currentLevel || null, gameSave: currentGameSave, boardHtml: currentBoardHtml };
+						const currentBoardHtmlExact = (document.getElementById('board') ? document.getElementById('board').outerHTML : null);
+						// Keep a sanitized version for saved-boards autosave (so it doesn't store runtime placements),
+						// but keep an exact snapshot for "restore previous session".
+						const currentBoardHtmlSanitized = (typeof sanitizeBoardHtml === 'function' && currentBoardHtmlExact) ? sanitizeBoardHtml(currentBoardHtmlExact) : currentBoardHtmlExact;
+						const backupObj = { ts: Date.now(), level: currentLevel || null, gameSave: currentGameSave, boardHtmlExact: currentBoardHtmlExact, boardHtml: currentBoardHtmlSanitized };
 						localStorage.setItem('locusGameSaveBackup', JSON.stringify(backupObj));
 						// Also add/overwrite a single autosave entry to saved boards for easy access (include gameSave)
 						try {
@@ -29690,11 +30804,13 @@ body { background: transparent !important; }
 							} catch (pe) { console.error('Failed to parse locusSavedBoards for autosave:', pe); }
 						} catch (e) {}
 					} catch (e) {}
-					// Now apply the selected board into the current page and set title/objective
-					applyBoardHtmlToGame(saved[n].html);
-					setLoadedLevelMeta(saved[n].name || n, saved[n].objective || null);
-					try { if (typeof resetScoreState === 'function') resetScoreState(); } catch(e){}
-					if (typeof updateScore === 'function') setTimeout(()=> updateScore(), 120);
+					// Load using unified loader (prevents board/settings mismatches)
+					loadScenarioLikeToGame({
+						boardHtml: saved[n].html,
+						name: saved[n].name || n,
+						objective: saved[n].objective || null,
+						scenarioSettings: (saved[n].scenarioSettings && typeof saved[n].scenarioSettings === 'object') ? saved[n].scenarioSettings : null
+					}, { source: 'Opgeslagen level' });
 					setTimeout(()=>{ if (typeof setStatus === 'function') setStatus('Speelveld geladen. Gebruik "Herstel vorige" om terug te keren.'); }, 50);
 				});
 				item.appendChild(label); item.appendChild(openEditorBtn); item.appendChild(loadBtn); item.appendChild(delBtn);
@@ -29715,10 +30831,11 @@ body { background: transparent !important; }
 							loadGameState();
 						}
 						// Then restore the exact board DOM snapshot
-						if (backup.boardHtml) {
+						const exactHtml = backup.boardHtmlExact || backup.boardHtml || null;
+						if (exactHtml) {
 							setTimeout(()=>{
-								applyBoardHtmlToGame(backup.boardHtml);
-								try { if (typeof resetScoreState === 'function') resetScoreState(); } catch(e){}
+								applyBoardHtmlToGame(exactHtml);
+								try { if (typeof rehydrateTrapsFromDOM === 'function') rehydrateTrapsFromDOM(); } catch(e){}
 								if (typeof updateScore === 'function') setTimeout(()=> updateScore(), 120);
 							}, 80);
 						}
