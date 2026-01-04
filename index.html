@@ -4537,26 +4537,36 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	.blackhole-modal {
 	  width: min(92vw, 760px);
 	  max-height: 82vh;
+	  background: radial-gradient(circle at 15% 20%, rgba(108,125,255,0.08), transparent 32%),
+		linear-gradient(145deg, #0d1020 0%, #0c1226 45%, #0a0f1f 100%);
+	  border: 1px solid rgba(130, 160, 255, 0.25);
+	  box-shadow: 0 18px 48px rgba(0, 6, 28, 0.55), inset 0 1px 0 rgba(255,255,255,0.05);
+	  backdrop-filter: blur(6px);
 	}
 
 	.blackhole-card-grid {
 	  margin-top: 16px;
+	  gap: 14px;
 	}
 
 	.blackhole-card-grid .blackhole-card {
 	  pointer-events: auto;
 	  cursor: pointer;
-	  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+	  background: linear-gradient(160deg, rgba(255,255,255,0.06), rgba(120,130,255,0.08));
+	  border: 1px solid rgba(130, 160, 255, 0.25);
+	  box-shadow: 0 14px 32px rgba(0, 10, 40, 0.35);
+	  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.2s ease;
 	}
 
 	.blackhole-card-grid .blackhole-card:hover {
 	  transform: translateY(-4px);
-	  box-shadow: 0 22px 36px rgba(40, 32, 88, 0.25);
+	  background: linear-gradient(160deg, rgba(255,255,255,0.12), rgba(150,170,255,0.16));
+	  box-shadow: 0 22px 36px rgba(40, 32, 88, 0.32);
 	}
 
 	.blackhole-card-grid .blackhole-card.selected {
-	  border-color: rgba(120, 100, 220, 0.58);
-	  box-shadow: 0 26px 44px rgba(70, 60, 160, 0.35);
+	  border-color: rgba(140, 190, 255, 0.8);
+	  box-shadow: 0 26px 44px rgba(70, 120, 220, 0.35), 0 0 0 1px rgba(140, 190, 255, 0.45);
 	}
 
 	.blackhole-stats {
@@ -4564,20 +4574,28 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  flex-wrap: wrap;
 	  justify-content: space-between;
 	  gap: 12px;
+	  padding: 10px 12px;
 	  font-size: 0.95rem;
-	  color: rgba(20,24,36,0.82);
+	  color: rgba(220,230,255,0.86);
+	  background: rgba(255,255,255,0.04);
+	  border: 1px solid rgba(140, 160, 240, 0.25);
+	  border-radius: 12px;
 	}
 
 	.blackhole-stats strong {
 	  font-weight: 700;
-	  color: #3a3570;
+	  color: #94b0ff;
 	}
 
 	.blackhole-feedback {
-	  min-height: 18px;
-	  font-size: 0.9rem;
-	  color: rgba(40,40,60,0.8);
-	  margin-top: 6px;
+	  min-height: 22px;
+	  font-size: 0.95rem;
+	  color: rgba(210,220,255,0.82);
+	  margin-top: 10px;
+	  padding: 8px 10px;
+	  background: rgba(110, 130, 220, 0.14);
+	  border: 1px solid rgba(140, 170, 255, 0.28);
+	  border-radius: 10px;
 	  transition: opacity 0.2s ease;
 	  opacity: 0;
 	}
@@ -4587,7 +4605,9 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	}
 
 	.blackhole-feedback[data-tone="warn"] {
-	  color: #c43838;
+	  color: #ffb4b4;
+	  background: rgba(176, 50, 74, 0.22);
+	  border-color: rgba(255, 120, 140, 0.35);
 	}
 
 	.blackhole-actions {
@@ -12079,14 +12099,14 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			coinMaster: { unlockedAtLevel: 5, announcement: 'nieuwe upgrade' },
 			goldenCards: { unlockedAtLevel: 7, announcement: 'nieuwe upgrade' },
 			luckyDraw: { unlockedAtLevel: 5, announcement: 'nieuwe upgrade' },
-			extraHandSize: { unlockedAtWorld: 2, unlockedAtLevel: 11, announcement: 'nieuwe upgrade' },
-			multicolorBoost: { unlockedAtLevel: 11, announcement: 'nieuwe upgrade' },
+			extraHandSize: { unlockedAtWorld: 3, unlockedAtLevel: 21, announcement: 'nieuwe upgrade' },
+			multicolorBoost: { unlockedAtWorld: 3, unlockedAtLevel: 21, announcement: 'nieuwe upgrade' },
 			bonusBoost: { unlockedAtWorld: 2, unlockedAtLevel: 5, announcement: 'nieuwe upgrade' },
 			blackHoleAccess: { unlockedAtLevel: 11, announcement: 'nieuwe uitdaging' },
 			portals: { unlockedAtLevel: 11, announcement: 'nieuwe upgrade' },
-			betterCards: { unlockedAtLevel: 11, announcement: 'nieuwe upgrade' },
+			betterCards: { unlockedAtWorld: 3, unlockedAtLevel: 21, announcement: 'nieuwe upgrade' },
 			xlBlocks: { unlockedAtLevel: 7, announcement: 'nieuwe upgrade' },
-			extraLargeBlocks: { unlockedAtLevel: 14, announcement: 'nieuwe upgrade' }
+			extraLargeBlocks: { unlockedAtWorld: 3, unlockedAtLevel: 21, announcement: 'nieuwe upgrade' }
 		},
 		// Elk level track welke content unlocked is
 		getLevelUnlocks: function(level, world = 1) {
@@ -12259,10 +12279,9 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		}
 	}
 
-	// Portal systeem - twee vaste portals per level (één in geel, één in groen)
+	// Portal systeem - plaats 2 portals per level in niet-rode zones
 	let portalsActive = false;
-	let portalCellYellow = null; // De portal cel in yellow-grid
-	let portalCellGreen = null;  // De portal cel in green-grid
+	let portalCells = [];
 
 	function activatePortals() {
 		portalsActive = true;
@@ -12273,49 +12292,39 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		// Verwijder oude portals
 		clearPortals();
 
-		// Plaats portal in yellow-grid
-		const yellowZone = document.getElementById('yellow-grid');
-		if (yellowZone) {
-			const yellowCells = Array.from(yellowZone.querySelectorAll('.cell:not(.void-cell):not(.active)'));
-			if (yellowCells.length > 0) {
-				const randomYellowCell = yellowCells[Math.floor(Math.random() * yellowCells.length)];
-				setupPortalCell(randomYellowCell, 'yellow-grid');
-				portalCellYellow = randomYellowCell;
-			}
+		const candidateZoneIds = ['yellow-grid', 'green-grid', 'purple-grid', 'blue-grid'];
+		const availableZones = candidateZoneIds
+			.map(id => ({ id, el: document.getElementById(id) }))
+			.filter(z => z.el);
+		if (!availableZones.length) {
+			console.log('🌐 No zones available for portals');
+			return;
 		}
 
-		// Plaats portal in green-grid
-		const greenZone = document.getElementById('green-grid');
-		if (greenZone) {
-			const greenCells = Array.from(greenZone.querySelectorAll('.cell:not(.void-cell):not(.active)'));
-			if (greenCells.length > 0) {
-				const randomGreenCell = greenCells[Math.floor(Math.random() * greenCells.length)];
-				setupPortalCell(randomGreenCell, 'green-grid');
-				portalCellGreen = randomGreenCell;
-			}
-		}
+		// Kies willekeurig twee unieke zones
+		const shuffledZones = availableZones.sort(() => Math.random() - 0.5);
+		const chosenZones = shuffledZones.slice(0, Math.min(2, shuffledZones.length));
 
-		console.log('🌐 Portals placed for this level - Yellow:', !!portalCellYellow, 'Green:', !!portalCellGreen);
+		chosenZones.forEach(({ id, el }) => {
+			const cells = Array.from(el.querySelectorAll('.cell:not(.void-cell):not(.active)'));
+			if (!cells.length) return;
+			const picked = cells[Math.floor(Math.random() * cells.length)];
+			setupPortalCell(picked, id);
+			portalCells.push(picked);
+		});
+
+		console.log('🌐 Portals placed for this level:', portalCells.map(c => c?.dataset?.zoneId || c?.closest?.('.zone')?.id || 'unknown'));
 	}
 	
 	function clearPortals() {
-		// Verwijder portal in yellow
-		if (portalCellYellow) {
-			portalCellYellow.classList.remove('portal-cell');
-			portalCellYellow.classList.remove('bold-cell');
-			const oldSymbol = portalCellYellow.querySelector('.portal-symbol');
+		portalCells.forEach(cell => {
+			if (!cell) return;
+			cell.classList.remove('portal-cell');
+			cell.classList.remove('bold-cell');
+			const oldSymbol = cell.querySelector('.portal-symbol');
 			if (oldSymbol) oldSymbol.remove();
-			portalCellYellow = null;
-		}
-		
-		// Verwijder portal in green
-		if (portalCellGreen) {
-			portalCellGreen.classList.remove('portal-cell');
-			portalCellGreen.classList.remove('bold-cell');
-			const oldSymbol = portalCellGreen.querySelector('.portal-symbol');
-			if (oldSymbol) oldSymbol.remove();
-			portalCellGreen = null;
-		}
+		});
+		portalCells = [];
 	}
 	
 	function setupPortalCell(cell, zoneId) {
@@ -12778,17 +12787,17 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			},
 			{
 				id: 'level-9-yellow-rows-7',
-				description: 'Level 9: Voltooi 5 gele kolommen.',
-				short: 'Level 9 - 5 gele kolommen',
-				check: () => checkYellowFullRows(5),
+				description: 'Level 9: Voltooi 4 gele kolommen.',
+				short: 'Level 9 - 4 gele kolommen',
+				check: () => checkYellowFullRows(4),
 				progress: () => {
 					const yellowConfig = window.yellowGridConfig || {};
 					const set = yellowConfig.scoreMode === 'diagonal'
 						? (window.scoredYellowSegments || window.scoredYellowDiagonals)
 						: window.scoredYellowColumns;
 					const current = (set instanceof Set) ? set.size : 0;
-					const capped = Math.max(0, Math.min(5, current));
-					return `${capped}/5`;
+					const capped = Math.max(0, Math.min(4, current));
+					return `${capped}/4`;
 				}
 			},
 			{
@@ -12798,13 +12807,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 				check: scores => scores.yellow >= 15 && scores.red >= 15 && scores.green >= 15 && scores.purple >= 15 && scores.blue >= 15,
 				progress: scores => {
 					const parts = [
-						(scores.yellow >= 15 ? '✔geel' : 'geel'),
-						(scores.red >= 15 ? '✔rood' : 'rood'),
-						(scores.green >= 15 ? '✔groen' : 'groen'),
-						(scores.purple >= 15 ? '✔paars' : 'paars'),
-						(scores.blue >= 15 ? '✔blauw' : 'blauw')
+						(scores.yellow >= 15 ? '✔geel' : ''),
+						(scores.red >= 15 ? '✔rood' : ''),
+						(scores.green >= 15 ? '✔groen' : ''),
+						(scores.purple >= 15 ? '✔paars' : ''),
+						(scores.blue >= 15 ? '✔blauw' : '')
 					];
-					return parts.join(', ');
+					return parts.join(' ');
 				}
 			},
 			{
@@ -12815,9 +12824,9 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			},
 			{
 				id: 'level-9-combo-master',
-				description: 'Level 9: Scoor 18 in rood, 2 gele kolommen én 24 bonus.',
+				description: 'Level 9: Scoor 20 in rood, 2 gele kolommen en 18 bonussen.',
 				short: 'Level 9 - Combo master',
-				check: scores => scores.red >= 18 && checkYellowFullRows(2) && ((scores?.bonusesCollected || 0) >= 24),
+				check: scores => scores.red >= 20 && checkYellowFullRows(2) && ((scores?.bonusesCollected || 0) >= 18),
 				progress: scores => {
 					const yellowConfig = window.yellowGridConfig || {};
 					const set = yellowConfig.scoreMode === 'diagonal'
@@ -12826,8 +12835,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 					const rowsDone = (set instanceof Set) ? set.size : 0;
 					const rowsCapped = Math.max(0, Math.min(2, rowsDone));
 					const bonusesDone = Math.max(0, (scores?.bonusesCollected || 0));
-					const bonusesCapped = Math.max(0, Math.min(24, bonusesDone));
-					return `gele kolommen: ${rowsCapped}/2 • bonussen: ${bonusesCapped}/24`;
+					const bonusesCapped = Math.max(0, Math.min(18, bonusesDone));
+					return `geel: ${rowsCapped}/2, bonussen: ${bonusesCapped}/18`;
 				}
 			}
 		],
@@ -12840,18 +12849,9 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			},
 			{
 				id: 'level-10-yellow-rows-8',
-				description: 'Level 10: Voltooi 4 gele kolommen.',
-				short: 'Level 10 - 4 gele kolommen',
-				check: () => checkYellowFullRows(4),
-				progress: () => {
-					const yellowConfig = window.yellowGridConfig || {};
-					const set = yellowConfig.scoreMode === 'diagonal'
-						? (window.scoredYellowSegments || window.scoredYellowDiagonals)
-						: window.scoredYellowColumns;
-					const current = (set instanceof Set) ? set.size : 0;
-					const capped = Math.max(0, Math.min(4, current));
-					return `${capped}/4`;
-				}
+				description: 'Level 10: Scoor 80 punten in geel.',
+				short: 'Level 10 - 80 punten geel',
+				check: scores => scores.yellow >= 80
 			},
 			{
 				id: 'level-10-perfect-balance',
@@ -14984,6 +14984,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		card.append(info, actions);
 		shopBonusContainer.appendChild(card);
 
+		if (shopModalLayer) shopModalLayer.dataset.mode = 'bonus-only';
 		if (shopModalTitle) shopModalTitle.textContent = '🏪 Bonus upgrade';
 		if (shopModalMessage) shopModalMessage.textContent = 'Je hebt 1 gratis bonus-upgrade gevonden!';
 		try { updateShopCoinDisplay(); } catch {}
@@ -14996,15 +14997,25 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			if (shopSkipBtn && skipOriginalText !== null) {
 				shopSkipBtn.textContent = skipOriginalText;
 			}
-			shopModalLayer.classList.remove('show');
-			restoreLayout();
+			if (shopModalLayer) {
+				shopModalLayer.classList.remove('show');
+				delete shopModalLayer.dataset.mode;
+			}
+			setTimeout(restoreLayout, 220);
 		};
 		if (shopSkipBtn) {
 			skipOriginalText = shopSkipBtn.textContent;
 			shopSkipBtn.textContent = 'Sluiten';
-			shopSkipBtn.addEventListener('click', () => {
+			shopSkipBtn.addEventListener('click', (e) => {
+				e.preventDefault();
+				e.stopImmediatePropagation();
 				close();
-			}, { once: true });
+			}, { once: true, capture: true });
+			shopSkipBtn.addEventListener('touchend', (e) => {
+				e.preventDefault();
+				e.stopImmediatePropagation();
+				close();
+			}, { once: true, capture: true });
 		}
 		if (shopCloseBtn) {
 			// Capture phase + stopImmediatePropagation so the global handler (skipShop) won't run.
@@ -16263,6 +16274,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  
 	  container.innerHTML = '';
 
+	  // Bepaal huidige world voor world-specifieke tuning
+	  let worldNum = 1;
+	  try {
+		const info = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(typeof currentLevel !== 'undefined' ? currentLevel : 1) : null;
+		worldNum = Number(info?.world || 1) || 1;
+	  } catch (e) {}
+
 	  // Red determinism: enforce a predictable number of active cells AND fixed points per subgrid.
 	  // Note: points are NOT derived from cells; red subgrids award fixed points when fully filled.
 	  const redTargetsById = {
@@ -16286,9 +16304,21 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  if (isRed && !(resolvedRedTargetCells > 0) && (resolvedRedTargetPoints > 0)) {
 		resolvedRedTargetCells = Math.max(1, Math.round(resolvedRedTargetPoints / 2));
 	  }
+	  const baseRedCells = resolvedRedTargetCells;
+	  const baseRedPointRatio = (resolvedRedTargetCells > 0 && resolvedRedTargetPoints > 0)
+		? (resolvedRedTargetPoints / resolvedRedTargetCells)
+		: 2;
+	  const redDensityBoost = isRed && worldNum <= 2;
 	  let redTargetActiveCells = (isRed && resolvedRedTargetCells > 0)
 		? Math.max(1, Math.floor(resolvedRedTargetCells))
 		: 0;
+	  if (redDensityBoost && redTargetActiveCells > 0) {
+		const extra = Math.max(2, Math.round(redTargetActiveCells * 0.15));
+		redTargetActiveCells += extra;
+		if (baseRedPointRatio > 0) {
+		  resolvedRedTargetPoints = Math.max(resolvedRedTargetPoints, Math.round(redTargetActiveCells * baseRedPointRatio));
+		}
+	  }
 	  if (isRed && redTargetActiveCells > 0) {
 		const maxCapacity = Math.max(1, Math.floor(rows) * Math.floor(cols));
 		redTargetActiveCells = Math.min(redTargetActiveCells, maxCapacity);
@@ -16412,7 +16442,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  };
 	  
 	  // Voor groen grid: zorg voor exact 8 eindpunten
-	  const targetEndpoints = !isRed ? 8 : Math.max(1, Math.floor(branchCount * splitChance));
+	const targetEndpoints = !isRed ? 8 : Math.max(1, Math.floor(branchCount * splitChance));
 	  
 	  if (isWorld2Green) {
 		// 1) Build a thick center "mega root" (2-3 wide).
@@ -16483,13 +16513,14 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  } else {
 		for(let b=0;b<branchAttempts;b++){
 		  if (isTallGreen && growthBudget <= 0) break;
-		  const len = minBranchLen + Math.floor(Math.random() * (maxBranchLen - minBranchLen + 1));
+		const len = minBranchLen + Math.floor(Math.random() * (maxBranchLen - minBranchLen + 1));
 		  const start = endpoints[Math.floor(Math.random()*endpoints.length)];
 		  let r = start.r, c = start.c;
 		  const dir = dirs[Math.floor(Math.random()*dirs.length)];
 		  
-		  // 25% kans dat deze tak breed wordt (vooral voor groen grid)
-		  const makeWide = !isRed && Math.random() < 0.25;
+		const redWideBias = isRed && worldNum <= 2;
+		// 25% kans op breedte voor niet-rood; voor wereld 1/2 rood ook bredere takken
+		const makeWide = (!isRed && Math.random() < 0.25) || (redWideBias && Math.random() < 0.55);
 
 		  for(let i=0;i<len;i++){
 			if (isTallGreen && growthBudget <= 0) break;
@@ -16617,7 +16648,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 			// Make the red shape more interesting: carve a few "holes" via swap operations
 			// (remove an interior cell, add a frontier cell) while keeping connectivity.
-			const swapAttempts = Math.max(3, Math.min(14, Math.floor(redTargetActiveCells * 0.8)));
+			let swapAttempts = Math.max(3, Math.min(14, Math.floor(redTargetActiveCells * 0.8)));
+			if (redDensityBoost) swapAttempts = Math.max(1, Math.floor(swapAttempts * 0.35));
 			for (let k = 0; k < swapAttempts; k++) {
 				const rem = pickInteriorToRemove();
 				if (rem === null) break;

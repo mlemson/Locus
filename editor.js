@@ -13,7 +13,7 @@
 
   const boardHost = document.getElementById('board-host');
   const refreshBtn = document.getElementById('refresh-board');
-  const printBtn = document.getElementById('print-board');
+  let printBtn = document.getElementById('print-board');
   const statusEl = document.getElementById('status');
 
   // NOTE: Do not persist these settings. A page refresh should reset them.
@@ -622,57 +622,70 @@
 
     function renderList() {
       list.textContent = '';
-        const actionsRoot = document.getElementById('scenario-actions') || (printBtn && printBtn.parentNode) || document.body;
-        if (!actionsRoot) return;
-        const controlsStack = document.getElementById('scenario-controls-stack') || actionsRoot;
-        const exportStack = document.getElementById('scenario-export-stack') || actionsRoot;
+      const cardsToShow = normalizedCards.filter(passesFilters).sort(compareCards);
+      if (!cardsToShow.length) {
+        const empty = document.createElement('div');
+        empty.style.opacity = '0.7';
+        empty.textContent = 'Geen kaarten voor deze filters.';
+        list.appendChild(empty);
+        return;
+      }
 
-        // clear and rebuild controls stack to keep layout consistent
-        if (controlsStack) controlsStack.innerHTML = '';
+      cardsToShow.forEach((it) => {
+        const row = document.createElement('label');
+        row.className = 'scenario-picker__item';
 
-        const coinsRow = document.createElement('div');
-        coinsRow.className = 'scenario-field';
-        const coinsLabel = document.createElement('label');
-        coinsLabel.textContent = 'Munten instellen';
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
         cb.checked = selected.has(it.id);
         cb.addEventListener('change', () => {
           if (cb.checked) selected.add(it.id);
           else selected.delete(it.id);
         });
 
-        coinsInput.style.width = '80px';
+        const accent = toCssColorMaybe(it.colorCode) || guessAccentFromColorName(it.colorName);
         const preview = renderCardPreview(it.matrix, accent, it.isGolden);
+
         const meta = document.createElement('div');
         meta.className = 'scenario-picker__meta';
+
         const headline = document.createElement('div');
-        coinsRow.append(coinsLabel, coinsInput);
         headline.className = 'scenario-picker__headline';
         headline.textContent = it.shapeName;
+
         const sub = document.createElement('div');
         sub.className = 'scenario-picker__sub';
+        const bits = [];
+        if (it.colorName) bits.push(it.colorName);
+        bits.push(`Kosten: ${it.cost}`);
+        if (it.blocks) bits.push(`${it.blocks} blokjes`);
+        sub.textContent = bits.filter(Boolean).join(' • ');
+
+        const badgeWrap = document.createElement('div');
+        badgeWrap.style.marginTop = '4px';
         const badges = [];
         if (it.isGolden) badges.push('Golden');
         if (it.isBonusBoost) badges.push('Bonus Boost');
+        badges.forEach((b) => {
+          const tag = document.createElement('span');
+          tag.className = 'scenario-picker__badge';
+          tag.textContent = b;
+          badgeWrap.appendChild(tag);
+        });
+
+        meta.appendChild(headline);
         meta.appendChild(sub);
+        if (badgeWrap.childElementCount) meta.appendChild(badgeWrap);
 
         row.appendChild(cb);
         row.appendChild(preview);
         row.appendChild(meta);
         list.appendChild(row);
+      });
     }
     colorSel.addEventListener('change', renderList);
-        if (controlsStack) controlsStack.append(coinsRow, deckBtn, upgradesBtn);
-
-        // Export button lives in export stack
-        if (exportStack && !document.getElementById('export-scenario-btn')) {
-          const exportBtn = document.createElement('button');
-          exportBtn.id = 'export-scenario-btn';
-          exportBtn.textContent = 'Exporteer';
-          exportBtn.title = 'Download scenario als bestand';
-          exportBtn.addEventListener('click', exportScenarioFile);
-          if (styleSource && styleSource.className) exportBtn.className = styleSource.className;
-          exportStack.appendChild(exportBtn);
-        }
+    bonusSel.addEventListener('change', renderList);
+    sortSel.addEventListener('change', renderList);
 
     toolbar.appendChild(starterBtn);
     toolbar.appendChild(selectAllBtn);
@@ -904,53 +917,108 @@
 
   function ensureScenarioControls() {
     try {
-      const container = (printBtn && printBtn.parentNode) ? printBtn.parentNode : document.body;
-      if (!container) return;
-      if (document.getElementById('scenario-coins-input')) return;
+      const actionsRoot = document.getElementById('scenario-actions') || document.body;
+      if (!actionsRoot) return;
+      const controlsStack = document.getElementById('scenario-controls-stack') || actionsRoot;
+      const exportStack = document.getElementById('scenario-export-stack') || actionsRoot;
+      const styleSource = document.querySelector('.panel__headerActions .btn') || printBtn || refreshBtn || null;
 
-      const wrap = document.createElement('span');
-      wrap.style.display = 'inline-flex';
-      wrap.style.alignItems = 'center';
-      wrap.style.gap = '8px';
-      wrap.style.marginLeft = '8px';
+      if (controlsStack) {
+        controlsStack.innerHTML = '';
 
-      const coinsLabel = document.createElement('label');
-      coinsLabel.textContent = 'Munten:';
-      coinsLabel.style.fontSize = '12px';
-      coinsLabel.style.opacity = '0.9';
-      const coinsInput = document.createElement('input');
-      coinsInput.type = 'number';
-      coinsInput.id = 'scenario-coins-input';
-      coinsInput.min = '0';
-      coinsInput.max = '99';
-      coinsInput.value = String(Math.max(0, Math.min(99, Math.floor(Number(scenarioSettings.coins) || 0))));
-      coinsInput.style.width = '70px';
-      coinsInput.addEventListener('change', () => {
-        scenarioSettings.coins = Math.max(0, Math.min(99, Math.floor(Number(coinsInput.value) || 0)));
-        coinsInput.value = String(scenarioSettings.coins);
-      });
+        const coinsRow = document.createElement('div');
+        coinsRow.className = 'scenario-field';
+        const coinsLabel = document.createElement('label');
+        coinsLabel.textContent = 'Munten instellen';
+        coinsLabel.setAttribute('for', 'scenario-coins-input');
+        const coinsInput = document.createElement('input');
+        coinsInput.type = 'number';
+        coinsInput.id = 'scenario-coins-input';
+        coinsInput.min = '0';
+        coinsInput.max = '99';
+        coinsInput.inputMode = 'numeric';
+        coinsInput.value = String(Math.max(0, Math.min(99, Math.floor(Number(scenarioSettings.coins) || 0))));
+        coinsInput.addEventListener('change', () => {
+          scenarioSettings.coins = Math.max(0, Math.min(99, Math.floor(Number(coinsInput.value) || 0)));
+          coinsInput.value = String(scenarioSettings.coins);
+        });
+        coinsRow.append(coinsLabel, coinsInput);
 
-      const deckBtn = document.createElement('button');
-      deckBtn.textContent = 'Deck kiezen';
-      deckBtn.addEventListener('click', openDeckPicker);
-      const upgradesBtn = document.createElement('button');
-      upgradesBtn.textContent = 'Upgrades kiezen';
-      upgradesBtn.addEventListener('click', openUpgradePicker);
-      const exportBtn = document.createElement('button');
-      exportBtn.textContent = '📥 Exporteer';
-      exportBtn.title = 'Download scenario als bestand';
-      exportBtn.addEventListener('click', exportScenarioFile);
+        const deckBtn = document.createElement('button');
+        deckBtn.id = 'scenario-deck-btn';
+        deckBtn.textContent = 'Deck kiezen';
+        deckBtn.addEventListener('click', openDeckPicker);
 
-      // Match styling of existing buttons if possible
-      const styleSource = printBtn || refreshBtn || null;
-      if (styleSource && styleSource.className) {
-        deckBtn.className = styleSource.className;
-        upgradesBtn.className = styleSource.className;
-        exportBtn.className = styleSource.className;
+        const upgradesBtn = document.createElement('button');
+        upgradesBtn.id = 'scenario-upgrades-btn';
+        upgradesBtn.textContent = 'Upgrades kiezen';
+        upgradesBtn.addEventListener('click', openUpgradePicker);
+
+        if (styleSource && styleSource.className) {
+          deckBtn.className = styleSource.className;
+          upgradesBtn.className = styleSource.className;
+        }
+
+        controlsStack.append(coinsRow, deckBtn, upgradesBtn);
       }
 
-      wrap.append(coinsLabel, coinsInput, deckBtn, upgradesBtn, exportBtn);
-      container.appendChild(wrap);
+      if (exportStack) {
+        if (!document.getElementById('export-scenario-btn')) {
+          const exportBtn = document.createElement('button');
+          exportBtn.id = 'export-scenario-btn';
+          exportBtn.textContent = 'Exporteer';
+          exportBtn.title = 'Download scenario als bestand';
+          exportBtn.addEventListener('click', exportScenarioFile);
+          if (styleSource && styleSource.className) exportBtn.className = styleSource.className;
+          exportStack.appendChild(exportBtn);
+        }
+
+        if (!document.getElementById('import-scenario-btn')) {
+          const importBtn = document.createElement('button');
+          importBtn.id = 'import-scenario-btn';
+          importBtn.textContent = 'Importeer';
+          importBtn.title = 'Laad scenario-bestand (.json)';
+          importBtn.addEventListener('click', importScenarioFile);
+          if (styleSource && styleSource.className) importBtn.className = styleSource.className;
+          exportStack.appendChild(importBtn);
+        }
+
+        const existingPrint = document.getElementById('print-board');
+        if (!existingPrint) {
+          const pb = document.createElement('button');
+          pb.id = 'print-board';
+          pb.textContent = 'Print';
+          pb.dataset.wired = '1';
+          pb.addEventListener('click', () => {
+            const printFriendlyToggle = document.getElementById('print-friendly-toggle');
+            const printFriendly = !!(printFriendlyToggle && printFriendlyToggle.checked);
+            const html = getCleanBoardHtmlForPrint(printFriendly);
+            if (!html) {
+              setStatus('Geen speelveld om te printen.');
+              return;
+            }
+            openPrintWindow(html, printFriendly);
+          });
+          if (styleSource && styleSource.className) pb.className = styleSource.className;
+          exportStack.appendChild(pb);
+          printBtn = pb;
+        } else if (!existingPrint.dataset.wired) {
+          existingPrint.dataset.wired = '1';
+          existingPrint.addEventListener('click', () => {
+            const printFriendlyToggle = document.getElementById('print-friendly-toggle');
+            const printFriendly = !!(printFriendlyToggle && printFriendlyToggle.checked);
+            const html = getCleanBoardHtmlForPrint(printFriendly);
+            if (!html) {
+              setStatus('Geen speelveld om te printen.');
+              return;
+            }
+            openPrintWindow(html, printFriendly);
+          });
+          printBtn = existingPrint;
+        }
+      }
+
+      ensurePrintFriendlyToggle();
     } catch (e) {}
   }
 
@@ -992,6 +1060,58 @@
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     setStatus(`Scenario "${name}" geëxporteerd als bestand.`);
+  }
+
+  function importScenarioFile() {
+    try {
+      const picker = document.createElement('input');
+      picker.type = 'file';
+      picker.accept = '.json,.locus.json,application/json';
+      picker.addEventListener('change', () => {
+        const file = (picker.files && picker.files[0]) ? picker.files[0] : null;
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const text = String(reader.result || '');
+            const data = JSON.parse(text);
+            if (!data || typeof data !== 'object') {
+              setStatus('Bestand kon niet worden gelezen.');
+              return;
+            }
+
+            const boardHtml = data.boardHtml || '';
+            const boardData = data.boardData || null;
+            if (boardHtml) {
+              setBoardHtml(boardHtml);
+            } else if (boardData) {
+              // We currently rely on HTML export; boardData-only imports are not supported yet.
+              setStatus('Bestand bevat alleen board-data; HTML ontbreekt.');
+              return;
+            } else {
+              setStatus('Geen speelveld gevonden in bestand.');
+              return;
+            }
+
+            if (data.coins != null) scenarioSettings.coins = Math.max(0, Math.min(99, Math.floor(Number(data.coins) || 0)));
+            if (Array.isArray(data.deckTemplateIds)) scenarioSettings.deckTemplateIds = data.deckTemplateIds.map(String);
+            if (Array.isArray(data.upgradeIds)) scenarioSettings.upgradeIds = data.upgradeIds.map(String);
+            if (data.world != null) {
+              const w = Number(data.world);
+              if (w === 1 || w === 2 || w === 3) scenarioSettings.world = w;
+            }
+            syncScenarioControlsUI();
+            setStatus(`Scenario "${data.name || file.name}" geïmporteerd.`);
+          } catch (err) {
+            setStatus('Importeren mislukt.');
+          }
+        };
+        reader.readAsText(file, 'utf-8');
+      });
+      picker.click();
+    } catch (e) {
+      setStatus('Importeren mislukt.');
+    }
   }
 
   function syncScenarioControlsUI() {
@@ -2221,25 +2341,11 @@ body { margin: 0; padding: 0; background: white; color: #111; font-family: Arial
     });
   }
 
-  if (printBtn) {
-    printBtn.addEventListener('click', () => {
-      const printFriendlyToggle = document.getElementById('print-friendly-toggle');
-      const printFriendly = !!(printFriendlyToggle && printFriendlyToggle.checked);
-      const html = getCleanBoardHtmlForPrint(printFriendly);
-      if (!html) {
-        setStatus('Geen speelveld om te printen.');
-        return;
-      }
-      openPrintWindow(html, printFriendly);
-    });
-  }
-
   // Ensure a print-friendly toggle is available in the editor UI
   function ensurePrintFriendlyToggle() {
     try {
       if (document.getElementById('print-friendly-toggle')) return;
-      if (!printBtn) return;
-      const exportStack = document.getElementById('scenario-export-stack') || (printBtn && printBtn.parentNode) || document.body;
+      const exportStack = document.getElementById('scenario-export-stack') || document.getElementById('scenario-actions') || document.body;
       const wrapper = document.createElement('label');
       wrapper.className = 'scenario-toggle';
       wrapper.title = 'Wanneer aangevinkt printen we met lichte, niet-volle kleuren';
@@ -2254,8 +2360,6 @@ body { margin: 0; padding: 0; background: white; color: #111; font-family: Arial
       exportStack.appendChild(wrapper);
     } catch (e) {}
   }
-
-  ensurePrintFriendlyToggle();
 
   // --- Saved boards (nameable) ---
   const SAVED_BOARDS_KEY = 'locusSavedBoards';
