@@ -622,31 +622,30 @@
 
     function renderList() {
       list.textContent = '';
-      const view = normalizedCards.filter(passesFilters).sort(compareCards);
-      selectAllBtn.onclick = () => {
-        view.forEach(c => selected.add(String(c.id)));
-        renderList();
-      };
-      clearAllBtn.onclick = () => {
-        view.forEach(c => selected.delete(String(c.id)));
-        renderList();
-      };
-      view.forEach(it => {
-        const row = document.createElement('label');
-        row.className = 'scenario-picker__item';
-        const cb = document.createElement('input');
-        cb.type = 'checkbox';
+        const actionsRoot = document.getElementById('scenario-actions') || (printBtn && printBtn.parentNode) || document.body;
+        if (!actionsRoot) return;
+        const controlsStack = document.getElementById('scenario-controls-stack') || actionsRoot;
+        const exportStack = document.getElementById('scenario-export-stack') || actionsRoot;
+
+        // clear and rebuild controls stack to keep layout consistent
+        if (controlsStack) controlsStack.innerHTML = '';
+
+        const coinsRow = document.createElement('div');
+        coinsRow.className = 'scenario-field';
+        const coinsLabel = document.createElement('label');
+        coinsLabel.textContent = 'Munten instellen';
         cb.checked = selected.has(it.id);
         cb.addEventListener('change', () => {
           if (cb.checked) selected.add(it.id);
           else selected.delete(it.id);
         });
 
-        const accent = toCssColorMaybe(it.colorCode) || guessAccentFromColorName(it.colorName);
+        coinsInput.style.width = '80px';
         const preview = renderCardPreview(it.matrix, accent, it.isGolden);
         const meta = document.createElement('div');
         meta.className = 'scenario-picker__meta';
         const headline = document.createElement('div');
+        coinsRow.append(coinsLabel, coinsInput);
         headline.className = 'scenario-picker__headline';
         headline.textContent = it.shapeName;
         const sub = document.createElement('div');
@@ -654,21 +653,26 @@
         const badges = [];
         if (it.isGolden) badges.push('Golden');
         if (it.isBonusBoost) badges.push('Bonus Boost');
-        if (it.category) badges.push(it.category);
-        if (it.colorName) badges.push(it.colorName);
-        sub.textContent = [...badges, `Blokjes: ${it.blocks}`, `Prijs: ${it.cost}`].join(' • ');
-        meta.appendChild(headline);
         meta.appendChild(sub);
 
         row.appendChild(cb);
         row.appendChild(preview);
         row.appendChild(meta);
         list.appendChild(row);
-      });
     }
     colorSel.addEventListener('change', renderList);
-    bonusSel.addEventListener('change', renderList);
-    sortSel.addEventListener('change', renderList);
+        if (controlsStack) controlsStack.append(coinsRow, deckBtn, upgradesBtn);
+
+        // Export button lives in export stack
+        if (exportStack && !document.getElementById('export-scenario-btn')) {
+          const exportBtn = document.createElement('button');
+          exportBtn.id = 'export-scenario-btn';
+          exportBtn.textContent = 'Exporteer';
+          exportBtn.title = 'Download scenario als bestand';
+          exportBtn.addEventListener('click', exportScenarioFile);
+          if (styleSource && styleSource.className) exportBtn.className = styleSource.className;
+          exportStack.appendChild(exportBtn);
+        }
 
     toolbar.appendChild(starterBtn);
     toolbar.appendChild(selectAllBtn);
@@ -2235,11 +2239,9 @@ body { margin: 0; padding: 0; background: white; color: #111; font-family: Arial
     try {
       if (document.getElementById('print-friendly-toggle')) return;
       if (!printBtn) return;
+      const exportStack = document.getElementById('scenario-export-stack') || (printBtn && printBtn.parentNode) || document.body;
       const wrapper = document.createElement('label');
-      wrapper.style.display = 'inline-flex';
-      wrapper.style.alignItems = 'center';
-      wrapper.style.gap = '6px';
-      wrapper.style.marginLeft = '8px';
+      wrapper.className = 'scenario-toggle';
       wrapper.title = 'Wanneer aangevinkt printen we met lichte, niet-volle kleuren';
       const input = document.createElement('input');
       input.type = 'checkbox';
@@ -2249,8 +2251,7 @@ body { margin: 0; padding: 0; background: white; color: #111; font-family: Arial
       span.textContent = 'Printvriendelijk';
       wrapper.appendChild(input);
       wrapper.appendChild(span);
-      // Insert after the print button
-      try { printBtn.parentNode.insertBefore(wrapper, printBtn.nextSibling); } catch (e) { document.body.appendChild(wrapper); }
+      exportStack.appendChild(wrapper);
     } catch (e) {}
   }
 
@@ -2404,23 +2405,26 @@ body { margin: 0; padding: 0; background: white; color: #111; font-family: Arial
   function ensureSaveButtons() {
     // Try to add save/manage buttons next to existing controls
     try {
-      const container = (printBtn && printBtn.parentNode) ? printBtn.parentNode : document.body;
+      const actionsRoot = document.getElementById('scenario-actions') || (printBtn && printBtn.parentNode) || document.body;
+      if (!actionsRoot) return;
+      const saveStack = document.getElementById('scenario-save-stack') || actionsRoot;
+      const styleSource = printBtn || refreshBtn || null;
+
       if (!document.getElementById('save-board')) {
-        const b = document.createElement('button'); b.id = 'save-board'; b.textContent = 'Opslaan';
-        // copy classes from an existing control so styling matches
-        const styleSource = printBtn || refreshBtn || null;
+        const b = document.createElement('button');
+        b.id = 'save-board';
+        b.textContent = 'Opslaan';
         if (styleSource && styleSource.className) b.className = styleSource.className;
-        else b.style.marginLeft = '8px';
         b.addEventListener('click', promptSaveBoard);
-        container.insertBefore(b, printBtn ? printBtn.nextSibling : null);
+        saveStack.appendChild(b);
       }
       if (!document.getElementById('manage-saved-boards')) {
-        const m = document.createElement('button'); m.id = 'manage-saved-boards'; m.textContent = 'Opgeslagen';
-        const styleSource2 = document.getElementById('save-board') || printBtn || refreshBtn || null;
-        if (styleSource2 && styleSource2.className) m.className = styleSource2.className;
-        else m.style.marginLeft = '8px';
+        const m = document.createElement('button');
+        m.id = 'manage-saved-boards';
+        m.textContent = 'Laad scenario';
+        if (styleSource && styleSource.className) m.className = styleSource.className;
         m.addEventListener('click', createSavedBoardsModal);
-        container.insertBefore(m, document.getElementById('save-board') ? document.getElementById('save-board').nextSibling : null);
+        saveStack.appendChild(m);
       }
     } catch (e) {}
   }

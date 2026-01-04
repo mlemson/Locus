@@ -8488,8 +8488,9 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	grid-template-rows: auto 1fr auto;
 	gap: 16px;
 	padding: 12px;
-	/* Use 100% instead of 100vw to avoid horizontal clipping inside padded body. */
+	/* Keep centered on very wide screens: limit width and auto-center. */
 	width: 100%;
+	margin: 0 auto;
 	height: calc(100vh - 20px);
 	box-sizing: border-box;
 	margin: 0 auto;
@@ -11268,6 +11269,16 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	}
 
   </style>
+	<style>
+		/* Ensure desktop wrapper stays centered on very wide screens (override later rules) */
+		@media (min-width:2000px) {
+			body #desktop-wrapper {
+				max-width: 1600px !important;
+				margin-left: auto !important;
+				margin-right: auto !important;
+			}
+		}
+	</style>
   <script>
     // Simple menu toggle: toggles .open on #controls and .active on #menu-toggle
     document.addEventListener('DOMContentLoaded', function() {
@@ -18584,6 +18595,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		} catch (e) {}
 		syncPlaceholderForCell(cell);
 	  });
+	  // Safety: fully rebuild trap state from DOM so penalties disappear after undo
+	  rehydrateTrapsFromDOM();
 	  restoreCoinState(coinSnapshotBefore);
 	  if (Array.isArray(bonuses) && bonuses.length) {
 		bonuses.forEach(revokeBonusClaim);
@@ -18644,6 +18657,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	if(!last) return;
 	if(last.wasActive) last.cell.classList.add('active'); else last.cell.classList.remove('active');
 	ensureTrapState(last.cell, last.cell.dataset.zoneId || last.cell.closest('.grid')?.id || '', { silent: true });
+	rehydrateTrapsFromDOM();
 	if(last.cell.classList.contains('gold-cell')){
 	  if(last.cell.classList.contains('active')) addCoin(); else removeCoin();
 	}
@@ -29986,10 +30000,10 @@ body { background: transparent !important; }
 			if (scale < 0.999) {
 				// Anchor to the left so narrow screens don't waste space on the left,
 				// but center it when there is spare horizontal room after scaling.
-				desktopWrapper.style.transformOrigin = 'top left';
+				desktopWrapper.style.transformOrigin = 'top center';
 				const scaledWidth = contentWidth * scale;
-				const offsetX = Math.max(0, (viewportW - scaledWidth) / 2);
-				desktopWrapper.style.transform = `translateX(${offsetX.toFixed(1)}px) scale(${scale.toFixed(4)})`;
+				// const offsetX = Math.max(0, (viewportW - scaledWidth) / 2);
+				desktopWrapper.style.transform = `scale(${scale.toFixed(4)})`;
 			} else {
 				desktopWrapper.style.removeProperty('transform');
 				desktopWrapper.style.removeProperty('transform-origin');

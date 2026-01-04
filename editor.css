@@ -17,6 +17,10 @@ html, body {
   display: grid;
   grid-template-columns: 280px 1fr;
   height: 100vh;
+  /* Keep the UI centered on very wide (4K) screens: limit width and auto-center */
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 12px;
 }
 
 .panel {
@@ -73,6 +77,51 @@ html, body {
   font-size: 0.85rem;
   opacity: 0.75;
   margin-bottom: 8px;
+}
+
+/* Scenario actions block */
+.scenario-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.scenario-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.scenario-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 10px;
+  background: rgba(0,0,0,0.03);
+}
+
+.scenario-field label {
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.scenario-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 10px;
+  background: rgba(0,0,0,0.03);
+}
+
+.scenario-actions .btn,
+.scenario-actions button {
+  width: 100%;
+  text-align: center;
 }
 
 .tool {
