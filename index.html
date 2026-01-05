@@ -18682,6 +18682,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  const connections = [];
 	  const purpleConfig = window.purpleGridConfig || {};
 	  const isWorld2Purple = purpleConfig.world2 === true;
+	  const isWorld3Purple = purpleConfig.world3 === true;
+	  const useExpandedPurpleScoring = isWorld2Purple || isWorld3Purple;
 
 	  for (let i = 0; i < totalPurple; i++) {
 		if (visited[i]) continue;
@@ -18715,12 +18717,11 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		);
 
 		let clusterScore = 0;
-		if (isWorld2Purple) {
-		  // World 2 request:
-		  // - Outer ring connections: 20 points per new connection (only the outer ring)
-		  // - Inner bold connections: 8 points per new connection (starting at 8)
-		  const perOuterConn = Number(purpleConfig.outerRingBonusPerBold) || 20;
+		if (useExpandedPurpleScoring) {
+		  // Requested values: inner↔inner = 8, inner↔outer = 10, outer↔outer = 25
+		  const perOuterConn = Number(purpleConfig.outerRingBonusPerBold) || 25;
 		  const perInnerConn = Number(purpleConfig.innerBoldConnectionPoints) || 8;
+		  const perMixedConn = Number(purpleConfig.outerInnerConnectionPoints) || 10;
 		  const outerBoldCount = cluster.reduce((acc, idx) => {
 			const cell = purpleCells[idx];
 			if (!cell.classList.contains('bold-cell') || !cell.classList.contains('active')) return acc;
@@ -18728,8 +18729,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			return acc + (isOuter ? 1 : 0);
 		  }, 0);
 		  const innerBoldCount = Math.max(0, boldCount - outerBoldCount);
-		  if (outerBoldCount >= 2) clusterScore += (outerBoldCount - 1) * perOuterConn;
-		  if (innerBoldCount >= 2) clusterScore += (innerBoldCount - 1) * perInnerConn;
+		  if (outerBoldCount >= 2) clusterScore += (outerBoldCount - 1) * perOuterConn; // outer↔outer: 25 each
+		  if (innerBoldCount >= 2) clusterScore += (innerBoldCount - 1) * perInnerConn; // inner↔inner: 8 each
+		  // Mixed link: inner ↔ outer
+		  if (outerBoldCount > 0 && innerBoldCount > 0) {
+			const mixedConnections = Math.min(outerBoldCount, innerBoldCount);
+			clusterScore += mixedConnections * perMixedConn; // default 10 each
+		  }
 		} else {
 		  if (boldCount >= 2) clusterScore = (boldCount - 1) * 8;
 		}
