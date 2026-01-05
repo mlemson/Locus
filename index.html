@@ -2936,6 +2936,144 @@ body.dark-mode .diamond-glyph { color: #bfefff; }
 	  50% { box-shadow: 0 0 18px 4px rgba(255, 215, 0, 0.9); }
 	}
 
+	/* Tutorial overlay + highlights */
+	#tutorial-overlay {
+	  position: fixed;
+	  inset: 0;
+	  background: rgba(0, 0, 0, 0.55);
+	  display: none;
+	  align-items: center;
+	  justify-content: center;
+	  z-index: 9999;
+	  backdrop-filter: blur(2px);
+	}
+	#tutorial-overlay .tutorial-card {
+	  background: #111827;
+	  color: #f8fafc;
+	  padding: 20px 22px;
+	  border-radius: 12px;
+	  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+	  max-width: 420px;
+	  width: calc(100% - 32px);
+	  text-align: center;
+	  border: 1px solid rgba(255, 255, 255, 0.08);
+	}
+	#tutorial-overlay .tutorial-card h3 { margin: 0 0 8px 0; font-size: 1.1rem; }
+	#tutorial-overlay .tutorial-card p { margin: 0 0 14px 0; opacity: 0.9; }
+	#tutorial-overlay .tutorial-card button {
+	  background: linear-gradient(135deg, #fbbf24, #f97316);
+	  border: none;
+	  color: #0f172a;
+	  padding: 10px 18px;
+	  border-radius: 10px;
+	  font-weight: 700;
+	  cursor: pointer;
+	  box-shadow: 0 10px 30px rgba(249, 115, 22, 0.35);
+	}
+	.tutorial-glow {
+	  position: relative;
+	  animation: tutorial-pulse 1.6s ease-in-out infinite;
+	  box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.7), 0 0 16px rgba(249, 115, 22, 0.9);
+	  z-index: 9998;
+	}
+	.tutorial-glow-soft {
+	  position: relative;
+	  animation: tutorial-pulse-soft 1.8s ease-in-out infinite;
+	  box-shadow: 0 0 0 2px rgba(125, 211, 252, 0.55), 0 0 14px rgba(59, 130, 246, 0.7);
+	  z-index: 9998;
+	}
+	@keyframes tutorial-pulse {
+	  0% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7), 0 0 16px rgba(249, 115, 22, 0.9); }
+	  50% { box-shadow: 0 0 0 10px rgba(251, 191, 36, 0.0), 0 0 22px rgba(249, 115, 22, 0.4); }
+	  100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7), 0 0 16px rgba(249, 115, 22, 0.9); }
+	}
+	@keyframes tutorial-pulse-soft {
+	  0% { box-shadow: 0 0 0 0 rgba(125, 211, 252, 0.6), 0 0 14px rgba(59, 130, 246, 0.8); }
+	  50% { box-shadow: 0 0 0 10px rgba(125, 211, 252, 0.0), 0 0 18px rgba(59, 130, 246, 0.4); }
+	  100% { box-shadow: 0 0 0 0 rgba(125, 211, 252, 0.6), 0 0 14px rgba(59, 130, 246, 0.8); }
+	}
+	#tutorial-ghost {
+	  position: fixed;
+	  width: 64px;
+	  left: 0%;
+	  height: 64px;
+	  pointer-events: none;
+	  z-index: 9997;
+	  display: none;
+	}
+	#tutorial-ghost .ghost-shape {
+	  width: 100%;
+	  height: 100%;
+	  background: linear-gradient(135deg, rgba(59,130,246,0.95), rgba(16,185,129,0.95));
+	  border-radius: 10px;
+	  box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+	  animation: ghost-float 1.4s ease-in-out infinite;
+	  opacity: 0.95;
+	}
+	#tutorial-ghost .ghost-label {
+	  position: absolute;
+	  top: -86px;
+	  left: 20%;
+	  transform: translateX(-50%);
+	  background: linear-gradient(135deg, #111827, #1f2937);
+	  color: #f8fafc;
+	  padding: 10px 14px;
+	  border-radius: 12px;
+	  font-size: 13px;
+	  font-weight: 800;
+	  white-space: normal;
+	  width: 280px;
+	  text-align: center;
+	  border: 1px solid rgba(255, 255, 255, 0.14);
+	  box-shadow: 0 12px 26px rgba(0,0,0,0.38);
+	}
+	#tutorial-ghost .ghost-rotate-hint {
+	  position: absolute;
+	  top: -40px;
+	  left: 20%;
+	  transform: translateX(-50%);
+	  background: rgba(17,24,39,0.94);
+	  color: #e5e7eb;
+	  padding: 10px 14px;
+	  border-radius: 12px;
+	  font-size: 12px;
+	  font-weight: 800;
+	  white-space: normal;
+	  width: 280px;
+	  text-align: center;
+	  border: 1px solid rgba(255, 255, 255, 0.16);
+	  box-shadow: 0 14px 26px rgba(0,0,0,0.4);
+	  display: none;
+	}
+
+	.purple-pair-cell {
+		position: relative;
+	}
+
+	.purple-pair-cell.purple-highlight::after {
+		content: '';
+		position: absolute;
+		top: -4px;
+		left: -4px;
+		right: -4px;
+		bottom: -4px;
+		border-radius: 6px;
+		box-shadow: 0 0 0 3px rgba(152, 103, 232, 0.95), 0 0 22px rgba(152, 103, 232, 0.6);
+		animation: purple-pair-pulse 1.2s ease-in-out infinite;
+		pointer-events: none;
+	}
+
+	@keyframes purple-pair-pulse {
+		0% { box-shadow: 0 0 0 3px rgba(152, 103, 232, 0.95), 0 0 22px rgba(152, 103, 232, 0.6); }
+		50% { box-shadow: 0 0 0 5px rgba(152, 103, 232, 0.35), 0 0 30px rgba(152, 103, 232, 0.45); }
+		100% { box-shadow: 0 0 0 3px rgba(152, 103, 232, 0.95), 0 0 22px rgba(152, 103, 232, 0.6); }
+	}
+	@keyframes ghost-float {
+	  0% { transform: translateY(0); }
+	  50% { transform: translateY(-6px); }
+	  100% { transform: translateY(0); }
+	}
+
 	body.dark-mode .score-row:hover {
 	  background: #484848;
 	}
@@ -6422,6 +6560,50 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	.objective-toast.show {
 		opacity: 1;
 		transform: translateX(-50%) translateY(0);
+	}
+
+	.objective-popup {
+		position: fixed;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%) scale(0.95);
+		background: linear-gradient(135deg, #111827, #0f172a);
+		color: #f8fafc;
+		padding: 16px 18px;
+		border-radius: 16px;
+		min-width: 260px;
+		max-width: 420px;
+		text-align: center;
+		box-shadow: 0 24px 48px rgba(0,0,0,0.45);
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.25s ease, transform 0.25s ease;
+		z-index: 1300;
+	}
+
+	body.dark-mode .objective-popup {
+		background: linear-gradient(135deg, #0b1220, #0e1528);
+		color: #f1f5f9;
+		box-shadow: 0 24px 52px rgba(0,0,0,0.6);
+	}
+
+	.objective-popup .objective-popup-title {
+		font-weight: 800;
+		font-size: 1rem;
+		margin-bottom: 6px;
+		letter-spacing: 0.01em;
+	}
+
+	.objective-popup .objective-popup-body {
+		font-size: 0.9rem;
+		line-height: 1.4;
+		opacity: 0.92;
+	}
+
+	.objective-popup.show {
+		opacity: 1;
+		transform: translate(-50%, -50%) scale(1);
 	}
 
 
@@ -12090,7 +12272,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		},
 		// Speciale features
 		features: {
-			bonusShop: { unlockedAtWorld: 2, name: 'Bonus Shop', icon: '🏪', description: 'Upgrade je bonussen permanent in de shop!' }
+			bonusShop: { unlockedAtWorld: 2, name: 'Bonus Shop', icon: '🏪', description: 'Upgrade je bonussen permanent in de shop!' },
+			randomShopCard: { unlockedAtLevel: 2, name: 'Random Shopkaart', icon: '✨', description: 'Mystery kaart verschijnt in de shop.' }
 		},
 		// Upgrade unlocks (level waarop ze in de shop verschijnen)
 		upgrades: {
@@ -12154,11 +12337,11 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			return this.cardCategories[category] && this.cardCategories[category].unlockedAtLevel <= currentLevel;
 		},
 		isFeatureUnlocked: function(featureId, level, world = 1) {
-			if (!this.features || !this.features[featureId]) return false;
-			const feature = this.features[featureId];
-			if (feature.unlockedAtWorld) return world >= feature.unlockedAtWorld;
-			if (feature.unlockedAtLevel) return level >= feature.unlockedAtLevel;
-			return false;
+			const feature = this.features && this.features[featureId];
+			if (!feature) return false;
+			if (feature.unlockedAtWorld && world < feature.unlockedAtWorld) return false;
+			if (feature.unlockedAtLevel && level < feature.unlockedAtLevel) return false;
+			return true;
 		}
 	};
 
@@ -12463,6 +12646,15 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 	// Objective templates - each level has 5 random candidates
 	const OBJECTIVE_TEMPLATES = {
+		0: [ // Intro level: focus op paars
+			{
+				id: 'intro-purple-8',
+				description: 'Haal 8 punten in paars.',
+				short: 'Intro - 8 punten paars',
+				check: scores => scores.purple >= 8,
+				progress: scores => `${Math.min(scores.purple || 0, 8)}/8`
+			}
+		],
 		1: [ // Level 1: Simple totals and single colors
 			{
 				id: 'level-1-total-10',
@@ -12510,7 +12702,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			},
 			{
 				id: 'level-2-green-purple',
-				description: 'Scoor 8 punten in groen én in paars.',
+				description: 'Scoor 8 punten in groen en paars.',
 				short: 'Level 2 - 8 groen + 8 paars',
 				check: scores => scores.green >= 8 && scores.purple >= 8
 			},
@@ -13724,7 +13916,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 	// Generate objectives array with random selection per level
 	const OBJECTIVES = [];
-	for (let level = 1; level <= 30; level++) { // Uitgebreid naar level 30 voor World 3
+	for (let level = 0; level <= 30; level++) { // Uitgebreid naar level 30 voor World 3
 		const templates = OBJECTIVE_TEMPLATES[level] || [];
 		if (templates.length > 0) {
 			// Pick a random objective from the 5 available for this level
@@ -13893,6 +14085,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		renderObjectivePanel();
 	}
 	let objectiveToastTimeout = null;
+	let objectivePopupTimeout = null;
 
 	/* ============================================
 	   DRAG & DROP VARIABELEN
@@ -14164,6 +14357,37 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			}, 2400);
 		}
 
+		function showObjectiveCompletionPopup(message) {
+			const levelNum = (typeof currentLevel !== 'undefined') ? Number(currentLevel) : null;
+			// Only show this popup during the intro tutorial (level 0) and only if the tutorial is not completed.
+			if (levelNum !== 0) return;
+			if (typeof isTutorialCompleted === 'function' && isTutorialCompleted()) return;
+			let popup = document.querySelector('.objective-popup');
+			if (!popup) {
+				popup = document.createElement('div');
+				popup.className = 'objective-popup';
+				const title = document.createElement('div');
+				title.className = 'objective-popup-title';
+				const body = document.createElement('div');
+				body.className = 'objective-popup-body';
+				popup.append(title, body);
+				document.body.appendChild(popup);
+			}
+			const titleEl = popup.querySelector('.objective-popup-title');
+			const bodyEl = popup.querySelector('.objective-popup-body');
+			if (titleEl) titleEl.textContent = 'Goed gedaan!';
+			if (bodyEl) {
+				const safeMessage = stripObjectiveSymbols ? stripObjectiveSymbols(message || '') : (message || '');
+				bodyEl.textContent = 'Nu kan je het level verder spelen om munten te halen die je zometeen kan gebruiken.';
+				if (safeMessage) bodyEl.dataset.detail = safeMessage;
+			}
+			popup.classList.add('show');
+			if (objectivePopupTimeout) clearTimeout(objectivePopupTimeout);
+			objectivePopupTimeout = setTimeout(() => {
+				popup.classList.remove('show');
+			}, 5200);
+		}
+
 		function stripObjectiveSymbols(text) {
 			if (text == null) return '';
 			let t = String(text);
@@ -14314,8 +14538,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			
 			// Update titel met level nummer EN world indicator
 			if (titleEl) {
-				const { world, subLevel } = getWorldAndSubLevel(currentLevel);
-				if (world === 1) {
+				const { world, subLevel, intro } = getWorldAndSubLevel(currentLevel);
+				if (currentLevel === 0 || intro) {
+					titleEl.textContent = 'Intro';
+					titleEl.style.background = '';
+					titleEl.style.webkitBackgroundClip = '';
+					titleEl.style.webkitTextFillColor = '';
+				} else if (world === 1) {
 					titleEl.textContent = `Level ${currentLevel}`;
 					titleEl.style.background = '';
 					titleEl.style.webkitBackgroundClip = '';
@@ -14407,6 +14636,12 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			}
 			const toast = document.querySelector('.objective-toast');
 			if (toast) toast.classList.remove('show');
+			if (objectivePopupTimeout) {
+				clearTimeout(objectivePopupTimeout);
+				objectivePopupTimeout = null;
+			}
+			const popup = document.querySelector('.objective-popup');
+			if (popup) popup.classList.remove('show');
 			// Reset UI visueel
 			const checkmark = document.querySelector('#objective-status');
 			if (checkmark) checkmark.textContent = '';
@@ -14436,6 +14671,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 					if (!window.loadedCustomLevelMetaCompleted) {
 						window.loadedCustomLevelMetaCompleted = true;
 						showObjectiveToast(`Doel behaald: ${compiled.short || compiled.description}`);
+						showObjectiveCompletionPopup(compiled.short || compiled.description);
 					}
 				} else if (window.loadedCustomLevelMetaCompleted) {
 					window.loadedCustomLevelMetaCompleted = false;
@@ -14475,6 +14711,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 					completedObjectiveIds.add(objective.id);
 					completedObjectives.push(objective);
 					showObjectiveToast(`Doel behaald: ${objective.short || objective.description}`);
+					showObjectiveCompletionPopup(objective.short || objective.description);
 				}
 			} else if (completedObjectiveIds.has(objective.id)) {
 				// Objective can become un-achieved (e.g. undo). Keep UI/state in sync.
@@ -14654,6 +14891,342 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		if (totalEl) totalEl.classList.remove('objective-achieved');
 	}
 
+	// ========== INTERACTIEVE TUTORIAL (EERSTE START) ==========
+	const TUTORIAL_STORAGE_KEY = 'locus_tutorial_v1_done';
+	const tutorialState = {
+		active: false,
+		cardSelected: false,
+		cardPlaced: false,
+		bonusPlaced: false,
+		bonusReady: false,
+		glowTargets: new Set(),
+		timers: [],
+		overlay: null,
+		ghost: null
+	};
+	let keyboardRotateTipShown = false;
+
+	function isTutorialCompleted() {
+		try { return localStorage.getItem(TUTORIAL_STORAGE_KEY) === '1'; } catch (_) { return false; }
+	}
+
+	function markTutorialDone() {
+		tutorialState.active = false;
+		try { localStorage.setItem(TUTORIAL_STORAGE_KEY, '1'); } catch (_) {}
+		clearTutorialHighlights();
+		hideTutorialOverlay();
+		hideTutorialGhost();
+	}
+
+	function ensureTutorialOverlay() {
+		if (tutorialState.overlay && document.body.contains(tutorialState.overlay)) return tutorialState.overlay;
+		const overlay = document.createElement('div');
+		overlay.id = 'tutorial-overlay';
+		const ghost = document.createElement('div');
+		ghost.id = 'tutorial-ghost';
+		ghost.innerHTML = `<div class="ghost-label"></div><div class="ghost-rotate-hint"></div><div class="ghost-shape"></div>`;
+		overlay.dataset.tutorial = 'overlay';
+		document.body.appendChild(overlay);
+		document.body.appendChild(ghost);
+		tutorialState.overlay = overlay;
+		tutorialState.ghost = ghost;
+		return overlay;
+	}
+
+	function showTutorialOverlay(contentHtml, buttonLabel, onStart) {
+		const overlay = ensureTutorialOverlay();
+		overlay.innerHTML = `<div class="tutorial-card">${contentHtml}<button type="button" id="tutorial-start-btn">${buttonLabel || 'Start!'}</button></div>`;
+		overlay.style.display = 'flex';
+		const btn = overlay.querySelector('#tutorial-start-btn');
+		if (btn) btn.onclick = () => { overlay.style.display = 'none'; if (typeof onStart === 'function') onStart(); };
+	}
+
+	function hideTutorialOverlay() {
+		if (tutorialState.overlay) tutorialState.overlay.style.display = 'none';
+	}
+
+	function addGlow(el, soft = false) {
+		if (!el) return;
+		el.classList.remove('tutorial-glow', 'tutorial-glow-soft');
+		el.classList.add(soft ? 'tutorial-glow-soft' : 'tutorial-glow');
+		tutorialState.glowTargets.add(el);
+	}
+
+	function removeGlow(el) {
+		if (!el) return;
+		el.classList.remove('tutorial-glow', 'tutorial-glow-soft');
+		tutorialState.glowTargets.delete(el);
+	}
+
+	function clearTutorialHighlights() {
+		tutorialState.glowTargets.forEach(el => el.classList.remove('tutorial-glow', 'tutorial-glow-soft'));
+		tutorialState.glowTargets.clear();
+		tutorialState.timers.forEach(id => clearTimeout(id));
+		tutorialState.timers = [];
+	}
+
+	function hideTutorialGhost() {
+		if (!tutorialState.ghost) return;
+		tutorialState.ghost.style.display = 'none';
+	}
+
+	function findFirstPlayablePlacement(cardData) {
+		if (!cardData) return null;
+		const colorName = cardData.color?.name || null;
+		const zones = getCandidateZonesForColor(colorName) || [];
+		for (const zone of zones) {
+			const rows = parseInt(zone.dataset.rows || '0', 10) || 0;
+			const cols = parseInt(zone.dataset.cols || '0', 10) || 0;
+			if (!rows || !cols) continue;
+			for (let y = 0; y < rows; y += 1) {
+				for (let x = 0; x < cols; x += 1) {
+					if (canPlace(zone, x, y, cardData.matrix)) {
+						const cell = getCell(zone, x, y);
+						return { zone, x, y, cell };
+					}
+				}
+			}
+		}
+		return null;
+	}
+
+	function showTutorialGhost(cardEl, cardData) {
+		const ghost = ensureTutorialOverlay() && tutorialState.ghost;
+		if (!ghost || !cardEl) return;
+		const cardRect = cardEl.getBoundingClientRect();
+		const placement = findFirstPlayablePlacement(cardData);
+		const targetRect = placement?.cell?.getBoundingClientRect();
+		const startX = cardRect.left + cardRect.width / 2;
+		const startY = cardRect.top + cardRect.height / 2;
+		let endX = targetRect ? (targetRect.left + targetRect.width / 2) : (window.innerWidth * 0.55);
+		const endY = targetRect ? (targetRect.top + targetRect.height / 2) : (window.innerHeight * 0.55);
+		const label = ghost.querySelector('.ghost-label');
+		const rotateHint = ghost.querySelector('.ghost-rotate-hint');
+		const colorName = (cardData?.color?.name || '').toLowerCase();
+		const isTouch = (('ontouchstart' in window) || (navigator?.maxTouchPoints > 0));
+		if (label) {
+			if (colorName.includes('paars')) label.textContent = 'Sleep naar het paarse vlak';
+			else if (colorName.includes('geel')) label.textContent = 'Sleep naar links in geel';
+			else if (colorName.includes('blauw')) label.textContent = 'Start onderaan in blauw';
+			else if (colorName.includes('groen')) label.textContent = 'Start bij de startcel in groen';
+			else label.textContent = 'Sleep naar het bord';
+		}
+		if (rotateHint) {
+			if (isTouch) {
+				rotateHint.style.display = 'none';
+			} else {
+				rotateHint.textContent = 'Draai met R · Spiegel met T';
+				rotateHint.style.display = 'block';
+			}
+		}
+		const ghostShape = ghost.querySelector('.ghost-shape');
+		if (colorName.includes('paars')) {
+			// Trek de ghost iets meer richting links (paarse zone) als er geen specifiek doel is.
+			if (!targetRect) endX = Math.max(30, endX - 200);
+			else endX = Math.max(30, endX - 170);
+			ghost.style.background = 'rgba(143, 118, 184, 0.15)';
+			ghost.style.borderColor = '#8f76b8';
+			if (ghostShape) ghostShape.style.background = 'linear-gradient(135deg, #b490dc, #8f76b8)';
+		} else {
+			ghost.style.background = 'rgba(255, 255, 255, 0.12)';
+			ghost.style.borderColor = 'rgba(255, 255, 255, 0.65)';
+			if (ghostShape) ghostShape.style.background = 'linear-gradient(135deg, rgba(59,130,246,0.95), rgba(16,185,129,0.95))';
+		}
+		ghost.style.display = 'block';
+		ghost.style.transition = 'none';
+		ghost.style.transform = `translate(${startX - 32}px, ${startY - 32}px)`;
+		requestAnimationFrame(() => {
+			ghost.style.transition = 'transform 0.9s ease, opacity 0.9s ease';
+			ghost.style.transform = `translate(${endX - 32}px, ${endY - 32}px)`;
+		});
+	}
+
+	function highlightObjectiveBlock() {
+		const objectiveZone = document.getElementById('objective-zone');
+		if (!objectiveZone) return;
+		addGlow(objectiveZone, true);
+		const t = setTimeout(() => removeGlow(objectiveZone), 5000);
+		tutorialState.timers.push(t);
+	}
+
+	function highlightCardPicker() {
+		const cardZone = document.getElementById('card-choice-zone');
+		if (!cardZone) return;
+		addGlow(cardZone, false);
+	}
+
+	function highlightIntroPurpleCard() {
+		if (!tutorialState.active || currentLevel !== 0) return;
+		const container = document.getElementById('card-options');
+		if (!container) return;
+		const purpleCard = container.querySelector('.card-option[data-color="paars"], .card-option[data-color="purple"]');
+		if (purpleCard) addGlow(purpleCard, false);
+		const purpleZone = document.getElementById('purple-zone');
+		if (purpleZone) addGlow(purpleZone, true);
+	}
+
+	function stopCardPickerHighlight() {
+		const cardZone = document.getElementById('card-choice-zone');
+		removeGlow(cardZone);
+	}
+
+	function highlightNextTurnButton() {
+		const btn = document.getElementById('new-cards-btn');
+		if (!btn) return;
+		addGlow(btn, false);
+	}
+
+	function stopNextTurnHighlight() {
+		const btn = document.getElementById('new-cards-btn');
+		removeGlow(btn);
+	}
+
+	function highlightBonusInventory() {
+		const container = document.getElementById('bonus-inventory');
+		if (!container) return;
+		addGlow(container, true);
+	}
+
+	function clearPurplePairHighlight() {
+		const zone = document.getElementById('purple-zone');
+		if (!zone) return;
+		zone.querySelectorAll('.purple-pair-cell.purple-highlight').forEach(el => el.classList.remove('purple-highlight'));
+	}
+
+	function highlightPurplePair() {
+		const zone = document.getElementById('purple-zone');
+		if (!zone) return;
+		clearPurplePairHighlight();
+		let targets = Array.from(zone.querySelectorAll('.purple-pair-cell'));
+		if (targets.length < 2) {
+			const bolds = Array.from(zone.querySelectorAll('.cell.bold-cell:not(.void-cell)'));
+			let pair = null;
+			for (let i = 0; i < bolds.length; i += 1) {
+				for (let j = i + 1; j < bolds.length; j += 1) {
+					const a = bolds[i];
+					const b = bolds[j];
+					if (!a || !b) continue;
+					const dx = Math.abs(Number(a.dataset.x) - Number(b.dataset.x));
+					const dy = Math.abs(Number(a.dataset.y) - Number(b.dataset.y));
+					if (dx + dy === 1) { pair = [a, b]; break; }
+				}
+				if (pair) break;
+			}
+			if (pair) targets = pair;
+		}
+		targets.slice(0, 2).forEach(el => el.classList.add('purple-highlight'));
+	}
+
+	function stopBonusHighlight() {
+		const container = document.getElementById('bonus-inventory');
+		removeGlow(container);
+	}
+
+	function startInteractiveTutorial() {
+		if (tutorialState.active) return;
+		if (isTutorialCompleted()) return;
+		tutorialState.active = true;
+		const objective = getObjectiveById ? getObjectiveById(currentObjectiveId) : null;
+		const desc = objective ? objective.description || objective.short || '' : 'Voltooi je eerste doel';
+		const popupHtml = `
+			<h3>Welkom in Locus!</h3>
+			<p>Jouw eerste doel: ${stripObjectiveSymbols(desc)}</p>
+			<p>Verbind twee dikgedrukte cellen met elkaar om punten te halen.</p>
+		`;
+		showTutorialOverlay(popupHtml, 'Start!', () => {
+			highlightObjectiveBlock();
+			const t = setTimeout(() => {
+				highlightCardPicker();
+				const inner = setTimeout(() => highlightIntroPurpleCard(), 600);
+				tutorialState.timers.push(inner);
+			}, 2000);
+			tutorialState.timers.push(t);
+		});
+	}
+
+	function scheduleTutorialOnFirstRun() {
+		if (isTutorialCompleted()) return;
+		if (currentLevel !== 0 || isLoadingGame) return;
+		const t = setTimeout(() => startInteractiveTutorial(), 600);
+		tutorialState.timers.push(t);
+	}
+
+	document.addEventListener('locus:tutorial-card-selected', event => {
+		if (!tutorialState.active) return;
+		stopCardPickerHighlight();
+		const cardEl = event.detail?.element || null;
+		const cardData = event.detail?.cardData || null;
+		if (cardEl) removeGlow(cardEl);
+		showTutorialGhost(cardEl, cardData);
+	});
+
+	document.addEventListener('locus:tutorial-card-selected', event => {
+		const colorName = (event.detail?.cardData?.color?.name || '').toLowerCase();
+		if (colorName.includes('paars') || colorName.includes('purple')) {
+			highlightPurplePair();
+		} else {
+			clearPurplePairHighlight();
+		}
+	});
+
+	document.addEventListener('locus:tutorial-card-selected', event => {
+		if (keyboardRotateTipShown) return;
+		try {
+			const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+			if (isTouch) return;
+			showObjectiveToast('Tip: draai met R, spiegel met T.');
+			keyboardRotateTipShown = true;
+		} catch (_) {}
+	});
+
+	document.addEventListener('locus:tutorial-card-selected', () => {
+		try {
+			const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+			if (!isTouch) return;
+			const rotateBtn = document.getElementById('floating-preview-rotate');
+			const mirrorBtn = document.getElementById('floating-preview-mirror');
+			if (rotateBtn) addGlow(rotateBtn, false);
+			if (mirrorBtn) addGlow(mirrorBtn, false);
+			setTimeout(() => {
+				if (rotateBtn) removeGlow(rotateBtn);
+				if (mirrorBtn) removeGlow(mirrorBtn);
+			}, 4200);
+		} catch (_) {}
+	});
+
+	document.addEventListener('locus:tutorial-card-placed', () => {
+		if (!tutorialState.active) return;
+		hideTutorialGhost();
+		highlightNextTurnButton();
+	});
+
+	document.addEventListener('click', evt => {
+		if (!tutorialState.active) return;
+		if (evt.target && evt.target.id === 'new-cards-btn') {
+			stopNextTurnHighlight();
+		}
+	});
+
+	document.addEventListener('locus:tutorial-bonus-available', () => {
+		if (!tutorialState.active || tutorialState.bonusReady) return;
+		// Wacht tot de laatste beurt (geen kaarten meer in hand of stapel) voordat bonussen oplichten
+		const noCardsLeft = Array.isArray(currentHand) && currentHand.length === 0;
+		const noDrawPile = Array.isArray(drawPile) && drawPile.length === 0;
+		if (!noCardsLeft || !noDrawPile) return;
+		const hasAnyBonus = BONUS_ORDER.some(key => (bonusInventory[key] || 0) > 0);
+		if (!hasAnyBonus) return;
+		tutorialState.bonusReady = true;
+		highlightBonusInventory();
+		showObjectiveToast('Klik op een verkregen bonus om een extra tetris blok te plaatsen.');
+	});
+
+	document.addEventListener('locus:tutorial-bonus-placed', () => {
+		if (!tutorialState.active) return;
+		stopBonusHighlight();
+		tutorialState.bonusPlaced = true;
+		markTutorialDone();
+	});
+
 	function updateBonusInventoryUI() {
 		const container = document.getElementById('bonus-inventory');
 		if (!container) return;
@@ -14723,6 +15296,25 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			button.append(swatch, label, countEl);
 			container.appendChild(button);
 		});
+
+		// Tutorial hook: zodra er een bonus beschikbaar is, licht de bonusrij op.
+		try {
+			const hasAnyBonus = BONUS_ORDER.some(key => (bonusInventory[key] || 0) > 0);
+			if (hasAnyBonus) {
+				document.dispatchEvent(new CustomEvent('locus:tutorial-bonus-available'));
+			}
+		} catch (_) {}
+
+		// Laat ook buiten de tutorial de bonusbalk oplichten met uitleg bij de laatste beurt zodra je een bonus ontvangt.
+		try {
+			const hasAnyBonus = BONUS_ORDER.some(key => (bonusInventory[key] || 0) > 0);
+			const noCardsLeft = Array.isArray(currentHand) && currentHand.length === 0;
+			const noDrawPile = Array.isArray(drawPile) && drawPile.length === 0;
+			if (hasAnyBonus && noCardsLeft && noDrawPile) {
+				addGlow(container, true);
+				showObjectiveToast('Klik op een verkregen bonus om een extra tetris blok te plaatsen.');
+			}
+		} catch (_) {}
 	}
 
 	function getBonusChargeAmount(colorKey) {
@@ -15399,7 +15991,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 					outerRingShade: false,
 					trimLeft: false,
 					trimRight: false,
-					randomBoldMinEdgeDistance: 0
+					randomBoldMinEdgeDistance: 0,
+					ensureAdjacentBoldPair: false
 		}, options);
 
 		const container = document.getElementById(containerId);
@@ -15526,6 +16119,17 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			return null;
 		};
 
+		const coordToIndex = (row, col) => {
+			if (!Number.isFinite(row) || !Number.isFinite(col)) return null;
+			if (row < 0 || row >= rows) return null;
+			const rowLen = normalizedRowLengths[row];
+			if (rowLen <= 0) return null;
+			const rowStart = normalizedRowOffsets[row];
+			const rel = col - rowStart;
+			if (rel < 0 || rel >= rowLen) return null;
+			return activeIndexOffsets[row] + rel;
+		};
+
 		const boldIndices = new Set();
 		const boldRowsSet = new Set(Array.isArray(options.boldRows) ? options.boldRows : []);
 		const includeDefaultBlue = options.includeDefaultBlueBold !== false;
@@ -15626,6 +16230,42 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			}
 		}
 
+	let ensuredBoldPairCoords = [];
+	if (options.ensureAdjacentBoldPair) {
+		const findAdjacentPair = () => {
+			for (let i = 0; i < currentBoldCoords.length; i += 1) {
+				for (let j = i + 1; j < currentBoldCoords.length; j += 1) {
+					const a = currentBoldCoords[i];
+					const b = currentBoldCoords[j];
+					if (!a || !b) continue;
+					const dist = Math.abs(a.row - b.row) + Math.abs(a.col - b.col);
+					if (dist === 1) return [a, b];
+				}
+			}
+			return null;
+		};
+
+		let pair = findAdjacentPair();
+		if (!pair) {
+			const midRow = Math.floor(rows / 2);
+			const startCol = Math.max(0, Math.floor((maxCols - 2) / 2));
+			const idxA = coordToIndex(midRow, startCol);
+			const idxB = coordToIndex(midRow, startCol + 1);
+			if (idxA !== null && idxB !== null) {
+				boldIndices.add(idxA);
+				boldIndices.add(idxB);
+				const coordA = indexToCoord(idxA);
+				const coordB = indexToCoord(idxB);
+				if (coordA) currentBoldCoords.push(coordA);
+				if (coordB) currentBoldCoords.push(coordB);
+				pair = [coordA, coordB].filter(Boolean);
+			}
+		}
+		if (pair && pair.length === 2) {
+			ensuredBoldPairCoords = pair;
+		}
+	}
+
 		// IMPORTANT: ensure minSymbols/maxSymbols correspond to ACTUALLY PLACED symbols.
 		// Previously we sampled from all active cells (including bold cells), but later we refuse to place symbols on bold
 		// and coins could override symbols. That made the visible symbol count much lower than minSymbols.
@@ -15670,6 +16310,11 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			}
 		}
 		trapIndices.forEach(idx => symbolIndices.delete(idx));
+
+		const ensuredPairSet = new Set((ensuredBoldPairCoords || []).map(coord => `${coord.col},${coord.row}`));
+		if (ensuredPairSet.size > 0 && containerId === 'purple-grid') {
+			container.dataset.purplePair = Array.from(ensuredPairSet).join('|');
+		}
 
 		const frag = document.createDocumentFragment();
 			for (let r = 0; r < rows; r++) {
@@ -15716,6 +16361,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 					}
 
 				if (boldIndices.has(idx)) cell.classList.add('bold-cell');
+				if (ensuredPairSet.has(`${c},${r}`)) cell.classList.add('purple-pair-cell');
 
 				if (trapIndices.has(idx)) {
 					decorateTrapCell(cell, { blackHoleChance: options.blackHoleChance });
@@ -20748,6 +21394,7 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	function buildShapePool() {
 		const pool = [];
 		const weights = { ...SHAPE_CATEGORY_WEIGHTS };
+		const effectiveLevel = Math.max(1, Number(currentLevel) || 1);
 		
 		// Pas weights aan op basis van upgrades
 		if (hasUpgrade('miniPack34')) {
@@ -20759,7 +21406,7 @@ function optionalCellsTouchActive(zone, pendingCells) {
 			if (category === 'golden') return; // Skip golden, die worden apart toegevoegd
 			
 			// Check of category unlocked is
-			if (!UNLOCK_PROGRESSION.isCategoryUnlocked(category, currentLevel)) {
+			if (!UNLOCK_PROGRESSION.isCategoryUnlocked(category, effectiveLevel)) {
 				return; // Skip niet-unlocked categorieën
 			}
 			
@@ -20839,10 +21486,12 @@ function optionalCellsTouchActive(zone, pendingCells) {
 
 	// Helper functie om world en subLevel te bepalen
 	function getWorldAndSubLevel(level) {
-		if (level <= 10) return { world: 1, subLevel: level };
-		if (level <= 20) return { world: 2, subLevel: level - 10 };
-		if (level <= 30) return { world: 3, subLevel: level - 20 };
-		return { world: Math.floor((level - 1) / 10) + 1, subLevel: ((level - 1) % 10) + 1 };
+		const numericLevel = Number(level) || 0;
+		if (numericLevel <= 0) return { world: 1, subLevel: 1, intro: true };
+		if (numericLevel <= 10) return { world: 1, subLevel: numericLevel };
+		if (numericLevel <= 20) return { world: 2, subLevel: numericLevel - 10 };
+		if (numericLevel <= 30) return { world: 3, subLevel: numericLevel - 20 };
+		return { world: Math.floor((numericLevel - 1) / 10) + 1, subLevel: ((numericLevel - 1) % 10) + 1 };
 	}
 
 	function isAtLeastWorldAndSubLevel(targetWorld, targetSubLevel, level = currentLevel) {
@@ -20860,6 +21509,7 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	}
 
 	let ownedDeckBlueprints = [];
+	let introDeckActive = false;
 	let drawPile = [];
 	let discardPile = [];
 	let currentHand = [];
@@ -20888,6 +21538,7 @@ function optionalCellsTouchActive(zone, pendingCells) {
 
 	let cardBlueprintCounter = 0;
 	let cardInstanceCounter = 0;
+	let bonusUseHintShown = false;
 
 	function nextBlueprintId() {
 	  cardBlueprintCounter += 1;
@@ -20931,6 +21582,32 @@ function optionalCellsTouchActive(zone, pendingCells) {
 			isGolden,
 			isBonusBoost: !!blueprint.isBonusBoost
 		};
+	}
+
+	function buildIntroTutorialDeckBlueprint() {
+		const getColor = (name, fallback) => colors.find(c => c.name === name) || fallback || { name: name || 'grijs', code: '#a0a0a0' };
+		const purple = getColor('paars');
+		const blue = getColor('blauw');
+		const yellow = getColor('geel');
+		const green = getColor('groen');
+		const red = getColor('rood');
+		const introShapes = [
+			{ name: 'Intro Domino Verticaal', matrix: [[1], [1]], category: 'mini' },
+			{ name: 'Intro Domino Horizontaal', matrix: [[1, 1]], category: 'mini' },
+			{ name: 'Intro Mini L', matrix: [[1, 0], [1, 1]], category: 'mini' },
+			{ name: 'Intro Mini J', matrix: [[0, 1], [1, 1]], category: 'mini' },
+			{ name: 'Intro L', matrix: [[1, 0], [1, 0], [1, 1]], category: 'standard' },
+			{ name: 'Intro Vierkant', matrix: [[1, 1], [1, 1]], category: 'standard' }
+		];
+		const blueprintDefs = [
+			{ shape: introShapes[0], color: purple },
+			{ shape: introShapes[1], color: yellow },
+			{ shape: introShapes[3], color: blue },
+			{ shape: introShapes[2], color: purple },
+			{ shape: introShapes[4], color: green },
+			{ shape: introShapes[5], color: red }
+		];
+		return blueprintDefs.map(entry => createCardBlueprint(entry.shape, entry.color));
 	}
 
 	function buildStandardDeckBlueprint() {
@@ -22110,30 +22787,44 @@ function getCollectedCoinCount(scores) {
 	}
 
 	function createRandomShopCardWithRarity() {
-		// Random card: keep it simple/consistent so cards don't feel “missing”.
-		// Rarity order (sequential):
-		// 1) Extra large (7 blocks): 5% (only if upgrade unlocked)
-		// 2) Gold modifier: small chance
-		// 3) Multikleur: small chance
+		// Random card odds tuning:
+		// - 20% kans op grotere vorm (large)
+		// - Multikleur: 0% basis, 20% met multikleur unlock, 50% met multikleur boost
+		// - Goud: 0% basis, 15% met gouden unlock
+		// - Extra large vormen komen mee in de “large” kans als de upgrade er is
+		const hasWildcardUnlock = hasUpgrade('wildcardCards');
+		const hasWildcardBoost = hasUpgrade('multicolorBoost');
+		const hasGoldUnlock = hasUpgrade('goldenCards');
+		const hasExtraLarge = hasUpgrade('extraLargeBlocks');
+
+		const pickRandom = (list) => (Array.isArray(list) && list.length)
+			? list[Math.floor(Math.random() * list.length)]
+			: null;
+
+		const largePool = shapePool.filter(e => e && e.category === 'large');
+		const basePool = shapePool.filter(e => e && e.category !== 'large');
+		const largeRoll = Math.random();
+		const wantLarge = largeRoll < 0.20;
 		let entry = null;
-		const extraLargeChance = hasUpgrade('extraLargeBlocks') ? 0.05 : 0;
-		if (extraLargeChance > 0 && Math.random() < extraLargeChance && Array.isArray(EXTRA_LARGE_7_SHAPES) && EXTRA_LARGE_7_SHAPES.length) {
-			const pick = EXTRA_LARGE_7_SHAPES[Math.floor(Math.random() * EXTRA_LARGE_7_SHAPES.length)];
-			entry = { name: pick.name, matrix: pick.matrix, category: 'large' };
+		if (wantLarge && largePool.length) {
+			// Mix in extra-large shapes (7+ blokjes) when unlocked.
+			const xlPool = (hasExtraLarge && Array.isArray(EXTRA_LARGE_7_SHAPES)) ? EXTRA_LARGE_7_SHAPES : [];
+			const useXL = xlPool.length && Math.random() < 0.25; // subset of large rolls become XL
+			if (useXL) {
+				const pick = pickRandom(xlPool);
+				entry = pick ? { name: pick.name, matrix: pick.matrix, category: 'large' } : null;
+			}
+			if (!entry) entry = pickRandom(largePool) || getRandomShapeEntry();
 		} else {
-			const baseShapes = shapePool.filter(e => e && countShapeBlocks(e.matrix) !== 7);
-			entry = baseShapes.length
-				? baseShapes[Math.floor(Math.random() * baseShapes.length)]
-				: getRandomShapeEntry();
+			entry = pickRandom(basePool) || getRandomShapeEntry();
 		}
 
 		const palette = NON_WILDCARD_COLORS.length ? NON_WILDCARD_COLORS : colors;
-		// Gouden en multikleur kaarten verschijnen ALLEEN als je de upgrade hebt gekocht
-		// Dit is de random kaart aankoop, dus hier mogen ze wel met kleine kans
-		const goldenChance = hasUpgrade('goldenCards') ? 0.04 : 0;
-		const multicolorChance = hasUpgrade('multicolorBoost') ? 0.04 : 0;
-		const isGolden = Math.random() < goldenChance;
-		const isMulticolor = !isGolden && Math.random() < multicolorChance;
+		const multicolorChance = hasWildcardBoost ? 0.50 : hasWildcardUnlock ? 0.20 : 0;
+		const goldenChance = hasGoldUnlock ? 0.15 : 0;
+		const roll = Math.random();
+		const isMulticolor = roll < multicolorChance;
+		const isGolden = !isMulticolor && (Math.random() < goldenChance);
 		const baseColor = isMulticolor
 			? { name: 'multikleur', code: 'rainbow' }
 			: palette[Math.floor(Math.random() * palette.length)];
@@ -22339,6 +23030,7 @@ function getCollectedCoinCount(scores) {
 	  card.dataset.shapeName = cardData.shapeName;
 	  card.dataset.shapeCols = String(cardData.matrix[0].length);
 	  card.dataset.shapeRows = String(cardData.matrix.length);
+	card.dataset.color = (cardData.color?.name || '').toLowerCase();
 	  card.cardData = cardData;
 	  card.cardShape = cardData.matrix;
 	  card.cardColor = cardData.color;
@@ -22742,6 +23434,9 @@ function getCollectedCoinCount(scores) {
 	  } catch {}
 	updateDrawButtonState();
 	applyTurnCardLocks();
+	if (tutorialState.active && currentLevel === 0) {
+		highlightIntroPurpleCard();
+	}
 	try { if (typeof monitorScenarioProgress === 'function') monitorScenarioProgress(); } catch(e){}
 	}
 
@@ -22765,6 +23460,9 @@ function getCollectedCoinCount(scores) {
 			bonusSpent: false
 		});
 		updateDrawButtonState();
+		try {
+			document.dispatchEvent(new CustomEvent('locus:tutorial-bonus-placed', { detail: { bonusKey: 'purchased' } }));
+		} catch (_) {}
 		return;
 	  }
 	  
@@ -22786,6 +23484,9 @@ function getCollectedCoinCount(scores) {
 		updateBonusInventoryUI();
 	}
 	  updateDrawButtonState();
+	  try {
+		document.dispatchEvent(new CustomEvent('locus:tutorial-bonus-placed', { detail: { bonusKey: colorKey } }));
+	  } catch (_) {}
 	}
 
 	function updateDrawButtonState() {
@@ -22884,6 +23585,7 @@ function getCollectedCoinCount(scores) {
 	  }
 	  currentHand = newHand;
 	  turnCount += 1;
+	bonusUseHintShown = false;
 	  updateTurnCounterDisplay();
 	  renderCurrentHand();
 	}
@@ -22971,7 +23673,19 @@ function getCollectedCoinCount(scores) {
 		sequence: actionId,
 		wasGolden
 	});
+	try {
+		document.dispatchEvent(new CustomEvent('locus:tutorial-card-placed', { detail: { placement: placementResult } }));
+	} catch (_) {}
 	// Golden cards are always extra; do not set per-turn locks.
+	try {
+		if (!bonusUseHintShown && currentHand.length === 0 && typeof getRemainingBonusCharges === 'function') {
+			const charges = getRemainingBonusCharges();
+			if (charges > 0) {
+				showObjectiveToast('Tip: klik op een bonus om deze te gebruiken.');
+				bonusUseHintShown = true;
+			}
+		}
+	} catch (_) {}
 	  // Rebuild the hand after removing the card so availability + button states refresh correctly
 	  renderCurrentHand();
 	  applyTurnCardLocks();
@@ -23544,7 +24258,7 @@ function openShopModal(callback) {
 		
 		// SHOP: max 3 kaart-opties.
 		// Grotere blokken (large/xl/xxl) vervangen soms een kleinere optie i.p.v. extra bij te komen.
-		// Altijd 1 "random" (mystery) kaart + 2 andere aanbiedingen.
+		// Vanaf level 2 komt er 1 "random" (mystery) kaart bij, plus 2 andere aanbiedingen.
 		const offers = [];
 
 		// Helper: pick N unieke entries.
@@ -23657,10 +24371,15 @@ function openShopModal(callback) {
 			offers.push(factory());
 		});
 
-		// Always add the random (mystery) card as the 3rd option.
-		const randomCard = createShopCard(null, true);
-		randomCard.isRandomShopCard = true;
-		offers.push({ option: randomCard, cost: 6, fixed: false, isRandom: true });
+		// Add the random (mystery) card once it is unlocked.
+		const randomCardUnlocked = (UNLOCK_PROGRESSION && typeof UNLOCK_PROGRESSION.isFeatureUnlocked === 'function')
+			? UNLOCK_PROGRESSION.isFeatureUnlocked('randomShopCard', currentLevel, currentWorld)
+			: currentLevel >= 2;
+		if (randomCardUnlocked) {
+			const randomCard = createShopCard(null, true);
+			randomCard.isRandomShopCard = true;
+			offers.push({ option: randomCard, cost: 6, fixed: false, isRandom: true });
+		}
 
 		// Defensive: ensure max 3.
 		const finalOffers = offers.slice(0, 3);
@@ -24032,7 +24751,29 @@ function openShopModal(callback) {
 
 	  const boardConfigs = [
 		() => createGrid('yellow-grid', yellowRows, yellowCols, { goldCells: true, symbols: true, minSymbols: 8, maxSymbols: 8, coinChance: 0.22, maxCoins: 17, rowLengths: yellowRowPattern, rowOffsets: yellowRowOffsets, boldColumns: [0], pointsPerColumn: yellowColumnPoints, trapChance: trapChance || blackHoleOnlyChance, maxTraps: maxTraps || blackHoleOnlyMaxTraps, blackHoleChance: hasBlackHoleUpgrade ? 1.0 : 0 }),
-		() => createGrid('purple-grid', 9, 9, { symbols: true, goldCells: true, minSymbols: 8, maxSymbols: 8, coinChance: 0.03, maxCoins: 4, randomBoldCount: 8, avoidAdjacentBold: true, trapChance: (shouldGenerateTraps ? 0.08 : 0) || blackHoleOnlyChance, maxTraps: shouldGenerateTraps ? 7 : 0, blackHoleChance: hasBlackHoleUpgrade && shouldGenerateTraps ? 0.3 : 0 }),
+		() => {
+			const isIntroLevel = Number(currentLevel || 0) === 0;
+			const purpleOptions = {
+				symbols: true,
+				goldCells: true,
+				minSymbols: 8,
+				maxSymbols: 8,
+				coinChance: 0.03,
+				maxCoins: 4,
+				avoidAdjacentBold: true,
+				trapChance: (shouldGenerateTraps ? 0.08 : 0) || blackHoleOnlyChance,
+				maxTraps: shouldGenerateTraps ? 7 : 0,
+				blackHoleChance: hasBlackHoleUpgrade && shouldGenerateTraps ? 0.3 : 0
+			};
+			if (isIntroLevel) {
+				purpleOptions.randomBoldCount = 0;
+				purpleOptions.ensureAdjacentBoldPair = true;
+			} else {
+				purpleOptions.randomBoldCount = 8;
+				purpleOptions.ensureAdjacentBoldPair = false;
+			}
+			return createGrid('purple-grid', 9, 9, purpleOptions);
+		},
 		() => createGrid('blue-grid', blueRows, blueCols, { boldBottom: true, goldCells: true, symbols: true, minSymbols: 8, maxSymbols: 8, coinChance: 0.07, maxCoins: 8, rowLengths: blueRowPattern, rowOffsets: blueRowOffsets, trapChance: (shouldGenerateTraps ? 0.04 : 0), maxTraps: shouldGenerateTraps ? 4 : 0, blackHoleChance: 0 }),
 		() => generateRoots('green-grid', 15, 15, 40, 0.25, 0.06, 12, 16, 4, false, (shouldGenerateTraps ? 0.07 : 0), shouldGenerateTraps ? 5 : 0, 0),
 		() => generateRoots('red-grid1', 4, 4, 10, 0.3, 0.04, 2, 2, 2, true, 0.00, 0, 0, { targetCells: 8, targetPoints: 16, showPointsLabel: true }),
@@ -25073,6 +25814,7 @@ function openShopModal(callback) {
 	  // (incl. per-zone caches zoals scoredYellowColumns/Segments, blue scored rows, etc.)
 	  resetScoreState();
 	  freePlacementsRemaining = 0;
+	bonusUseHintShown = false;
 	  
 	  // Reset ALLE score UI elementen naar 0 VOORDAT objectives worden gecontroleerd
 	  document.querySelectorAll('#scoreboard .score').forEach(el => {
@@ -25124,6 +25866,15 @@ function openShopModal(callback) {
 	  actionSequence = 0;
 	  resetTurnCardFlags();
 	  
+	// Intro level gebruikt een vaste paarse deck zodat de eerste hand altijd paars bevat
+	if (currentLevel === 0 && !isLoadingGame) {
+		ownedDeckBlueprints = buildIntroTutorialDeckBlueprint();
+		introDeckActive = true;
+	} else if (introDeckActive && currentLevel > 0 && !isLoadingGame) {
+		introDeckActive = false;
+		resetDeckToStandard();
+	}
+
 	  console.log('🃏 Building deck from', ownedDeckBlueprints.length, 'blueprints');
 	  
 	  // Bij laden van een save: gebruik de opgeslagen deck state indien beschikbaar
@@ -25138,9 +25889,14 @@ function openShopModal(callback) {
 		currentHand = savedDeckState.currentHand || [];
 		turnCount = savedDeckState.turnCount || 0;
 		console.log('🎴 Restored deck from save:', drawPile.length, 'in draw,', currentHand.length, 'in hand,', discardPile.length, 'in discard');
-	  } else {
+	} else {
 		// Nieuwe start: maak fresh deck
-		drawPile = shuffleArray(ownedDeckBlueprints.map(bp => instantiateBlueprint(bp)));
+		if (currentLevel === 0) {
+			const introBlueprints = ownedDeckBlueprints && ownedDeckBlueprints.length ? ownedDeckBlueprints : buildIntroTutorialDeckBlueprint();
+			drawPile = introBlueprints.map(bp => instantiateBlueprint(bp));
+		} else {
+			drawPile = shuffleArray(ownedDeckBlueprints.map(bp => instantiateBlueprint(bp)));
+		}
 		// If scenario restricts colors, remove disallowed cards from the draw pile
 		// so they are never drawn during this run.
 		if (Array.isArray(window.scenarioAllowedColors)) {
@@ -25151,7 +25907,7 @@ function openShopModal(callback) {
 		currentHand = [];
 		turnCount = 0;
 		console.log('🎴 Fresh deck created:', drawPile.length, 'cards in draw pile');
-	  }
+	}
 	  
 	  console.log('🎴 First card:', drawPile[0]?.shapeName, drawPile[0]?.color?.name);
 	  
@@ -25657,6 +26413,7 @@ function sanitizeBoardHtml(html) {
 		bonusMasteryState[colorKey] = false;
 	  });
 	  updateBonusInventoryUI();
+	introDeckActive = false;
 	  resetDeckToStandard();
 	  resetCoins();
 	  addCoin();
@@ -25684,7 +26441,8 @@ function sanitizeBoardHtml(html) {
 	  // Reset coinsAwardedFromScore
 	  if (typeof coinsAwardedFromScore !== 'undefined') coinsAwardedFromScore = 0;
 	  
-	  startLevel(1);
+	startLevel(0);
+	scheduleTutorialOnFirstRun();
 	}
 
 	function completeRound() {
@@ -25866,6 +26624,9 @@ function sanitizeBoardHtml(html) {
 		selectedColor = currentColor;
 		if (rotateButton) rotateButton.disabled = false;
 		if (mirrorButton) mirrorButton.disabled = false;
+		try {
+			document.dispatchEvent(new CustomEvent('locus:tutorial-card-selected', { detail: { element: card, cardData } }));
+		} catch (_) {}
 		// Keep cards switchable; only apply turn-based locks (golden vs normal) + playability.
 		applyTurnCardLocks();
 
