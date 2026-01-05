@@ -13159,26 +13159,66 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 					if (!yellowZone) return false;
 					const grid = yellowZone.querySelector('.grid');
 					if (!grid) return false;
+					const yellowConfig = window.yellowGridConfig || {};
+					const minLen = Math.max(1, Number(yellowConfig.minDiagonalLength) || 4);
+					const requiredLen = Math.max(minLen, 5);
+					const allowToCenter = yellowConfig.allowDiagonalToCenter === true;
 					const cells = Array.from(grid.querySelectorAll('.cell:not(.void-cell)'));
-					// Group cells by diagonal index
-					const diagGroups = {};
-					cells.forEach(cell => {
-						const diag = cell.dataset.diag;
-						if (diag !== undefined) {
-							if (!diagGroups[diag]) diagGroups[diag] = [];
-							diagGroups[diag].push(cell);
-						}
+					if (!cells.length) return false;
+					const cellByCoord = new Map();
+					cells.forEach(c => {
+						const x = Number(c.dataset.x);
+						const y = Number(c.dataset.y);
+						if (Number.isFinite(x) && Number.isFinite(y)) cellByCoord.set(`${x},${y}`, c);
 					});
-					// Count how many diagonals have 6+ cells all active
-					let completedDiagonals = 0;
-					for (const diag of Object.keys(diagGroups)) {
-						const diagCells = diagGroups[diag];
-						if (diagCells.length >= 5) {
-							const allActive = diagCells.every(c => c.classList.contains('active'));
-							if (allActive) completedDiagonals++;
+					const tryGet = (x, y) => cellByCoord.get(`${x},${y}`) || null;
+					const collectSegments = (dx, dy) => {
+						const segments = [];
+						for (const startCell of cellByCoord.values()) {
+							const x0 = Number(startCell.dataset.x);
+							const y0 = Number(startCell.dataset.y);
+							if (!Number.isFinite(x0) || !Number.isFinite(y0)) continue;
+							if (tryGet(x0 - dx, y0 - dy)) continue; // only start at true segment start
+							const segCells = [];
+							let x = x0;
+							let y = y0;
+							while (true) {
+								const here = tryGet(x, y);
+								if (!here) break;
+								segCells.push(here);
+								x += dx;
+								y += dy;
+							}
+							if (segCells.length) segments.push(segCells);
 						}
-					}
-					return completedDiagonals >= 2;
+						return segments;
+					};
+					const segments = [...collectSegments(1, 1), ...collectSegments(1, -1)];
+					let completed = 0;
+					segments.forEach(seg => {
+						if (seg.length < requiredLen) return;
+						const fullActive = seg.every(c => c.classList.contains('active'));
+						if (fullActive) {
+							completed += 1;
+							return;
+						}
+						if (!allowToCenter) return;
+						const mid = Math.floor(seg.length / 2);
+						const boldIdxs = [];
+						for (let i = 0; i < seg.length; i++) {
+							if (seg[i].classList.contains('bold-cell')) boldIdxs.push(i);
+						}
+						let pivot = mid;
+						if (boldIdxs.length) {
+							boldIdxs.sort((a, b) => Math.abs(a - mid) - Math.abs(b - mid));
+							pivot = boldIdxs[0];
+						}
+						const left = seg.slice(0, pivot + 1);
+						const right = seg.slice(pivot);
+						if (left.length >= requiredLen && left.every(c => c.classList.contains('active'))) completed += 1;
+						if (right.length >= requiredLen && right.every(c => c.classList.contains('active'))) completed += 1;
+					});
+					return completed >= 2;
 				}
 			},
 			{
