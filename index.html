@@ -14258,17 +14258,14 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 					}
 				}
 			}
+			// Use the full matrix size for centering so asymmetrical shapes (e.g. hinge/trap)
+			// keep a stable anchor; fall back to filled bounds only if the shape is entirely empty.
 			if (maxX < 0 || maxY < 0) {
 				return { offsetX: (shapeWidth * resolvedStep) / 2, offsetY: (shapeHeight * resolvedStep) / 2 };
 			}
-			const filledWidth = (maxX - minX + 1);
-			const filledHeight = (maxY - minY + 1);
-			// Center between first/last filled cell centers, accounting for grid gap.
-			const centerCol = minX + (filledWidth - 1) / 2;
-			const centerRow = minY + (filledHeight - 1) / 2;
 			return {
-				offsetX: (centerCol * resolvedStep) + (resolvedCellSize / 2),
-				offsetY: (centerRow * resolvedStep) + (resolvedCellSize / 2)
+				offsetX: (shapeWidth * resolvedStep) / 2,
+				offsetY: (shapeHeight * resolvedStep) / 2
 			};
 		} catch {
 			return { offsetX: 0, offsetY: 0 };
