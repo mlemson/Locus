@@ -17686,7 +17686,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			delete cell.dataset.bonusUpgradeEvent;
 			hasSymbol.classList.add('bonus-used');
 			try { hasSymbol.remove(); } catch {}
-			openRandomFreeBonusUpgradeModal();
+			// Directly grant the free upgrade without opening the shop modal
+			grantRandomBonusUpgrade();
 		} else if (hasSymbol.classList.contains('mega-bonus-symbol')) {
 			const megaBonusColor = hasSymbol.dataset.megaBonusColor;
 			cell.dataset.bonusConsumed = 'true';
@@ -21446,6 +21447,7 @@ function optionalCellsTouchActive(zone, pendingCells) {
 			{ name: 'Plus', matrix: [[0,1,0],[1,1,1],[0,1,0]], weight: 1 },
 			{ name: 'U vorm', matrix: [[1,0,1],[1,1,1]], weight: 1 },
 			{ name: 'L groot', matrix: [[1,0],[1,0],[1,0],[1,1]], weight: 1 },
+			{ name: 'Kolom-L', matrix: [[1,0,0],[1,0,0],[1,1,1]], weight: 1 },
 			{ name: 'Trap', matrix: [[1,0,0],[1,1,0],[0,1,1]], weight: 1 },
 			{ name: 'Hoefijzer', matrix: [[1,1,0],[1,0,0],[1,1,0]], weight: 1 },
 			{ name: 'Pijl', matrix: [[0,0,1],[1,1,1],[0,1,0]], weight: 1 },
