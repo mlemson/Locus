@@ -15209,10 +15209,6 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 	document.addEventListener('locus:tutorial-bonus-available', () => {
 		if (!tutorialState.active || tutorialState.bonusReady) return;
-		// Wacht tot de laatste beurt (geen kaarten meer in hand of stapel) voordat bonussen oplichten
-		const noCardsLeft = Array.isArray(currentHand) && currentHand.length === 0;
-		const noDrawPile = Array.isArray(drawPile) && drawPile.length === 0;
-		if (!noCardsLeft || !noDrawPile) return;
 		const hasAnyBonus = BONUS_ORDER.some(key => (bonusInventory[key] || 0) > 0);
 		if (!hasAnyBonus) return;
 		tutorialState.bonusReady = true;
@@ -15305,12 +15301,14 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			}
 		} catch (_) {}
 
-		// Laat ook buiten de tutorial de bonusbalk oplichten met uitleg bij de laatste beurt zodra je een bonus ontvangt.
+		// Laat alleen in het intro-level de bonusbalk oplichten bij de laatste beurt zodra je een bonus ontvangt.
 		try {
 			const hasAnyBonus = BONUS_ORDER.some(key => (bonusInventory[key] || 0) > 0);
 			const noCardsLeft = Array.isArray(currentHand) && currentHand.length === 0;
 			const noDrawPile = Array.isArray(drawPile) && drawPile.length === 0;
-			if (hasAnyBonus && noCardsLeft && noDrawPile) {
+			const levelNum = (typeof currentLevel !== 'undefined') ? Number(currentLevel) : null;
+			const isIntroLevel = levelNum === 0;
+			if (hasAnyBonus && noCardsLeft && noDrawPile && isIntroLevel) {
 				addGlow(container, true);
 				showObjectiveToast('Klik op een verkregen bonus om een extra tetris blok te plaatsen.');
 			}
@@ -20039,10 +20037,14 @@ document.addEventListener('pointermove', ev => {
 		lastBaseX = lastBaseY = null;
 
 		const overlay = document.getElementById('drag-overlay');
-		if (overlay && overlay.contains(draggedBlock)) {
-			document.body.appendChild(draggedBlock);
+		if (overlay) {
+			overlay.style.display = 'block';
+			overlay.style.pointerEvents = 'none';
 		}
-		if (overlay) overlay.style.display = 'none';
+		if (draggedBlock) {
+			draggedBlock.style.opacity = '1';
+			draggedBlock.style.pointerEvents = 'none';
+		}
 
 		document.body.classList.remove('dragging');
 		document.body.style.cursor = '';
@@ -25800,6 +25802,17 @@ function openShopModal(callback) {
 	  try { if (window) { window._locusScenarioMode = false; window._locusScenarioLoaded = false; } } catch (e) {}
 
 	  currentLevel = level;
+	// Stop any lingering tutorial state when leaving the intro level so hints do not bleed into later levels.
+	if (level !== 0 && tutorialState.active) {
+		tutorialState.active = false;
+		tutorialState.cardSelected = false;
+		tutorialState.cardPlaced = false;
+		tutorialState.bonusPlaced = false;
+		tutorialState.bonusReady = false;
+		clearTutorialHighlights();
+		hideTutorialOverlay();
+		hideTutorialGhost();
+	}
 	  // Clear any previously loaded custom board metadata when starting a normal level
 	  // (but preserve it when we are loading a custom-board save).
 	  if (!opts.preserveLoadedCustomMeta) {
@@ -26591,8 +26604,7 @@ function sanitizeBoardHtml(html) {
 			suppressCardSelectUntil = Date.now() + 500;
 			return;
 		}
-		// For any other selection, respect suppression windows.
-		if (Date.now() < suppressCardSelectUntil) return;
+		// For any other selection, always allow switching to a new card immediately.
 		// If we are starting a drag from the currently selected card, remove the old drag
 		// block without clearing the card selection.
 		if (isSameCard && forceDrag && draggedBlock) {
