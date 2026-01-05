@@ -12142,7 +12142,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		goldenCards: {
 			id: 'goldenCards',
 			name: 'Gouden Kaarten',
-			description: 'Ontgrendel gouden kaarten die op elk grid geplaatst kunnen worden.',
+			description: 'Ontgrendel gouden kaarten die altijd geplaatst kunnen worden.',
 			cost: 15,
 			icon: '✨',
 			purchased: false,
@@ -12864,13 +12864,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			},
 			{
 				id: 'level-6-green-20',
-				description: 'Level 6: Scoor 24 punten in groen.',
+				description: 'Level 6: Scoor 24 punten in groen en 12 in geel.',
 				short: 'Level 6 - 24 punten groen',
-				check: scores => scores.green >= 24
+				check: scores => scores.green >= 24 && scores.yellow >= 12
 			},
 			{
 				id: 'level-6-tricolor-advanced',
-				description: 'Level 6: Scoor 12+ in paars, blauw én geel.',
+				description: 'Level 6: Scoor 12 punten in paars, blauw en geel.',
 				short: 'Level 6 - 12+ in paars/blauw/geel',
 				check: scores => scores.purple >= 12 && scores.blue >= 12 && scores.yellow >= 12
 			},
@@ -20065,8 +20065,8 @@ document.addEventListener('pointermove', ev => {
 		const overlay = document.getElementById('drag-overlay');
 		if (overlay) {
 			overlay.style.display = 'block';
-			// Keep pointer events enabled so the player can pick the block back up after releasing.
-			overlay.style.pointerEvents = 'auto';
+			// Keep overlay transparent for hit-testing; block itself stays pickable.
+			overlay.style.pointerEvents = 'none';
 		}
 		if (draggedBlock) {
 			draggedBlock.style.opacity = '1';
