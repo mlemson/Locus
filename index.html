@@ -13183,12 +13183,12 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			},
 			{
 				id: 'level-12-bonus-rush',
-				description: 'Level 12: Verzamel 24 bonussen.',
+				description: 'Level 12: Verzamel 30 bonussen.',
 				short: 'Level 12 - Bonus rush',
-				check: scores => (scores?.bonusesCollected || 0) >= 24,
+				check: scores => (scores?.bonusesCollected || 0) >= 30,
 				progress: scores => {
-					const collected = Math.max(0, Math.min(24, (scores?.bonusesCollected || 0)));
-					return `${collected}/24`;
+					const collected = Math.max(0, Math.min(30, (scores?.bonusesCollected || 0)));
+					return `${collected}/30`;
 				}
 			},
 			{
@@ -15647,7 +15647,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 				? ['blue', 'green', 'yellow']
 				: ['green', 'blue', 'yellow']);
 
-		const pickCandidateCell = (gridId) => {
+		const pickCandidateCell = (gridId, { preferTop = false } = {}) => {
 			const grid = document.getElementById(gridId);
 			if (!grid) return null;
 			const candidates = Array.from(grid.querySelectorAll('.cell:not(.void-cell)'))
@@ -15658,7 +15658,27 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 				.filter(cell => !cell.classList.contains('trap-cell'))
 				.filter(cell => !cell.querySelector('.symbol'));
 			if (!candidates.length) return null;
-			return candidates[Math.floor(Math.random() * candidates.length)];
+			if (!preferTop) return candidates[Math.floor(Math.random() * candidates.length)];
+
+			let bestCell = null;
+			let bestScore = { y: Infinity, x: Infinity, idx: Infinity };
+			const scoreCell = (cell, idx) => {
+				const y = Number(cell.dataset.y);
+				const x = Number(cell.dataset.x);
+				return {
+					y: Number.isFinite(y) ? y : Infinity,
+					x: Number.isFinite(x) ? x : Infinity,
+					idx
+				};
+			};
+			candidates.forEach((cell, idx) => {
+				const score = scoreCell(cell, idx);
+				if (!bestCell || score.y < bestScore.y || (score.y === bestScore.y && (score.x < bestScore.x || (score.x === bestScore.x && score.idx < bestScore.idx)))) {
+					bestCell = cell;
+					bestScore = score;
+				}
+			});
+			return bestCell || candidates[0];
 		};
 
 		const zoneToGridId = {
@@ -15670,7 +15690,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		let target = null;
 		let chosenZone = null;
 		for (const z of zoneOrder) {
-			target = pickCandidateCell(zoneToGridId[z]);
+			target = pickCandidateCell(zoneToGridId[z], { preferTop: z === 'blue' });
 			if (target) {
 				chosenZone = z;
 				break;
@@ -17861,9 +17881,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		total: 0
 	  };
 	  try {
+		const seen = new Set();
 		(activeTraps || []).forEach(trap => {
 		  const penalty = Number(trap && trap.penalty) || 0;
 		  if (penalty <= 0) return;
+		  const key = trap && (trap.cell || trap.id || null);
+		  if (key && seen.has(key)) return; // dedupe stray duplicate entries
+		  if (key) seen.add(key);
 		  const zoneId = normalizeZoneId(String(trap.zoneId || '')).toLowerCase();
 		  out.total += penalty;
 		  if (zoneId.startsWith('red-grid') || zoneId === 'red-zone') out.red += penalty;
