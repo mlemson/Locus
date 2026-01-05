@@ -13067,21 +13067,15 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			},
 			{
 				id: 'level-10-yellow-rows-8',
-				description: 'Level 10: Scoor 80 punten in geel.',
-				short: 'Level 10 - 80 punten geel',
-				check: scores => scores.yellow >= 80
+				description: 'Level 10: Scoor 70 punten in geel.',
+				short: 'Level 10 - 70 punten geel',
+				check: scores => scores.yellow >= 70
 			},
 			{
 				id: 'level-10-perfect-balance',
 				description: 'Level 10: Scoor minstens 20 punten in elke kleur.',
 				short: 'Level 10 - Perfecte balans',
 				check: scores => scores.yellow >= 20 && scores.red >= 20 && scores.green >= 20 && scores.purple >= 20 && scores.blue >= 20
-			},
-			{
-				id: 'level-10-green-master',
-				description: 'Level 10: Scoor 32 punten in groen.',
-				short: 'Level 10 - Groen meester',
-				check: scores => scores.green >= 32
 			},
 			{
 				id: 'level-10-purple-ring',
@@ -27814,7 +27808,7 @@ function showFloatingPreview(shape, color, options = {}) {
 		const WORLD_INFO = {
 			1: {
 				paars: '<strong>Paars</strong>: Begin overal. Haal 8 punten per connectie van paarse dikgedrukte cellen.',
-				geel: '<strong>Geel</strong>: Begin links. Je scoort als je een volledige kolom vult. De eerste kolom geeft 12 punten, daarna telkens hoger.',
+				geel: '<strong>Geel</strong>: Begin links. Je scoort als je een volledige kolom vult. De eerste kolom geeft 12 punten, daarna 18 punten, en meer.',
 				groen: '<strong>Groen</strong>: Begin vanaf het midden. Bereik de donkergroene cellen om 8 punten te verdienen.',
 				rood: '<strong>Rood</strong>: Begin overal. Elk rood vak dat volledig gevuld is levert punten op:',
 				blauw: '<strong>Blauw</strong>: Begin onderaan. Bereik dikgedrukte cellen om punten te behalen.'
