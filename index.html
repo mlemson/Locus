@@ -20039,11 +20039,12 @@ document.addEventListener('pointermove', ev => {
 		const overlay = document.getElementById('drag-overlay');
 		if (overlay) {
 			overlay.style.display = 'block';
-			overlay.style.pointerEvents = 'none';
+			// Keep pointer events enabled so the player can pick the block back up after releasing.
+			overlay.style.pointerEvents = 'auto';
 		}
 		if (draggedBlock) {
 			draggedBlock.style.opacity = '1';
-			draggedBlock.style.pointerEvents = 'none';
+			draggedBlock.style.pointerEvents = '';
 		}
 
 		document.body.classList.remove('dragging');
