@@ -5,6 +5,24 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 	<meta title="LOCUS Digitaal">
 	<script>
+		// Prevent pinch/double-touch zoom on phones; keep single-finger scrolling intact.
+		(function disableTouchZoom() {
+			try {
+				const isCoarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+				if (!isCoarse) return;
+				const blockPinch = (e) => {
+					if (e.touches && e.touches.length > 1) {
+						e.preventDefault();
+					}
+				};
+				window.addEventListener('touchmove', blockPinch, { passive: false });
+				window.addEventListener('gesturestart', e => e.preventDefault());
+				window.addEventListener('gesturechange', e => e.preventDefault());
+				window.addEventListener('gestureend', e => e.preventDefault());
+			} catch (_) {}
+		})();
+	</script>
+	<script>
 		/*
 			EN:
 			- WHY: Apply the saved theme class as early as possible to avoid a flash of the wrong theme.
@@ -690,6 +708,13 @@
 			grid-template-columns: repeat(2, minmax(140px, 1fr));
 			gap: 8px;
 			margin: 0;
+		}
+
+		@media (orientation: landscape) {
+			body.mobile-sidebar-layout #ml-board-center #board {
+				grid-template-columns: repeat(3, minmax(130px, 1fr));
+				align-items: start;
+			}
 		}
 
 		body.mobile-sidebar-layout #ml-board-center #board .zone {
@@ -2032,6 +2057,13 @@
 	}
 	#green-zone.no-scroll.drag-scroll-active {
 		cursor: default !important;
+	}
+	body.world-1 #green-zone,
+	body.world-1 #green-zone--placeholder {
+		overflow: hidden !important;
+	}
+	body.world-1 #green-zone #green-grid {
+		max-height: none;
 	}
 
 	/* Desktop: beperk groene en rode zone breedte */
@@ -12749,7 +12781,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 				id: 'level-3-green',
 				description: 'Level 3: Scoor 16 punten in groen.',
 				short: 'Level 3 - 8 in groen',
-				check: scores => scores.green >= 8
+				check: scores => scores.green >= 16
 			},
 			{
 				id: 'level-3-blue-14',
@@ -12778,12 +12810,12 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 				check: scores => scores.yellow >= 6 && scores.green >= 6 && scores.purple >= 6 && scores.blue >= 6,
 				progress: scores => {
 					const parts = [
-						(scores.yellow >= 6 ? '✔geel' : 'geel'),
-						(scores.green >= 6 ? '✔groen' : 'groen'),
-						(scores.purple >= 6 ? '✔paars' : 'paars'),
-						(scores.blue >= 6 ? '✔blauw' : 'blauw')
+						(scores.yellow >= 6 ? '✔geel' : ''),
+						(scores.green >= 6 ? '✔groen' : ''),
+						(scores.purple >= 6 ? '✔paars' : ''),
+						(scores.blue >= 6 ? '✔blauw' : '')
 					];
-					return parts.join(', ');
+					return parts.join(' ');
 				}
 			},
 			{
@@ -25598,6 +25630,7 @@ function openShopModal(callback) {
 	  const computedCellSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')) || 26;
 	  const cellSize = Math.max(18, Math.min(30, computedCellSize)); // Clamp between 18 and 30
 	  const worldInfo = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(currentLevel) : null;
+	  const isWorld1 = !!(worldInfo && worldInfo.world === 1);
 	  const isWorld2 = !!(worldInfo && worldInfo.world === 2);
 	  const isWorld3 = !!(worldInfo && worldInfo.world === 3);
 	  const isPortrait = window.innerHeight > window.innerWidth;
@@ -25722,16 +25755,27 @@ function openShopModal(callback) {
 	  const greenGrid = document.getElementById('green-grid');
 	  const greenZone = document.getElementById('green-zone');
 	  if (greenGrid && greenZone) {
-		// Always keep green scrollable when content exceeds the viewport.
-		greenZone.style.overflowY = 'auto';
-		greenZone.style.overflowX = 'auto';
-		// Clear potentially stale inline sizing; we re-apply below when needed.
-		greenZone.style.removeProperty('width');
-		greenZone.style.removeProperty('height');
-		greenZone.style.removeProperty('min-height');
-		greenZone.style.removeProperty('max-height');
-		enableZoneDragScroll(greenZone, { ignoreSelectors: '#controls,#bottom-bar,#card-choice-zone,.card,.card-option' });
-		console.log('💚 Green zone: scroll enabled');
+		// World 1 request: keep green fixed (no scrolling).
+		if (isWorld1) {
+			greenZone.classList.add('no-scroll');
+			greenZone.style.overflow = 'hidden';
+			greenZone.style.touchAction = 'manipulation';
+			greenZone.scrollTop = 0;
+			greenZone.scrollLeft = 0;
+			console.log('💚 Green zone: scroll disabled for World 1');
+		} else {
+			greenZone.classList.remove('no-scroll');
+			// Keep green scrollable when content exceeds the viewport.
+			greenZone.style.overflowY = 'auto';
+			greenZone.style.overflowX = 'auto';
+			// Clear potentially stale inline sizing; we re-apply below when needed.
+			greenZone.style.removeProperty('width');
+			greenZone.style.removeProperty('height');
+			greenZone.style.removeProperty('min-height');
+			greenZone.style.removeProperty('max-height');
+			enableZoneDragScroll(greenZone, { ignoreSelectors: '#controls,#bottom-bar,#card-choice-zone,.card,.card-option' });
+			console.log('💚 Green zone: scroll enabled');
+		}
 	  }
 	  
 	  // Rood zones - VEEL meer height voor uitstekende cells
