@@ -4673,8 +4673,9 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		pointer-events: none;
 	}
 	/* Hide badge for multikleur (rainbow) cards which already have their own corner mark */
-	.deck-modal-grid .deck-modal-card[data-card-label*="MULTIKLEUR"].deck-modal-card--inactive::after,
-	.deck-modal-grid .deck-modal-card[data-card-label*="RAINBOW"].deck-modal-card--inactive::after {
+	.deck-modal-grid .deck-modal-card[data-card-label*="MULTIKLEUR" i].deck-modal-card--inactive::after,
+	.deck-modal-grid .deck-modal-card[data-card-label*="RAINBOW" i].deck-modal-card--inactive::after,
+	.deck-modal-grid .deck-modal-card[data-card-label*="MULTI" i].deck-modal-card--inactive::after {
 		display: none;
 	}
 
@@ -12236,26 +12237,36 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		},
 		bonusEcho: {
 			id: 'bonusEcho',
-			name: 'Bonus Echo',
-			description: 'Nieuw wereld 2 effect: speel op 2 bonussen voor +20 punten van die kleur. Succesvolle plaatsing maakt de kaart direct opnieuw speelbaar en 2× op rij geeft een extra beurt.',
+			name: 'Level 2 kaarten',
+			description: 'Ontgrendel Level 2 kaarten (Bonus Echo): speel op 2 bonussen voor +20 punten van die kleur, daarna direct opnieuw. Twee keer op rij geeft een extra beurt. Kies direct 1 uit 3 tetromino\'s met dit effect.',
 			cost: 16,
 			icon: '🔁',
 			purchased: false,
 			onPurchase: () => {
 				try {
-					if (typeof createBonusEchoCardBlueprint !== 'function') return;
-					const blueprint = createBonusEchoCardBlueprint();
-					if (!blueprint) return;
-					ownedDeckBlueprints.push(blueprint);
-					try {
-						const card = instantiateBlueprint(blueprint);
-						if (card) currentHand.push(card);
-					} catch (e) {}
-					updateDeckPreview();
-					saveGameState();
-					renderCurrentHand();
-					showObjectiveToast('🔁 Bonus Echo kaart ontvangen! Plaats op twee bonussen voor +20 en een directe herhaalbeurt.');
-				} catch (e) {}
+					const isStandardTetromino = (entry) => {
+						if (!entry || entry.category !== 'standard' || !entry.matrix) return false;
+						const blocks = (typeof countShapeBlocks === 'function') ? countShapeBlocks(entry.matrix) : null;
+						return !blocks || blocks === 4;
+					};
+					const choices = buildRewardChoices({
+						count: 3,
+						filterFn: isStandardTetromino,
+						colorsPalette: NON_WILDCARD_COLORS,
+						blueprintOptions: { isBonusEcho: true }
+					});
+					showRewardPickerModal({
+						titleText: 'Kies je Level 2 kaart',
+						subtextHtml: 'Selecteer 1 van 3 normale vormen met het Level 2 (Bonus Echo) effect.',
+						choices,
+						onPick: ({ blueprint, card }) => {
+							grantPickedBlueprintReward({ blueprint, card });
+							closeGoldenUnlockModal();
+							restoreGoldenUnlockModalCopy();
+							showObjectiveToast('🔁 Level 2 kaart toegevoegd! Plaats op twee bonussen voor +20 en een directe herhaalbeurt.');
+						}
+					});
+				} catch (e) { console.error('Failed to grant Level 2 (Bonus Echo) reward', e); }
 			}
 		},
 		multicolorBoost: {
@@ -21901,6 +21912,13 @@ function optionalCellsTouchActive(zone, pendingCells) {
 		return { name: color.name, code: color.code, isGolden: !!color.isGolden };
 	}
 
+	function getColorDisplayName(color) {
+		const name = String(color?.name || '').trim();
+		if (!name) return '';
+		if (name.toLowerCase() === 'multikleur') return 'multi';
+		return name;
+	}
+
 	function createCardBlueprint(shapeEntry, colorOverride, extras = {}) {
 		return {
 			blueprintId: nextBlueprintId(),
@@ -22280,10 +22298,11 @@ function getCollectedCoinCount(scores) {
 	  card.style.pointerEvents = 'none';
 	  const isGolden = !!(blueprint.isGolden || blueprint.color?.isGolden);
 	  const colorObj = cloneColor(blueprint.color || { name: '', code: '#cccccc' });
+	  const displayName = getColorDisplayName(colorObj);
 	  // Golden is a card modifier; do not paint the blocks gold.
 	  if (isGolden) colorObj.isGolden = false;
 	  card.dataset.golden = isGolden ? 'true' : 'false';
-		const baseLabel = blueprint.shapeName || (colorObj.name ? `${colorObj.name} kaart` : 'Kaart');
+		const baseLabel = blueprint.shapeName || (displayName ? `${displayName} kaart` : 'Kaart');
 		card.dataset.cardLabel = baseLabel;
 		card.setAttribute('aria-label', baseLabel);
 	  if (isGolden) card.classList.add('card-golden');
@@ -22301,9 +22320,9 @@ function getCollectedCoinCount(scores) {
 		: (colorObj.code || '#a0a0a0'));
 	  swatch.style.background = fill;
 	  const labelText = document.createElement('span');
-	  labelText.textContent = isGolden
-		? 'GOUDEN'
-		: (colorObj.name ? colorObj.name.toUpperCase() : 'KAART');
+	labelText.textContent = isGolden
+		? 'GOUD'
+		: (displayName ? displayName.toUpperCase() : 'KAART');
 	  label.append(swatch, labelText);
 	  const meta = document.createElement('div');
 	  meta.classList.add('card-meta');
@@ -22528,7 +22547,8 @@ function getCollectedCoinCount(scores) {
 						badge.textContent = '?';
 						// Avoid adding badge on multikleur cards (they have their own mark)
 						const label = (card.dataset.cardLabel || '').toLowerCase();
-						if (!label.includes('multikleur') && !label.includes('rainbow')) card.appendChild(badge);
+						const isRainbow = (blueprint?.color?.name === 'multikleur') || label.includes('multikleur') || label.includes('rainbow') || label.includes('multi');
+						if (!isRainbow) card.appendChild(badge);
 					} catch (e) {}
 					break;
 				case 'used':
@@ -23458,6 +23478,7 @@ function getCollectedCoinCount(scores) {
 	const isBonusEchoCard = !!cardData.isBonusEcho;
 	const isDeckCopy = !!cardData.isDeckCopy;
 	const isLuckyCopy = !!cardData.isLuckyCopy;
+	const displayName = getColorDisplayName(cardData.color);
 	card.dataset.golden = isGoldenCard ? 'true' : 'false';
 	card.dataset.bonusBoost = isBonusBoostCard ? 'true' : 'false';
 	card.dataset.bonusEcho = isBonusEchoCard ? 'true' : 'false';
@@ -23514,8 +23535,8 @@ function getCollectedCoinCount(scores) {
 			: cardData.color.code);
 		const labelText = document.createElement('span');
 		labelText.textContent = isGoldenCard
-		  ? 'GOUDEN'
-		  : cardData.color.name.toUpperCase();
+		  ? 'GOUD'
+		  : (displayName ? displayName.toUpperCase() : 'KAART');
 		label.append(swatch, labelText);
 
 		const meta = document.createElement('div');
@@ -25002,7 +25023,8 @@ function openShopModal(callback) {
 			const colorBadge = document.createElement('span');
 			colorBadge.classList.add('card-meta');
 			const isGoldenCard = !!(option?.isGolden || option?.color?.isGolden);
-			colorBadge.textContent = isGoldenCard ? 'GOUDEN' : option.color.name.toUpperCase();
+			const displayName = getColorDisplayName(option?.color);
+			colorBadge.textContent = isGoldenCard ? 'GOUD' : (displayName ? displayName.toUpperCase() : 'KAART');
 			header.append(colorBadge);
 		  }
 
@@ -25487,8 +25509,8 @@ function openShopModal(callback) {
 	  // BLAUW: Lange continue rivier (60+ rijen) die kronkelt en soms breed wordt
 	  // Blauw grid: Continue rivier die altijd doorloopt, met extra tak tijdens split
 	  // World 2 request (UX): keep the river within the zone width (no horizontal scrolling needed).
-	  // Match the purple grid width (13 cols) and clamp offsets to stay inside.
-	  const blueCols = 13;
+	  // Maak de rivier iets smaller zodat hij beter op het scherm past.
+	  const blueCols = 10;
 	  const blueRowPattern = [];
 	  const blueRowOffsets = [];
 	  const blueSplitData = []; // Voor tracking split info
@@ -26267,21 +26289,17 @@ function openShopModal(callback) {
 		const isCoarse = (typeof isCoarsePointer === 'function') ? isCoarsePointer() : false;
 		// "Mobile-like" also includes touch landscape sidebar layout (can be >650px wide but still mobile UX).
 		const isMobileLike = (typeof isMobileViewport === 'function') ? isMobileViewport() : isNarrow;
-		let maxWidthPx;
-		if (isMobileLike && isCoarse) {
-			// Wider mobile phones (<=650px)
-			if (viewportW >= 391) maxWidthPx = 190;
-			else if (viewportW >= 341) maxWidthPx = 180;
-			else if (viewportW >= 291) maxWidthPx = 172;
-			else maxWidthPx = 165;
-			// Touch landscape sidebar layout (can be >650px): allow a bit wider.
-			if (!isNarrow) maxWidthPx = 280;
-		} else {
-			maxWidthPx = 260;
-		}
-		// If the generated river is narrower, shrink to content so there is no unnecessary horizontal scrolling.
+		// Make the min-width match the maximum generated width so no horizontal scroll is needed.
+		// Use the theoretical grid width (cols * cell-size) plus a small buffer, and include the widest actual row.
 		const contentWidthPx = blueCols * cellSize;
-		const targetWidthPx = Math.min(maxWidthPx, Math.max(1, contentWidthPx));
+		let widestRowCells = blueCols;
+		try {
+			const rows = blueGrid ? Array.from(blueGrid.querySelectorAll('.grid-row')) : [];
+			if (rows.length) {
+				widestRowCells = Math.max(widestRowCells, ...rows.map(r => (r.children ? r.children.length : 0)));
+			}
+		} catch (e) {}
+		const targetWidthPx = Math.max(1, Math.max(contentWidthPx, widestRowCells * cellSize) + 10);
 		// Use important to avoid any CSS !important overrides in later blocks.
 		blueZone.style.setProperty('width', `${targetWidthPx}px`, 'important');
 		blueZone.style.setProperty('min-width', `${targetWidthPx}px`, 'important');
@@ -26315,7 +26333,7 @@ function openShopModal(callback) {
 		// and later keep the user's last unzoomed scroll position.
 		restoreOrAnchorZoneScroll(blueZone, (z) => resetBlueZoomScroll(z));
 		enableZoneDragScroll(blueZone, { ignoreSelectors: '#controls,#bottom-bar,#card-choice-zone,.card,.card-option' });
-		console.log(`30a Blue zone: width=${maxWidthPx}px, scroll enabled, maxHeight=${tallZoneMaxVh}`);
+		console.log(`30a Blue zone: width=${targetWidthPx}px, scroll enabled, maxHeight=${tallZoneMaxVh}`);
 	  }
 	  
 	  // Groen zone
