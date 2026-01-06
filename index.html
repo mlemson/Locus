@@ -12292,7 +12292,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		bonusEcho: {
 			id: 'bonusEcho',
 			name: 'Level 2 kaarten',
-			description: 'Ontgrendel Level 2 kaarten: speel op 2 bonussen voor +20 punten van die kleur, daarna direct opnieuw. Twee keer op rij geeft een extra beurt. Kies direct 1 uit 3 tetromino\'s met dit effect.',
+			description: 'Ontgrendel Level 2 kaarten met 3 varianten (score / replay / bonusbeurt). Iedere kaart vraagt 2 bonussen. Kies direct 1 uit 3 varianten.',
 			cost: 16,
 			icon: '🔁',
 			purchased: false,
@@ -12317,7 +12317,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 							grantPickedBlueprintReward({ blueprint, card });
 							closeGoldenUnlockModal();
 							restoreGoldenUnlockModalCopy();
-							showObjectiveToast('🔁 Level 2 kaart toegevoegd! Plaats op twee bonussen voor +20 en een directe herhaalbeurt.');
+							showObjectiveToast('🔁 Level 2 kaart toegevoegd! Kies een variant (score / replay / bonusbeurt) die 2 bonussen nodig heeft.');
 						}
 					});
 				} catch (e) { console.error('Failed to grant Level 2 (Bonus Echo) reward', e); }
@@ -14811,14 +14811,11 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 						try {
 							const progressText = normalizeObjectiveProgress(objective.progress(progressSource));
 							if (progressText) description = `${description} (${progressText})`;
-						} catch (error) {
-							console.warn('Objective progress failed', objective.id, error);
-						}
+						} catch (error) { /* ignore */ }
 					}
 					currentEl.innerHTML = `<strong>Doel:</strong> ${description}`;
 				}
 			}
-
 			// Verberg "nog geen doelen voltooid" op desktop
 			if (completedObjectives.length === 0) {
 				// Laat leeg op desktop
@@ -21882,15 +21879,37 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	const LUCKY_DRAW_COPY_CHANCE = 0.25;
 	let goldenColorRotation = 0;
 
-	// Wereld 2 kaart upgrade: bonus-echo (score buff + extra turns)
+	// Wereld 2 kaart upgrade: Bonus Echo (3 varianten)
 	const BONUS_ECHO_REQUIRED_BONUSES = 2;
 	const BONUS_ECHO_SCORE_BONUS = 20;
 	const BONUS_ECHO_CARD_COST_BONUS = 4;
+	const BONUS_ECHO_VARIANTS = [
+		{ key: 'points', tag: 'ECHO • SCORE', sub: `2× BONUS = +${BONUS_ECHO_SCORE_BONUS}`, desc: 'Plaats op 2 bonussen voor +20 in deze kleur.' },
+		{ key: 'replay', tag: 'ECHO • REPLAY', sub: `2× BONUS = +${BONUS_ECHO_SCORE_BONUS} • NOG EEN KEER`, desc: 'Scoort hij? Dan mag je deze kaart direct opnieuw spelen.' },
+		{ key: 'turn', tag: 'ECHO • BEURT', sub: `2× BONUS = +${BONUS_ECHO_SCORE_BONUS} • 2 OP RIJ = BONUSBEURT`, desc: 'Speel twee echo-kaarten na elkaar voor een bonusbeurt met je gespeelde kaarten.' }
+	];
+
+	function pickBonusEchoVariant() {
+		if (!Array.isArray(BONUS_ECHO_VARIANTS) || !BONUS_ECHO_VARIANTS.length) return 'replay';
+		const pick = BONUS_ECHO_VARIANTS[Math.floor(Math.random() * BONUS_ECHO_VARIANTS.length)];
+		return pick?.key || 'replay';
+	}
+
+	function getBonusEchoUiCopy(variantKey = 'replay', readyNote = '') {
+		const meta = BONUS_ECHO_VARIANTS.find(v => v.key === variantKey) || BONUS_ECHO_VARIANTS[1];
+		return {
+			tag: meta.tag,
+			sub: readyNote ? `${meta.sub}${readyNote}` : meta.sub,
+			desc: meta.desc
+		};
+	}
+
 	let colorScoreBonuses = { yellow: 0, red: 0, green: 0, purple: 0, blue: 0 };
 	let bonusEchoExtraTurns = 0;
 	let bonusEchoStreak = 0;
 	let bonusEchoFreePlays = 0;
 	let lastCardWasBonusEcho = false;
+	let lastBonusEchoVariant = null;
 
 	function resetBonusEchoState() {
 		colorScoreBonuses = { yellow: 0, red: 0, green: 0, purple: 0, blue: 0 };
@@ -21898,6 +21917,7 @@ function optionalCellsTouchActive(zone, pendingCells) {
 		bonusEchoStreak = 0;
 		bonusEchoFreePlays = 0;
 		lastCardWasBonusEcho = false;
+		lastBonusEchoVariant = null;
 	}
 
 	// Variabelen die nodig zijn voor buildShapePool
@@ -21964,7 +21984,7 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	var BATTERY_SAVER_ENABLED = true;
 	var BATTERY_SUPPRESS_LOGS = true;
 	var BATTERY_THROTTLE_DRAG = true;
-	var BATTERY_REDUCE_ANIM = true;
+	var BATTERY_REDUCE_ANIM = false;
 
 	// Apply battery-saver tweaks early (logs + reduced motion)
 	(function applyBatterySaver() {
@@ -22042,6 +22062,7 @@ function optionalCellsTouchActive(zone, pendingCells) {
 			isGolden,
 			isBonusBoost: !!blueprint.isBonusBoost,
 			isBonusEcho: !!blueprint.isBonusEcho,
+			bonusEchoVariant: blueprint.bonusEchoVariant || 'replay',
 			bonusEchoReplaysAvailable: Number(blueprint.bonusEchoReplaysAvailable || 0)
 		};
 	}
@@ -22737,7 +22758,11 @@ function getCollectedCoinCount(scores) {
 		const picks = pool.slice(0, Math.max(1, count));
 		return picks.map(entry => {
 			const chosenColor = palette ? cloneColor(palette[Math.floor(Math.random() * palette.length)]) : fallbackColor;
-			const blueprint = createCardBlueprint(entry, chosenColor, blueprintOptions || undefined);
+			const extras = blueprintOptions ? { ...blueprintOptions } : undefined;
+			if (extras && extras.isBonusEcho && !extras.bonusEchoVariant) {
+				extras.bonusEchoVariant = pickBonusEchoVariant();
+			}
+			const blueprint = createCardBlueprint(entry, chosenColor, extras || undefined);
 			return { blueprint, card: instantiateBlueprint(blueprint) };
 		});
 	}
@@ -23419,14 +23444,15 @@ function getCollectedCoinCount(scores) {
 		return card;
 	}
 
-	function createBonusEchoCardBlueprint() {
+	function createBonusEchoCardBlueprint(variantKey = null) {
 		const miniChoices = (CARD_BLUEPRINTS && Array.isArray(CARD_BLUEPRINTS.mini)) ? CARD_BLUEPRINTS.mini : [];
 		const defaultShape = { name: 'Echo Domino', matrix: [[1], [1]], category: 'mini' };
 		const shapePick = miniChoices.find(entry => countShapeBlocks(entry.matrix) === BONUS_ECHO_REQUIRED_BONUSES) || defaultShape;
 		const entry = { name: 'Bonus Echo', matrix: cloneShape(shapePick.matrix), category: 'mini' };
 		const palette = NON_WILDCARD_COLORS.length ? NON_WILDCARD_COLORS : colors;
 		const baseColor = cloneColor(palette[Math.floor(Math.random() * palette.length)]);
-		return createCardBlueprint(entry, baseColor, { isBonusEcho: true });
+		const pickedVariant = variantKey || pickBonusEchoVariant();
+		return createCardBlueprint(entry, baseColor, { isBonusEcho: true, bonusEchoVariant: pickedVariant });
 	}
 
 	function createBonusEchoShopCard() {
@@ -23674,6 +23700,7 @@ function getCollectedCoinCount(scores) {
 			card.appendChild(effect);
 		} else if (isBonusEchoCard) {
 			const replayCharges = Number(cardData.bonusEchoReplaysAvailable || 0);
+			const variant = cardData.bonusEchoVariant || 'replay';
 			const effect = document.createElement('div');
 			effect.classList.add('card-effect', 'card-effect-echo');
 			const icon = document.createElement('span');
@@ -23683,13 +23710,15 @@ function getCollectedCoinCount(scores) {
 			textWrap.classList.add('card-effect-echo-text');
 			const title = document.createElement('div');
 			title.classList.add('card-effect-echo-title');
-			title.textContent = 'BONUS ECHO';
 			const sub = document.createElement('div');
 			sub.classList.add('card-effect-echo-sub');
-			const readyNote = replayCharges > 0 ? ' • KLAAR' : '';
-			sub.textContent = `${BONUS_ECHO_REQUIRED_BONUSES}× BONUS = +${BONUS_ECHO_SCORE_BONUS} & REPLAY${readyNote}`;
+			const readyNote = (variant === 'replay' && replayCharges > 0) ? ' • KLAAR' : '';
+			const copy = getBonusEchoUiCopy(variant, readyNote);
+			title.textContent = copy.tag;
+			sub.textContent = copy.sub;
 			textWrap.append(title, sub);
 			effect.append(icon, textWrap);
+			effect.title = copy.desc;
 			card.appendChild(effect);
 		}
 	  }
@@ -24153,6 +24182,7 @@ function getCollectedCoinCount(scores) {
 			isGolden: !!(card.isGolden || card.color?.isGolden),
 			isBonusBoost: !!card.isBonusBoost,
 			isBonusEcho: !!card.isBonusEcho,
+			bonusEchoVariant: card.bonusEchoVariant || 'replay',
 			bonusEchoReplaysAvailable: 0
 		};
 	}
@@ -24170,6 +24200,7 @@ function getCollectedCoinCount(scores) {
 		bonusEchoFreePlays = 0;
 		bonusEchoStreak = 0;
 		lastCardWasBonusEcho = false;
+		lastBonusEchoVariant = null;
 		cardPlacementHistory = [];
 		cardsPlayedThisTurn = 0;
 		resetTurnCardFlags();
@@ -24269,8 +24300,10 @@ function getCollectedCoinCount(scores) {
 		if (!playedCard || !playedCard.isBonusEcho) {
 			bonusEchoStreak = 0;
 			lastCardWasBonusEcho = false;
-			return { replayGranted: false, pointsAwarded: 0, extraTurnGranted: false, colorKey: null };
+			lastBonusEchoVariant = null;
+			return { replayGranted: false, pointsAwarded: 0, extraTurnGranted: false, colorKey: null, variant: null };
 		}
+		const variant = playedCard.bonusEchoVariant || 'replay';
 		const bonusClaims = Array.isArray(placementResult?.bonuses) ? placementResult.bonuses.filter(Boolean) : [];
 		const colorKey = getBonusKeyFromColorName(playedCard?.color?.name);
 		const meetsBonusRequirement = bonusClaims.length >= BONUS_ECHO_REQUIRED_BONUSES;
@@ -24279,34 +24312,46 @@ function getCollectedCoinCount(scores) {
 		let replayGranted = false;
 		if (pointsAwarded > 0) {
 			colorScoreBonuses[colorKey] = Number(colorScoreBonuses[colorKey] || 0) + pointsAwarded;
-			replayGranted = true;
-			bonusEchoStreak = lastCardWasBonusEcho ? bonusEchoStreak + 1 : 1;
-			lastCardWasBonusEcho = true;
-			if (bonusEchoStreak >= 2) {
-				bonusEchoExtraTurns += 1;
+			if (variant === 'replay') replayGranted = true;
+			if (variant === 'turn') {
+				bonusEchoStreak = (lastCardWasBonusEcho && lastBonusEchoVariant === 'turn') ? bonusEchoStreak + 1 : 1;
+				lastCardWasBonusEcho = true;
+				lastBonusEchoVariant = 'turn';
+				if (bonusEchoStreak >= 2) {
+					bonusEchoExtraTurns += 1;
+					bonusEchoStreak = 0;
+					extraTurnGranted = true;
+				}
+			} else {
 				bonusEchoStreak = 0;
-				extraTurnGranted = true;
+				lastCardWasBonusEcho = false;
+				lastBonusEchoVariant = null;
 			}
 			const label = (BONUS_COLOR_CONFIG[colorKey]?.label) || playedCard?.color?.name || '';
-			showObjectiveToast(`🔁 Bonus Echo: +${pointsAwarded} ${label}${extraTurnGranted ? ' en bonusbeurt klaar!' : ''}`);
+			const toastSuffix = extraTurnGranted ? ' en bonusbeurt klaar!' : '';
+			showObjectiveToast(`🔁 Bonus Echo: +${pointsAwarded} ${label}${toastSuffix}`);
 		} else {
 			bonusEchoStreak = 0;
 			lastCardWasBonusEcho = false;
+			lastBonusEchoVariant = null;
 		}
-		return { replayGranted, pointsAwarded, extraTurnGranted, colorKey };
+		return { replayGranted, pointsAwarded, extraTurnGranted, colorKey, variant };
 	}
 
 	function recomputeBonusEchoSequenceState() {
 		bonusEchoStreak = 0;
 		lastCardWasBonusEcho = false;
+		lastBonusEchoVariant = null;
 		cardPlacementHistory.forEach(entry => {
-			const success = entry && entry.cardRef && entry.cardRef.isBonusEcho && Number(entry.bonusEchoPointsAdded || 0) > 0;
+			const success = entry && entry.cardRef && entry.cardRef.isBonusEcho && entry.cardRef.bonusEchoVariant === 'turn' && Number(entry.bonusEchoPointsAdded || 0) > 0;
 			if (success) {
-				bonusEchoStreak = lastCardWasBonusEcho ? bonusEchoStreak + 1 : 1;
+				bonusEchoStreak = lastCardWasBonusEcho && lastBonusEchoVariant === 'turn' ? bonusEchoStreak + 1 : 1;
 				lastCardWasBonusEcho = true;
+				lastBonusEchoVariant = 'turn';
 			} else {
 				bonusEchoStreak = 0;
 				lastCardWasBonusEcho = false;
+				lastBonusEchoVariant = null;
 			}
 		});
 	}
@@ -24340,6 +24385,7 @@ function getCollectedCoinCount(scores) {
 	if (!playedCard?.isBonusEcho) {
 		bonusEchoStreak = 0;
 		lastCardWasBonusEcho = false;
+		lastBonusEchoVariant = null;
 	}
 	if (playedCard && playedCard.isBonusEcho && playedCard.bonusEchoReplaysAvailable > 0) {
 		playedCard.bonusEchoReplaysAvailable = Math.max(0, playedCard.bonusEchoReplaysAvailable - 1);
@@ -24396,6 +24442,10 @@ function getCollectedCoinCount(scores) {
 		bonusEchoPointsAdded = Number(echoOutcome.pointsAwarded || 0);
 		bonusEchoExtraTurnGranted = !!echoOutcome.extraTurnGranted;
 		bonusEchoColorKey = echoOutcome.colorKey || null;
+	} else {
+		bonusEchoStreak = 0;
+		lastCardWasBonusEcho = false;
+		lastBonusEchoVariant = null;
 	}
 	if (playedCard && playedCard.isBonusEcho) {
 		if (bonusEchoReplayGranted) {
@@ -26823,7 +26873,8 @@ function openShopModal(callback) {
 			bonusEchoExtraTurns,
 			bonusEchoStreak,
 			bonusEchoFreePlays,
-			lastCardWasBonusEcho
+			lastCardWasBonusEcho,
+			lastBonusEchoVariant
 		  },
 		  preLevelStarterPicksDone,
 		  
@@ -26841,7 +26892,8 @@ function openShopModal(callback) {
 			color: bp.color ? { name: bp.color.name, code: bp.color.code, isGolden: bp.color.isGolden } : null,
 			isGolden: bp.isGolden || false,
 			isBonusBoost: bp.isBonusBoost || false,
-			isBonusEcho: bp.isBonusEcho || false
+			isBonusEcho: bp.isBonusEcho || false,
+			bonusEchoVariant: bp.bonusEchoVariant || null
 		  })),
 		  
 		  // Current game state (drawPile, discardPile, currentHand)
@@ -26855,6 +26907,7 @@ function openShopModal(callback) {
 			isGolden: card.isGolden || false,
 			isBonusBoost: card.isBonusBoost || false,
 			isBonusEcho: card.isBonusEcho || false,
+			bonusEchoVariant: card.bonusEchoVariant || null,
 			bonusEchoReplaysAvailable: card.bonusEchoReplaysAvailable || 0
 		  })),
 		  discardPile: discardPile.map(card => ({
@@ -26867,6 +26920,7 @@ function openShopModal(callback) {
 			isGolden: card.isGolden || false,
 			isBonusBoost: card.isBonusBoost || false,
 			isBonusEcho: card.isBonusEcho || false,
+			bonusEchoVariant: card.bonusEchoVariant || null,
 			bonusEchoReplaysAvailable: card.bonusEchoReplaysAvailable || 0
 		  })),
 		  currentHand: currentHand.map(card => ({
@@ -26879,6 +26933,7 @@ function openShopModal(callback) {
 			isGolden: card.isGolden || false,
 			isBonusBoost: card.isBonusBoost || false,
 			isBonusEcho: card.isBonusEcho || false,
+			bonusEchoVariant: card.bonusEchoVariant || null,
 			bonusEchoReplaysAvailable: card.bonusEchoReplaysAvailable || 0
 		  })),
 		  cardsPlayedThisTurn: cardsPlayedThisTurn,
@@ -27100,6 +27155,7 @@ function isWorld4CardAllowed(cardData) {
 				bonusEchoStreak = Number(savedEcho.bonusEchoStreak || 0);
 				bonusEchoFreePlays = Number(savedEcho.bonusEchoFreePlays || 0);
 				lastCardWasBonusEcho = !!savedEcho.lastCardWasBonusEcho;
+				lastBonusEchoVariant = savedEcho.lastBonusEchoVariant || null;
 			} catch (e) { resetBonusEchoState(); }
 		} else {
 			resetBonusEchoState();
@@ -27142,7 +27198,8 @@ function isWorld4CardAllowed(cardData) {
 			  color: colorObj,
 			  isGolden: bp.isGolden || false,
 			  isBonusBoost: bp.isBonusBoost || false,
-			  isBonusEcho: bp.isBonusEcho || false
+			  isBonusEcho: bp.isBonusEcho || false,
+			  bonusEchoVariant: bp.bonusEchoVariant || (bp.isBonusEcho ? 'replay' : null)
 			};
 		  }).filter(bp => bp !== null);
 		  
@@ -27194,6 +27251,7 @@ function isWorld4CardAllowed(cardData) {
 			isGolden: cardData.isGolden || false,
 			isBonusBoost: cardData.isBonusBoost || false,
 			isBonusEcho: cardData.isBonusEcho || false,
+			bonusEchoVariant: cardData.bonusEchoVariant || (cardData.isBonusEcho ? 'replay' : null),
 			bonusEchoReplaysAvailable: cardData.bonusEchoReplaysAvailable || 0
 		  };
 		}
