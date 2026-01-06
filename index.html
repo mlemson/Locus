@@ -8323,6 +8323,28 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  box-shadow: 0 0 8px rgba(58,111,247,0.4);
 	}
 
+	.cell.locked-cell {
+	  position: relative;
+	  background: repeating-linear-gradient(45deg, rgba(255,120,80,0.18) 0, rgba(255,120,80,0.18) 8px, rgba(0,0,0,0.05) 8px, rgba(0,0,0,0.05) 16px);
+	  border-color: rgba(255,120,80,0.6);
+	}
+
+	.cell.locked-cell::after {
+	  content: '!';
+	  position: absolute;
+	  inset: 0;
+	  display: grid;
+	  place-items: center;
+	  font-weight: 900;
+	  color: #ff7148;
+	  text-shadow: 0 1px 3px rgba(0,0,0,0.35);
+	  pointer-events: none;
+	}
+
+	.cell.door-open {
+	  box-shadow: inset 0 0 0 2px rgba(90, 200, 140, 0.65);
+	}
+
 	/* Hover effect op cellen */
 	body.dark-mode .cell:hover {
 	  background: #31343b;
@@ -8408,6 +8430,28 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	.card.selected {
 	  outline: 3px solid #7a8aad;
 	  outline-offset: -3px;
+	}
+
+	.card.card-locked-color {
+	  position: relative;
+	  filter: grayscale(0.8) brightness(0.65);
+	  box-shadow: inset 0 0 0 2px rgba(255, 120, 80, 0.5);
+	}
+
+	.card .card-lock-badge {
+	  position: absolute;
+	  inset: 6px;
+	  display: grid;
+	  place-items: center;
+	  border: 2px dashed rgba(255, 110, 60, 0.8);
+	  border-radius: 6px;
+	  color: #ff7148;
+	  font-weight: 900;
+	  font-size: 22px;
+	  letter-spacing: 1px;
+	  pointer-events: none;
+	  background: linear-gradient(135deg, rgba(0,0,0,0.0), rgba(0,0,0,0.35));
+	  text-shadow: 0 2px 6px rgba(0,0,0,0.35);
 	}
 	
 	body.dark-mode .card.selected {
@@ -20461,16 +20505,26 @@ document.addEventListener('pointermove', ev => {
 	  const overrideCellSize = parseFloat((cssCellSizeRaw || computedCellSizeRaw || '').trim());
 	  const { cellSize: defaultCellSize } = getCardSizing();
 	  const cellSize = Number.isFinite(overrideCellSize) && overrideCellSize > 0 ? overrideCellSize : defaultCellSize;
-	  card.dataset.shapeCols = String(shape[0].length);
-	  card.dataset.shapeRows = String(shape.length);
+
+	  // Normalize ragged shapes so previews keep all columns.
+	  const cols = Math.max(...shape.map(row => (Array.isArray(row) ? row.length : 0)), 0);
+	  const rows = shape.length;
+	  const paddedShape = shape.map(row => {
+		const copy = Array.isArray(row) ? row.slice() : [];
+		while (copy.length < cols) copy.push(0);
+		return copy;
+	  });
+
+	  card.dataset.shapeCols = String(cols);
+	  card.dataset.shapeRows = String(rows);
 	  const pattern = card.querySelector('.card-pattern');
 	  if (pattern) {
 		pattern.innerHTML = '';
-		pattern.style.gridTemplateColumns = `repeat(${shape[0].length}, ${cellSize}px)`;
-		pattern.style.gridTemplateRows = `repeat(${shape.length}, ${cellSize}px)`;
+		pattern.style.gridTemplateColumns = `repeat(${cols}, ${cellSize}px)`;
+		pattern.style.gridTemplateRows = `repeat(${rows}, ${cellSize}px)`;
 		// Gap is controlled via CSS (`--preview-gap`) so all previews stay consistent.
 		pattern.style.removeProperty('gap');
-		shape.forEach(row => {
+		paddedShape.forEach(row => {
 		  row.forEach(cell => {
 			const div = document.createElement('div');
 			div.classList.add('card-cell');
@@ -20501,8 +20555,8 @@ document.addEventListener('pointermove', ev => {
 		});
 	  }
 	  const meta = card.querySelector('.card-meta');
-	  if (meta) meta.textContent = `${shape.length}×${shape[0].length}`;
-	  card.cardShape = shape;
+	  if (meta) meta.textContent = `${rows}×${cols}`;
+	  card.cardShape = paddedShape;
 	}
 
 	function getActualCellSize(root = null) {
@@ -20812,6 +20866,21 @@ function clearElPos(el) {
 			};
 			return null;
 		  }
+
+			// World 4: blocked when the cell is locked behind a door of another color.
+			const lockedColor = String(target.dataset.lockedColor || target.dataset.doorColor || '').toLowerCase();
+			const isDoorClosed = !!target.dataset.doorColor && !target.classList.contains('door-open');
+			if (lockedColor && !isWorld4ColorUnlocked(lockedColor) && (isDoorClosed || target.dataset.lockedColor)) {
+				if (isOptional) continue;
+				window.lastPlacementFailure = {
+					zoneId: zone?.id || null,
+					reason: 'locked-color',
+					x: baseX + x,
+					y: baseY + y,
+					color: lockedColor
+				};
+				return null;
+			}
 				if (target.classList.contains('active')) {
 					if (isOptional) {
 						// Optionele cel mag overlappen met een bestaand blok; wel onthouden voor adjacency.
@@ -21542,26 +21611,17 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	const CARD_BLUEPRINTS = {
 		// Mini kaarten (2-3 blokjes)
 		mini: [
-			{ name: 'Domino verticaal', matrix: [[1],[1]], weight: 1 },
-			{ name: 'Domino horizontaal', matrix: [[1,1]], weight: 1 },
-			{ name: 'Tri-bar horizontaal', matrix: [[1,1,1]], weight: 1 },
-			{ name: 'Tri-bar verticaal', matrix: [[1],[1],[1]], weight: 1 },
+			{ name: 'Domino', matrix: [[1],[1]], weight: 1 },
+			{ name: 'Tri-bar', matrix: [[1],[1],[1]], weight: 1 },
 			{ name: 'Mini L', matrix: [[1,0],[1,1]], weight: 1 },
-			{ name: 'Mini J', matrix: [[0,1],[1,1]], weight: 1 }
 		],
 		// Standaard Tetris (4 blokjes)
 		standard: [
-			{ name: 'I verticaal', matrix: [[1],[1],[1],[1]], weight: 1 },
-			{ name: 'I horizontaal', matrix: [[1,1,1,1]], weight: 1 },
+			{ name: 'I', matrix: [[1],[1],[1],[1]], weight: 1 },
 			{ name: 'O', matrix: [[1,1],[1,1]], weight: 1 },
-			{ name: 'T omhoog', matrix: [[1,0],[1,1],[1,0]], weight: 1 },
-			{ name: 'T omlaag', matrix: [[0,1],[1,1],[0,1]], weight: 1 },
-			{ name: 'L klassiek', matrix: [[1,0],[1,0],[1,1]], weight: 1 },
-			{ name: 'J klassiek', matrix: [[0,1],[0,1],[1,1]], weight: 1 },
-			{ name: 'S horizontaal', matrix: [[1,1,0],[0,1,1]], weight: 1 },
-			{ name: 'S verticaal', matrix: [[0,1],[1,1],[1,0]], weight: 1 },
-			{ name: 'Z horizontaal', matrix: [[0,1,1],[1,1,0]], weight: 1 },
-			{ name: 'Z verticaal', matrix: [[1,0],[1,1],[0,1]], weight: 1 }
+			{ name: 'T', matrix: [[1,0],[1,1],[1,0]], weight: 1 },
+			{ name: 'L', matrix: [[1,0],[1,0],[1,1]], weight: 1 },
+			{ name: 'S', matrix: [[0,1],[1,1],[1,0]], weight: 1 },
 		],
 		// Grote/creatieve vormen
 		large: [
@@ -21572,18 +21632,40 @@ function optionalCellsTouchActive(zone, pendingCells) {
 			{ name: 'Trap', matrix: [[1,0,0],[1,1,0],[0,1,1]], weight: 1 },
 			{ name: 'Hoefijzer', matrix: [[1,1,0],[1,0,0],[1,1,0]], weight: 1 },
 			{ name: 'Pijl', matrix: [[0,0,1],[1,1,1],[0,1,0]], weight: 1 },
-			{ name: 'Lang 5 horizontaal', matrix: [[1,1,1,1,1]], weight: 1 },
-			{ name: 'Lang 5 verticaal', matrix: [[1],[1],[1],[1],[1]], weight: 1 },
-			{ name: 'Hinge', matrix: [[1,1,0],[0,1,1],[0,0,1]], weight: 1 },
+			{ name: 'Lang 5', matrix: [[1],[1],[1],[1],[1]], weight: 1 },
 			{ name: 'Z dubbel', matrix: [[0,1],[1,0],[1,1]], weight: 1 },
-			{ name: 'S dubbel rechts', matrix: [[1,0],[1,1],[0,1,1]], weight: 1 },
 			{ name: 'Hoekspiegel', matrix: [[1,0,0],[1,1,1],[0,0,1]], weight: 1 }
 		],
 		// Gouden kaarten (speciale category)
 		golden: [
+			// Mini variants
+			{ name: 'Gouden Domino', matrix: [[1],[1]], weight: 1 },
+			{ name: 'Gouden Tri-bar', matrix: [[1],[1],[1]], weight: 1 },
+			{ name: 'Gouden Mini L', matrix: [[1,0],[1,1]], weight: 1 },
+			// Standard Tetris variants
 			{ name: 'Gouden Vierkant', matrix: [[1,1],[1,1]], weight: 1 },
 			{ name: 'Gouden L', matrix: [[1,0],[1,0],[1,1]], weight: 1 },
-			{ name: 'Gouden Zuil', matrix: [[1],[1],[1]], weight: 1 }
+			{ name: 'Gouden I', matrix: [[1],[1],[1],[1]], weight: 1 },
+			{ name: 'Gouden T', matrix: [[1,0],[1,1],[1,0]], weight: 1 },
+			{ name: 'Gouden J', matrix: [[0,1],[0,1],[1,1]], weight: 1 },
+			{ name: 'Gouden S', matrix: [[0,1],[1,1],[1,0]], weight: 1 },
+			// Large/creative variants
+			{ name: 'Gouden Plus', matrix: [[0,1,0],[1,1,1],[0,1,0]], weight: 1 },
+			{ name: 'Gouden U vorm', matrix: [[1,0,1],[1,1,1]], weight: 1 },
+			{ name: 'Gouden L groot', matrix: [[1,0],[1,0],[1,0],[1,1]], weight: 1 },
+			{ name: 'Gouden Kolom-L', matrix: [[1,0,0],[1,0,0],[1,1,1]], weight: 1 },
+			{ name: 'Gouden Trap', matrix: [[1,0,0],[1,1,0],[0,1,1]], weight: 1 },
+			{ name: 'Gouden Hoefijzer', matrix: [[1,1,0],[1,0,0],[1,1,0]], weight: 1 },
+			{ name: 'Gouden Pijl', matrix: [[0,0,1],[1,1,1],[0,1,0]], weight: 1 },
+			{ name: 'Gouden Lang 5', matrix: [[1],[1],[1],[1],[1]], weight: 1 },
+			{ name: 'Gouden Z dubbel', matrix: [[0,1],[1,0],[1,1]], weight: 1 },
+			{ name: 'Gouden Hoekspiegel', matrix: [[1,0,0],[1,1,1],[0,0,1]], weight: 1 },
+			// XL (6) shapes - golden variants
+			{ name: 'Gouden XL 2x3', matrix: [[1,1,1],[1,1,1]], weight: 1 },
+			{ name: 'Gouden XL Lang 6', matrix: [[1],[1],[1],[1],[1],[1]], weight: 1 },
+			// Extra large (7) shapes - golden variants
+			{ name: 'Gouden Extra Groot Randhoek', matrix: [[1,1,1],[1,0,0],[1,1,1]], weight: 0.08 },
+			{ name: 'Gouden Extra Groot Dubbele balk', matrix: [[1,1,1],[0,1,0],[1,1,1]], weight: 0.08 }
 		]
 	};
 
@@ -21596,8 +21678,7 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	// XL vormen (6 blokjes): pas na upgrade.
 	const XL_6_SHAPES = [
 		{ name: 'XL (6) - 2x3', matrix: [[1,1,1],[1,1,1]], weight: 1 },
-		{ name: 'XL (6) - Lang 6 horizontaal', matrix: [[1,1,1,1,1,1]], weight: 1 },
-		{ name: 'XL (6) - Lang 6 verticaal', matrix: [[1],[1],[1],[1],[1],[1]], weight: 1 }
+		{ name: 'XL (6) - Lang 6', matrix: [[1],[1],[1],[1],[1],[1]], weight: 1 }
 	];
 
 	const SHAPE_CATEGORY_WEIGHTS = {
@@ -21699,6 +21780,10 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	// Variabelen die nodig zijn voor buildShapePool
 	let currentLevel = 1;
 	let currentWorld = 1; // Nieuwe variabele om bij te houden in welke wereld we zitten
+
+	// World 4 state: allowed colors + locked door colors
+	let world4AllowedColors = null;
+	let world4UnlockedColors = new Set();
 
 	// Helper functie om world en subLevel te bepalen
 	function getWorldAndSubLevel(level) {
@@ -23260,6 +23345,8 @@ function getCollectedCoinCount(scores) {
 	card.dataset.bonusBoost = isBonusBoostCard ? 'true' : 'false';
 	card.dataset.deckCopy = isDeckCopy ? 'true' : 'false';
 	card.dataset.luckyCopy = isLuckyCopy ? 'true' : 'false';
+	const isWorld4Allowed = isWorld4CardAllowed(cardData);
+	card.dataset.world4Allowed = isWorld4Allowed ? 'true' : 'false';
 	if (isGoldenCard) {
 		card.classList.add('card-golden');
 	}
@@ -23271,6 +23358,13 @@ function getCollectedCoinCount(scores) {
 	}
 	if (isLuckyCopy) {
 		card.classList.add('card-lucky-copy');
+	}
+	if (!isWorld4Allowed) {
+		card.classList.add('card-locked-color');
+		const badge = document.createElement('div');
+		badge.className = 'card-lock-badge';
+		badge.textContent = '!';
+		card.appendChild(badge);
 	}
 	// Visual markers for pre-level chosen cards
 	if (cardData && cardData.isPrelevelChoice) {
@@ -24019,6 +24113,7 @@ function getCollectedCoinCount(scores) {
 
 	function isCardPlayable(card) {
 		if (!card) return false;
+		if (!isWorld4CardAllowed(card)) return false;
 		return isCardAllowedByTurnRules(card) && cardHasPlayablePlacement(card);
 	}
 
@@ -24892,6 +24987,11 @@ function openShopModal(callback) {
 	  document.body.classList.toggle('world-2', world === 2);
 	  document.body.classList.toggle('world-1', world === 1);
 	  document.body.classList.toggle('world-3', world === 3);
+	  document.body.classList.toggle('world-4', world === 4);
+	  if (world !== 4) {
+		setWorld4AllowedColors(null);
+		clearWorld4Locks();
+	  }
 	  
 	  // World 1: disable scrolling in green zone
 	  const greenZone = document.getElementById('green-zone');
@@ -26029,6 +26129,10 @@ function openShopModal(callback) {
 	  // Normal mode: ensure scenario flags are cleared.
 	  try { if (window) { window._locusScenarioMode = false; window._locusScenarioLoaded = false; } } catch (e) {}
 
+	  // World 4: reset color gating + locks between levels
+	  setWorld4AllowedColors(null);
+	  clearWorld4Locks();
+
 	  currentLevel = level;
 	// Stop any lingering tutorial state when leaving the intro level so hints do not bleed into later levels.
 	if (level !== 0 && tutorialState.active) {
@@ -26047,6 +26151,8 @@ function openShopModal(callback) {
 		try { window.loadedCustomLevelMeta = null; window.loadedCustomObjectiveCompiled = null; window.loadedCustomLevelMetaCompleted = false; } catch(e){}
 	  }
 	  lastRoundFailureReason = null;
+	  const { world: levelWorld } = getWorldAndSubLevel(currentLevel);
+	  const world4Active = Number(levelWorld) === 4;
 		
 	  // Rebuild shape pool zodat nieuwe card categorieën beschikbaar zijn
 	  shapePool = buildShapePool();
@@ -26126,6 +26232,10 @@ function openShopModal(callback) {
 			const allowed = window.scenarioAllowedColors;
 			drawPile = (drawPile || []).filter(c => c && (allowed.includes((c.color && c.color.name) || '') || (c.color && c.color.name) === 'multikleur'));
 		}
+		// World 4: keep only allowed colors in the draw pile when restrictions are active.
+		if (world4Active && Array.isArray(world4AllowedColors) && world4AllowedColors.length) {
+			drawPile = (drawPile || []).filter(card => isWorld4CardAllowed(card));
+		}
 		discardPile = savedDeckState.discardPile || [];
 		currentHand = savedDeckState.currentHand || [];
 		turnCount = savedDeckState.turnCount || 0;
@@ -26143,6 +26253,10 @@ function openShopModal(callback) {
 		if (Array.isArray(window.scenarioAllowedColors)) {
 			const allowed = window.scenarioAllowedColors;
 			drawPile = drawPile.filter(c => c && (allowed.includes((c.color && c.color.name) || '') || (c.color && c.color.name) === 'multikleur'));
+		}
+		// World 4: keep the draw pile limited to the current allowed palette.
+		if (world4Active && Array.isArray(world4AllowedColors) && world4AllowedColors.length) {
+			drawPile = drawPile.filter(card => isWorld4CardAllowed(card));
 		}
 		discardPile = [];
 		currentHand = [];
@@ -26335,6 +26449,60 @@ function sanitizeBoardHtml(html) {
 	} catch (e) {
 		return html;
 	}
+}
+
+function setWorld4AllowedColors(colors) {
+	try {
+		world4AllowedColors = Array.isArray(colors) ? colors.map(c => String(c || '').toLowerCase()) : null;
+		window.world4AllowedColors = world4AllowedColors;
+	} catch (e) {
+		world4AllowedColors = null;
+	}
+}
+
+function clearWorld4Locks() {
+	try {
+		world4UnlockedColors = new Set();
+		window.world4UnlockedColors = world4UnlockedColors;
+		// Remove any lingering door/key visuals
+		document.querySelectorAll('.door-cell,.key-cell').forEach(el => {
+			try { el.classList.remove('door-open'); } catch (_) {}
+		});
+	} catch (e) {}
+}
+
+function isWorld4ColorUnlocked(color) {
+	const key = String(color || '').toLowerCase();
+	return world4UnlockedColors instanceof Set && world4UnlockedColors.has(key);
+}
+
+function unlockWorld4Color(color) {
+	const key = String(color || '').toLowerCase();
+	if (!key) return;
+	if (!(world4UnlockedColors instanceof Set)) world4UnlockedColors = new Set();
+	if (world4UnlockedColors.has(key)) return;
+	world4UnlockedColors.add(key);
+	window.world4UnlockedColors = world4UnlockedColors;
+	// Unlock all cells gated by this color
+	document.querySelectorAll(`.cell[data-locked-color]`).forEach(cell => {
+		const c = String(cell.dataset.lockedColor || '').toLowerCase();
+		if (c !== key) return;
+		try { delete cell.dataset.lockedColor; } catch (_) {}
+		cell.classList.remove('locked-cell');
+	});
+	// Open matching doors
+	document.querySelectorAll(`.cell[data-door-color]`).forEach(cell => {
+		const c = String(cell.dataset.doorColor || '').toLowerCase();
+		if (c !== key) return;
+		cell.classList.add('door-open');
+	});
+}
+
+function isWorld4CardAllowed(cardData) {
+	if (!world4AllowedColors || !world4AllowedColors.length) return true;
+	const name = String(cardData?.color?.name || '').toLowerCase();
+	if (name === 'multikleur') return true;
+	return world4AllowedColors.includes(name);
 }
 
 	function loadGameState() {
@@ -26856,7 +27024,8 @@ function sanitizeBoardHtml(html) {
 		removeCardControlButtons();
 		card.classList.add('selected');
 		const cardData = card.cardData;
-		const currentShape = cardData?.matrix || card.cardShape || shape;
+		// Use the normalized/padded shape stored on the card first; fallback to raw matrix.
+		const currentShape = card.cardShape || cardData?.matrix || shape;
 		const currentColor = cardData?.color || card.cardColor || color;
 		selectedCardId = card.dataset.cardId || null;
 		selectedCardElement = card;
