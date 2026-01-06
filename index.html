@@ -4137,6 +4137,48 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		gap: 6px;
 	}
 
+	.card-effect.card-effect-echo {
+		background: linear-gradient(135deg, #e5f1ff, #d7e4ff);
+		color: #0f243a;
+		padding: 8px 10px;
+		border-radius: 12px;
+		box-shadow: 0 10px 22px rgba(0,0,0,0.16);
+		gap: 10px;
+		align-self: flex-start;
+	}
+
+	.card-effect-echo .card-effect-echo-icon {
+		width: 24px;
+		height: 24px;
+		border-radius: 7px;
+		background: linear-gradient(135deg, #4fc3ff, #6a8bff);
+		display: grid;
+		place-items: center;
+		color: #0b1b2c;
+		font-weight: 800;
+		font-size: 14px;
+		box-shadow: 0 6px 14px rgba(0,0,0,0.16);
+	}
+
+	.card-effect-echo .card-effect-echo-text {
+		display: flex;
+		flex-direction: column;
+		line-height: 1.05;
+		gap: 1px;
+	}
+
+	.card-effect-echo .card-effect-echo-title {
+		font-size: 0.78rem;
+		letter-spacing: 0.07em;
+	}
+
+	.card-effect-echo .card-effect-echo-sub {
+		font-size: 0.7rem;
+		letter-spacing: 0.04em;
+		font-weight: 700;
+		opacity: 0.82;
+	}
+
 	body.dark-mode .card-option {
 		background: linear-gradient(160deg, #2d3142 0%, #232635 45%, #1b1e2c 100%);
 		border-color: rgba(120,140,220,0.2);
@@ -4169,6 +4211,18 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	body.dark-mode .card-effect {
 		color: rgba(255,255,255,0.85);
 		background: rgba(255,255,255,0.08);
+	}
+
+	body.dark-mode .card-effect.card-effect-echo {
+		background: linear-gradient(135deg, #1f2f4c, #1a2741);
+		color: #e7f2ff;
+		box-shadow: 0 10px 22px rgba(0,0,0,0.45);
+	}
+
+	body.dark-mode .card-effect-echo .card-effect-echo-icon {
+		background: linear-gradient(135deg, #5ac8ff, #809cff);
+		color: #0b1626;
+		box-shadow: 0 6px 14px rgba(0,0,0,0.35);
 	}
 
 	#card-options {
@@ -12238,7 +12292,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		bonusEcho: {
 			id: 'bonusEcho',
 			name: 'Level 2 kaarten',
-			description: 'Ontgrendel Level 2 kaarten (Bonus Echo): speel op 2 bonussen voor +20 punten van die kleur, daarna direct opnieuw. Twee keer op rij geeft een extra beurt. Kies direct 1 uit 3 tetromino\'s met dit effect.',
+			description: 'Ontgrendel Level 2 kaarten: speel op 2 bonussen voor +20 punten van die kleur, daarna direct opnieuw. Twee keer op rij geeft een extra beurt. Kies direct 1 uit 3 tetromino\'s met dit effect.',
 			cost: 16,
 			icon: '🔁',
 			purchased: false,
@@ -12257,7 +12311,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 					});
 					showRewardPickerModal({
 						titleText: 'Kies je Level 2 kaart',
-						subtextHtml: 'Selecteer 1 van 3 normale vormen met het Level 2 (Bonus Echo) effect.',
+						subtextHtml: 'Selecteer 1 van 3 level 2 kaarten.',
 						choices,
 						onPick: ({ blueprint, card }) => {
 							grantPickedBlueprintReward({ blueprint, card });
@@ -13472,9 +13526,9 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			},
 			{
 				id: 'level-16-purple-titan',
-				description: 'Level 16: Scoor 120 punten in paars.',
+				description: 'Level 16: Scoor 110 punten in paars.',
 				short: 'Level 16 - Paarse titaan',
-				check: scores => scores.purple >= 120
+				check: scores => scores.purple >= 110
 			},
 			{
 				id: 'level-16-green-depths',
@@ -13543,9 +13597,9 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			},
 			{
 				id: 'level-18-purple-overlord',
-				description: 'Level 18: Scoor 200 punten in paars.',
+				description: 'Level 18: Scoor 140 punten in paars.',
 				short: 'Level 18 - Paarse overlord',
-				check: scores => scores.purple >= 200
+				check: scores => scores.purple >= 140
 			},
 			{
 				id: 'level-18-red-megagrid',
@@ -22338,7 +22392,8 @@ function getCollectedCoinCount(scores) {
 	  card.tabIndex = -1;
 	  card.style.cursor = 'default';
 	  card.style.pointerEvents = 'none';
-	  const isGolden = !!(blueprint.isGolden || blueprint.color?.isGolden);
+	const isGolden = !!(blueprint.isGolden || blueprint.color?.isGolden);
+	const isBonusEcho = !!blueprint.isBonusEcho;
 	  const colorObj = cloneColor(blueprint.color || { name: '', code: '#cccccc' });
 	  const displayName = getColorDisplayName(colorObj);
 	  // Golden is a card modifier; do not paint the blocks gold.
@@ -22366,10 +22421,32 @@ function getCollectedCoinCount(scores) {
 		? 'GOUD'
 		: (displayName ? displayName.toUpperCase() : 'KAART');
 	  label.append(swatch, labelText);
-	  const meta = document.createElement('div');
-	  meta.classList.add('card-meta');
-	  meta.textContent = rows && cols ? `${rows}×${cols}` : '';
-	  card.append(label, meta);
+	const meta = document.createElement('div');
+	meta.classList.add('card-meta');
+	meta.textContent = rows && cols ? `${rows}×${cols}` : '';
+	card.append(label, meta);
+
+	if (isBonusEcho) {
+		label.style.display = 'none';
+		meta.style.display = 'none';
+		const replayCharges = Number(blueprint.bonusEchoReplaysAvailable || 0);
+		const effect = document.createElement('div');
+		effect.classList.add('card-effect', 'card-effect-echo');
+		const icon = document.createElement('span');
+		icon.classList.add('card-effect-echo-icon');
+		icon.textContent = '⟳';
+		const textWrap = document.createElement('div');
+		textWrap.classList.add('card-effect-echo-text');
+		const title = document.createElement('div');
+		title.classList.add('card-effect-echo-title');
+		const sub = document.createElement('div');
+		sub.classList.add('card-effect-echo-sub');
+		const readyNote = replayCharges > 0 ? ' • KLAAR' : '';
+		sub.textContent = `${BONUS_ECHO_REQUIRED_BONUSES}× BONUS = +${BONUS_ECHO_SCORE_BONUS} & REPLAY${readyNote}`;
+		textWrap.append(title, sub);
+		effect.append(icon, textWrap);
+		card.appendChild(effect);
+	}
 	  return card;
 	}
 
@@ -23598,11 +23675,21 @@ function getCollectedCoinCount(scores) {
 		} else if (isBonusEchoCard) {
 			const replayCharges = Number(cardData.bonusEchoReplaysAvailable || 0);
 			const effect = document.createElement('div');
-			effect.classList.add('card-effect');
-			effect.textContent = `🔁 BONUS ECHO: ${BONUS_ECHO_REQUIRED_BONUSES} bonussen = +${BONUS_ECHO_SCORE_BONUS} & direct opnieuw`; 
-			if (replayCharges > 0) {
-				effect.textContent += ` (extra speelbeurt klaar)`;
-			}
+			effect.classList.add('card-effect', 'card-effect-echo');
+			const icon = document.createElement('span');
+			icon.classList.add('card-effect-echo-icon');
+			icon.textContent = '⟳';
+			const textWrap = document.createElement('div');
+			textWrap.classList.add('card-effect-echo-text');
+			const title = document.createElement('div');
+			title.classList.add('card-effect-echo-title');
+			title.textContent = 'BONUS ECHO';
+			const sub = document.createElement('div');
+			sub.classList.add('card-effect-echo-sub');
+			const readyNote = replayCharges > 0 ? ' • KLAAR' : '';
+			sub.textContent = `${BONUS_ECHO_REQUIRED_BONUSES}× BONUS = +${BONUS_ECHO_SCORE_BONUS} & REPLAY${readyNote}`;
+			textWrap.append(title, sub);
+			effect.append(icon, textWrap);
 			card.appendChild(effect);
 		}
 	  }
