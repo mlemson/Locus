@@ -14250,40 +14250,56 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	}
 
 	function computeShapeCenterOffsets(shape, cellSize = null) {
-			try {
-				if (!shape || !shape.length || !shape[0] || !shape[0].length) {
-					return { offsetX: 0, offsetY: 0 };
-				}
-				const metrics = getBoardCellMetrics();
-				// If a specific cellSize was passed, use it (gap assumed 0). Otherwise
-				// when zoomed-in measure the actual cell size from the active zoom
-				// zone so offsets align with the rendered draggable.
-				const measuredRoot = (document.body.classList.contains('zoomed-in') && typeof activeZoomZone !== 'undefined' && activeZoomZone) ? activeZoomZone : null;
-				const resolvedCellSize = Number.isFinite(cellSize) ? Number(cellSize) : getActualCellSize(measuredRoot) || metrics.cellSize;
-				const resolvedGap = Number.isFinite(cellSize) ? 0 : metrics.gap;
-				const resolvedStep = resolvedCellSize + resolvedGap;
+		try {
+			if (!shape || !shape.length || !shape[0] || !shape[0].length) {
+				return { offsetX: 0, offsetY: 0 };
+			}
+			const metrics = getBoardCellMetrics();
+			// If a specific cellSize was passed, use it (gap assumed 0). Otherwise
+			// when zoomed-in measure the actual cell size from the active zoom
+			// zone so offsets align with the rendered draggable.
+			const measuredRoot = (document.body.classList.contains('zoomed-in') && typeof activeZoomZone !== 'undefined' && activeZoomZone) ? activeZoomZone : null;
+			const resolvedCellSize = Number.isFinite(cellSize) ? Number(cellSize) : getActualCellSize(measuredRoot) || metrics.cellSize;
+			const resolvedGap = Number.isFinite(cellSize) ? 0 : metrics.gap;
+			const resolvedStep = resolvedCellSize + resolvedGap;
 
 			const shapeHeight = shape.length;
 			const shapeWidth = shape[0].length;
 			let minX = shapeWidth, maxX = -1, minY = shapeHeight, maxY = -1;
+			let solidMinX = shapeWidth, solidMaxX = -1, solidMinY = shapeHeight, solidMaxY = -1;
 			for (let y = 0; y < shapeHeight; y++) {
 				for (let x = 0; x < shapeWidth; x++) {
-					if (shape[y][x]) {
-						minX = Math.min(minX, x);
-						maxX = Math.max(maxX, x);
-						minY = Math.min(minY, y);
-						maxY = Math.max(maxY, y);
+					const val = shape[y][x];
+					if (!val) continue;
+					minX = Math.min(minX, x);
+					maxX = Math.max(maxX, x);
+					minY = Math.min(minY, y);
+					maxY = Math.max(maxY, y);
+					if (isSolidShapeCell(val)) {
+						solidMinX = Math.min(solidMinX, x);
+						solidMaxX = Math.max(solidMaxX, x);
+						solidMinY = Math.min(solidMinY, y);
+						solidMaxY = Math.max(solidMaxY, y);
 					}
 				}
 			}
-			// Use the full matrix size for centering so asymmetrical shapes (e.g. hinge/trap)
-			// keep a stable anchor; fall back to filled bounds only if the shape is entirely empty.
-			if (maxX < 0 || maxY < 0) {
+			// When optional cells exist, center on the solid footprint so the optional
+			// extension sits "off" the anchor instead of pulling the drag anchor away.
+			const hasSolid = Number.isFinite(solidMinX) && solidMaxX >= 0 && solidMaxY >= 0;
+			const hasOptional = hasOptionalCells(shape);
+			const useSolidBounds = hasOptional && hasSolid;
+			const boundMinX = useSolidBounds ? solidMinX : minX;
+			const boundMaxX = useSolidBounds ? solidMaxX : maxX;
+			const boundMinY = useSolidBounds ? solidMinY : minY;
+			const boundMaxY = useSolidBounds ? solidMaxY : maxY;
+			if (boundMaxX < 0 || boundMaxY < 0) {
 				return { offsetX: (shapeWidth * resolvedStep) / 2, offsetY: (shapeHeight * resolvedStep) / 2 };
 			}
+			const width = boundMaxX - boundMinX + 1;
+			const height = boundMaxY - boundMinY + 1;
 			return {
-				offsetX: (shapeWidth * resolvedStep) / 2,
-				offsetY: (shapeHeight * resolvedStep) / 2
+				offsetX: (boundMinX * resolvedStep) + (width * resolvedStep) / 2,
+				offsetY: (boundMinY * resolvedStep) + (height * resolvedStep) / 2
 			};
 		} catch {
 			return { offsetX: 0, offsetY: 0 };
@@ -21454,11 +21470,35 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	// ========================
 	// PLACE SHAPE
 	// ========================
+	const ZONE_COLOR_CODE_MAP = {
+		geel: '#cfba51',
+		yellow: '#cfba51',
+		rood: '#b56069',
+		red: '#b56069',
+		groen: '#92c28c',
+		green: '#92c28c',
+		paars: '#8f76b8',
+		purple: '#8f76b8',
+		blauw: '#5689b0',
+		blue: '#5689b0'
+	};
+
+	function resolveZoneColorCode(zone, fallbackColor) {
+		try {
+			const zoneKey = String(zone?.dataset?.color || '').toLowerCase();
+			if (zoneKey && ZONE_COLOR_CODE_MAP[zoneKey]) return ZONE_COLOR_CODE_MAP[zoneKey];
+		} catch (e) {}
+		return fallbackColor || '';
+	}
+
 	function placeShape(zone, baseX, baseY, shape, color) {
 	  if (!zone) return null;
-	  const colorCode = typeof color === 'string'
+	  const rawColorCode = typeof color === 'string'
 		? color
 		: (color?.code);
+	  const isMultikleur = (typeof color === 'object' && (color.name === 'multikleur' || color.code === 'rainbow')) || rawColorCode === 'rainbow';
+	  const zoneColorCode = resolveZoneColorCode(zone, rawColorCode);
+	  const colorCode = isMultikleur ? zoneColorCode : rawColorCode;
 	  const effectiveShape = shape;
 	  // Validate using the required cells only (optional cells are skipped by collectPlacementCells).
 	  const pendingCells = collectPlacementCells(zone, baseX, baseY, effectiveShape);
