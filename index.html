@@ -13420,10 +13420,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			},
 			{
 				id: 'level-16-bonus-legend',
-				description: 'Level 16: Verzamel 25 bonuspunten.',
+				description: 'Level 16: Haal 25 bonussen.',
 				short: 'Level 16 - Bonus legende',
-				check: scores => scores.bonus >= 25,
-				progress: scores => (scores.bonus >= 25 ? '✔' : `${Math.max(0, scores.bonus)}/25`)
+				check: scores => (scores?.bonusesCollected || 0) >= 25,
+				progress: scores => {
+					const collected = Math.max(0, Math.min(25, (scores?.bonusesCollected || 0)));
+					return `${collected}/25`;
+				}
 			}
 		],
 		17: [
@@ -13499,10 +13502,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			},
 			{
 				id: 'level-18-bonus-titan',
-				description: 'Level 18: Verzamel 30 bonuspunten.',
+				description: 'Level 18: Haal 30 bonussen.',
 				short: 'Level 18 - Bonus titaan',
-				check: scores => scores.bonus >= 30,
-				progress: scores => (scores.bonus >= 30 ? '✔' : `${Math.max(0, scores.bonus)}/30`)
+				check: scores => (scores?.bonusesCollected || 0) >= 30,
+				progress: scores => {
+					const collected = Math.max(0, Math.min(30, (scores?.bonusesCollected || 0)));
+					return `${collected}/30`;
+				}
 			}
 		],
 		19: [
@@ -13571,10 +13577,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			},
 			{
 				id: 'level-20-bonus-god',
-				description: 'Level 20: Verzamel 30 bonuspunten.',
+				description: 'Level 20: Haal 30 bonussen.',
 				short: 'Level 20 - Bonus god',
-				check: scores => scores.bonus >= 30,
-				progress: scores => (scores.bonus >= 30 ? '✔' : `${Math.max(0, scores.bonus)}/30`)
+				check: scores => (scores?.bonusesCollected || 0) >= 30,
+				progress: scores => {
+					const collected = Math.max(0, Math.min(30, (scores?.bonusesCollected || 0)));
+					return `${collected}/30`;
+				}
 			},
 			{
 				id: 'level-20-complete-all',
@@ -18300,6 +18309,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	const safeLevel = (typeof currentLevel !== 'undefined') ? currentLevel : 1;
 	const worldInfo = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(safeLevel) : { world: 1 };
 	const isWorld2 = Number(worldInfo?.world || 1) === 2;
+	const isWorld3 = Number(worldInfo?.world || 1) === 3;
 	const greenGrid = document.getElementById('green-grid');
 
 		try { console.debug('updateScore:called', { cellId: cell ? (cell.id || null) : null, time: Date.now() }); } catch(e) {}
@@ -18714,10 +18724,10 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		const colCells = (columnCellMap.get(col) || []).slice().sort((a, b) => Number(a.dataset.y) - Number(b.dataset.y));
 		const full = colCells.length === expectedHeight && colCells.every(cell => cell.classList.contains('active'));
 		const wasFull = window.scoredYellowColumns.has(col);
-		// Yellow request: every 2 columns share the same bonus.
-		// e.g. columns 1-2 => 12 each, 3-4 => 18 each, 5-6 => 24 each, ...
+		// World 1: elke 2 kolommen delen een vaste waarde (1-2:12, 3-4:18, 5-6:30, 7-8:42, 9-10:60; daarna 60)
 		const columnPairIndex = Math.floor(col / 2);
-		const columnPointsValue = 12 + (columnPairIndex * 6);
+		const world1ColumnPairPoints = [12, 18, 30, 42, 60];
+		const columnPointsValue = world1ColumnPairPoints[Math.min(columnPairIndex, world1ColumnPairPoints.length - 1)] || 0;
 		if (!columnPointsValue || columnPointsValue <= 0) {
 		  if (wasFull) window.scoredYellowColumns.delete(col);
 		  continue;
@@ -27950,18 +27960,25 @@ function showFloatingPreview(shape, color, options = {}) {
 
 		const WORLD_INFO = {
 			1: {
-				paars: '<strong>Paars</strong>: Begin overal. Haal 8 punten per connectie van paarse dikgedrukte cellen.',
-				geel: '<strong>Geel</strong>: Begin links. Je scoort als je een volledige kolom vult. De eerste kolom geeft 12 punten, daarna 18 punten, en meer.',
+				paars: '<strong>Paars</strong>: Begin overal. Haal 8 punten per verbinding van paarse dikgedrukte cellen.',
+				geel: '<strong>Geel</strong>: Begin links. Je scoort als je een volledige kolom vult. Kolommen 1-2 geven 12 punten per kolom, 3-4 geven 18, 5-6 geven 30, 7-8 geven 42 punten, en 9-10 geven 60 punten per kolom.',
 				groen: '<strong>Groen</strong>: Begin vanaf het midden. Bereik de donkergroene cellen om 8 punten te verdienen.',
 				rood: '<strong>Rood</strong>: Begin overal. Elk rood vak dat volledig gevuld is levert punten op:',
 				blauw: '<strong>Blauw</strong>: Begin onderaan. Bereik dikgedrukte cellen om punten te behalen.'
 			},
 			2: {
-				paars: '<strong>Paars</strong>: Maak clusters van aaneengesloten paarse cellen. Verbindingen met vetgedrukte cellen scoren extra: buitenring (20 per verbinding) en binnenste vetgedrukte cellen (8 per verbinding).',
+				paars: '<strong>Paars</strong>: Maak verbindingen van aaneengesloten paarse cellen. Score: 8 per verbinding, verbinding naar hoekcel: 10 punten, hoekcellen onderling: 25 punten per verbinding.',
 				geel: '<strong>Geel</strong>: Je scoort als je een diagonale lijn vult. (start vanaf dikgedrukte cellen)',
-				groen: '<strong>Groen</strong>: Activeer eindcellen. Eindcellen verder van de start leveren doorgaans meer punten op.',
-				rood: '<strong>Rood</strong>: Elk rood subgrid dat volledig gevuld is levert punten op (vaste punten per subgrid).',
-				blauw: '<strong>Blauw</strong>: Per rij waarin minstens één vetgedrukte cel actief is scoor je oplopende punten. (eerste rij lager, elke volgende rij hoger).'
+				groen: '<strong>Groen</strong>: Begin vanaf het midden. Bereik de donkergroene cellen om punten te verdienen, hoe verder van het midden, hoe meer punten je kan verdienen.',
+				rood: '<strong>Rood</strong>: Begin overal. Elk rood vak dat volledig gevuld is levert punten op:',
+				blauw: '<strong>Blauw</strong>: Begin onderaan. Bereik dikgedrukte cellen om punten te behalen.'
+			},
+			3: {
+				paars: '<strong>Paars</strong>: Maak verbindingen van aaneengesloten paarse cellen. Score: 8 per verbinding, verbinding naar hoekcel: 10 punten, hoekcellen onderling: 25 punten per verbinding.',
+				geel: '<strong>Geel</strong>: Je scoort per volledige ring van de diamant. Buitenste ringen geven de minste punten, binnenste ringen de meeste (oplopend tot 64 punten).',
+				groen: '<strong>Groen</strong>: Begin vanaf het midden. Bereik de donkergroene cellen om punten te verdienen, hoe verder van het midden, hoe meer punten je kan verdienen.',
+				rood: '<strong>Rood</strong>: Begin overal. Elk rood vak dat volledig gevuld is levert punten op:',
+				blauw: '<strong>Blauw</strong>: Begin onderaan. Bereik dikgedrukte cellen om punten te behalen.'
 			}
 		};
 
