@@ -12234,6 +12234,30 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 				} catch (e) {}
 			}
 		},
+		bonusEcho: {
+			id: 'bonusEcho',
+			name: 'Bonus Echo',
+			description: 'Nieuw wereld 2 effect: speel op 2 bonussen voor +20 punten van die kleur. Succesvolle plaatsing maakt de kaart direct opnieuw speelbaar en 2× op rij geeft een extra beurt.',
+			cost: 16,
+			icon: '🔁',
+			purchased: false,
+			onPurchase: () => {
+				try {
+					if (typeof createBonusEchoCardBlueprint !== 'function') return;
+					const blueprint = createBonusEchoCardBlueprint();
+					if (!blueprint) return;
+					ownedDeckBlueprints.push(blueprint);
+					try {
+						const card = instantiateBlueprint(blueprint);
+						if (card) currentHand.push(card);
+					} catch (e) {}
+					updateDeckPreview();
+					saveGameState();
+					renderCurrentHand();
+					showObjectiveToast('🔁 Bonus Echo kaart ontvangen! Plaats op twee bonussen voor +20 en een directe herhaalbeurt.');
+				} catch (e) {}
+			}
+		},
 		multicolorBoost: {
 			id: 'multicolorBoost',
 			name: 'Multikleur Boost',
@@ -12361,6 +12385,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			extraHandSize: { unlockedAtWorld: 3, unlockedAtLevel: 21, announcement: 'nieuwe upgrade' },
 			multicolorBoost: { unlockedAtWorld: 3, unlockedAtLevel: 21, announcement: 'nieuwe upgrade' },
 			bonusBoost: { unlockedAtWorld: 2, unlockedAtLevel: 5, announcement: 'nieuwe upgrade' },
+			bonusEcho: { unlockedAtWorld: 2, unlockedAtLevel: 12, announcement: 'nieuwe upgrade' },
 			blackHoleAccess: { unlockedAtLevel: 11, announcement: 'nieuwe uitdaging' },
 			portals: { unlockedAtLevel: 11, announcement: 'nieuwe upgrade' },
 			betterCards: { unlockedAtWorld: 3, unlockedAtLevel: 21, announcement: 'nieuwe upgrade' },
@@ -13170,29 +13195,29 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			},
 			{
 				id: 'level-11-long-path',
-				description: 'Level 11: Scoor 32 punten in blauw.',
+				description: 'Level 11: Scoor 50 punten in blauw.',
 				short: 'Level 11 - Lange reis',
-				check: scores => scores.blue >= 32
+				check: scores => scores.blue >= 50
 			},
 			{
 				id: 'level-11-purple-expansion',
-				description: 'Level 11: Scoor 32 punten in paars.',
+				description: 'Level 11: Scoor 40 punten in paars.',
 				short: 'Level 11 - Paarse expansie',
-				check: scores => scores.purple >= 32
+				check: scores => scores.purple >= 40
 			},
 		],
 		12: [
 			{
 				id: 'level-12-deep-roots',
-				description: 'Level 12: Scoor 40 punten in groen (diepe wortels).',
+				description: 'Level 12: Scoor 50 punten in groen.',
 				short: 'Level 12 - Diepe wortels',
-				check: scores => scores.green >= 40
+				check: scores => scores.green >= 50
 			},
 			{
 				id: 'level-12-red-connection',
-				description: 'Level 12: Scoor 35 punten in rood.',
+				description: 'Level 12: Scoor 45 punten in rood.',
 				short: 'Level 12 - Rode verbinding',
-				check: scores => scores.red >= 35
+				check: scores => scores.red >= 45
 			},
 			{
 				id: 'level-12-yellow-precision',
@@ -13285,27 +13310,27 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		13: [
 			{
 				id: 'level-13-mega-blue',
-				description: 'Level 13: Scoor 50 punten in blauw.',
+				description: 'Level 13: Scoor 70 punten in blauw.',
 				short: 'Level 13 - Mega blauw',
-				check: scores => scores.blue >= 50
+				check: scores => scores.blue >= 70
 			},
 			{
 				id: 'level-13-purple-perfect',
-				description: 'Level 13: Scoor 48 punten in paars.',
-				short: 'Level 13 - Paars 48 punten',
-				check: scores => scores.purple >= 48
+				description: 'Level 13: Scoor 70 punten in paars.',
+				short: 'Level 13 - Paars 70 punten',
+				check: scores => scores.purple >= 70
 			},
 			{
 				id: 'level-13-green-giant',
-				description: 'Level 13: Scoor 48 punten in groen.',
+				description: 'Level 13: Scoor 70 punten in groen.',
 				short: 'Level 13 - Groene reus',
-				check: scores => scores.green >= 48
+				check: scores => scores.green >= 70
 			},
 			{
 				id: 'level-13-red-master',
-				description: 'Level 13: Scoor 45 punten in rood.',
-				short: 'Level 13 - Rood 45 punten',
-				check: scores => scores.red >= 45
+				description: 'Level 13: Scoor 58 punten in rood.',
+				short: 'Level 13 - Rood 58 punten',
+				check: scores => scores.red >= 58
 			},
 			{
 				id: 'level-13-yellow-artisan',
@@ -13369,120 +13394,104 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		14: [
 			{
 				id: 'level-14-total-score',
-				description: 'Level 14: Scoor 160 punten totaal.',
+				description: 'Level 14: Scoor 200 punten in totaal.',
 				short: 'Level 14 - Totale score',
-				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 160
+				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 200
 			},
 			{
 				id: 'level-14-balanced-power',
-				description: 'Level 14: Scoor 45 punten in 4 verschillende kleuren.',
+				description: 'Level 14: Scoor 58 punten in 4 verschillende kleuren.',
 				short: 'Level 14 - Gebalanceerde kracht',
 				check: scores => {
 					const colorScores = [scores.yellow, scores.red, scores.green, scores.purple, scores.blue];
-					return colorScores.filter(s => s >= 45).length >= 4;
+					return colorScores.filter(s => s >= 58).length >= 4;
 				}
 			},
-			/* REMOVED BONUS OBJECTIVE AS REQUESTED */
-			/*
-			{
-				id: 'level-14-bonus-master',
-				description: 'Level 14: Verzamel 40+ bonuspunten.',
-				short: 'Level 14 - Bonus meester',
-				check: scores => scores.bonus >= 40,
-				progress: scores => (scores.bonus >= 40 ? '⭐✔' : `⭐${Math.max(0, scores.bonus)}/40`)
-			},
-			*/
 			{
 				id: 'level-14-blue-marathon',
-				description: 'Level 14: Scoor 70 punten in blauw.',
+				description: 'Level 14: Scoor 90 punten in blauw.',
 				short: 'Level 14 - Blauwe marathon',
-				check: scores => scores.blue >= 70
+				check: scores => scores.blue >= 90
 			},
 			{
 				id: 'level-14-multi-color-focus',
-				description: 'Level 14: Scoor 48 punten in groen en paars.',
+				description: 'Level 14: Scoor 60 punten in groen en paars.',
 				short: 'Level 14 - Multi-kleur focus',
-				check: scores => scores.green >= 48 && scores.purple >= 48
+				check: scores => scores.green >= 60 && scores.purple >= 60
 			}
 		],
 		15: [
 			{
-				id: 'level-15-trap-master',
-				description: 'Level 15: Scoor 48 punten in groen en paars.',
-				short: 'Level 15 - Val meester',
-				check: scores => scores.purple >= 48 && scores.green >= 48
-			},
-			{
 				id: 'level-15-green-legend',
-				description: 'Level 15: Scoor 58 punten in groen.',
+				description: 'Level 15: Scoor 80 punten in groen.',
 				short: 'Level 15 - Groene legende',
-				check: scores => scores.green >= 58
+				check: scores => scores.green >= 80
 			},
 			{
 				id: 'level-15-red-network',
-				description: 'Level 15: Scoor 50 punten in rood.',
+				description: 'Level 15: Scoor 70 punten in rood.',
 				short: 'Level 15 - Rood netwerk',
-				check: scores => scores.red >= 50
+				check: scores => scores.red >= 70
 			},
 			{
 				id: 'level-15-yellow-perfect',
-				description: 'Level 15: Scoor 60 punten in geel.',
+				description: 'Level 15: Scoor 80 punten in geel.',
 				short: 'Level 15 - Gele perfectie',
-				check: scores => scores.yellow >= 60
+				check: scores => scores.yellow >= 80
 			},
 			{
 				id: 'level-15-ultimate-balance',
-				description: 'Level 15: Scoor 32 punten in elke kleur.',
+				description: 'Level 15: Scoor 50 punten in elke kleur.',
 				short: 'Level 15 - Ultieme balans',
-				check: scores => scores.yellow >= 32 && scores.red >= 32 && scores.green >= 32 && scores.purple >= 32 && scores.blue >= 32
+				check: scores => scores.yellow >= 50 && scores.red >= 50 && scores.green >= 50 && scores.purple >= 50 && scores.blue >= 50
 			}
 		],
 		16: [
 			{
 				id: 'level-16-total-domination',
-				description: 'Level 16: Scoor 180 punten totaal.',
+				description: 'Level 16: Scoor 280 punten totaal.',
 				short: 'Level 16 - Totale dominantie',
-				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 180
+				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 280
 			},
 			{
 				id: 'level-16-blue-epic',
-				description: 'Level 16: Scoor 60 punten in blauw.',
+				description: 'Level 16: Scoor 120 punten in blauw.',
 				short: 'Level 16 - Blauwe epic',
-				check: scores => scores.blue >= 60
+				check: scores => scores.blue >= 120
 			},
 			{
 				id: 'level-16-purple-titan',
-				description: 'Level 16: Scoor 60 punten in paars.',
+				description: 'Level 16: Scoor 120 punten in paars.',
 				short: 'Level 16 - Paarse titaan',
-				check: scores => scores.purple >= 60
+				check: scores => scores.purple >= 120
 			},
 			{
 				id: 'level-16-green-depths',
-				description: 'Level 16: Scoor 65 punten in groen.',
+				description: 'Level 16: Scoor 120 punten in groen.',
 				short: 'Level 16 - Groene dieptes',
-				check: scores => scores.green >= 65
+				check: scores => scores.green >= 120
 			},
 			{
 				id: 'level-16-bonus-legend',
-				description: 'Level 16: Haal 25 bonussen.',
+				description: 'Level 16: Haal 40 bonussen.',
 				short: 'Level 16 - Bonus legende',
-				check: scores => (scores?.bonusesCollected || 0) >= 25,
+				check: scores => (scores?.bonusesCollected || 0) >= 40,
 				progress: scores => {
-					const collected = Math.max(0, Math.min(25, (scores?.bonusesCollected || 0)));
-					return `${collected}/25`;
+					const collected = Math.max(0, Math.min(40, (scores?.bonusesCollected || 0)));
+					return `${collected}/40`;
 				}
 			}
 		],
 		17: [
 			{
 				id: 'level-17-red-empire',
-				description: 'Level 17: Scoor 58 punten in rood.',
+				description: 'Level 17: Scoor 78 punten in rood.',
 				short: 'Level 17 - Rood rijk',
-				check: scores => scores.red >= 58
+				check: scores => scores.red >= 78
 			},
 			{
 				id: 'level-17-four-pillars',
-				description: 'Level 17: Scoor 48 punten in 4 verschillende kleuren.',
+				description: 'Level 17: Scoor 70 punten in 4 verschillende kleuren.',
 				short: 'Level 17 - Vier pilaren',
 				check: scores => {
 					const colorScores = [scores.yellow, scores.red, scores.green, scores.purple, scores.blue];
@@ -13491,41 +13500,41 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			},
 			{
 				id: 'level-17-yellow-architect',
-				description: 'Level 17: Scoor 80 punten in geel.',
+				description: 'Level 17: Scoor 150 punten in geel.',
 				short: 'Level 17 - Gele architect',
 				check: scores => scores.yellow >= 80
 			},
 			{
 				id: 'level-17-blue-odyssey',
-				description: 'Level 17: Scoor 70 punten in blauw.',
+				description: 'Level 17: Scoor 150 punten in blauw.',
 				short: 'Level 17 - Blauwe odyssee',
 				check: scores => scores.blue >= 70
 			},
 			{
 				id: 'level-17-complete-mastery',
-				description: 'Level 17: Scoor 48 punten elke kleur.',
+				description: 'Level 17: Scoor 58 punten elke kleur.',
 				short: 'Level 17 - Complete meesterschap',
-				check: scores => scores.yellow >= 48 && scores.red >= 48 && scores.green >= 48 && scores.purple >= 48 && scores.blue >= 48
+				check: scores => scores.yellow >= 58 && scores.red >= 58 && scores.green >= 58 && scores.purple >= 58 && scores.blue >= 58
 			}
 		],
 		18: [
 			{
 				id: 'level-18-mega-score',
-				description: 'Level 18: Scoor 200 punten totaal.',
+				description: 'Level 18: Scoor 300 punten totaal.',
 				short: 'Level 18 - Mega score',
-				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 200
+				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 300
 			},
 			{
 				id: 'level-18-green-abyss',
-				description: 'Level 18: Scoor 70 punten in groen.',
+				description: 'Level 18: Scoor 200 punten in groen.',
 				short: 'Level 18 - Groene afgrond',
-				check: scores => scores.green >= 70
+				check: scores => scores.green >= 200
 			},
 			{
 				id: 'level-18-purple-overlord',
-				description: 'Level 18: Scoor 60 punten in paars.',
+				description: 'Level 18: Scoor 200 punten in paars.',
 				short: 'Level 18 - Paarse overlord',
-				check: scores => scores.purple >= 60
+				check: scores => scores.purple >= 200
 			},
 			{
 				id: 'level-18-red-megagrid',
@@ -13546,39 +13555,39 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			},
 			{
 				id: 'level-18-bonus-titan',
-				description: 'Level 18: Haal 30 bonussen.',
+				description: 'Level 18: Haal 35 bonussen.',
 				short: 'Level 18 - Bonus titaan',
-				check: scores => (scores?.bonusesCollected || 0) >= 30,
+				check: scores => (scores?.bonusesCollected || 0) >= 35,
 				progress: scores => {
-					const collected = Math.max(0, Math.min(30, (scores?.bonusesCollected || 0)));
-					return `${collected}/30`;
+					const collected = Math.max(0, Math.min(35, (scores?.bonusesCollected || 0)));
+					return `${collected}/35`;
 				}
 			}
 		],
 		19: [
 			{
 				id: 'level-19-blue-legend',
-				description: 'Level 19: Scoor 70 punten in blauw.',
+				description: 'Level 19: Scoor 250 punten in blauw.',
 				short: 'Level 19 - Blauwe legende',
 				check: scores => scores.blue >= 70
 			},
 			{
 				id: 'level-19-all-pillars',
-				description: 'Level 19: Scoor 50 punten elke kleur.',
+				description: 'Level 19: Scoor 80 punten elke kleur.',
 				short: 'Level 19 - Alle pilaren',
-				check: scores => scores.yellow >= 50 && scores.red >= 50 && scores.green >= 50 && scores.purple >= 50 && scores.blue >= 50
+				check: scores => scores.yellow >= 80 && scores.red >= 80 && scores.green >= 80 && scores.purple >= 80 && scores.blue >= 80
 			},
 			{
 				id: 'level-19-green-infinite',
-				description: 'Level 19: Scoor 80 punten in groen.',
+				description: 'Level 19: Scoor 180 punten in groen.',
 				short: 'Level 19 - Groene oneindigheid',
-				check: scores => scores.green >= 80
+				check: scores => scores.green >= 180
 			},
 			{
 				id: 'level-19-red-completion',
-				description: 'Level 19: Scoor 60 punten in rood.',
+				description: 'Level 19: Scoor 120 punten in rood.',
 				short: 'Level 19 - Rode voltooiing',
-				check: scores => scores.red >= 60
+				check: scores => scores.red >= 120
 			},
 			{
 				id: 'level-19-perfect-world',
@@ -13599,13 +13608,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		20: [
 			{
 				id: 'level-20-ultimate',
-				description: 'Level 20: Scoor 250 punten totaal (ultieme uitdaging).',
+				description: 'Level 20: Scoor 400 punten totaal (ultieme uitdaging).',
 				short: 'Level 20 - Ultiem',
-				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 250
+				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 400
 			},
 			{
 				id: 'level-20-perfect-balance',
-				description: 'Level 20: Scoor 55 punten in elke kleur.',
+				description: 'Level 20: Scoor 100 punten in elke kleur.',
 				short: 'Level 20 - Perfecte balans',
 				check: scores => scores.yellow >= 55 && scores.red >= 55 && scores.green >= 55 && scores.purple >= 55 && scores.blue >= 55,
 				progress: scores => {
@@ -13621,12 +13630,12 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			},
 			{
 				id: 'level-20-bonus-god',
-				description: 'Level 20: Haal 30 bonussen.',
+				description: 'Level 20: Haal 40 bonussen.',
 				short: 'Level 20 - Bonus god',
-				check: scores => (scores?.bonusesCollected || 0) >= 30,
+				check: scores => (scores?.bonusesCollected || 0) >= 40,
 				progress: scores => {
-					const collected = Math.max(0, Math.min(30, (scores?.bonusesCollected || 0)));
-					return `${collected}/30`;
+					const collected = Math.max(0, Math.min(40, (scores?.bonusesCollected || 0)));
+					return `${collected}/40`;
 				}
 			},
 			{
@@ -13654,20 +13663,19 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			},
 			{
 				id: 'level-20-world2-master',
-				description: 'Level 20: Meester van Wereld 2 - Scoor 50 punten in elke kleur en haal 25+ bonus.',
+				description: 'Level 20: Meester van Wereld 2 - Scoor 100 punten in elke kleur.',
 				short: 'Level 20 - Wereld 2 meester',
 				check: scores => {
 					const colorScores = [scores.yellow, scores.red, scores.green, scores.purple, scores.blue];
-					return colorScores.filter(s => s >= 50).length === 5 && scores.bonus >= 25;
+					return colorScores.filter(s => s >= 100).length === 5;
 				},
 				progress: scores => {
 					const parts = [
-						(scores.yellow >= 50 ? '✔geel' : ''),
-						(scores.red >= 50 ? '✔rood' : ''),
-						(scores.green >= 50 ? '✔groen' : ''),
-						(scores.purple >= 50 ? '✔paars' : ''),
-						(scores.blue >= 50 ? '✔blauw' : ''),
-						(scores.bonus >= 25 ? '✔' : scores.bonus)
+						(scores.yellow >= 100 ? '✔geel' : ''),
+						(scores.red >= 100 ? '✔rood' : ''),
+						(scores.green >= 100 ? '✔groen' : ''),
+						(scores.purple >= 100 ? '✔paars' : ''),
+						(scores.blue >= 100 ? '✔blauw' : '')
 					];
 					return parts.join(' ');
 				}
@@ -17861,6 +17869,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  blackHoleBonus = 0;
 	  totalBonusesCollected = 0;
 	  latestScoreSnapshot = null;
+	resetBonusEchoState();
 	coinsAwardedFromScore = 0;
 	cellActivationSequence = 0;
 	placementSequence = 0;
@@ -18988,6 +18997,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	purple -= penaltyDelta.purple;
 	blue -= penaltyDelta.blue;
 	red -= penaltyDelta.red;
+	// Add any persistent score buffs granted by Bonus Echo cards.
+	const bonusScore = colorScoreBonuses || {};
+	yellow += Number(bonusScore.yellow || 0);
+	green += Number(bonusScore.green || 0);
+	purple += Number(bonusScore.purple || 0);
+	blue += Number(bonusScore.blue || 0);
+	red += Number(bonusScore.red || 0);
 	const waarden = [yellow, green, purple, blue, red];
 	// Bonus should never go negative.
 	const baseBonus = Math.max(0, Math.min(...waarden));
@@ -19496,7 +19512,16 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  if (Array.isArray(bonuses) && bonuses.length) {
 		bonuses.forEach(revokeBonusClaim);
 	  }
+	  if (placement && placement.bonusEchoPointsAdded && placement.bonusEchoColorKey) {
+		const key = placement.bonusEchoColorKey;
+		const current = Number(colorScoreBonuses[key] || 0);
+		colorScoreBonuses[key] = Math.max(0, current - Number(placement.bonusEchoPointsAdded || 0));
+		if (placement.bonusEchoExtraTurnGranted && bonusEchoExtraTurns > 0) {
+			bonusEchoExtraTurns = Math.max(0, bonusEchoExtraTurns - 1);
+		}
+	  }
 	  updateScore();
+	  recomputeBonusEchoSequenceState();
 	  if (isBonusPlacement) {
 		if (bonusSpent && bonusKey) restoreBonusCharge(bonusKey);
 		selectedCardId = null;
@@ -21777,6 +21802,24 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	const LUCKY_DRAW_COPY_CHANCE = 0.25;
 	let goldenColorRotation = 0;
 
+	// Wereld 2 kaart upgrade: bonus-echo (score buff + extra turns)
+	const BONUS_ECHO_REQUIRED_BONUSES = 2;
+	const BONUS_ECHO_SCORE_BONUS = 20;
+	const BONUS_ECHO_CARD_COST_BONUS = 4;
+	let colorScoreBonuses = { yellow: 0, red: 0, green: 0, purple: 0, blue: 0 };
+	let bonusEchoExtraTurns = 0;
+	let bonusEchoStreak = 0;
+	let bonusEchoFreePlays = 0;
+	let lastCardWasBonusEcho = false;
+
+	function resetBonusEchoState() {
+		colorScoreBonuses = { yellow: 0, red: 0, green: 0, purple: 0, blue: 0 };
+		bonusEchoExtraTurns = 0;
+		bonusEchoStreak = 0;
+		bonusEchoFreePlays = 0;
+		lastCardWasBonusEcho = false;
+	}
+
 	// Variabelen die nodig zijn voor buildShapePool
 	let currentLevel = 1;
 	let currentWorld = 1; // Nieuwe variabele om bij te houden in welke wereld we zitten
@@ -21814,6 +21857,8 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	let drawPile = [];
 	let discardPile = [];
 	let currentHand = [];
+	let preLevelStarterPicksDone = false;
+	let preLevelStarterPicksInProgress = false;
 	let pendingShopCallback = null;
 	let lastRoundWasSuccess = false;
 	let lastRoundFailureReason = null;
@@ -21881,7 +21926,9 @@ function optionalCellsTouchActive(zone, pendingCells) {
 			category: blueprint.category,
 			color: safeColor,
 			isGolden,
-			isBonusBoost: !!blueprint.isBonusBoost
+			isBonusBoost: !!blueprint.isBonusBoost,
+			isBonusEcho: !!blueprint.isBonusEcho,
+			bonusEchoReplaysAvailable: Number(blueprint.bonusEchoReplaysAvailable || 0)
 		};
 	}
 
@@ -22657,6 +22704,47 @@ function getCollectedCoinCount(scores) {
 		showStep();
 	}
 
+	function startStarterMiniRewardSequence(onComplete) {
+		const steps = 2;
+		let step = 1;
+		const colorPalette = NON_WILDCARD_COLORS.length ? NON_WILDCARD_COLORS : colors;
+		const filterMiniTiny = (e) => {
+			if (!e || !e.matrix) return false;
+			const blocks = (typeof countShapeBlocks === 'function') ? countShapeBlocks(e.matrix) : null;
+			if (!Number.isFinite(blocks)) return (e.category === 'mini' || e.category === 'standard');
+			return blocks <= 3;
+		};
+		const grantToDeck = (blueprint) => {
+			ownedDeckBlueprints.push(blueprint);
+			updateDeckPreview();
+			saveGameState();
+		};
+		const showStep = () => {
+			const choices = buildRewardChoices({
+				count: 3,
+				filterFn: filterMiniTiny,
+				colorsPalette: colorPalette
+			});
+			showRewardPickerModal({
+				titleText: `🧩 Startpakket kaart (${step}/${steps})`,
+				subtextHtml: 'Kies 1 uit 3 compacte kaarten (max. 3 blokjes). Je krijgt twee keuzes voordat level 1.1 start.',
+				choices,
+				onPick: ({ blueprint }) => {
+					grantToDeck(blueprint);
+					step += 1;
+					if (step > steps) {
+						closeGoldenUnlockModal();
+						restoreGoldenUnlockModalCopy();
+						if (typeof onComplete === 'function') onComplete();
+						return;
+					}
+					setTimeout(showStep, 60);
+				}
+			});
+		};
+		showStep();
+	}
+
 	function populateGoldenUnlockModal() {
 		if (!goldenUnlockContent) return;
 		goldenUnlockContent.innerHTML = '';
@@ -23084,8 +23172,12 @@ function getCollectedCoinCount(scores) {
 		const extra = (typeof BONUS_BOOST_CARD_COST_BONUS === 'number') ? BONUS_BOOST_CARD_COST_BONUS : 4;
 		baseCost += extra;
 	  }
+	  if (cardData && cardData.isBonusEcho) {
+		const extra = (typeof BONUS_ECHO_CARD_COST_BONUS === 'number') ? BONUS_ECHO_CARD_COST_BONUS : 4;
+		baseCost += extra;
+	  }
 	  // Multikleur modifier +2
-	  if (cardData.color.name === 'multikleur') baseCost += 2;
+	  if (cardData.color && cardData.color.name === 'multikleur') baseCost += 2;
 	  return baseCost;
 	}
 
@@ -23095,6 +23187,9 @@ function getCollectedCoinCount(scores) {
 		// - Multikleur: 5% basis, 20% met multikleur unlock, 50% met multikleur boost
 		// - Goud: 3% basis, 15% met gouden unlock
 		// - Extra large vormen komen mee in de “large” kans als de upgrade er is
+		if (hasUpgrade('bonusEcho') && Math.random() < 0.12) {
+			return instantiateBlueprint(createBonusEchoCardBlueprint());
+		}
 		const hasWildcardUnlock = hasUpgrade('wildcardCards');
 		const hasWildcardBoost = hasUpgrade('multicolorBoost');
 		const hasGoldUnlock = hasUpgrade('goldenCards');
@@ -23182,6 +23277,23 @@ function getCollectedCoinCount(scores) {
 		const bp = createBonusBoostCardBlueprint();
 		const card = instantiateBlueprint(bp);
 		card.isBonusBoostShopCard = true;
+		return card;
+	}
+
+	function createBonusEchoCardBlueprint() {
+		const miniChoices = (CARD_BLUEPRINTS && Array.isArray(CARD_BLUEPRINTS.mini)) ? CARD_BLUEPRINTS.mini : [];
+		const defaultShape = { name: 'Echo Domino', matrix: [[1], [1]], category: 'mini' };
+		const shapePick = miniChoices.find(entry => countShapeBlocks(entry.matrix) === BONUS_ECHO_REQUIRED_BONUSES) || defaultShape;
+		const entry = { name: 'Bonus Echo', matrix: cloneShape(shapePick.matrix), category: 'mini' };
+		const palette = NON_WILDCARD_COLORS.length ? NON_WILDCARD_COLORS : colors;
+		const baseColor = cloneColor(palette[Math.floor(Math.random() * palette.length)]);
+		return createCardBlueprint(entry, baseColor, { isBonusEcho: true });
+	}
+
+	function createBonusEchoShopCard() {
+		const bp = createBonusEchoCardBlueprint();
+		const card = instantiateBlueprint(bp);
+		card.isBonusEchoShopCard = true;
 		return card;
 	}
 
@@ -23294,6 +23406,10 @@ function getCollectedCoinCount(scores) {
 		return !!document.querySelector('#card-choice-zone .card-option[data-golden="false"]');
 	}
 
+	function hasBonusEchoReplayReady() {
+		return currentHand.some(card => card && card.isBonusEcho && Number(card.bonusEchoReplaysAvailable || 0) > 0);
+	}
+
 	function resetTurnCardFlags() {
 		goldenCardPlayedThisTurn = false;
 		nonGoldenCardPlayedThisTurn = false;
@@ -23301,7 +23417,7 @@ function getCollectedCoinCount(scores) {
 
 	function computeCardLockOptions() {
 		// Turn rule: max 1 normal card per turn; golden is always allowed.
-		const allowNormalByTurnRule = !nonGoldenCardPlayedThisTurn;
+		const allowNormalByTurnRule = !nonGoldenCardPlayedThisTurn || hasBonusEchoReplayReady();
 		return {
 			allowGolden: allowGoldenCardsInHand(),
 			allowNormal: allowNormalByTurnRule && hasNonGoldenCardsInHand()
@@ -23339,10 +23455,12 @@ function getCollectedCoinCount(scores) {
 	  card.cardColor = cardData.color;
 	const isGoldenCard = !!cardData.isGolden || !!cardData.color?.isGolden;
 	const isBonusBoostCard = !!cardData.isBonusBoost;
+	const isBonusEchoCard = !!cardData.isBonusEcho;
 	const isDeckCopy = !!cardData.isDeckCopy;
 	const isLuckyCopy = !!cardData.isLuckyCopy;
 	card.dataset.golden = isGoldenCard ? 'true' : 'false';
 	card.dataset.bonusBoost = isBonusBoostCard ? 'true' : 'false';
+	card.dataset.bonusEcho = isBonusEchoCard ? 'true' : 'false';
 	card.dataset.deckCopy = isDeckCopy ? 'true' : 'false';
 	card.dataset.luckyCopy = isLuckyCopy ? 'true' : 'false';
 	const isWorld4Allowed = isWorld4CardAllowed(cardData);
@@ -23352,6 +23470,9 @@ function getCollectedCoinCount(scores) {
 	}
 	if (isBonusBoostCard) {
 		card.classList.add('card-bonus-boost');
+	}
+	if (isBonusEchoCard) {
+		card.classList.add('card-bonus-echo');
 	}
 	if (isDeckCopy) {
 		card.classList.add('card-deck-copy');
@@ -23410,6 +23531,15 @@ function getCollectedCoinCount(scores) {
 				? BONUS_COLOR_CONFIG[colorKey].label
 				: (cardData?.color?.name || '');
 			effect.textContent = `⚡ BONUS BOOST: 2× ${labelColor}`;
+			card.appendChild(effect);
+		} else if (isBonusEchoCard) {
+			const replayCharges = Number(cardData.bonusEchoReplaysAvailable || 0);
+			const effect = document.createElement('div');
+			effect.classList.add('card-effect');
+			effect.textContent = `🔁 BONUS ECHO: ${BONUS_ECHO_REQUIRED_BONUSES} bonussen = +${BONUS_ECHO_SCORE_BONUS} & direct opnieuw`; 
+			if (replayCharges > 0) {
+				effect.textContent += ` (extra speelbeurt klaar)`;
+			}
 			card.appendChild(effect);
 		}
 	  }
@@ -23803,6 +23933,15 @@ function getCollectedCoinCount(scores) {
 
 	function updateDrawButtonState() {
 	  if (!newCardsButton) return;
+	  const hasBonusEchoExtraTurnReady = (bonusEchoExtraTurns > 0) && Array.isArray(discardPile) && discardPile.length > 0 && currentHand.length === 0;
+	  if (drawPile.length === 0 && currentHand.length === 0 && hasBonusEchoExtraTurnReady) {
+		newCardsButton.classList.remove('complete-round');
+		newCardsButton.classList.remove('ready-for-next-turn');
+		newCardsButton.disabled = false;
+		newCardsButton.setAttribute('data-label', 'Bonusbeurt');
+		newCardsButton.setAttribute('aria-label', 'Bonusbeurt');
+		return;
+	  }
 	  if (drawPile.length === 0 && currentHand.length === 0) {
 		// Voltooi ronde - tekst wijzigt naar "Einde beurt"
 		newCardsButton.classList.add('complete-round');
@@ -23813,6 +23952,14 @@ function getCollectedCoinCount(scores) {
 		return;
 	  }
 	  if (drawPile.length === 0) {
+		if (hasBonusEchoExtraTurnReady) {
+			newCardsButton.classList.remove('complete-round');
+			newCardsButton.classList.remove('ready-for-next-turn');
+			newCardsButton.disabled = false;
+			newCardsButton.setAttribute('data-label', 'Bonusbeurt');
+			newCardsButton.setAttribute('aria-label', 'Bonusbeurt');
+			return;
+		}
 		// Voltooi ronde - tekst wijzigt naar "Einde beurt"
 		newCardsButton.classList.add('complete-round');
 		newCardsButton.classList.remove('ready-for-next-turn');
@@ -23844,14 +23991,56 @@ function getCollectedCoinCount(scores) {
 	  newCardsButton.disabled = false;
 	}
 
+	function cloneCardForExtraTurn(card) {
+		if (!card) return null;
+		return {
+			id: nextCardInstanceId(),
+			blueprintId: card.blueprintId,
+			shapeName: card.shapeName,
+			matrix: cloneShape(card.matrix),
+			category: card.category,
+			color: cloneColor(card.color),
+			isGolden: !!(card.isGolden || card.color?.isGolden),
+			isBonusBoost: !!card.isBonusBoost,
+			isBonusEcho: !!card.isBonusEcho,
+			bonusEchoReplaysAvailable: 0
+		};
+	}
+
+	function prepareBonusEchoExtraTurnDeck() {
+		if (!(bonusEchoExtraTurns > 0)) return false;
+		const source = Array.isArray(discardPile) ? discardPile.slice() : [];
+		if (!source.length) return false;
+		const clones = source.map(cloneCardForExtraTurn).filter(Boolean);
+		if (!clones.length) return false;
+		drawPile = shuffleArray(clones);
+		discardPile = [];
+		currentHand = [];
+		bonusEchoExtraTurns = Math.max(0, bonusEchoExtraTurns - 1);
+		bonusEchoFreePlays = 0;
+		bonusEchoStreak = 0;
+		lastCardWasBonusEcho = false;
+		cardPlacementHistory = [];
+		cardsPlayedThisTurn = 0;
+		resetTurnCardFlags();
+		showObjectiveToast('🔁 Bonusbeurt! Je gespeelde kaarten keren terug voor een extra ronde.');
+		updateDeckPreview();
+		return true;
+	}
+
 	function drawNextHand() {
 	  if (drawPile.length === 0) {
+		if (prepareBonusEchoExtraTurnDeck()) {
+			// Deck is refilled for the extra turn; continue with draw.
+		} else {
 		updateDrawButtonState();
 		return;
+		}
 	  }
 	  cardPlacementHistory = [];
 	  cardsPlayedThisTurn = 0;
 	resetTurnCardFlags();
+	bonusEchoFreePlays = 0;
 	  
 	  const createUpgradeCopy = (sourceCard, originTag) => {
 		if (!sourceCard) return null;
@@ -23864,6 +24053,9 @@ function getCollectedCoinCount(scores) {
 			category: sourceCard.category,
 			color,
 			isGolden: !!(sourceCard.isGolden || sourceCard.color?.isGolden),
+			isBonusBoost: !!sourceCard.isBonusBoost,
+			isBonusEcho: !!sourceCard.isBonusEcho,
+			bonusEchoReplaysAvailable: Number(sourceCard.bonusEchoReplaysAvailable || 0),
 			generatedByUpgrade: originTag || null
 		};
 	  };
@@ -23923,6 +24115,52 @@ function getCollectedCoinCount(scores) {
 	  };
 	}
 
+	function applyBonusEchoOutcome(playedCard, placementResult) {
+		if (!playedCard || !playedCard.isBonusEcho) {
+			bonusEchoStreak = 0;
+			lastCardWasBonusEcho = false;
+			return { replayGranted: false, pointsAwarded: 0, extraTurnGranted: false, colorKey: null };
+		}
+		const bonusClaims = Array.isArray(placementResult?.bonuses) ? placementResult.bonuses.filter(Boolean) : [];
+		const colorKey = getBonusKeyFromColorName(playedCard?.color?.name);
+		const meetsBonusRequirement = bonusClaims.length >= BONUS_ECHO_REQUIRED_BONUSES;
+		const pointsAwarded = (colorKey && meetsBonusRequirement) ? BONUS_ECHO_SCORE_BONUS : 0;
+		let extraTurnGranted = false;
+		let replayGranted = false;
+		if (pointsAwarded > 0) {
+			colorScoreBonuses[colorKey] = Number(colorScoreBonuses[colorKey] || 0) + pointsAwarded;
+			replayGranted = true;
+			bonusEchoStreak = lastCardWasBonusEcho ? bonusEchoStreak + 1 : 1;
+			lastCardWasBonusEcho = true;
+			if (bonusEchoStreak >= 2) {
+				bonusEchoExtraTurns += 1;
+				bonusEchoStreak = 0;
+				extraTurnGranted = true;
+			}
+			const label = (BONUS_COLOR_CONFIG[colorKey]?.label) || playedCard?.color?.name || '';
+			showObjectiveToast(`🔁 Bonus Echo: +${pointsAwarded} ${label}${extraTurnGranted ? ' en bonusbeurt klaar!' : ''}`);
+		} else {
+			bonusEchoStreak = 0;
+			lastCardWasBonusEcho = false;
+		}
+		return { replayGranted, pointsAwarded, extraTurnGranted, colorKey };
+	}
+
+	function recomputeBonusEchoSequenceState() {
+		bonusEchoStreak = 0;
+		lastCardWasBonusEcho = false;
+		cardPlacementHistory.forEach(entry => {
+			const success = entry && entry.cardRef && entry.cardRef.isBonusEcho && Number(entry.bonusEchoPointsAdded || 0) > 0;
+			if (success) {
+				bonusEchoStreak = lastCardWasBonusEcho ? bonusEchoStreak + 1 : 1;
+				lastCardWasBonusEcho = true;
+			} else {
+				bonusEchoStreak = 0;
+				lastCardWasBonusEcho = false;
+			}
+		});
+	}
+
 	function discardCurrentHand() {
 	  if (currentHand.length === 0) return;
 	  // Filter kopie-kaarten uit voordat ze naar discard gaan
@@ -23949,6 +24187,17 @@ function getCollectedCoinCount(scores) {
 	  if (!consumed) return;
 	cardsPlayedThisTurn += 1;
 	const { playedCard, handIndex } = consumed;
+	if (!playedCard?.isBonusEcho) {
+		bonusEchoStreak = 0;
+		lastCardWasBonusEcho = false;
+	}
+	if (playedCard && playedCard.isBonusEcho && playedCard.bonusEchoReplaysAvailable > 0) {
+		playedCard.bonusEchoReplaysAvailable = Math.max(0, playedCard.bonusEchoReplaysAvailable - 1);
+	}
+	let bonusEchoReplayGranted = false;
+	let bonusEchoPointsAdded = 0;
+	let bonusEchoExtraTurnGranted = false;
+	let bonusEchoColorKey = null;
 	// Bonus Boost card: after playing it, only that color's bonus is 2× (per level)
 	try {
 		if (playedCard && playedCard.isBonusBoost) {
@@ -23983,11 +24232,36 @@ function getCollectedCoinCount(scores) {
 		bonuses: Array.isArray(placementResult.bonuses) ? placementResult.bonuses.slice() : [],
 		turn: turnCount,
 		sequence: actionId,
-		wasGolden
+		wasGolden,
+		bonusEchoPointsAdded,
+		bonusEchoExtraTurnGranted,
+		bonusEchoColorKey
 	});
 	try {
 		document.dispatchEvent(new CustomEvent('locus:tutorial-card-placed', { detail: { placement: placementResult } }));
 	} catch (_) {}
+	if (playedCard && playedCard.isBonusEcho) {
+		const echoOutcome = applyBonusEchoOutcome(playedCard, placementResult);
+		bonusEchoReplayGranted = !!echoOutcome.replayGranted;
+		bonusEchoPointsAdded = Number(echoOutcome.pointsAwarded || 0);
+		bonusEchoExtraTurnGranted = !!echoOutcome.extraTurnGranted;
+		bonusEchoColorKey = echoOutcome.colorKey || null;
+	}
+	if (playedCard && playedCard.isBonusEcho) {
+		if (bonusEchoReplayGranted) {
+			playedCard.bonusEchoReplaysAvailable = Number(playedCard.bonusEchoReplaysAvailable || 0) + 1;
+			const discardIdx = discardPile.findIndex(card => card && card.id === playedCard.id);
+			if (discardIdx !== -1) discardPile.splice(discardIdx, 1);
+			currentHand.push(playedCard);
+			bonusEchoFreePlays = Number(bonusEchoFreePlays || 0) + 1;
+		}
+		if (bonusEchoExtraTurnGranted) {
+			updateDrawButtonState();
+		}
+	}
+	if (bonusEchoPointsAdded > 0) {
+		try { updateScore(); } catch (_) {}
+	}
 	// Golden cards are always extra; do not set per-turn locks.
 	try {
 		if (!bonusUseHintShown && currentHand.length === 0 && typeof getRemainingBonusCharges === 'function') {
@@ -24107,7 +24381,10 @@ function getCollectedCoinCount(scores) {
 		// Golden cards are exempt.
 		if (!card) return false;
 		const isGolden = !!(card.isGolden || card.color?.isGolden);
+		const isBonusEchoCard = !!card.isBonusEcho;
+		const hasEchoReplay = isBonusEchoCard && Number(card.bonusEchoReplaysAvailable || 0) > 0;
 		if (isGolden) return true;
+		if (hasEchoReplay) return true;
 		return !nonGoldenCardPlayedThisTurn;
 	}
 
@@ -24640,6 +24917,13 @@ function openShopModal(callback) {
 				const boostCard = createBonusBoostShopCard();
 				boostCard.isBonusBoostShopCard = true;
 				return { option: boostCard, cost: calculateCardCost(boostCard), fixed: false };
+			});
+		}
+		if (hasUpgrade('bonusEcho')) {
+			availableSpecialFactories.push(() => {
+				const echoCard = createBonusEchoShopCard();
+				echoCard.isBonusEchoShopCard = true;
+				return { option: echoCard, cost: calculateCardCost(echoCard), fixed: false };
 			});
 		}
 		if (hasUpgrade('goldenCards')) {
@@ -26126,6 +26410,21 @@ function openShopModal(callback) {
 		}
 	  } catch (e) {}
 
+	  // Voor level 1.1: altijd eerst 2 startkaarten kiezen (1 uit 3, twee keer)
+	  try {
+		const isLevelOne = Number(level) === 1;
+		if (isLevelOne && !preLevelStarterPicksDone && !preLevelStarterPicksInProgress) {
+			preLevelStarterPicksInProgress = true;
+			startStarterMiniRewardSequence(() => {
+				preLevelStarterPicksDone = true;
+				preLevelStarterPicksInProgress = false;
+				try { saveGameState(); } catch (e) {}
+				startLevel(level, options);
+			});
+			return;
+		}
+	  } catch (e) {}
+
 	  // Normal mode: ensure scenario flags are cleared.
 	  try { if (window) { window._locusScenarioMode = false; window._locusScenarioLoaded = false; } } catch (e) {}
 
@@ -26337,6 +26636,14 @@ function openShopModal(callback) {
 		  // Bonuses
 		  bonusInventory: { ...bonusInventory },
 		  bonusMasteryState: { ...bonusMasteryState },
+		  bonusEchoState: {
+			colorScoreBonuses: { ...colorScoreBonuses },
+			bonusEchoExtraTurns,
+			bonusEchoStreak,
+			bonusEchoFreePlays,
+			lastCardWasBonusEcho
+		  },
+		  preLevelStarterPicksDone,
 		  
 		  // Objectives
 		  currentObjectiveId: currentObjectiveId,
@@ -26351,7 +26658,8 @@ function openShopModal(callback) {
 			category: bp.category,
 			color: bp.color ? { name: bp.color.name, code: bp.color.code, isGolden: bp.color.isGolden } : null,
 			isGolden: bp.isGolden || false,
-			isBonusBoost: bp.isBonusBoost || false
+			isBonusBoost: bp.isBonusBoost || false,
+			isBonusEcho: bp.isBonusEcho || false
 		  })),
 		  
 		  // Current game state (drawPile, discardPile, currentHand)
@@ -26363,7 +26671,9 @@ function openShopModal(callback) {
 			category: card.category,
 			color: card.color ? { name: card.color.name, code: card.color.code, isGolden: card.color.isGolden } : null,
 			isGolden: card.isGolden || false,
-			isBonusBoost: card.isBonusBoost || false
+			isBonusBoost: card.isBonusBoost || false,
+			isBonusEcho: card.isBonusEcho || false,
+			bonusEchoReplaysAvailable: card.bonusEchoReplaysAvailable || 0
 		  })),
 		  discardPile: discardPile.map(card => ({
 			id: card.id,
@@ -26373,7 +26683,9 @@ function openShopModal(callback) {
 			category: card.category,
 			color: card.color ? { name: card.color.name, code: card.color.code, isGolden: card.color.isGolden } : null,
 			isGolden: card.isGolden || false,
-			isBonusBoost: card.isBonusBoost || false
+			isBonusBoost: card.isBonusBoost || false,
+			isBonusEcho: card.isBonusEcho || false,
+			bonusEchoReplaysAvailable: card.bonusEchoReplaysAvailable || 0
 		  })),
 		  currentHand: currentHand.map(card => ({
 			id: card.id,
@@ -26383,7 +26695,9 @@ function openShopModal(callback) {
 			category: card.category,
 			color: card.color ? { name: card.color.name, code: card.color.code, isGolden: card.color.isGolden } : null,
 			isGolden: card.isGolden || false,
-			isBonusBoost: card.isBonusBoost || false
+			isBonusBoost: card.isBonusBoost || false,
+			isBonusEcho: card.isBonusEcho || false,
+			bonusEchoReplaysAvailable: card.bonusEchoReplaysAvailable || 0
 		  })),
 		  cardsPlayedThisTurn: cardsPlayedThisTurn,
 		  turnCount: turnCount,
@@ -26518,6 +26832,8 @@ function isWorld4CardAllowed(cardData) {
 		  console.error('❌ Failed to parse save data');
 		  return false;
 		}
+		const savedBonusEchoState = gameState.bonusEchoState ? { ...gameState.bonusEchoState } : null;
+		const savedPreLevelStarterPicksDone = (typeof gameState.preLevelStarterPicksDone === 'boolean') ? gameState.preLevelStarterPicksDone : null;
 		
 		if (gameState.version !== '1.0') {
 		  console.warn('⚠️ Save version mismatch:', gameState.version);
@@ -26594,6 +26910,21 @@ function isWorld4CardAllowed(cardData) {
 			bonusMasteryState[key] = gameState.bonusMasteryState[key];
 		  });
 		}
+		if (gameState.bonusEchoState) {
+			try {
+				const savedEcho = gameState.bonusEchoState || {};
+				colorScoreBonuses = { ...colorScoreBonuses, ...(savedEcho.colorScoreBonuses || {}) };
+				bonusEchoExtraTurns = Number(savedEcho.bonusEchoExtraTurns || 0);
+				bonusEchoStreak = Number(savedEcho.bonusEchoStreak || 0);
+				bonusEchoFreePlays = Number(savedEcho.bonusEchoFreePlays || 0);
+				lastCardWasBonusEcho = !!savedEcho.lastCardWasBonusEcho;
+			} catch (e) { resetBonusEchoState(); }
+		} else {
+			resetBonusEchoState();
+		}
+		// Restore starter pick completion so level 1 gating is respected after load
+		preLevelStarterPicksDone = !!savedPreLevelStarterPicksDone;
+		preLevelStarterPicksInProgress = false;
 		
 		// Restore objectives
 		currentObjectiveId = gameState.currentObjectiveId || null;
@@ -26628,7 +26959,8 @@ function isWorld4CardAllowed(cardData) {
 			  category: bp.category || 'standard',
 			  color: colorObj,
 			  isGolden: bp.isGolden || false,
-			  isBonusBoost: bp.isBonusBoost || false
+			  isBonusBoost: bp.isBonusBoost || false,
+			  isBonusEcho: bp.isBonusEcho || false
 			};
 		  }).filter(bp => bp !== null);
 		  
@@ -26678,7 +27010,9 @@ function isWorld4CardAllowed(cardData) {
 			category: cardData.category || 'standard',
 			color: colorObj,
 			isGolden: cardData.isGolden || false,
-			isBonusBoost: cardData.isBonusBoost || false
+			isBonusBoost: cardData.isBonusBoost || false,
+			isBonusEcho: cardData.isBonusEcho || false,
+			bonusEchoReplaysAvailable: cardData.bonusEchoReplaysAvailable || 0
 		  };
 		}
 		
@@ -26722,6 +27056,16 @@ function isWorld4CardAllowed(cardData) {
 					setLoadedLevelMeta(gameState.loadedCustomLevelMeta.name, gameState.loadedCustomLevelMeta.objective);
 				}
 			} catch (e) { console.error('Failed to restore custom board after startLevel', e); }
+		}
+		if (savedBonusEchoState) {
+			try {
+				colorScoreBonuses = { ...colorScoreBonuses, ...(savedBonusEchoState.colorScoreBonuses || {}) };
+				bonusEchoExtraTurns = Number(savedBonusEchoState.bonusEchoExtraTurns || 0);
+				bonusEchoStreak = Number(savedBonusEchoState.bonusEchoStreak || 0);
+				bonusEchoFreePlays = Number(savedBonusEchoState.bonusEchoFreePlays || 0);
+				lastCardWasBonusEcho = !!savedBonusEchoState.lastCardWasBonusEcho;
+				if (typeof updateScore === 'function') updateScore();
+			} catch (e) { console.error('Failed to reapply Bonus Echo state after load', e); }
 		}
 		isLoadingGame = false;
 		savedDeckState = null; // Clear na gebruik
@@ -26811,6 +27155,8 @@ function isWorld4CardAllowed(cardData) {
 	  Object.keys(UPGRADES).forEach(key => {
 		UPGRADES[key].purchased = false;
 	  });
+	  preLevelStarterPicksDone = false;
+	  preLevelStarterPicksInProgress = false;
 	  
 	  // Reset portals
 	  portalsActive = false;
@@ -26857,6 +27203,13 @@ function isWorld4CardAllowed(cardData) {
 	function completeRound() {
 	  if (currentHand.length !== 0 || drawPile.length !== 0) {
 		return;
+	  }
+	  if (bonusEchoExtraTurns > 0 && Array.isArray(discardPile) && discardPile.length > 0) {
+		if (prepareBonusEchoExtraTurnDeck()) {
+			drawNextHand();
+			updateDeckPreview();
+			return;
+		}
 	  }
 		const score = Number(document.getElementById('total-score')?.textContent || '0') || 0;
 		const coinsBeforeBonus = getSpendableCoinCount();
@@ -28389,6 +28742,13 @@ function showFloatingPreview(shape, color, options = {}) {
 	  newCardsButton.addEventListener('click', event => {
 		event.stopPropagation();
 		if (drawPile.length === 0) {
+		  const canUseBonusEchoTurn = bonusEchoExtraTurns > 0 && discardPile.length > 0 && currentHand.length === 0;
+		  if (canUseBonusEchoTurn && prepareBonusEchoExtraTurnDeck()) {
+			// After preparing the deck, draw the bonus hand immediately.
+			drawNextHand();
+			updateDeckPreview();
+			return;
+		  }
 		  // End of round: warn about playable cards AND remaining bonuses.
 		  if (shouldWarnBeforeCompletingRound()) {
 			showCompleteRoundConfirm(finalizeRoundCompletion);
