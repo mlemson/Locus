@@ -12,7 +12,7 @@
   let deckPickerState = null;
 
   const boardHost = document.getElementById('board-host');
-  const refreshBtn = document.getElementById('refresh-board');
+  let refreshBtn = document.getElementById('refresh-board');
   let printBtn = document.getElementById('print-board');
   const statusEl = document.getElementById('status');
 
@@ -920,6 +920,7 @@
       const actionsRoot = document.getElementById('scenario-actions') || document.body;
       if (!actionsRoot) return;
       const controlsStack = document.getElementById('scenario-controls-stack') || actionsRoot;
+      const refreshStack = document.getElementById('scenario-refresh-stack') || actionsRoot;
       const exportStack = document.getElementById('scenario-export-stack') || actionsRoot;
       const styleSource = document.querySelector('.panel__headerActions .btn') || printBtn || refreshBtn || null;
 
@@ -957,9 +958,24 @@
         if (styleSource && styleSource.className) {
           deckBtn.className = styleSource.className;
           upgradesBtn.className = styleSource.className;
+        } else {
+          deckBtn.classList.add('btn');
+          upgradesBtn.classList.add('btn');
         }
 
         controlsStack.append(coinsRow, deckBtn, upgradesBtn);
+      }
+
+      if (refreshStack && !document.getElementById('refresh-board')) {
+        const refBtn = document.createElement('button');
+        refBtn.id = 'refresh-board';
+        refBtn.textContent = 'Verversen';
+        if (styleSource && styleSource.className) refBtn.className = styleSource.className;
+        else refBtn.classList.add('btn');
+        refBtn.dataset.wired = '1';
+        refBtn.addEventListener('click', () => generateNewBoard());
+        refreshStack.appendChild(refBtn);
+        refreshBtn = refBtn;
       }
 
       if (exportStack) {
@@ -970,6 +986,7 @@
           exportBtn.title = 'Download scenario als bestand';
           exportBtn.addEventListener('click', exportScenarioFile);
           if (styleSource && styleSource.className) exportBtn.className = styleSource.className;
+          else exportBtn.classList.add('btn');
           exportStack.appendChild(exportBtn);
         }
 
@@ -980,6 +997,7 @@
           importBtn.title = 'Laad scenario-bestand (.json)';
           importBtn.addEventListener('click', importScenarioFile);
           if (styleSource && styleSource.className) importBtn.className = styleSource.className;
+          else importBtn.classList.add('btn');
           exportStack.appendChild(importBtn);
         }
 
@@ -1000,6 +1018,7 @@
             openPrintWindow(html, printFriendly);
           });
           if (styleSource && styleSource.className) pb.className = styleSource.className;
+          else pb.classList.add('btn');
           exportStack.appendChild(pb);
           printBtn = pb;
         } else if (!existingPrint.dataset.wired) {
@@ -1125,7 +1144,7 @@
     // Allow an override tool (buttons added dynamically) to take precedence.
     if (window.__locusEditorOverrideTool) return window.__locusEditorOverrideTool;
     const el = document.querySelector('input[name="tool"]:checked');
-    return el ? String(el.value) : 'select';
+    return el ? String(el.value) : 'erase';
   }
 
   function hasSpecial(cell) {
@@ -1194,10 +1213,16 @@
     if (!cell) return;
     // Toggleable tool behaviors: clicking again removes what was placed.
     switch (tool) {
-      case 'erase':
-        ensureNonVoid(cell);
-        clearCell(cell);
+      case 'erase': {
+        // Toggle between an existing cel and verwijderd (void) status.
+        if (cell.classList.contains('void-cell')) {
+          ensureNonVoid(cell);
+          clearCell(cell);
+        } else {
+          makeVoid(cell);
+        }
         return;
+      }
       case 'delete':
         if (cell.classList.contains('void-cell')) {
           ensureNonVoid(cell);
@@ -2334,7 +2359,8 @@ body { margin: 0; padding: 0; background: white; color: #111; font-family: Arial
     }
   });
 
-  if (refreshBtn) {
+  if (refreshBtn && !refreshBtn.dataset.wired) {
+    refreshBtn.dataset.wired = '1';
     refreshBtn.addEventListener('click', () => {
       // Requirement: refresh should REALLY regenerate, independent of the running game.
       generateNewBoard();
@@ -2519,6 +2545,7 @@ body { margin: 0; padding: 0; background: white; color: #111; font-family: Arial
         b.id = 'save-board';
         b.textContent = 'Opslaan';
         if (styleSource && styleSource.className) b.className = styleSource.className;
+        else b.classList.add('btn');
         b.addEventListener('click', promptSaveBoard);
         saveStack.appendChild(b);
       }
@@ -2527,6 +2554,7 @@ body { margin: 0; padding: 0; background: white; color: #111; font-family: Arial
         m.id = 'manage-saved-boards';
         m.textContent = 'Laad scenario';
         if (styleSource && styleSource.className) m.className = styleSource.className;
+        else m.classList.add('btn');
         m.addEventListener('click', createSavedBoardsModal);
         saveStack.appendChild(m);
       }
@@ -2639,14 +2667,19 @@ body { margin: 0; padding: 0; background: white; color: #111; font-family: Arial
   
   function ensureBlueStartToolInSpecials() {
     try {
+      // If the tool already exists anywhere, do nothing.
+      if (document.querySelector('input[value="bold-blue"]')) return;
+
+      // Place inside the Gereedschap panel if present, otherwise fall back to the first tool parent.
+      const sections = Array.from(document.querySelectorAll('.panel__section'));
+      const toolsSection = sections.find(s => (s.querySelector('.panel__sectionTitle') || {}).textContent?.trim().toLowerCase() === 'gereedschap');
       const toolRadios = Array.from(document.querySelectorAll('input[name="tool"]'));
-      const parent = toolRadios.length ? (toolRadios[0].closest('fieldset') || toolRadios[0].parentNode) : document.body;
+      const parent = toolsSection || (toolRadios.length ? toolRadios[0].closest('.panel__section') || toolRadios[0].parentNode : document.body);
       if (!parent) return;
-      if (parent.querySelector('input[value="bold-blue"]')) return;
       const id = 'tool-bold-blue';
       const wrapper = document.createElement('div'); wrapper.style.display = 'flex'; wrapper.style.alignItems = 'center'; wrapper.style.gap = '6px'; wrapper.style.marginTop = '4px';
       const input = document.createElement('input'); input.type = 'radio'; input.name = 'tool'; input.value = 'bold-blue'; input.id = id;
-      const label = document.createElement('label'); label.htmlFor = id; label.textContent = 'Blue start'; label.style.cursor = 'pointer';
+      const label = document.createElement('label'); label.htmlFor = id; label.textContent = 'startpunt blauw (bold)'; label.style.cursor = 'pointer';
       input.addEventListener('change', () => { window.__locusEditorOverrideTool = null; });
       wrapper.appendChild(input); wrapper.appendChild(label); parent.appendChild(wrapper);
     } catch (e) {}

@@ -19,9 +19,7 @@
     <aside class="panel" aria-label="Editor tools">
       <div class="panel__header">
         <div class="panel__title">Editor</div>
-        <div class="panel__headerActions">
-          <button id="refresh-board" class="btn" type="button">Verversen</button>
-        </div>
+        <div class="panel__headerActions"></div>
       </div>
 
       <div class="panel__section">
@@ -29,6 +27,8 @@
         <div id="scenario-actions" class="scenario-actions">
           <div class="scenario-subtitle">Level eigenschappen</div>
           <div id="scenario-controls-stack" class="scenario-stack"></div>
+          <div class="scenario-subtitle">Scenario acties</div>
+          <div id="scenario-refresh-stack" class="scenario-stack"></div>
           <div id="scenario-save-stack" class="scenario-stack"></div>
           <div id="scenario-export-stack" class="scenario-stack"></div>
         </div>
@@ -36,10 +36,9 @@
 
       <div class="panel__section">
         <div class="panel__sectionTitle">Gereedschap</div>
-        <label class="tool"><input type="radio" name="tool" value="select" checked> <span>Selecteer</span></label>
-        <label class="tool"><input type="radio" name="tool" value="erase"> <span>Lege cell</span></label>
-        <label class="tool"><input type="radio" name="tool" value="delete"> <span>Cell verwijderen</span></label>
-        <label class="tool"><input type="radio" name="tool" value="bold"> <span>Bold (omlijning)</span></label>
+        <label class="tool"><input type="radio" name="tool" value="erase" checked> <span>Cell plaatsen / verwijderen</span></label>
+        <label class="tool"><input type="radio" name="tool" value="bold"> <span>Bold cell plaatsen / verwijderen (dikgedrukt)</span></label>
+        <label class="tool"><input type="radio" name="tool" value="bold-blue"> <span>Startpunt blauw (bold)</span></label>
       </div>
 
       <div class="panel__section">
