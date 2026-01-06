@@ -22465,9 +22465,6 @@ function getCollectedCoinCount(scores) {
 		effect.style.gap = '6px';
 		effect.style.alignSelf = 'center';
 		effect.style.marginTop = '2px';
-		const iconTop = document.createElement('span');
-		iconTop.classList.add('card-effect-echo-icon');
-		iconTop.textContent = '⟳';
 		const textWrap = document.createElement('div');
 		textWrap.classList.add('card-effect-echo-text');
 		textWrap.style.alignItems = 'center';
@@ -22488,7 +22485,7 @@ function getCollectedCoinCount(scores) {
 		icon.classList.add('card-effect-echo-icon');
 		icon.textContent = '⟳';
 		iconBottom.appendChild(icon);
-		effect.append(iconTop, textWrap, iconBottom);
+		effect.append(textWrap, iconBottom);
 		effect.title = copy.desc;
 		card.appendChild(effect);
 	}
@@ -23693,59 +23690,71 @@ function getCollectedCoinCount(scores) {
 	  card.appendChild(pattern);
 	  updateCardPattern(card, cardData.matrix, cardData.color);
 
+	const label = document.createElement('div');
+	label.classList.add('card-label');
+	const swatch = document.createElement('span');
+	swatch.classList.add('card-label-dot');
+	// Golden is a modifier; keep the swatch showing the base color.
+	swatch.style.background = (cardData.color.code === 'rainbow'
+		? 'linear-gradient(135deg, #f06272, #fff25a, #4ed346, #5d90f0, #a35eff)'
+		: cardData.color.code);
+	const labelText = document.createElement('span');
+	labelText.textContent = isGoldenCard
+	  ? 'GOUD'
+	  : (displayName ? displayName.toUpperCase() : 'KAART');
+	label.append(swatch, labelText);
+
+	const meta = document.createElement('div');
+	meta.classList.add('card-meta');
+	meta.textContent = `${cardData.matrix.length}×${cardData.matrix[0].length}`;
+
 	if (inlineLabel) {
-		const label = document.createElement('div');
-		label.classList.add('card-label');
-		const swatch = document.createElement('span');
-		swatch.classList.add('card-label-dot');
-		// Golden is a modifier; keep the swatch showing the base color.
-		swatch.style.background = (cardData.color.code === 'rainbow'
-			? 'linear-gradient(135deg, #f06272, #fff25a, #4ed346, #5d90f0, #a35eff)'
-			: cardData.color.code);
-		const labelText = document.createElement('span');
-		labelText.textContent = isGoldenCard
-		  ? 'GOUD'
-		  : (displayName ? displayName.toUpperCase() : 'KAART');
-		label.append(swatch, labelText);
-
-		const meta = document.createElement('div');
-		meta.classList.add('card-meta');
-		meta.textContent = `${cardData.matrix.length}×${cardData.matrix[0].length}`;
-
 		card.append(label, meta);
-		if (isBonusBoostCard) {
-			const colorKey = getBonusKeyFromColorName(cardData?.color?.name);
-			const effect = document.createElement('div');
-			effect.classList.add('card-effect');
-			const labelColor = (colorKey && BONUS_COLOR_CONFIG[colorKey])
-				? BONUS_COLOR_CONFIG[colorKey].label
-				: (cardData?.color?.name || '');
-			effect.textContent = `⚡ BONUS BOOST: 2× ${labelColor}`;
-			card.appendChild(effect);
-		} else if (isBonusEchoCard) {
-			const replayCharges = Number(cardData.bonusEchoReplaysAvailable || 0);
-			const variant = cardData.bonusEchoVariant || 'replay';
-			const effect = document.createElement('div');
-			effect.classList.add('card-effect', 'card-effect-echo');
-			const icon = document.createElement('span');
-			icon.classList.add('card-effect-echo-icon');
-			icon.textContent = '⟳';
-			const textWrap = document.createElement('div');
-			textWrap.classList.add('card-effect-echo-text');
-			const title = document.createElement('div');
-			title.classList.add('card-effect-echo-title');
-			const sub = document.createElement('div');
-			sub.classList.add('card-effect-echo-sub');
-			const readyNote = (variant === 'replay' && replayCharges > 0) ? ' • KLAAR' : '';
-			const copy = getBonusEchoUiCopy(variant, readyNote);
-			title.textContent = copy.tag;
-			sub.textContent = copy.sub;
-			textWrap.append(title, sub);
-			effect.append(icon, textWrap);
-			effect.title = copy.desc;
-			card.appendChild(effect);
-		}
-	  }
+	}
+
+	if (isBonusBoostCard) {
+		const colorKey = getBonusKeyFromColorName(cardData?.color?.name);
+		const effect = document.createElement('div');
+		effect.classList.add('card-effect');
+		const labelColor = (colorKey && BONUS_COLOR_CONFIG[colorKey])
+			? BONUS_COLOR_CONFIG[colorKey].label
+			: (cardData?.color?.name || '');
+		effect.textContent = `⚡ BONUS BOOST: 2× ${labelColor}`;
+		card.appendChild(effect);
+	} else if (isBonusEchoCard) {
+		const replayCharges = Number(cardData.bonusEchoReplaysAvailable || 0);
+		const variant = cardData.bonusEchoVariant || 'replay';
+		const effect = document.createElement('div');
+		effect.classList.add('card-effect', 'card-effect-echo');
+		effect.style.flexDirection = 'column';
+		effect.style.alignItems = 'center';
+		effect.style.gap = '6px';
+		effect.style.alignSelf = 'center';
+		effect.style.marginTop = inlineLabel ? '6px' : '10px';
+		const textWrap = document.createElement('div');
+		textWrap.classList.add('card-effect-echo-text');
+		textWrap.style.alignItems = 'center';
+		const title = document.createElement('div');
+		title.classList.add('card-effect-echo-title');
+		const sub = document.createElement('div');
+		sub.classList.add('card-effect-echo-sub');
+		const readyNote = (variant === 'replay' && replayCharges > 0) ? ' • KLAAR' : '';
+		const copy = getBonusEchoUiCopy(variant, readyNote);
+		title.textContent = copy.tag;
+		sub.textContent = '';
+		sub.style.display = 'none';
+		textWrap.append(title, sub);
+		const iconRow = document.createElement('div');
+		iconRow.style.display = 'flex';
+		iconRow.style.justifyContent = 'center';
+		const icon = document.createElement('span');
+		icon.classList.add('card-effect-echo-icon');
+		icon.textContent = '⟳';
+		iconRow.appendChild(icon);
+		effect.append(textWrap, iconRow);
+		effect.title = copy.desc;
+		card.appendChild(effect);
+	}
 
 	  // Pointer UX:
 	  // - Touch: tap selects (no loose block), press/hold or move starts drag.
