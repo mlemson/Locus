@@ -21884,9 +21884,9 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	const BONUS_ECHO_SCORE_BONUS = 20;
 	const BONUS_ECHO_CARD_COST_BONUS = 4;
 	const BONUS_ECHO_VARIANTS = [
-		{ key: 'points', tag: 'ECHO • SCORE', sub: `2× BONUS = +${BONUS_ECHO_SCORE_BONUS}`, desc: 'Plaats op 2 bonussen voor +20 in deze kleur.' },
-		{ key: 'replay', tag: 'ECHO • REPLAY', sub: `2× BONUS = +${BONUS_ECHO_SCORE_BONUS} • NOG EEN KEER`, desc: 'Scoort hij? Dan mag je deze kaart direct opnieuw spelen.' },
-		{ key: 'turn', tag: 'ECHO • BEURT', sub: `2× BONUS = +${BONUS_ECHO_SCORE_BONUS} • 2 OP RIJ = BONUSBEURT`, desc: 'Speel twee echo-kaarten na elkaar voor een bonusbeurt met je gespeelde kaarten.' }
+		{ key: 'points', tag: 'SPECIAL', sub: '', desc: 'Plaats op 2 bonussen voor +20 in deze kleur.' },
+		{ key: 'replay', tag: 'SPECIAL', sub: '', desc: 'Scoort hij? Dan mag je deze kaart direct opnieuw spelen.' },
+		{ key: 'turn', tag: 'SPECIAL', sub: '', desc: 'Speel twee echo-kaarten na elkaar voor een bonusbeurt met je gespeelde kaarten.' }
 	];
 
 	function pickBonusEchoVariant() {
@@ -21899,7 +21899,7 @@ function optionalCellsTouchActive(zone, pendingCells) {
 		const meta = BONUS_ECHO_VARIANTS.find(v => v.key === variantKey) || BONUS_ECHO_VARIANTS[1];
 		return {
 			tag: meta.tag,
-			sub: readyNote ? `${meta.sub}${readyNote}` : meta.sub,
+			sub: '',
 			desc: meta.desc
 		};
 	}
@@ -22451,21 +22451,45 @@ function getCollectedCoinCount(scores) {
 		label.style.display = 'none';
 		meta.style.display = 'none';
 		const replayCharges = Number(blueprint.bonusEchoReplaysAvailable || 0);
+		const variant = blueprint.bonusEchoVariant || 'replay';
+		// Center the block preview for the special card.
+		pattern.style.margin = '6px auto 12px auto';
+		pattern.style.justifyContent = 'center';
+		pattern.style.alignItems = 'center';
+		pattern.style.display = 'grid';
+
 		const effect = document.createElement('div');
 		effect.classList.add('card-effect', 'card-effect-echo');
-		const icon = document.createElement('span');
-		icon.classList.add('card-effect-echo-icon');
-		icon.textContent = '⟳';
+		effect.style.flexDirection = 'column';
+		effect.style.alignItems = 'center';
+		effect.style.gap = '6px';
+		effect.style.alignSelf = 'center';
+		effect.style.marginTop = '2px';
+		const iconTop = document.createElement('span');
+		iconTop.classList.add('card-effect-echo-icon');
+		iconTop.textContent = '⟳';
 		const textWrap = document.createElement('div');
 		textWrap.classList.add('card-effect-echo-text');
+		textWrap.style.alignItems = 'center';
 		const title = document.createElement('div');
 		title.classList.add('card-effect-echo-title');
 		const sub = document.createElement('div');
 		sub.classList.add('card-effect-echo-sub');
-		const readyNote = replayCharges > 0 ? ' • KLAAR' : '';
-		sub.textContent = `${BONUS_ECHO_REQUIRED_BONUSES}× BONUS = +${BONUS_ECHO_SCORE_BONUS} & REPLAY${readyNote}`;
+		const readyNote = (variant === 'replay' && replayCharges > 0) ? ' • KLAAR' : '';
+		const copy = getBonusEchoUiCopy(variant, readyNote);
+		title.textContent = copy.tag;
+		sub.textContent = '';
+		sub.style.display = 'none';
 		textWrap.append(title, sub);
-		effect.append(icon, textWrap);
+		const iconBottom = document.createElement('div');
+		iconBottom.style.display = 'flex';
+		iconBottom.style.justifyContent = 'center';
+		const icon = document.createElement('span');
+		icon.classList.add('card-effect-echo-icon');
+		icon.textContent = '⟳';
+		iconBottom.appendChild(icon);
+		effect.append(iconTop, textWrap, iconBottom);
+		effect.title = copy.desc;
 		card.appendChild(effect);
 	}
 	  return card;
