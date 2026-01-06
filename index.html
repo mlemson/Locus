@@ -22414,8 +22414,9 @@ function getCollectedCoinCount(scores) {
 		setGoldenUnlockModalCopy(GOLDEN_UNLOCK_DEFAULT_TITLE, GOLDEN_UNLOCK_DEFAULT_SUBTEXT);
 	}
 
-	function buildRewardChoices({ count = 3, filterFn = null, color = null, blueprintOptions = null } = {}) {
+	function buildRewardChoices({ count = 3, filterFn = null, color = null, colorsPalette = null, blueprintOptions = null } = {}) {
 		const fallbackColor = color || { name: 'grijs', code: '#a0a0a0' };
+		const palette = Array.isArray(colorsPalette) && colorsPalette.length ? colorsPalette : null;
 		const candidates = shapePool.filter(e => {
 			if (!e || !e.matrix) return false;
 			if (typeof filterFn === 'function' && !filterFn(e)) return false;
@@ -22424,7 +22425,8 @@ function getCollectedCoinCount(scores) {
 		const pool = candidates.length ? shuffleArray([...candidates]) : shuffleArray([...shapePool]);
 		const picks = pool.slice(0, Math.max(1, count));
 		return picks.map(entry => {
-			const blueprint = createCardBlueprint(entry, fallbackColor, blueprintOptions || undefined);
+			const chosenColor = palette ? cloneColor(palette[Math.floor(Math.random() * palette.length)]) : fallbackColor;
+			const blueprint = createCardBlueprint(entry, chosenColor, blueprintOptions || undefined);
 			return { blueprint, card: instantiateBlueprint(blueprint) };
 		});
 	}
@@ -22509,7 +22511,7 @@ function getCollectedCoinCount(scores) {
 			const choices = buildRewardChoices({
 				count: 3,
 				filterFn: filterMini34,
-				color: pickColor()
+				colorsPalette: colorPalette
 			});
 			showRewardPickerModal({
 				titleText: `🧩 Kies je mini-kaart (${step}/${steps})`,
@@ -22965,8 +22967,8 @@ function getCollectedCoinCount(scores) {
 	function createRandomShopCardWithRarity() {
 		// Random card odds tuning:
 		// - 20% kans op grotere vorm (large)
-		// - Multikleur: 0% basis, 20% met multikleur unlock, 50% met multikleur boost
-		// - Goud: 0% basis, 15% met gouden unlock
+		// - Multikleur: 5% basis, 20% met multikleur unlock, 50% met multikleur boost
+		// - Goud: 3% basis, 15% met gouden unlock
 		// - Extra large vormen komen mee in de “large” kans als de upgrade er is
 		const hasWildcardUnlock = hasUpgrade('wildcardCards');
 		const hasWildcardBoost = hasUpgrade('multicolorBoost');
@@ -22996,8 +22998,8 @@ function getCollectedCoinCount(scores) {
 		}
 
 		const palette = NON_WILDCARD_COLORS.length ? NON_WILDCARD_COLORS : colors;
-		const multicolorChance = hasWildcardBoost ? 0.50 : hasWildcardUnlock ? 0.20 : 0;
-		const goldenChance = hasGoldUnlock ? 0.15 : 0;
+		const multicolorChance = hasWildcardBoost ? 0.50 : hasWildcardUnlock ? 0.20 : 0.05;
+		const goldenChance = hasGoldUnlock ? 0.15 : 0.03;
 		const roll = Math.random();
 		const isMulticolor = roll < multicolorChance;
 		const isGolden = !isMulticolor && (Math.random() < goldenChance);
