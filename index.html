@@ -24933,6 +24933,8 @@ function openShopModal(callback) {
 
 		// Specials are allowed but should not explode the amount of options.
 		const availableSpecialFactories = [];
+		const hasBonusEchoUpgrade = hasUpgrade('bonusEcho');
+		let bonusEchoFactory = null;
 		if (hasUpgrade('bonusBoost')) {
 			availableSpecialFactories.push(() => {
 				const boostCard = createBonusBoostShopCard();
@@ -24940,12 +24942,16 @@ function openShopModal(callback) {
 				return { option: boostCard, cost: calculateCardCost(boostCard), fixed: false };
 			});
 		}
-		if (hasUpgrade('bonusEcho')) {
-			availableSpecialFactories.push(() => {
+		if (hasBonusEchoUpgrade) {
+			bonusEchoFactory = () => {
 				const echoCard = createBonusEchoShopCard();
 				echoCard.isBonusEchoShopCard = true;
-				return { option: echoCard, cost: calculateCardCost(echoCard), fixed: false };
-			});
+				// Level 2 kaarten zijn prijzig: zorg voor een minimumprijs.
+				const baseCost = calculateCardCost(echoCard);
+				const cost = Math.max(baseCost, 8);
+				return { option: echoCard, cost, fixed: false };
+			};
+			availableSpecialFactories.push(bonusEchoFactory);
 		}
 		if (hasUpgrade('goldenCards')) {
 			availableSpecialFactories.push(() => {
@@ -24988,6 +24994,14 @@ function openShopModal(callback) {
 			if (!factory) return;
 			offers.push(factory());
 		});
+
+		// Ensure Level 2 (Bonus Echo) card appears when unlocked.
+		if (bonusEchoFactory) {
+			const hasEchoOffer = offers.some(o => o?.option?.isBonusEchoShopCard);
+			if (!hasEchoOffer) {
+				offers.unshift(bonusEchoFactory());
+			}
+		}
 
 		// Add the random (mystery) card once it is unlocked.
 		const randomCardUnlocked = (UNLOCK_PROGRESSION && typeof UNLOCK_PROGRESSION.isFeatureUnlocked === 'function')
