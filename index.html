@@ -14177,6 +14177,15 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	let activeTraps = [];
 	let trapIdCounter = 0;
 	let lastTrapHighlightId = null;
+	let lastTrapPenaltyBreakdown = {
+		yellow: 0,
+		red: 0,
+		green: 0,
+		purple: 0,
+		blue: 0,
+		other: 0,
+		total: 0
+	};
 
 	// Touch UX: lift the dragged block slightly above the finger.
 	// Keep this small; it only applies to real touch/pen pointer events.
@@ -17865,6 +17874,21 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  return TRAP_ZONE_LABELS[normalized] || normalized;
 	}
 
+	function getTrapKey(trap) {
+		if (!trap) return null;
+		try {
+			const cell = trap.cell;
+			const zone = normalizeZoneId(String(trap.zoneId || cell?.dataset?.zoneId || cell?.closest?.('.grid')?.id || ''));
+			const x = cell?.dataset?.x;
+			const y = cell?.dataset?.y;
+			if (x !== undefined && y !== undefined) return `${zone}|${x}|${y}`;
+			if (trap.id) return `id:${trap.id}`;
+			if (cell?.dataset?.trapInstanceId) return `inst:${cell.dataset.trapInstanceId}`;
+			if (cell) return `cell:${zone}|${cell}`;
+		} catch (e) {}
+		return trap && trap.id ? `id:${trap.id}` : null;
+	}
+
 	function decorateTrapCell(cell, options = {}) {
 	  if (!cell) return 'pit';
 	  const { forceType = null, blackHoleChance = BLACK_HOLE_DEFAULT_CHANCE } = options;
@@ -17920,13 +17944,24 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  };
 	  try {
 		const seen = new Set();
-		(activeTraps || []).forEach(trap => {
+		activeTraps = (activeTraps || []).filter(trap => {
+		  const cell = trap && trap.cell;
+		  // Ignore traps in placeholder clones or with no valid cell
+		  if (!cell || (cell.closest && cell.closest('.zone-placeholder'))) return false;
+		  // Ignore traps that are no longer marked triggered in the DOM
+		  if (!(cell.dataset?.trapTriggered === 'true') && !cell.classList.contains('trap-triggered')) return false;
+		  const key = getTrapKey(trap);
+		  if (key && seen.has(key)) return false;
+		  if (key) seen.add(key);
+		  return true;
+		});
+		activeTraps.forEach(trap => {
 		  const penalty = Number(trap && trap.penalty) || 0;
 		  if (penalty <= 0) return;
-		  const key = trap && (trap.cell || trap.id || null);
-		  if (key && seen.has(key)) return; // dedupe stray duplicate entries
-		  if (key) seen.add(key);
-		  const zoneId = normalizeZoneId(String(trap.zoneId || '')).toLowerCase();
+		  const cell = trap && trap.cell;
+		  // Skip if cell lost its triggered flag (defensive double-check)
+		  if (!(cell?.dataset?.trapTriggered === 'true') && !cell?.classList?.contains('trap-triggered')) return;
+		  const zoneId = normalizeZoneId(String(trap.zoneId || cell?.dataset?.zoneId || cell?.closest?.('.grid')?.id || '')).toLowerCase();
 		  out.total += penalty;
 		  if (zoneId.startsWith('red-grid') || zoneId === 'red-zone') out.red += penalty;
 		  else if (zoneId === 'yellow-grid' || zoneId.indexOf('yellow') !== -1 || zoneId.indexOf('geel') !== -1) out.yellow += penalty;
@@ -18079,13 +18114,15 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 	function registerTrapTrigger(cell, zoneId = '', { silent = false } = {}) {
 	  if (!cell || cell.dataset.trapTriggered === 'true') return;
+	  // Skip cells inside placeholder zones (clones)
+	  if (cell.closest && cell.closest('.zone-placeholder')) return;
 	  const trapId = nextTrapId();
 	  const normalizedZone = normalizeZoneId(zoneId || cell.dataset.zoneId || cell.closest('.grid')?.id || '');
 	const trapType = cell.dataset.trapType || 'pit';
 	const isBlackHole = trapType === 'blackHole';
 	const blackHoleUnlocked = isBlackHole && hasUpgrade('blackHoleAccess');
 	const penaltyValue = isBlackHole ? 0 : TRAP_PENALTY;
-	  const trapRecord = {
+	  const prospective = {
 		id: trapId,
 		cell,
 		zoneId: normalizedZone,
@@ -18093,10 +18130,16 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		triggeredAt: Date.now(),
 		type: trapType
 	  };
+	  // Guard: avoid duplicate registrations of the same trap cell
+	  const dupKey = getTrapKey(prospective);
+	  if (dupKey) {
+		const hasDup = (activeTraps || []).some(t => getTrapKey(t) === dupKey);
+		if (hasDup) return;
+	  }
 	  cell.dataset.trapTriggered = 'true';
 	  cell.dataset.trapInstanceId = trapId;
 	  cell.classList.add('trap-triggered');
-	  activeTraps.push(trapRecord);
+	  activeTraps.push(prospective);
 	  lastTrapHighlightId = trapId;
 	  if (!silent && penaltyValue > 0) {
 		const rect = cell.getBoundingClientRect();
@@ -18116,19 +18159,23 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	else if (trapVisible) renderTrapSummary({ highlightId: trapId });
 	else renderTrapSummary();
 	if (trapType === 'blackHole') {
-		handleBlackHoleTrapTrigger(trapRecord, { upgradeUnlocked: blackHoleUnlocked, silent });
+		handleBlackHoleTrapTrigger(prospective, { upgradeUnlocked: blackHoleUnlocked, silent });
 	  }
 	}
 
 	function releaseTrap(cell) {
 	  if (!cell || cell.dataset.trapTriggered !== 'true') return;
 	  const trapId = cell.dataset.trapInstanceId;
+	  const trapKey = getTrapKey({ cell, id: trapId, zoneId: cell.dataset?.zoneId });
 	  cell.classList.remove('trap-triggered');
 	  delete cell.dataset.trapTriggered;
 	  delete cell.dataset.trapInstanceId;
-	  if (trapId) {
-		activeTraps = activeTraps.filter(trap => trap.id !== trapId);
-	  }
+	  // Remove any lingering entries that match by id or by trap key (covers stale duplicates)
+	  activeTraps = (activeTraps || []).filter(trap => {
+		if (trapId && trap.id === trapId) return false;
+		const key = getTrapKey(trap);
+		return !trapKey || key !== trapKey;
+	  });
 	  renderTrapSummary();
 	}
 
@@ -18146,6 +18193,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 	function ensureTrapState(cell, zoneId = '', options = {}) {
 	  if (!cell || cell.dataset.trap !== 'true') return;
+	  // Skip cells inside placeholder zones (clones)
+	  if (cell.closest && cell.closest('.zone-placeholder')) return;
 	  const normalizedZone = normalizeZoneId(zoneId || cell.dataset.zoneId || cell.closest('.grid')?.id || '');
 	  const isActive = cell.classList.contains('active');
 	  const triggered = cell.dataset.trapTriggered === 'true';
@@ -18160,6 +18209,15 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	function resetTrapState() {
 	  activeTraps = [];
 	  lastTrapHighlightId = null;
+	  lastTrapPenaltyBreakdown = {
+		yellow: 0,
+		red: 0,
+		green: 0,
+		purple: 0,
+		blue: 0,
+		other: 0,
+		total: 0
+	  };
 	  document.querySelectorAll('.cell.trap-triggered, .cell[data-trap-triggered="true"]').forEach(cell => {
 		cell.classList.remove('trap-triggered');
 		delete cell.dataset.trapTriggered;
@@ -18844,15 +18902,22 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	} catch (e) {}
 
 	// Trap penalties should apply to the *affected color* (harder objectives), not only total.
-	// Any penalty that can't be mapped to a color stays as a total-only penalty.
+	// Apply only the delta since last calculation so penalties do not stack each update.
 	const trapPenaltyBreakdown = getTrapPenaltyBreakdown();
-	// IMPORTANT: don't clamp to 0 here.
-	// If a trap triggers early, the player should still get the full -5 counted.
-	yellow = yellow - (trapPenaltyBreakdown.yellow || 0);
-	green = green - (trapPenaltyBreakdown.green || 0);
-	purple = purple - (trapPenaltyBreakdown.purple || 0);
-	blue = blue - (trapPenaltyBreakdown.blue || 0);
-	red = red - (trapPenaltyBreakdown.red || 0);
+	const penaltyDelta = {
+	  yellow: (Number(trapPenaltyBreakdown.yellow) || 0) - (Number(lastTrapPenaltyBreakdown.yellow) || 0),
+	  green: (Number(trapPenaltyBreakdown.green) || 0) - (Number(lastTrapPenaltyBreakdown.green) || 0),
+	  purple: (Number(trapPenaltyBreakdown.purple) || 0) - (Number(lastTrapPenaltyBreakdown.purple) || 0),
+	  blue: (Number(trapPenaltyBreakdown.blue) || 0) - (Number(lastTrapPenaltyBreakdown.blue) || 0),
+	  red: (Number(trapPenaltyBreakdown.red) || 0) - (Number(lastTrapPenaltyBreakdown.red) || 0),
+	  other: (Number(trapPenaltyBreakdown.other) || 0) - (Number(lastTrapPenaltyBreakdown.other) || 0),
+	  total: (Number(trapPenaltyBreakdown.total) || 0) - (Number(lastTrapPenaltyBreakdown.total) || 0)
+	};
+	yellow -= penaltyDelta.yellow;
+	green -= penaltyDelta.green;
+	purple -= penaltyDelta.purple;
+	blue -= penaltyDelta.blue;
+	red -= penaltyDelta.red;
 	const waarden = [yellow, green, purple, blue, red];
 	// Bonus should never go negative.
 	const baseBonus = Math.max(0, Math.min(...waarden));
@@ -18880,6 +18945,15 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	const newScore = (yellow + green + purple + blue + red + totalBonusScore);
 	const trapPenaltyOther = Number(trapPenaltyBreakdown.other) || 0;
 	const trapPenaltyTotal = Number(trapPenaltyBreakdown.total) || 0;
+	lastTrapPenaltyBreakdown = {
+		yellow: Number(trapPenaltyBreakdown.yellow) || 0,
+		red: Number(trapPenaltyBreakdown.red) || 0,
+		green: Number(trapPenaltyBreakdown.green) || 0,
+		purple: Number(trapPenaltyBreakdown.purple) || 0,
+		blue: Number(trapPenaltyBreakdown.blue) || 0,
+		other: trapPenaltyOther,
+		total: trapPenaltyTotal
+	};
 	const displayScore = newScore - trapPenaltyOther;
 
 	// huidige getoonde waarde (als number, fallback 0)
@@ -29727,12 +29801,22 @@ function monitorScenarioProgress() {
 			lastTrapHighlightId = null;
 		} catch (e) {}
 		const triggered = Array.from(document.querySelectorAll('.cell[data-trap-triggered="true"], .cell.trap-triggered'));
+		// Deduplicate by coordinate to avoid counting placeholder clones
+		const seen = new Set();
 		triggered.forEach(cell => {
 			if (!cell) return;
+			// Skip cells inside placeholder zones (clones of real zones)
+			if (cell.closest('.zone-placeholder')) return;
+			// Deduplicate by zone + coordinates
+			const zoneId = normalizeZoneId(cell.dataset.zoneId || cell.closest('.grid')?.id || cell.closest('.zone')?.id || '');
+			const x = cell.dataset.x;
+			const y = cell.dataset.y;
+			const key = (x !== undefined && y !== undefined) ? `${zoneId}|${x}|${y}` : null;
+			if (key && seen.has(key)) return;
+			if (key) seen.add(key);
 			const trapType = cell.dataset.trapType || 'pit';
 			const isBlackHole = trapType === 'blackHole';
 			const penaltyValue = isBlackHole ? 0 : TRAP_PENALTY;
-			const zoneId = normalizeZoneId(cell.dataset.zoneId || cell.closest('.grid')?.id || cell.closest('.zone')?.id || '');
 			const trapId = nextTrapId();
 			cell.dataset.trapTriggered = 'true';
 			cell.dataset.trapInstanceId = trapId;
