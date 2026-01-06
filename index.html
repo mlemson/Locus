@@ -16614,6 +16614,20 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		let zoneNavRight = null;
 		let mobileZoomResizeBound = false;
 
+		if (BATTERY_SAVER_ENABLED) {
+			document.addEventListener('visibilitychange', () => {
+				if (!document.hidden) return;
+				// Stop any queued placeholder sync frames while hidden.
+				try {
+					if (placeholderSyncFrame) {
+						cancelAnimationFrame(placeholderSyncFrame);
+						placeholderSyncFrame = null;
+						placeholderSyncQueue.clear();
+					}
+				} catch (_) {}
+			});
+		}
+
 	function isMobileViewport() {
 		try {
 			const w = window.innerWidth;
@@ -16857,6 +16871,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 	function schedulePlaceholderSync(zone) {
 	  if (!zone || !zone._placeholder) return;
+	  if (BATTERY_SAVER_ENABLED && document.hidden) return;
 	  placeholderSyncQueue.add(zone);
 	  if (placeholderSyncFrame) return;
 	  placeholderSyncFrame = requestAnimationFrame(() => {
@@ -21890,6 +21905,33 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	let isLoadingGame = false;
 	let savedDeckState = null;
 
+	// Battery saver toggle: flip to false to disable the low-power tweaks below.
+	// Use var to avoid temporal dead zone when referenced earlier in the file.
+	var BATTERY_SAVER_ENABLED = true;
+	var BATTERY_SUPPRESS_LOGS = true;
+	var BATTERY_THROTTLE_DRAG = true;
+	var BATTERY_REDUCE_ANIM = true;
+
+	// Apply battery-saver tweaks early (logs + reduced motion)
+	(function applyBatterySaver() {
+		if (!BATTERY_SAVER_ENABLED) return;
+		try {
+			if (BATTERY_SUPPRESS_LOGS && typeof console === 'object') {
+				const noop = () => {};
+				['log','info','debug'].forEach(fn => { try { console[fn] = noop; } catch (_) {} });
+			}
+			if (BATTERY_REDUCE_ANIM) {
+				const style = document.createElement('style');
+				style.id = 'battery-saver-style';
+				style.textContent = 'body.battery-saver *, body.battery-saver *::before, body.battery-saver *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }';
+				document.head && document.head.appendChild(style);
+				document.addEventListener('DOMContentLoaded', () => {
+					try { document.body.classList.add('battery-saver'); } catch (_) {}
+				});
+			}
+		} catch (_) {}
+	})();
+
 	// Initialiseer shapePool nu currentLevel beschikbaar is
 	shapePool = buildShapePool();
 
@@ -26182,6 +26224,9 @@ function openShopModal(callback) {
 		let startScrollLeft = 0;
 		let startScrollTop = 0;
 		let moved = false;
+		let dragRaf = null;
+		let pendingDx = 0;
+		let pendingDy = 0;
 
 		zoneEl.addEventListener('pointerdown', (e) => {
 			if (e.button !== undefined && e.button !== 0) return; // left button only
@@ -26211,8 +26256,20 @@ function openShopModal(callback) {
 			}
 			if (!moved) return;
 			e.preventDefault();
-			zoneEl.scrollLeft = startScrollLeft - dx;
-			zoneEl.scrollTop = startScrollTop - dy;
+			if (BATTERY_SAVER_ENABLED && BATTERY_THROTTLE_DRAG) {
+				pendingDx = dx;
+				pendingDy = dy;
+				if (!dragRaf) {
+					dragRaf = requestAnimationFrame(() => {
+						zoneEl.scrollLeft = startScrollLeft - pendingDx;
+						zoneEl.scrollTop = startScrollTop - pendingDy;
+						dragRaf = null;
+					});
+				}
+			} else {
+				zoneEl.scrollLeft = startScrollLeft - dx;
+				zoneEl.scrollTop = startScrollTop - dy;
+			}
 		}, { passive: false });
 
 		const endDrag = () => {
@@ -26446,6 +26503,12 @@ function openShopModal(callback) {
 	  try {
 		const isLevelOne = Number(level) === 1;
 		if (isLevelOne && !preLevelStarterPicksDone && !preLevelStarterPicksInProgress) {
+			// Switch off the intro deck before we start the starter picks, so the picks land on the standard deck
+			// and won't be wiped when we restart startLevel after the picker completes.
+			if (introDeckActive) {
+				introDeckActive = false;
+				resetDeckToStandard();
+			}
 			preLevelStarterPicksInProgress = true;
 			startStarterMiniRewardSequence(() => {
 				preLevelStarterPicksDone = true;
