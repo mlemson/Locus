@@ -13780,9 +13780,9 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		22: [
 			{
 				id: 'level-22-purple-domination',
-				description: 'Level 22: Scoor 60 punten in paars.',
+				description: 'Level 22: Scoor 100 punten in paars.',
 				short: 'Level 22 - Paarse dominantie',
-				check: scores => scores.purple >= 60
+				check: scores => scores.purple >= 100
 			},
 			{
 				id: 'level-22-red-network',
@@ -13798,39 +13798,39 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			},
 			{
 				id: 'level-22-coin-master',
-				description: 'Level 22: Verzamel 12+ munten in dit level.',
+				description: 'Level 22: Verzamel 15+ munten in dit level.',
 				short: 'Level 22 - Munt meester',
-				check: scores => getCollectedCoinCount(scores) >= 12,
+				check: scores => getCollectedCoinCount(scores) >= 15,
 				progress: scores => {
-					const collected = Math.max(0, Math.min(12, getCollectedCoinCount(scores)));
-					return `${collected}/12`;
+					const collected = Math.max(0, Math.min(15, getCollectedCoinCount(scores)));
+					return `${collected}/15`;
 				}
 			},
 			{
 				id: 'level-22-dual-focus',
-				description: 'Level 22: Scoor 72 punten in groen en blauw.',
+				description: 'Level 22: Scoor 100 punten in groen en blauw.',
 				short: 'Level 22 - Dubbele focus',
-				check: scores => scores.green >= 72 && scores.blue >= 72
+				check: scores => scores.green >= 100 && scores.blue >= 100
 			}
 		],
 		23: [
 			{
 				id: 'level-23-total-power',
-				description: 'Level 23: Scoor 200 punten totaal.',
+				description: 'Level 23: Scoor 300 punten totaal.',
 				short: 'Level 23 - Totale kracht',
-				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 200
+				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 300
 			},
 			{
 				id: 'level-23-blue-split-master',
-				description: 'Level 23: Scoor 100 punten in blauw.',
+				description: 'Level 23: Scoor 250 punten in blauw.',
 				short: 'Level 23 - Split meester',
-				check: scores => scores.blue >= 100
+				check: scores => scores.blue >= 250
 			},
 			{
 				id: 'level-23-green-depth',
-				description: 'Level 23: Scoor 100 punten in groen.',
+				description: 'Level 23: Scoor 200 punten in groen.',
 				short: 'Level 23 - Groene diepte',
-				check: scores => scores.green >= 100
+				check: scores => scores.green >= 200
 			},
 			{
 				id: 'level-23-triple-threat',
@@ -13884,27 +13884,27 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			},
 			{
 				id: 'level-24-bonus-rush',
-				description: 'Level 24: Verzamel 35 bonussen.',
+				description: 'Level 24: Verzamel 40 bonussen.',
 				short: 'Level 24 - Bonus rush',
-				check: scores => (scores?.bonusesCollected || 0) >= 35,
+				check: scores => (scores?.bonusesCollected || 0) >= 40,
 				progress: scores => {
-					const collected = Math.max(0, Math.min(35, (scores?.bonusesCollected || 0)));
-					return `${collected}/35`;
+					const collected = Math.max(0, Math.min(40, (scores?.bonusesCollected || 0)));
+					return `${collected}/40`;
 				}
 			},
 			{
 				id: 'level-24-blue-depths',
-				description: 'Level 24: Scoor 150 punten in blauw.',
+				description: 'Level 24: Scoor 300 punten in blauw.',
 				short: 'Level 24 - Blauwe dieptes',
-				check: scores => scores.blue >= 150
+				check: scores => scores.blue >= 300
 			}
 		],
 		25: [
 			{
 				id: 'level-25-halfway-champion',
-				description: 'Level 25: Scoor 300 punten totaal.',
+				description: 'Level 25: Scoor 450 punten totaal.',
 				short: 'Level 25 - Halverwege kampioen',
-				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 250
+				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 450
 			},
 			{
 				id: 'level-25-purple-complete',
@@ -13959,12 +13959,12 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			},
 			{
 				id: 'level-25-coin-hoarder',
-				description: 'Level 25: Verzamel 20+ munten.',
+				description: 'Level 25: Verzamel 25+ munten.',
 				short: 'Level 25 - Munt verzamelaar',
-				check: scores => getCollectedCoinCount(scores) >= 20,
+				check: scores => getCollectedCoinCount(scores) >= 25,
 				progress: scores => {
-					const collected = Math.max(0, Math.min(20, getCollectedCoinCount(scores)));
-					return `${collected}/20`;
+					const collected = Math.max(0, Math.min(25, getCollectedCoinCount(scores)));
+					return `${collected}/25`;
 				}
 			}
 		],
@@ -14010,17 +14010,17 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			},
 			{
 				id: 'level-27-mega-total',
-				description: 'Level 27: Scoor 300 punten totaal.',
+				description: 'Level 27: Scoor 450 punten totaal.',
 				short: 'Level 27 - Mega totaal',
-				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 300
+				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 450
 			}
 		],
 		28: [
 			{
 				id: 'level-28-blue-master',
-				description: 'Level 28: Scoor 200 punten in blauw.',
+				description: 'Level 28: Scoor 350 punten in blauw.',
 				short: 'Level 28 - Blauwe meester',
-				check: scores => scores.blue >= 200
+				check: scores => scores.blue >= 350
 			},
 			{
 				id: 'level-28-yellow-emperor',
@@ -14059,9 +14059,9 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		29: [
 			{
 				id: 'level-29-penultimate',
-				description: 'Level 29: Op naar de finale! Scoor 400 punten totaal.',
+				description: 'Level 29: Op naar de finale! Scoor 600 punten totaal.',
 				short: 'Level 29 - Bijna daar',
-				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 400
+				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 600
 			},
 			{
 				id: 'level-29-all-zones-active',
@@ -14087,9 +14087,9 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		30: [
 			{
 				id: 'level-30-ultimate-champion',
-				description: 'Level 30: FINALE! Scoor 500 punten totaal.',
+				description: 'Level 30: FINALE! Scoor 750 punten totaal.',
 				short: 'Level 30 - Ultieme kampioen',
-				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 500
+				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 750
 			}
 		]
 	};
@@ -14306,6 +14306,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		other: 0,
 		total: 0
 	};
+	let dragGapMode = 'default';
 
 	// Touch UX: lift the dragged block slightly above the finger.
 	// Keep this small; it only applies to real touch/pen pointer events.
@@ -16046,6 +16047,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			overlay.style.display = 'block';
 		}
 		draggedBlock = block;
+		resetDragBlockGap();
 		draggedShape = block._shape || shape;
 		draggedColor = colorObj;
 		try { badge.setPointerCapture(event.pointerId); } catch {}
@@ -16084,6 +16086,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		const overlay = document.getElementById('drag-overlay');
 		if (overlay && !overlay.contains(block)) overlay.appendChild(block);
 		draggedBlock = block;
+		resetDragBlockGap();
 		draggedShape = block._shape || shape;
 		draggedColor = colorObj;
 		beginPointerDrag({ clientX: event.clientX, clientY: event.clientY, pointerId: event.pointerId || null });
@@ -16138,6 +16141,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		const overlay = document.getElementById('drag-overlay');
 		if (overlay && !overlay.contains(block)) overlay.appendChild(block);
 		draggedBlock = block;
+		resetDragBlockGap();
 		draggedShape = block._shape || shape;
 		draggedColor = colorObj;
 		beginPointerDrag({ clientX: event.clientX, clientY: event.clientY, pointerId: event.pointerId || null });
@@ -19748,6 +19752,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		beginPointerDrag({ clientX: ev.clientX, clientY: ev.clientY, pointerId: ev.pointerId });
 
         draggedBlock = block;
+		resetDragBlockGap();
         draggedColor = color;
 		draggedShape = currentShape;
 		
@@ -19907,55 +19912,61 @@ document.addEventListener('pointermove', ev => {
 	  }
 
 	// ===== Vind zones en cellen onder ALLE gevulde cellen van het blok =====
+	const prevPointerEvents = draggedBlock.style.pointerEvents;
+	draggedBlock.style.pointerEvents = 'none';
+	
+	// Detecteer zone onder cursor en pas gap aan VOOR het meten
+	const centerElem = document.elementFromPoint(cursorX, cursorY);
+	const detectedZone = centerElem ? centerElem.closest('.zone') : null;
+	const gapChanged = applyDragBlockGap(detectedZone);
+	
+	// Als gap is veranderd, wacht een frame en meet dan opnieuw
+	// Dit zorgt dat de browser de layout update kan doorvoeren
+	if (gapChanged) {
+		// Force een synchrone reflow door offsetHeight te lezen
+		void draggedBlock.offsetHeight;
+	}
+
+	// Meet blok NA eventuele gap-aanpassing
 	const blockRect = draggedBlock.getBoundingClientRect();
 
-	// Derive per-cell spacing from the rendered draggable block so
-	// sampling points match what the user actually sees. This keeps
-	// visual size unchanged while aligning elementFromPoint checks.
+	// Derive per-cell spacing from the rendered draggable block
 	const shapeHeight = draggedShape.length;
 	const shapeWidth = draggedShape[0].length;
 	const stepX = shapeWidth > 0 ? (blockRect.width / shapeWidth) : 0;
 	const stepY = shapeHeight > 0 ? (blockRect.height / shapeHeight) : 0;
 
-	// Verzamel alle hits van gevulde cellen
+	// Verzamel alle hits van gevulde cellen via elementFromPoint
 	const cellHits = [];
-	  
-	  // Schakel pointer events uit voor het gedraaide blok
-	  const prevPointerEvents = draggedBlock.style.pointerEvents;
-	  draggedBlock.style.pointerEvents = 'none';
-	  
-	  // Check elke gevulde cel in de shape
-	  for (let row = 0; row < shapeHeight; row++) {
+	
+	for (let row = 0; row < shapeHeight; row++) {
 		for (let col = 0; col < shapeWidth; col++) {
-		  // Optional (value 2) cells should NOT drive hit-testing / anchoring.
-		  if (isSolidShapeCell(draggedShape[row][col])) {
-			// Bereken de positie van deze cel in het visuele blok
-			const cellX = blockRect.left + (col * stepX) + (stepX / 2);
-			const cellY = blockRect.top + (row * stepY) + (stepY / 2);
-			
-			// Vind de grid cel onder dit punt
-			const elem = document.elementFromPoint(cellX, cellY);
-			const gridCell = elem ? elem.closest('.cell') : null;
-			
-			if (gridCell && gridCell.dataset.x !== undefined && gridCell.dataset.y !== undefined) {
-			  const cellZone = gridCell.closest('.zone');
-			  if (cellZone && !cellZone.classList.contains('zone-placeholder')) {
-				cellHits.push({
-				  gridCell: gridCell,
-				  zone: cellZone,
-				  shapeRow: row,
-				  shapeCol: col,
-				  gridX: parseInt(gridCell.dataset.x, 10),
-				  gridY: parseInt(gridCell.dataset.y, 10)
-				});
-			  }
+			if (isSolidShapeCell(draggedShape[row][col])) {
+				const cellX = blockRect.left + (col * stepX) + (stepX / 2);
+				const cellY = blockRect.top + (row * stepY) + (stepY / 2);
+				
+				const elem = document.elementFromPoint(cellX, cellY);
+				const gridCell = elem ? elem.closest('.cell') : null;
+				
+				if (gridCell && gridCell.dataset.x !== undefined && gridCell.dataset.y !== undefined) {
+					const cellZone = gridCell.closest('.zone');
+					if (cellZone && !cellZone.classList.contains('zone-placeholder')) {
+						cellHits.push({
+							gridCell: gridCell,
+							zone: cellZone,
+							shapeRow: row,
+							shapeCol: col,
+							gridX: parseInt(gridCell.dataset.x, 10),
+							gridY: parseInt(gridCell.dataset.y, 10)
+						});
+					}
+				}
 			}
-		  }
 		}
-	  }
+	}
 	  
-	  // Herstel pointer events
-	  draggedBlock.style.pointerEvents = prevPointerEvents || '';
+	// Herstel pointer events
+	draggedBlock.style.pointerEvents = prevPointerEvents || '';
 	  
 	  // Als we geen hits hebben, bail
 	  if (cellHits.length === 0) {
@@ -20897,6 +20908,32 @@ document.addEventListener('pointermove', ev => {
 		} catch (e) {
 			return false;
 		}
+	}
+
+	function resetDragBlockGap() {
+		dragGapMode = 'default';
+		if (draggedBlock) {
+			draggedBlock.style.gap = 'var(--board-grid-gap)';
+		}
+	}
+
+	function applyDragBlockGap(zoneCandidate) {
+		if (!draggedBlock) return false;
+		const zoneEl = zoneCandidate && zoneCandidate.classList && zoneCandidate.classList.contains('zone')
+			? zoneCandidate
+			: (zoneCandidate && typeof zoneCandidate.closest === 'function' ? zoneCandidate.closest('.zone') : null);
+		const isPlaceholder = zoneEl && zoneEl.classList && zoneEl.classList.contains('zone-placeholder');
+		const shouldBeGapless = !!zoneEl && !isPlaceholder && isAbsolutePositionedGrid(zoneEl);
+		if (shouldBeGapless && dragGapMode !== 'gapless') {
+			draggedBlock.style.gap = '0px';
+			dragGapMode = 'gapless';
+			return true;
+		} else if (!shouldBeGapless && dragGapMode !== 'default') {
+			draggedBlock.style.gap = 'var(--board-grid-gap)';
+			dragGapMode = 'default';
+			return true;
+		}
+		return false;
 	}
 
 		// Inject small helper CSS for class-based toggles (avoid inline styles for grid chrome)
@@ -22293,6 +22330,7 @@ function getCollectedCoinCount(scores) {
 	  if (overlay) overlay.style.display = 'block';
 	  
 	  draggedBlock = block;
+	resetDragBlockGap();
 	  draggedShape = block._shape || shape;
 	  draggedColor = colorObj;
 	  
@@ -27568,6 +27606,7 @@ function isWorld4CardAllowed(cardData) {
 		setElPos(block, startX - offsetX, startY - offsetY);
 
 		draggedBlock = block;
+		resetDragBlockGap();
 		draggedShape = block._shape || shape;
 		draggedColor = color;
 		lastZone = null;
@@ -27730,6 +27769,7 @@ function isWorld4CardAllowed(cardData) {
 	}
 
 	draggedBlock = block;
+	resetDragBlockGap();
 	draggedShape = block._shape || selectedShape;
 	draggedColor = selectedColor;
 	lastZone = null;
@@ -28647,6 +28687,7 @@ function showFloatingPreview(shape, color, options = {}) {
 				setElPos(block, rect.left, rect.top);
 
 				draggedBlock = block;
+				resetDragBlockGap();
 				draggedShape = block._shape || selectedShape;
 				draggedColor = selectedColor;
 				beginPointerDrag({ clientX: e.clientX, clientY: e.clientY, pointerId: e.pointerId });
