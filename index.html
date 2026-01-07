@@ -13643,12 +13643,6 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 				check: scores => scores.yellow >= 80 && scores.red >= 80 && scores.green >= 80 && scores.purple >= 80 && scores.blue >= 80
 			},
 			{
-				id: 'level-19-green-infinite',
-				description: 'Level 19: Scoor 180 punten in groen.',
-				short: 'Level 19 - Groene oneindigheid',
-				check: scores => scores.green >= 180
-			},
-			{
 				id: 'level-19-red-completion',
 				description: 'Level 19: Scoor 120 punten in rood.',
 				short: 'Level 19 - Rode voltooiing',
@@ -26073,16 +26067,16 @@ function openShopModal(callback) {
 	  
 	  // World 3: Meer traps en hogere moeilijkheid
 	  const hasBlackHoleUpgrade = hasUpgrade('blackHoleAccess');
-	  const trapChance = 0.15 + (subLevel * 0.01); // 15-25% trap chance
-	  const maxTraps = 15 + subLevel; // 15-25 max traps
-	  const blackHoleChance = hasBlackHoleUpgrade ? BLACK_HOLE_DEFAULT_CHANCE * 1.5 : 0;
+	  const trapChance = 0.05 + (subLevel * 0.01); // 5-15% trap chance
+	  const maxTraps = 10 + subLevel; // 10-20 max traps
+	  const blackHoleChance = hasBlackHoleUpgrade ? BLACK_HOLE_DEFAULT_CHANCE : 0;
 	  
 	  // GEEL: Mega diamant patroon - combinatie van World 1 kolommen + World 2 vormen
 	  // Grotere vorm met diagonale scoring
 	  const yellowShape = {
-		pattern: [4, 6, 8, 10, 12, 14, 14, 12, 10, 8, 6, 4],
+		pattern: [4, 6, 8, 10, 12, 12, 12, 12, 10, 8, 6, 4],
 		offsets: [5, 4, 3, 2, 1, 0, 0, 1, 2, 3, 4, 5],
-		boldCells: [[0,1], [0,2], [5,0], [5,13], [6,0], [6,13], [11,1], [11,2], [3,6], [3,7], [8,6], [8,7]]
+		boldCells: [[0,1], [0,2], [5,3], [5,10], [6,3], [6,10], [11,1], [11,2], [3,6], [3,7], [8,6], [8,7]]
 	  };
 	  const yellowRows = yellowShape.pattern.length;
 	  // Use the true bounding width (max(offset + length)), not max(length)+max(offset).
@@ -26294,10 +26288,10 @@ function openShopModal(callback) {
 		  createGrid('yellow-grid', yellowRows, yellowCols, {
 			goldCells: true,
 			symbols: true,
-			minSymbols: 10,
-			maxSymbols: 10,
+			minSymbols: 12,
+			maxSymbols: 12,
 			coinChance: 0.10,
-			maxCoins: 10,
+			maxCoins: 16,
 			rowLengths: yellowShape.pattern,
 			rowOffsets: yellowShape.offsets,
 			boldColumns: [],
@@ -26306,8 +26300,8 @@ function openShopModal(callback) {
 			diagonalLegend: true,
 			trimRight: true,
 			trapChance: trapChance,
-			maxTraps: Math.floor(maxTraps * 0.6),
-			blackHoleChance: blackHoleChance
+			maxTraps: Math.floor(maxTraps * 0.4),
+			blackHoleChance: blackHoleChance * 0.3
 		  });
 		  const yellowZone = document.getElementById('yellow-zone');
 		  if (yellowZone && yellowShape.boldCells) {
@@ -26327,7 +26321,7 @@ function openShopModal(callback) {
 		  minSymbols: 16,
 		  maxSymbols: 16,
 		  coinChance: 0.06,
-		  maxCoins: 10,
+		  maxCoins: 12,
 		  randomBoldCount: 14,
 		  avoidAdjacentBold: true,
 		  fixedBoldCells: [[0,0], [0, purpleSize - 1], [purpleSize - 1, 0], [purpleSize - 1, purpleSize - 1], 
@@ -26336,7 +26330,7 @@ function openShopModal(callback) {
 		  outerRingShade: true,
 		  trapChance: trapChance * 1.1,
 		  maxTraps: Math.floor(maxTraps * 1.1),
-		  blackHoleChance: blackHoleChance * 0.3
+		  blackHoleChance: blackHoleChance * 0.2
 		}),
 		
 		// Blauw: Ultra lange rivier met 2 splits
@@ -26345,10 +26339,10 @@ function openShopModal(callback) {
 			boldBottom: true,
 			goldCells: true,
 			symbols: true,
-			minSymbols: 58,
-			maxSymbols: 58,
+			minSymbols: 30,
+			maxSymbols: 30,
 			coinChance: 0.20,
-			maxCoins: 40,
+			maxCoins: 25,
 			rowLengths: blueRowPattern,
 			rowOffsets: blueRowOffsets,
 			voidCells: blueGapCells,
@@ -26356,13 +26350,13 @@ function openShopModal(callback) {
 			trimRight: true,
 			trapChance: trapChance * 0.9,
 			maxTraps: Math.floor(maxTraps * 0.9),
-			blackHoleChance: 0
+			blackHoleChance: blackHoleChance * 0.2
 		  });
 		},
 		
 		// Groen: Ultra groot met maximale vertakkingen
 		() => {
-		  const greenSplitChance = 0.45;
+		  const greenSplitChance = 0.55;
 		  return generateRoots('green-grid', greenRows, greenCols, greenMaxGrowth, greenSplitChance, 0.06, 12, 21, 6, false, trapChance, Math.floor(maxTraps * 1.1), blackHoleChance * 0.4);
 		},
 		
@@ -28812,7 +28806,7 @@ function showFloatingPreview(shape, color, options = {}) {
 			},
 			3: {
 				paars: '<strong>Paars</strong>: Maak verbindingen van aaneengesloten paarse cellen. Score: 8 per verbinding, verbinding naar hoekcel: 10 punten, hoekcellen onderling: 25 punten per verbinding.',
-				geel: '<strong>Geel</strong>: Je scoort per volledige ring van de diamant. Buitenste ringen geven de minste punten, binnenste ringen de meeste (oplopend tot 64 punten).',
+				geel: '<strong>Geel</strong>: Je scoort per volledige ring van de diamant. De buitenste ring geeft de meeste punten, de binnenste ring de minste (oplopend tot 64 punten).',
 				groen: '<strong>Groen</strong>: Begin vanaf het midden. Bereik de donkergroene cellen om punten te verdienen, hoe verder van het midden, hoe meer punten je kan verdienen.',
 				rood: '<strong>Rood</strong>: Begin overal. Elk rood vak dat volledig gevuld is levert punten op:',
 				blauw: '<strong>Blauw</strong>: Begin onderaan. Bereik dikgedrukte cellen om punten te behalen.'
