@@ -37,12 +37,12 @@
 				// and text color before external/embedded CSS parses fully.
 				var _s = document.createElement('style');
 				_s.setAttribute('data-locus-theme-preload','true');
-				_s.textContent = 'html,body { background: #1b1d22 !important; color: #e5e5e5 !important; }\n'
-					+ '#menu-toggle { background: var(--color-menu-bg, #2f3546) !important; border-color: var(--shadow-light, rgba(255,255,255,0.12)) !important; }\n'
-					+ '#menu-toggle span { background: rgba(255,255,255,0.88) !important; }\n'
-					+ '#mobile-objective-banner, #ml-objective-top { background: transparent !important; }\n'
-					+ '#objective-zone { background: rgba(34,37,43,0.95) !important; color: var(--color-text-light, #e5e5e5) !important; }\n'
-					+ '.card { background: var(--color-dark-gray, #333) !important; color: inherit !important; }';
+				_s.textContent = 'html,body { background: #1b1d22; color: #e5e5e5; }\n'
+					+ '#menu-toggle { background: var(--color-menu-bg, #2f3546); border-color: var(--shadow-light, rgba(255,255,255,0.12)); }\n'
+					+ '#menu-toggle span { background: rgba(255,255,255,0.88); }\n'
+					+ '#mobile-objective-banner, #ml-objective-top { background: transparent; }\n'
+					+ '#objective-zone { background: rgba(34,37,43,0.95); color: var(--color-text-light, #e5e5e5); }\n'
+					+ '.card { background: var(--color-dark-gray, #333); color: inherit; }';
 				document.head.appendChild(_s);
 			} catch (e) {
 				// Ignore storage or DOM errors (private mode / blocked storage).
@@ -480,11 +480,11 @@
 
 			/* Red zone: keep proportions in zoom, like compact mobile. */
 			#red-zone.zoom-focus {
-				flex-wrap: wrap !important;
-				flex-direction: row !important;
-				width: auto !important;
-				min-width: 380px !important;
-				height: auto !important;
+				flex-wrap: wrap;
+				flex-direction: row;
+				width: auto;
+				min-width: 380px;
+				height: auto;
 				max-width: 90vw;
 			}
 		}
@@ -508,61 +508,60 @@
 		   Used for both mobile landscape AND mobile portrait on phones.
 		   Board center, options in slim sidebars. */
 		body.mobile-sidebar-layout {
-			overflow: hidden !important;
+			overflow: hidden;
 			max-height: 100vh;
 			max-height: 100svh;
 		}
 
 		body.mobile-sidebar-layout,
 		body.mobile-sidebar-layout html {
-			overflow: hidden !important;
+			overflow: hidden;
 		}
 
 		/* Hamburger menu in mobile sidebar layout */
-		body.mobile-sidebar-layout #menu-toggle {
-			position: fixed !important;
-			top: 4px;
-			left: 4px;
-			z-index: 1100;
-			width: 36px;
-			height: 36px;
-			display: flex !important;
-		}
+	body.mobile-sidebar-layout.mobile-sidebar-layout #menu-toggle {
+		position: fixed;
+		top: 4px;
+		left: 4px;
+		z-index: 1100;
+		width: 36px;
+		height: 36px;
+		display: flex;
+	}
 
-		body.mobile-sidebar-layout #controls {
-			position: fixed;
-			top: 44px;
-			left: 4px;
-			z-index: 1099;
-			max-height: calc(100vh - 50px);
-			max-height: calc(100svh - 50px);
-			overflow-y: auto;
-		}
+	body.mobile-sidebar-layout.mobile-sidebar-layout #controls {
+		position: fixed;
+		top: 44px;
+		left: 4px;
+		z-index: 1099;
+		max-height: calc(100vh - 50px);
+		max-height: calc(100svh - 50px);
+		overflow-y: auto;
+	}
 
-		body.mobile-sidebar-layout #bottom-bar {
-			display: none !important;
-		}
+	body.mobile-sidebar-layout.mobile-sidebar-layout #bottom-bar {
+		display: none !important;
+	}
 
-		body.mobile-sidebar-layout #mobile-objective-banner {
-			display: none !important;
+	body.mobile-sidebar-layout.mobile-sidebar-layout #mobile-objective-banner {
 		}
 
 		/* Safety net: if the sidebar class ever lingers, never apply it in portrait. */
 		@media (max-width: 650px) and (orientation: portrait) {
 			body.mobile-sidebar-layout {
-				overflow: auto !important;
+				overflow: auto;
 				max-height: none;
 			}
 			body.mobile-sidebar-layout html {
-				overflow: auto !important;
+				overflow: auto;
 			}
-			body.mobile-sidebar-layout #mobile-landscape-wrapper {
+			body.mobile-sidebar-layout.mobile-sidebar-layout #mobile-landscape-wrapper {
 				display: none !important;
 			}
-			body.mobile-sidebar-layout #bottom-bar {
+			body.mobile-sidebar-layout.mobile-sidebar-layout #bottom-bar {
 				display: flex !important;
 			}
-			body.mobile-sidebar-layout #mobile-objective-banner {
+			body.mobile-sidebar-layout.mobile-sidebar-layout #mobile-objective-banner {
 				display: flex !important;
 			}
 		}
@@ -584,18 +583,18 @@
 			overflow: auto;
 		}
 
-		body.mobile-sidebar-layout.zoomed-in #red-zone.zoom-focus {
-			display: grid !important;
-			grid-template-columns: repeat(2, max-content) !important;
+		body.mobile-sidebar-layout.mobile-sidebar-layout.zoomed-in #red-zone.zoom-focus {
+			display: grid;
+			grid-template-columns: repeat(2, max-content);
 			width: auto;
 			max-width: 100vw;
 		}
 
-		body.mobile-sidebar-layout.zoomed-in .zone-nav-arrow {
-			display: flex;
+		body.mobile-sidebar-layout.mobile-sidebar-layout.zoomed-in .zone-nav-arrow {
+			display: flex !important;
 		}
 
-		body.mobile-sidebar-layout #mobile-landscape-wrapper {
+		body.mobile-sidebar-layout.mobile-sidebar-layout #mobile-landscape-wrapper {
 			display: flex !important;
 			flex-direction: row;
 			align-items: stretch;
@@ -610,8 +609,8 @@
 			overflow: hidden;
 		}
 
-		body.mobile-sidebar-layout #ml-sidebar-left,
-		body.mobile-sidebar-layout #ml-sidebar-right {
+		body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left,
+		body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-right {
 			display: flex !important;
 			flex-direction: column;
 			gap: 2px;
@@ -737,7 +736,7 @@
 
 		/* Gold zone in left sidebar */
 		body.mobile-sidebar-layout #ml-sidebar-left #gold-zone {
-			display: flex !important;
+			display: flex;
 			flex-direction: column;
 			align-items: center;
 			gap: 2px;
@@ -770,14 +769,14 @@
 			border: 1px solid #c9960a;
 		}
 
-		body.mobile-sidebar-layout #ml-sidebar-left #gold-zone .buy-placement-btn {
+body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone .buy-placement-btn {
 			padding: 3px 5px;
 			font-size: 0.45rem;
-			display: block !important;
+			display: block;
 		}
 
-		body.mobile-sidebar-layout #ml-sidebar-left #gold-zone #collected-coins {
-			display: none !important;
+body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #collected-coins {
+			display: none;
 		}
 
 		@media (orientation: landscape) {
@@ -839,7 +838,7 @@
 		body.mobile-sidebar-layout #ml-sidebar-right #card-choice-zone h2,
 		body.mobile-sidebar-layout #ml-sidebar-right #kiesKaartTitel,
 		body.mobile-sidebar-layout #ml-sidebar-right #card-choice-zone br {
-			display: none !important;
+			display: none;
 		}
 
 		body.mobile-sidebar-layout #ml-sidebar-right #card-options {
@@ -1250,7 +1249,7 @@
 	  }
 
 	  #bottom-bar-coins {
-		display: none !important;
+		display: none;
 	  }
 
 	  #bottom-bar #scoreboard,
@@ -1269,7 +1268,7 @@
 
 	  /* Place the coin panel next to the bonus inventory. */
 	  #bottom-bar-bonus #gold-zone {
-		width: 100% !important;
+		width: 100%;
 		flex: 0 0 auto;
 		padding: 3px 6px;
 		margin: 0;
@@ -1586,7 +1585,7 @@
 			body.classic-mode #gold-zone,
 			body.classic-mode .zone-info-btn,
 		body.classic-mode .zone-info-popover {
-			display: none !important;
+			display: none;
 		}
 
 		/* Classic mode: don't scale down; board should fill the screen. */
@@ -1596,7 +1595,7 @@
 
 		/* Hide the legacy UI column so the board uses the full width. */
 		body.classic-mode #board > .column:last-child {
-			display: none !important;
+			display: none;
 		}
 
 		#original-card-zone {
@@ -1648,13 +1647,13 @@
 		/* Zones compacter maken voor betere fit */
 		/* Green grid (lichtgroene binnenste area) beperken (niet tijdens zoom) */
 		body:not(.zoomed-in) #green-grid {
-			min-width: calc(15 * var(--cell-size)) !important;
-			max-width: calc(15 * var(--cell-size) + 20px) !important;
+			min-width: calc(15 * var(--cell-size));
+			max-width: calc(15 * var(--cell-size) + 20px);
 		}
 		/* Zoomed-in: only the ACTIVE (zoom-focused) green zone may widen */
 		body.zoomed-in #green-zone.zoom-focus #green-grid {
-			min-width: calc(30 * var(--cell-size)) !important;
-			max-width: calc(30 * var(--cell-size) + 20px) !important;
+			min-width: calc(30 * var(--cell-size));
+			max-width: calc(30 * var(--cell-size) + 20px);
 		}
 
 		/* Mobile: blue is vertically long by design; keep it scrollable but not a giant strip. */
@@ -1702,13 +1701,13 @@
 
 		/* Green grid (lichtgroene binnenste area) beperken (niet tijdens zoom) */
 		body:not(.zoomed-in) #green-grid {
-			min-width: calc(15 * var(--cell-size)) !important;
-			max-width: calc(15 * var(--cell-size) + 20px) !important;
+			min-width: calc(15 * var(--cell-size));
+			max-width: calc(15 * var(--cell-size) + 20px);
 		}
 		/* Zoomed-in: only the ACTIVE (zoom-focused) green zone may widen */
 		body.zoomed-in #green-zone.zoom-focus #green-grid {
-			min-width: calc(30 * var(--cell-size)) !important;
-			max-width: calc(30 * var(--cell-size) + 20px) !important;
+			min-width: calc(30 * var(--cell-size));
+			max-width: calc(30 * var(--cell-size) + 20px);
 		}
 
 		#blue-zone.zoom-focus {
@@ -1737,11 +1736,11 @@
 
 		/* Red zone: behoud originele verhoudingen bij zoom */
 		#red-zone.zoom-focus {
-		  flex-wrap: wrap !important;
-		  flex-direction: row !important;
-		  width: auto !important;
-		  min-width: 380px !important;
-		  height: auto !important;
+		  flex-wrap: wrap;
+		  flex-direction: row;
+		  width: auto;
+		  min-width: 380px;
+		  height: auto;
 		  max-width: 90vw;
 		}
 		
@@ -1774,11 +1773,11 @@
 
 		/* Red zone: behoud originele verhoudingen bij zoom */
 		#red-zone.zoom-focus {
-		  flex-wrap: wrap !important;
-		  flex-direction: row !important;
-		  width: auto !important;
-		  min-width: 380px !important;
-		  height: auto !important;
+		  flex-wrap: wrap;
+		  flex-direction: row;
+		  width: auto;
+		  min-width: 380px;
+		  height: auto;
 		  max-width: 90vw;
 		}
 	
@@ -2052,15 +2051,15 @@
 	}
 	/* World 1: disable scrolling in green zone */
 	#green-zone.no-scroll {
-		overflow: hidden !important;
-		cursor: default !important;
+		overflow: hidden;
+		cursor: default;
 	}
 	#green-zone.no-scroll.drag-scroll-active {
-		cursor: default !important;
+		cursor: default;
 	}
 	body.world-1 #green-zone,
 	body.world-1 #green-zone--placeholder {
-		overflow: hidden !important;
+		overflow: hidden;
 	}
 	body.world-1 #green-zone #green-grid {
 		max-height: none;
@@ -2094,7 +2093,14 @@
 	#purple-zone,
 	#purple-zone--placeholder { background:#a48dcc; height: 310px;  }
 	#blue-zone,
-	#blue-zone--placeholder { background:#6ba8d8; width: 180px; height: 791px; }
+	#blue-zone--placeholder { background:#6ba8d8; height: 791px; }
+
+	/* Blue zone: vaste breedte, breder grid wordt scrollbaar */
+	#blue-zone {
+		width: 180px;
+		max-width: 300px;
+		min-width: 180px;
+	}
 
 	/* Blue (World 2): keep scroll but hide the (white) scrollbar visuals on desktop too. */
 	#blue-zone {
@@ -2129,7 +2135,7 @@
 		gap: 18px;
 	}
 	#red-zone.red-group > .zone {
-		margin: 0 !important;
+		margin: 0;
 	}
 	/* Red subgrid points label (shows how many points a full subgrid yields). */
 	#red-zone .red-grid-points-label {
@@ -2149,7 +2155,7 @@
 	}
 	  
 	#red-grid1,
-	#red-grid1--placeholder { background:#de838c; margin: 15px; border-radius: 0; border:0; box-shadow: none !important; }
+	#red-grid1--placeholder { background:#de838c; margin: 15px; border-radius: 0; border:0; box-shadow: none; }
 	#red-grid2,
 	#red-grid2--placeholder { background:#de838c; margin: 15px; border-radius: 0; border:0; box-shadow: none; }
 	#red-grid3,
@@ -2161,7 +2167,7 @@
 		#red-zone.red-group #red-grid2,
 		#red-zone.red-group #red-grid3,
 		#red-zone.red-group #red-grid4 {
-			margin: 0 !important;
+			margin: 0;
 		}
 	}
 
@@ -2190,7 +2196,7 @@
 	#green-zone .cell,
 	#green-zone--placeholder .cell { background: #d6f5d6; color: #003300; border-color: #c1ffa8; } 
 	#green-zone .cell.end-cell,
-	#green-zone--placeholder .cell.end-cell {background-color: #7bba7b !important; border-color: #7bb57f; } 
+	#green-zone--placeholder .cell.end-cell {background-color: #7bba7b; border-color: #7bb57f; } 
 	#blue-zone .cell,
 	#blue-zone--placeholder .cell { background: #d6eaff; color: #001f3f; border-color: #a8d8ff; }
 	#yellow-zone .cell.active,
@@ -2207,24 +2213,24 @@
 	#green-zone .cell.active,
 	#green-zone--placeholder .cell.active { background: #92c28c; border-color: #c1ffa8; }
 	#green-zone .cell.end-cell.active,
-	#green-zone--placeholder .cell.end-cell.active {background-color: #5da35d !important; border-color: #518755; } 
+	#green-zone--placeholder .cell.end-cell.active {background-color: #5da35d; border-color: #518755; } 
 #yellow-zone .cell.end-cell.active,
-#yellow-zone--placeholder .cell.end-cell.active { background-color: #cfae4a !important; border-color: #b8963c !important; }
+#yellow-zone--placeholder .cell.end-cell.active { background-color: #cfae4a; border-color: #b8963c; }
 #purple-zone .cell.end-cell.active,
-#purple-zone--placeholder .cell.end-cell.active { background-color: #7a5aa8 !important; border-color: #62478a !important; }
+#purple-zone--placeholder .cell.end-cell.active { background-color: #7a5aa8; border-color: #62478a; }
 #blue-zone .cell.end-cell.active,
-#blue-zone--placeholder .cell.end-cell.active { background-color: #3b7aa4 !important; border-color: #2f6386 !important; }
+#blue-zone--placeholder .cell.end-cell.active { background-color: #3b7aa4; border-color: #2f6386; }
 
 	/* Bold start cells should keep the normal active background but have a thicker/darker border */
 	#green-zone .cell.bold-cell.active,
 	#green-zone--placeholder .cell.bold-cell.active {
-		background-color: #92c28c !important; /* match normal green active */
-		border-color: #2b572b !important;
+		background-color: #92c28c; /* match normal green active */
+		border-color: #2b572b;
 	}
 
 	/* Start cell in green should not use the dark end-cell active color */
 	#green-zone .cell.start-cell.active,
-	#green-zone--placeholder .cell.start-cell.active { background-color: #92c28c !important; border-color: #c1ffa8 !important; }
+	#green-zone--placeholder .cell.start-cell.active { background-color: #92c28c; border-color: #c1ffa8; }
 	#blue-zone .cell.active,
 	#blue-zone--placeholder .cell.active { background: #5689b0; border-color: #a8d8ff; }
 
@@ -2380,7 +2386,7 @@
 	}
 	.cell:hover { background: #eef3ff; }
 	.cell.active { background: #cde3ff; border-color: #a8c9ff; color: #000; transform: scale(1.1); box-shadow: 0 0 8px rgba(58,111,247,0.25); }
-	.cell.bold-cell{ border:2px solid #2c3333 !important }
+	.cell.bold-cell { border: 2px solid #2c3333 !important; }
 	.cell.end-cell{ background:#a7d6aa; border-color:#a7d6aa }
 	.cell.end-cell.active{ background:#81b884 }
 	.cell.trap-cell { position: relative; }
@@ -2546,7 +2552,7 @@ body.dark-mode .diamond-glyph { color: #bfefff; }
 	/* Portal cel styling */
 	.portal-cell {
 		animation: portal-pulse 2s ease-in-out infinite;
-		z-index: 10 !important;
+		z-index: 10;
 	}
 
 	.portal-symbol {
@@ -3449,12 +3455,12 @@ body.dark-mode .diamond-glyph { color: #bfefff; }
 		color: #2a1b00;
 		padding: 14px 20px;
 		border-radius: 16px;
-		display: flex !important;
+		display: flex;
 		align-items: center;
 		gap: 12px;
 		box-shadow: 0 18px 40px rgba(0,0,0,0.32);
 		font-weight: 600;
-		z-index: 2147483647 !important;
+		z-index: 2147483647;
 		opacity: 0;
 		animation: highscoreToastEnter 0.35s ease forwards;
 		pointer-events: none;
@@ -3663,7 +3669,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		/* Desktop must not show the mobile hand-scroll arrows. */
 		.hand-scroll-btn,
 		#card-controls.hand-scroll-enabled .hand-scroll-btn {
-			display: none !important;
+			display: none;
 		}
 
 		.card-action-btn {
@@ -4005,9 +4011,9 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	/* When JS positions the buttons near the dragged block, override the
 	   fixed layout offsets (e.g. mobile-sidebar translateY + right:15px). */
 	.card-control-btn.dynamic-pos {
-		right: auto !important;
-		margin-left: 0 !important;
-		transform: none !important;
+		right: auto;
+		margin-left: 0;
+		transform: none;
 	}
 
 	.card-control-rotate {
@@ -4646,7 +4652,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	}
 
 	.deck-modal-grid .card-option {
-		transform: none !important;
+		transform: none;
 		width: 100%;
 		max-width: 120px;
 		min-height: 132px;
@@ -4966,7 +4972,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		.deck-modal-grid .card-option {
 			max-width: 82px;
 			min-height: 112px;
-			padding: 4px !important;
+			padding: 4px;
 			overflow: hidden;
 		}
 
@@ -5022,8 +5028,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		.deck-modal-grid .card-option {
 			min-height: 72px;
 			max-width: 72px;
-			padding: 4px !important;
-			transform: none !important;
+			padding: 4px;
+			transform: none;
 			overflow: hidden;
 		}
 
@@ -5058,7 +5064,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 		/* Shop Modal - compactere layout */
 		#shop-modal {
-			width: min(96vw, 420px) !important;
+			width: min(96vw, 420px);
 			max-height: 72vh;
 			padding: 12px 14px;
 			gap: 8px;
@@ -5070,24 +5076,24 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 		/* Verberg uitleg tekst */
 		#shop-modal-message {
-			display: none !important;
+			display: none;
 		}
 
 		/* Verberg shop-card-header */
 		.shop-card-header {
-			display: none !important;
+			display: none;
 		}
 
 		/* Shop cards - kleiner schalen */
 		.shop-card {
 			transform: scale(0.85);
 			transform-origin: center;
-			padding: 8px !important;
-			gap: 6px !important;
+			padding: 8px;
+			gap: 6px;
 		}
 
 		.shop-card-list {
-			grid-template-columns: repeat(2, 1fr) !important;
+			grid-template-columns: repeat(2, 1fr);
 			gap: 16px;
 		}
 
@@ -5102,66 +5108,66 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 		/* Shop lower grid - force side by side with flexbox */
 		.shop-lower-grid {
-			display: flex !important;
-			flex-direction: row !important;
-			gap: 10px !important;
-			width: 100% !important;
+			display: flex;
+			flex-direction: row;
+			gap: 10px;
+			width: 100%;
 		}
 
 		.shop-upgrades-section,
 		.shop-bonus-section {
-			flex: 1 1 0 !important;
-			min-width: 0 !important;
-			width: auto !important;
-			max-width: none !important;
-			padding: 12px !important;
-			flex-direction: column !important;
-			align-items: stretch !important;
-			justify-content: flex-start !important;
-			border-radius: 12px !important;
+			flex: 1 1 0;
+			min-width: 0;
+			width: auto;
+			max-width: none;
+			padding: 12px;
+			flex-direction: column;
+			align-items: stretch;
+			justify-content: flex-start;
+			border-radius: 12px;
 		}
 
 		.shop-section-title {
-			font-size: 0.72rem !important;
-			margin-bottom: 10px !important;
+			font-size: 0.72rem;
+			margin-bottom: 10px;
 		}
 
 		.shop-section-title::before {
-			font-size: 0.85rem !important;
+			font-size: 0.85rem;
 		}
 
 		.shop-upgrade-container {
-			display: grid !important;
-			grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-			gap: 10px !important;
-			width: 100% !important;
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 10px;
+			width: 100%;
 		}
 
 		/* Bonus container ook single column */
 		.shop-bonus-container {
-			display: flex !important;
-			flex-direction: column !important;
-			gap: 10px !important;
-			width: 100% !important;
+			display: flex;
+			flex-direction: column;
+			gap: 10px;
+			width: 100%;
 		}
 
 		/* Bonus cards compacter - verticale layout */
 		.shop-bonus-card {
-			flex-direction: column !important;
-			align-items: flex-start !important;
-			gap: 8px !important;
-			padding: 10px 12px !important;
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 8px;
+			padding: 10px 12px;
 		}
 
 		.shop-bonus-info {
 			width: 100%;
-			gap: 8px !important;
-			font-size: 0.75rem !important;
+			gap: 8px;
+			font-size: 0.75rem;
 		}
 
 		.shop-bonus-swatch {
-			width: 16px !important;
-			height: 16px !important;
+			width: 16px;
+			height: 16px;
 		}
 
 		.shop-bonus-actions {
@@ -5170,44 +5176,44 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 		.shop-bonus-actions button {
 			width: 100%;
-			padding: 8px 12px !important;
-			font-size: 0.75rem !important;
+			padding: 8px 12px;
+			font-size: 0.75rem;
 		}
 
 		.shop-upgrade-card {
-			padding: 12px !important;
-			gap: 8px !important;
+			padding: 12px;
+			gap: 8px;
 		}
 
 		.shop-upgrade-card::before {
-			height: 2px !important;
+			height: 2px;
 		}
 
 		.shop-upgrade-header {
-			font-size: 0.8rem !important;
+			font-size: 0.8rem;
 		}
 
 		.upgrade-icon {
-			width: 28px !important;
-			height: 28px !important;
-			font-size: 1rem !important;
-			border-radius: 8px !important;
+			width: 28px;
+			height: 28px;
+			font-size: 1rem;
+			border-radius: 8px;
 		}
 
 		.shop-upgrade-desc {
-			font-size: 0.7rem !important;
-			line-height: 1.35 !important;
+			font-size: 0.7rem;
+			line-height: 1.35;
 		}
 
 		.shop-upgrade-actions button {
-			padding: 8px 14px !important;
-			font-size: 0.75rem !important;
-			border-radius: 8px !important;
+			padding: 8px 14px;
+			font-size: 0.75rem;
+			border-radius: 8px;
 		}
 
 		.shop-empty-state {
-			padding: 14px !important;
-			font-size: 0.72rem !important;
+			padding: 14px;
+			font-size: 0.72rem;
 		}
 	}
 
@@ -7356,7 +7362,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			/* Keep only the total coin text in the bottom bar. */
 			#bottom-bar .coin,
 			#bottom-bar #collected-coins {
-				display: none !important;
+				display: none;
 			}
 		}
 
@@ -7916,7 +7922,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		}
 
 		#bottom-bar #collected-coins {
-			display: none !important;
+			display: none;
 		}
 		
 		/* Mobiele +1 blokplaatsing knop */
@@ -7998,7 +8004,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			}
 
 			#bottom-bar-bonus {
-				display: flex !important;
+				display: flex;
 				flex-direction: row;
 				align-items: center;
 				justify-content: flex-start;
@@ -8048,16 +8054,16 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 			/* Inside the bottom bar, the bonus zone should not look like a big panel. */
 			#bottom-bar #bonus-zone {
-				background: transparent !important;
-				border: none !important;
-				box-shadow: none !important;
-				padding: 0 !important;
-				gap: 0 !important;
+				background: transparent;
+				border: none;
+				box-shadow: none;
+				padding: 0;
+				gap: 0;
 			}
 
 			#bottom-bar #bonus-zone h2,
 			#bottom-bar #bonus-zone .bonus-hint {
-				display: none !important;
+				display: none;
 			}
 
 			/* One-line, low-height bonus badges: must fit 5 side-by-side. */
@@ -8105,7 +8111,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 				padding: 4px 8px;
 				font-size: 0.66rem;
 				border-radius: 8px;
-				margin-top: 0 !important;
+				margin-top: 0;
 			}
 
 			#bottom-bar .buy-placement-cost {
@@ -8126,13 +8132,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			#bottom-bar-bonus .bonus-inventory::-webkit-scrollbar { display: none; }
 
 			#bottom-bar-bonus #bonus-zone {
-				background: transparent !important;
-				border: none !important;
-				box-shadow: none !important;
-				padding: 0 !important;
+				background: transparent;
+				border: none;
+				box-shadow: none;
+				padding: 0;
 			}
 
-			#bottom-bar-bonus .bonus-badge .bonus-label { display: none !important; }
+			#bottom-bar-bonus .bonus-badge .bonus-label { display: none; }
 			#bottom-bar-bonus .bonus-badge .bonus-swatch {
 				width: 10px;
 				height: 10px;
@@ -8146,16 +8152,16 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 			/* Mobile: show ONLY the total coin text (under the buy button), never the coin circles. */
 			#bottom-bar #gold-zone::before {
-				display: none !important;
-				content: none !important;
+				display: none;
+				content: none;
 			}
 			#bottom-bar #gold-zone::after {
-				display: block !important;
+				display: block;
 			}
 
 			#bottom-bar #collected-coins,
 			#bottom-bar .coin {
-				display: none !important;
+				display: none;
 			}
 
 			/* Mobile cards strip: keep buttons fully inside the bar.
@@ -8176,26 +8182,26 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		@media (max-width: 550px) {
 			/* Compact mode: prevent coins/buy from pushing bonus inventory away. */
 			.bottom-bar-footer {
-				margin-top: 0 !important;
+				margin-top: 0;
 			}
 
 			#bottom-bar-bonus {
 				gap: 6px;
 			}
 			#bottom-bar-bonus #bonus-zone {
-				flex: 7 1 0 !important;
-				min-width: 0 !important;
-				padding: 0 !important;
+				flex: 7 1 0;
+				min-width: 0;
+				padding: 0;
 			}
 			#bottom-bar-bonus #gold-zone {
-				flex: 3 1 0 !important;
-				min-width: 0 !important;
+				flex: 3 1 0;
+				min-width: 0;
 			}
 			#bottom-bar .bonus-inventory,
 			#bottom-bar-bonus .bonus-inventory {
-				margin: 0 !important;
-				overflow: hidden !important;
-				flex-wrap: nowrap !important;
+				margin: 0;
+				overflow: hidden;
+				flex-wrap: nowrap;
 				align-items: center;
 			}
 
@@ -8214,16 +8220,16 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			}
 
 			#bottom-bar #gold-zone {
-				padding: 2px 4px !important;
-				background: transparent !important;
-				border: none !important;
-				box-shadow: none !important;
-				gap: 6px !important;
+				padding: 2px 4px;
+				background: transparent;
+				border: none;
+				box-shadow: none;
+				gap: 6px;
 			}
 
 			#bottom-bar #gold-zone::before {
-				display: none !important;
-				content: none !important;
+				display: none;
+				content: none;
 			}
 
 			#bottom-bar #gold-zone::after {
@@ -8232,21 +8238,21 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			}
 
 			#bottom-bar .buy-placement-btn {
-				margin-top: 0 !important;
-				padding: 3px 6px !important;
-				gap: 4px !important;
-				border: none !important;
-				box-shadow: none !important;
-				font-size: 0.62rem !important;
+				margin-top: 0;
+				padding: 3px 6px;
+				gap: 4px;
+				border: none;
+				box-shadow: none;
+				font-size: 0.62rem;
 			}
-			#bottom-bar .buy-placement-arrow { font-size: 0.8rem !important; }
-			#bottom-bar .buy-placement-rainbow-cell { width: 12px !important; height: 12px !important; border-radius: min(5px, calc(12px / 5)) !important; }
-			#bottom-bar .buy-placement-cost { font-size: 0.58rem !important; padding: 0 3px !important; }
+			#bottom-bar .buy-placement-arrow { font-size: 0.8rem; }
+			#bottom-bar .buy-placement-rainbow-cell { width: 12px; height: 12px; border-radius: min(5px, calc(12px / 5)); }
+			#bottom-bar .buy-placement-cost { font-size: 0.58rem; padding: 0 3px; }
 
 			/* Bonus upgrade shop is no longer accessed via a button. */
 			#bonus-shop-btn,
 			#bottom-bar #bonus-shop-btn {
-				display: none !important;
+				display: none;
 			}
 
 			/* Make the key action buttons smaller on very compact mobile. */
@@ -8541,9 +8547,9 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	}
 	
 	body.dragging * {
-	  cursor: none !important;
-	  -webkit-user-select: none !important;
-	  user-select: none !important;
+	  cursor: none;
+	  -webkit-user-select: none;
+	  user-select: none;
 	}
 
 	.draggable { touch-action: none; user-select: none; cursor: none; }
@@ -8840,7 +8846,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  }
 
 	  body.desktop-portrait #desktop-wrapper {
-		display: flex;
+		display: flex !important;
 		flex-direction: column;
 		flex-wrap: nowrap;
 		align-items: center;
@@ -8880,7 +8886,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		transform-origin: top center;
 	  }
 
-	  body.desktop-portrait #desktop-bottom {
+	  body.desktop-portrait.desktop-portrait #desktop-bottom {
 		flex: 0 0 auto;
 		width: 100%;
 		max-width: 100%;
@@ -8902,8 +8908,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			font-size: 0.8rem;
 		}
 		
-		body.desktop-portrait #desktop-bottom {
-			flex-wrap: nowrap;
+		body.desktop-portrait.desktop-portrait #desktop-bottom {
+			flex-wrap: nowrap !important;
 			justify-content: center;
 			align-items: stretch;
 			gap: 8px;
@@ -8911,22 +8917,22 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			max-height: 160px;
 		}
 
-		body.desktop-portrait #desktop-bottom-left {
-			flex: 0 0 140px !important;
-			min-width: 130px !important;
-			max-width: 160px !important;
+		body.desktop-portrait.desktop-portrait #desktop-bottom-left {
+			flex: 0 0 140px;
+			min-width: 130px;
+			max-width: 160px;
 		}
 
-		body.desktop-portrait #desktop-bottom-center {
-			flex: 1 1 auto !important;
-			min-width: 180px !important;
-			max-width: 350px !important;
+		body.desktop-portrait.desktop-portrait #desktop-bottom-center {
+			flex: 1 1 auto;
+			min-width: 180px;
+			max-width: 350px;
 			align-items: center;
 		}
 		
 		/* On touch devices (iPad portrait), action buttons go INSIDE bottom-center, below cards */
 		body.desktop-portrait.touch-portrait #desktop-bottom-center #card-action-buttons {
-			display: flex !important;
+			display: flex;
 			flex-direction: row;
 			gap: 6px;
 			align-items: center;
@@ -8944,16 +8950,16 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			padding: 6px;
 		}
 
-		body.desktop-portrait #desktop-bottom-buttons {
+		body.desktop-portrait.desktop-portrait #desktop-bottom-buttons {
 			flex: 0 0 auto;
 			min-width: 0;
 			width: auto;
 		}
 
-		body.desktop-portrait #desktop-bottom-right {
-			flex: 0 0 110px !important;
-			min-width: 100px !important;
-			max-width: 130px !important;
+		body.desktop-portrait.desktop-portrait #desktop-bottom-right {
+			flex: 0 0 110px;
+			min-width: 100px;
+			max-width: 130px;
 		}
 
 		/* Card panel: remove extra vertical chrome and force a single row of cards. */
@@ -8963,20 +8969,20 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		body.desktop-portrait #card-choice-zone h2,
 		body.desktop-portrait #kiesKaartTitel,
 		body.desktop-portrait #card-choice-zone br {
-			display: none !important;
+			display: none;
 		}
-		body.desktop-portrait #desktop-bottom-center #card-controls {
+		body.desktop-portrait.desktop-portrait #desktop-bottom-center #card-controls {
 			flex-direction: row;
 			justify-content: center;
 			width: fit-content;
 		}
-		body.desktop-portrait #desktop-bottom-center #card-options {
+		body.desktop-portrait.desktop-portrait #desktop-bottom-center #card-options {
 			flex-wrap: nowrap;
 			justify-content: center;
 			gap: 6px;
 			width: fit-content;
 		}
-		body.desktop-portrait #desktop-bottom-center .card-option {
+		body.desktop-portrait.desktop-portrait #desktop-bottom-center .card-option {
 			width: 60px;
 			max-width: 60px;
 			min-height: 85px;
@@ -8984,18 +8990,18 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			gap: 4px;
 			--preview-cell: 12px;
 		}
-		body.desktop-portrait #desktop-bottom-center .card-option .card-cell {
+		body.desktop-portrait.desktop-portrait #desktop-bottom-center .card-option .card-cell {
 			width: 10px;
 			height: 10px;
 		}
-		body.desktop-portrait #desktop-bottom-center .card-label {
+		body.desktop-portrait.desktop-portrait #desktop-bottom-center .card-label {
 			font-size: 0.5rem;
 			padding: 2px 4px;
 		}
 
 		/* Buttons: smaller footprint in the dedicated portrait button column. */
-		body.desktop-portrait #desktop-bottom-buttons #card-action-buttons {
-			display: flex !important;
+		body.desktop-portrait.desktop-portrait #desktop-bottom-buttons #card-action-buttons {
+			display: flex;
 			flex-direction: column;
 			gap: 4px;
 			align-items: center;
@@ -9003,7 +9009,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			margin: 0;
 			padding: 0;
 		}
-		body.desktop-portrait #desktop-bottom-buttons .card-action-btn,
+		body.desktop-portrait.desktop-portrait #desktop-bottom-buttons .card-action-btn,
 		body.desktop-portrait #desktop-bottom-buttons .deck-preview {
 			width: 36px;
 			min-width: 36px;
@@ -9012,13 +9018,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			min-height: 36px;
 			padding: 6px;
 		}
-		body.desktop-portrait #desktop-bottom-buttons .card-action-btn::before {
+		body.desktop-portrait.desktop-portrait #desktop-bottom-buttons .card-action-btn::before {
 			font-size: 0.95rem;
 		}
-		body.desktop-portrait #desktop-bottom-buttons .deck-preview::before {
+		body.desktop-portrait.desktop-portrait #desktop-bottom-buttons .deck-preview::before {
 			font-size: 0.9rem;
 		}
-		body.desktop-portrait #desktop-bottom-buttons .deck-count {
+		body.desktop-portrait.desktop-portrait #desktop-bottom-buttons .deck-count {
 			font-size: 0.6rem;
 		}
 
@@ -9159,8 +9165,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			font-size: 0.8rem;
 		}
 		
-		body.desktop-portrait #desktop-bottom {
-			flex-wrap: nowrap;
+		body.desktop-portrait.desktop-portrait #desktop-bottom {
+			flex-wrap: nowrap !important;
 			justify-content: center;
 			align-items: stretch;
 			gap: 8px;
@@ -9168,29 +9174,29 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			max-height: 140px;
 		}
 
-		body.desktop-portrait #desktop-bottom-left {
-			flex: 0 0 140px !important;
-			min-width: 130px !important;
-			max-width: 160px !important;
+		body.desktop-portrait.desktop-portrait #desktop-bottom-left {
+			flex: 0 0 140px;
+			min-width: 130px;
+			max-width: 160px;
 		}
 
-		body.desktop-portrait #desktop-bottom-center {
-			flex: 1 1 auto !important;
-			min-width: 180px !important;
-			max-width: 450px !important;
+		body.desktop-portrait.desktop-portrait #desktop-bottom-center {
+			flex: 1 1 auto;
+			min-width: 180px;
+			max-width: 450px;
 			align-items: center;
 		}
 
-		body.desktop-portrait #desktop-bottom-buttons {
+		body.desktop-portrait.desktop-portrait #desktop-bottom-buttons {
 			flex: 0 0 auto;
 			min-width: 0;
 			width: auto;
 		}
 
-		body.desktop-portrait #desktop-bottom-right {
-			flex: 0 0 100px !important;
-			min-width: 90px !important;
-			max-width: 140px !important;
+		body.desktop-portrait.desktop-portrait #desktop-bottom-right {
+			flex: 0 0 100px;
+			min-width: 90px;
+			max-width: 140px;
 		}
 
 		/* Card panel: compact horizontal row */
@@ -9200,20 +9206,20 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		body.desktop-portrait #card-choice-zone h2,
 		body.desktop-portrait #kiesKaartTitel,
 		body.desktop-portrait #card-choice-zone br {
-			display: none !important;
+			display: none;
 		}
-		body.desktop-portrait #desktop-bottom-center #card-controls {
+		body.desktop-portrait.desktop-portrait #desktop-bottom-center #card-controls {
 			flex-direction: row;
 			justify-content: center;
 			width: fit-content;
 		}
-		body.desktop-portrait #desktop-bottom-center #card-options {
+		body.desktop-portrait.desktop-portrait #desktop-bottom-center #card-options {
 			flex-wrap: nowrap;
 			justify-content: center;
 			gap: 6px;
 			width: fit-content;
 		}
-		body.desktop-portrait #desktop-bottom-center .card-option {
+		body.desktop-portrait.desktop-portrait #desktop-bottom-center .card-option {
 			width: 60px;
 			max-width: 60px;
 			min-height: 85px;
@@ -9221,18 +9227,18 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			gap: 4px;
 			--preview-cell: 12px;
 		}
-		body.desktop-portrait #desktop-bottom-center .card-option .card-cell {
+		body.desktop-portrait.desktop-portrait #desktop-bottom-center .card-option .card-cell {
 			width: 10px;
 			height: 10px;
 		}
-		body.desktop-portrait #desktop-bottom-center .card-label {
+		body.desktop-portrait.desktop-portrait #desktop-bottom-center .card-label {
 			font-size: 0.5rem;
 			padding: 2px 4px;
 		}
 
 		/* Buttons: compact column */
-		body.desktop-portrait #desktop-bottom-buttons #card-action-buttons {
-			display: flex !important;
+		body.desktop-portrait.desktop-portrait #desktop-bottom-buttons #card-action-buttons {
+			display: flex;
 			flex-direction: column;
 			gap: 4px;
 			align-items: center;
@@ -9240,7 +9246,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			margin: 0;
 			padding: 0;
 		}
-		body.desktop-portrait #desktop-bottom-buttons .card-action-btn,
+		body.desktop-portrait.desktop-portrait #desktop-bottom-buttons .card-action-btn,
 		body.desktop-portrait #desktop-bottom-buttons .deck-preview {
 			width: 36px;
 			min-width: 36px;
@@ -9385,27 +9391,27 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  }
 
 	  /* Portrait mode: elementen verdelen */
-	  body.desktop-portrait #desktop-bottom-left {
+	  body.desktop-portrait.desktop-portrait #desktop-bottom-left {
 		flex: 1 1 220px;
 		min-width: 160px;
 		max-width: 260px;
 	  }
 
-	  body.desktop-portrait #desktop-bottom-center {
+	  body.desktop-portrait.desktop-portrait #desktop-bottom-center {
 		flex: 2 1 320px;
 		min-width: 220px;
 		max-width: 520px;
 		align-items: stretch;
 	  }
 
-	  body.desktop-portrait #desktop-bottom-right {
+	  body.desktop-portrait.desktop-portrait #desktop-bottom-right {
 		flex: 1 1 200px;
 		min-width: 150px;
 		max-width: 260px;
 	  }
 	  
-	  body.desktop-portrait #desktop-bottom-buttons {
-		display: flex;
+	  body.desktop-portrait.desktop-portrait #desktop-bottom-buttons {
+		display: flex !important;
 		flex-direction: column;
 		justify-content: flex-start;
 		align-items: center;
@@ -9532,7 +9538,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
   /* Very constrained iPad landscape: force portrait-style bottom layout */
   @media (min-width: 651px) and (max-width: 950px) and (max-height: 700px) and (orientation: landscape) {
 	body.desktop-landscape #desktop-wrapper {
-		display: flex;
+		display: flex !important;
 		flex-direction: column;
 		align-items: center;
 	}
@@ -9554,7 +9560,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  /* Menu linksbovenin - altijd zichtbaar */
 	  #desktop-menu {
 		grid-area: menu;
-		display: flex !important;
+		display: flex;
 		align-items: flex-start;
 		justify-content: flex-start;
 		z-index: 1002;
@@ -9564,7 +9570,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 	  /* Hamburger button - altijd zichtbaar in desktop */
 	  #desktop-menu-toggle {
-		display: none !important;
+		display: none;
 		flex-direction: column;
 		justify-content: center;
 		align-items: center;
@@ -9622,17 +9628,17 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  }
 
 	  #controls {
-		position: fixed !important;
+		position: fixed;
 		left: 64px;
 		top: 12px;
-		opacity: 1 !important;
-		pointer-events: auto !important;
+		opacity: 1;
+		pointer-events: auto;
 		background: #fffbea;
 		border: 1px solid #e3e6ea;
 		border-radius: 12px;
 		box-shadow: 0 4px 16px rgba(0,0,0,0.2);
 		padding: 12px;
-		display: none !important;
+		display: none;
 		flex-direction: column;
 		gap: 8px;
 		width: 220px;
@@ -9641,7 +9647,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  }
 
 	  #controls.open {
-		display: flex !important;
+		display: flex;
 	  }
 
   /* Doel bovenaan */
@@ -9888,8 +9894,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
   }
 
   /* Portrait mode: toon bottom bar - clean consolidated layout */
-  body.desktop-portrait #desktop-bottom {
-	display: flex;
+  body.desktop-portrait.desktop-portrait #desktop-bottom {
+	display: flex !important;
 	flex-wrap: wrap;
 	justify-content: center;
 	align-items: flex-start;
@@ -9910,26 +9916,26 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	flex-shrink: 1;
   }
 
-  body.desktop-portrait #desktop-bottom-left {
+  body.desktop-portrait.desktop-portrait #desktop-bottom-left {
 	flex: 1 1 200px;
 	min-width: 140px;
 	max-width: 240px;
   }
 
-  body.desktop-portrait #desktop-bottom-center {
+  body.desktop-portrait.desktop-portrait #desktop-bottom-center {
 	flex: 2 1 300px;
 	min-width: 220px;
 	max-width: 500px;
   }
 
-  body.desktop-portrait #desktop-bottom-right {
+  body.desktop-portrait.desktop-portrait #desktop-bottom-right {
 	flex: 1 1 180px;
 	min-width: 130px;
 	max-width: 220px;
   }
 
-  body.desktop-portrait #desktop-bottom-buttons {
-	display: flex;
+  body.desktop-portrait.desktop-portrait #desktop-bottom-buttons {
+	display: flex !important;
 	flex-direction: column;
 	justify-content: flex-start;
 	align-items: center;
@@ -9960,13 +9966,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  }
 
 	  /* Portrait mode: toon munten onder bonussen */
-	  body.desktop-portrait #desktop-bottom-right #gold-zone {
+	  body.desktop-portrait.desktop-portrait #desktop-bottom-right #gold-zone {
 		order: 10;
 	  }
 
 	  /* Portrait mode: hide coin grid, show text counter like mobile */
 	  body.desktop-portrait #gold-zone {
-		display: flex;
+		display: flex !important;
 		flex-direction: row;
 		align-items: center;
 		justify-content: flex-start;
@@ -10054,11 +10060,11 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  }
 
 	  body.desktop-portrait #card-controls #card-action-buttons {
-		display: none !important;
+		display: none;
 	  }
 	  
-	  body.desktop-portrait #desktop-bottom-buttons #card-action-buttons {
-		display: flex !important;
+	  body.desktop-portrait.desktop-portrait #desktop-bottom-buttons #card-action-buttons {
+		display: flex;
 		flex-direction: column;
 		align-items: center;
 		flex: 0 0 auto;
@@ -10106,8 +10112,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  /* Scrolling alleen wanneer er 4+ kaarten zijn (class toegevoegd via JS) */
 	  #desktop-right #card-options.has-scroll {
 		max-height: 610px;
-		min-height: 0 !important;
-		overflow-y: auto !important;
+		min-height: 0;
+		overflow-y: auto;
 		scrollbar-width: thin;
 		scrollbar-color: rgba(100, 120, 180, 0.5) transparent;
 	  }
@@ -10137,7 +10143,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  /* Buttons centreren onder kaarten op desktop */
 	  #desktop-right > #card-action-buttons,
 	  #card-choice-zone #card-action-buttons {
-		display: flex !important;
+		display: flex;
 		flex-direction: row;
 		gap: 8px;
 		align-items: center;
@@ -10153,11 +10159,11 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  
 	  /* Hide buttons when still in card-controls during landscape layout */
 	  body.desktop-landscape #card-controls #card-action-buttons {
-		display: none !important;
+		display: none;
 	  }
 	  
 	  body.desktop-landscape #desktop-right > #card-action-buttons {
-		display: flex !important;
+		display: flex;
 		justify-content: center;
 		gap: 10px;
 	  }
@@ -10196,7 +10202,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		border-radius: 10px;
 		border: 1px solid #e3e6ea;
 		box-shadow: 0 2px 6px rgba(0,0,0,0.12);
-		background: #fffbea !important;
+		background: #fffbea;
 		text-align: left;
 		overflow: hidden;
 	  }
@@ -10225,7 +10231,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif, "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji";
 	  }
 	  body.desktop-landscape:not(.classic-mode) #collected-coins {
-		display: none !important;
+		display: none;
 	  }
 	  body.dark-mode.desktop-landscape:not(.classic-mode) #gold-zone::after {
 		color: var(--color-text-light);
@@ -10239,7 +10245,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  body.classic-mode #mobile-objective-banner,
 	  body.classic-mode #buy-placement-container,
 	  body.classic-mode #bottom-bar {
-		display: none !important;
+		display: none;
 	  }
 
 	  /* Classic mode: hide coins + zone info + theme toggle; only board + hamburger remain. */
@@ -10248,10 +10254,10 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  body.classic-mode #collected-coins,
 	  body.classic-mode .zone-info-btn,
 	  body.classic-mode .zone-info-popover {
-		display: none !important;
+		display: none;
 	  }
 	  body.classic-mode #board > .column:last-child {
-		display: none !important;
+		display: none;
 	  }
 
 	  /* Classic mode: hide next turn / shop / deck controls everywhere. */
@@ -10259,19 +10265,19 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  body.classic-mode #new-cards-btn,
 	  body.classic-mode #bonus-shop-btn,
 	  body.classic-mode #deck-preview {
-		display: none !important;
+		display: none;
 	  }
 	  body.classic-mode #gold-zone::after {
-		content: none !important;
+		content: none;
 	  }
 	  /* Classic mode: show max 20 coin slots. */
 	  body.classic-mode #collected-coins .coin:nth-child(n+21) {
-		display: none !important;
+		display: none;
 	  }
 
 	  /* Classic mode: hamburger menu shows only essentials. */
 	  body.classic-mode #controls button:not(#classic-mode-toggle):not(#print-btn) {
-		display: none !important;
+		display: none;
 	  }
 
 	  /* Classic mode: keep coins visible even on mobile layout. */
@@ -10292,9 +10298,9 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  }
 
 	  body.dark-mode #gold-zone {
-		border: 1px solid var(--color-border-dark) !important;
-		box-shadow: 0 4px 10px var(--shadow-dark) !important;
-		background: linear-gradient(145deg, #22252b, #1a1c21) !important;
+		border: 1px solid var(--color-border-dark);
+		box-shadow: 0 4px 10px var(--shadow-dark);
+		background: linear-gradient(145deg, #22252b, #1a1c21);
 		color: var(--color-text-light);
 	  }
 
@@ -10375,7 +10381,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  #bottom-bar-score,
 	  #bottom-bar-coins,
 	  #mobile-objective-banner {
-		display: none !important;
+		display: none;
 	  }
 
 	  /* Hamburger menu: fixed overlay so it doesn't take vertical space. */
@@ -10421,7 +10427,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 	  /* Legacy desktop toggle (unused): keep hidden so only #menu-toggle is visible. */
 	  #desktop-menu-toggle {
-		display: none !important;
+		display: none;
 	  }
 
 	/* Dark mode toggle is removed; no standalone button present. */
@@ -10429,7 +10435,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  /* Desktop request: remove rotate/mirror buttons from the UI. */
 	  #rotate-card-btn,
 	  #mirror-card-btn {
-		display: none !important;
+		display: none;
 	  }
 
 	  /* ============================================
@@ -10872,24 +10878,24 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 	  /* Narrow portrait desktop (651-900px): tighter layout to fit all elements */
 	  @media (min-width: 651px) and (max-width: 900px) {
-		body.desktop-portrait #desktop-bottom {
+		body.desktop-portrait.desktop-portrait #desktop-bottom {
 		  gap: 8px;
 		  padding: 0 8px;
 		}
 
-		body.desktop-portrait #desktop-bottom-left {
+		body.desktop-portrait.desktop-portrait #desktop-bottom-left {
 		  flex: 0 1 180px;
 		  min-width: 130px;
 		  max-width: 200px;
 		}
 
-		body.desktop-portrait #desktop-bottom-center {
+		body.desktop-portrait.desktop-portrait #desktop-bottom-center {
 		  flex: 1 1 340px;
 		  min-width: 240px;
 		  max-width: 480px;
 		}
 
-		body.desktop-portrait #desktop-bottom-right {
+		body.desktop-portrait.desktop-portrait #desktop-bottom-right {
 		  flex: 0 1 160px;
 		  min-width: 120px;
 		  max-width: 200px;
@@ -11304,16 +11310,16 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  .zone-info-popover,
 	  .zone-delete,
 	  .trash-btn {
-		display: none !important;
+		display: none;
 	  }
 
 	  #board {
-		display: flex !important;
-		position: static !important;
-		left: 0 !important;
-		top: 0 !important;
-		margin: 0 !important;
-		transform: none !important;
+		display: flex;
+		position: static;
+		left: 0;
+		top: 0;
+		margin: 0;
+		transform: none;
 	  }
 
 	  /* Ensure print contains full grids, not only the visible part of scroll containers. */
@@ -11322,27 +11328,27 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  #red-zone,
 	  #purple-zone,
 	  #blue-zone {
-		overflow: visible !important;
-		height: auto !important;
-		max-height: none !important;
+		overflow: visible;
+		height: auto;
+		max-height: none;
 	  }
 	  #yellow-grid,
 	  #green-grid,
 	  #purple-grid,
 	  #blue-grid,
 	  #red-zone .grid {
-		overflow: visible !important;
-		max-height: none !important;
+		overflow: visible;
+		max-height: none;
 	  }
 	  .board {
-		transform: none !important;
-		max-height: none !important;
+		transform: none;
+		max-height: none;
 	  }
 	  #board > .column:last-child {
-		display: none !important;
+		display: none;
 	  }
 	  #menu-toggle {
-		display: inline-flex !important;
+		display: inline-flex;
 	  }
     }
 
@@ -11473,24 +11479,24 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	}
 
 	@media (min-width: 651px) and (max-width: 900px) {
-		body.desktop-portrait #desktop-bottom {
+		body.desktop-portrait.desktop-portrait #desktop-bottom {
 			gap: 8px;
 			padding: 0 8px;
 		}
 
-		body.desktop-portrait #desktop-bottom-left {
+		body.desktop-portrait.desktop-portrait #desktop-bottom-left {
 			flex: 0 1 180px;
 			min-width: 130px;
 			max-width: 200px;
 		}
 
-		body.desktop-portrait #desktop-bottom-center {
+		body.desktop-portrait.desktop-portrait #desktop-bottom-center {
 			flex: 1 1 340px;
 			min-width: 240px;
 			max-width: 480px;
 		}
 
-		body.desktop-portrait #desktop-bottom-right {
+		body.desktop-portrait.desktop-portrait #desktop-bottom-right {
 			flex: 0 1 160px;
 			min-width: 120px;
 			max-width: 200px;
@@ -11531,21 +11537,21 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		body.zoomed-in #blue-zone.zoom-focus,
 		body.zoomed-in #purple-zone.zoom-focus,
 		body.zoomed-in #red-zone.zoom-focus {
-			position: fixed !important;
-			left: 0 !important;
-			right: 0 !important;
-			width: 100vw !important;
-			max-width: 100vw !important;
-			min-height: var(--mobile-zoom-height, 57svh) !important;
-			max-height: var(--mobile-zoom-height, 57svh) !important;
-			min-width: 0 !important;
-			margin: 0 !important;
+			position: fixed;
+			left: 0;
+			right: 0;
+			width: 100vw;
+			max-width: 100vw;
+			min-height: var(--mobile-zoom-height, 57svh);
+			max-height: var(--mobile-zoom-height, 57svh);
+			min-width: 0;
+			margin: 0;
 
 			/* Center position matches existing yellow-ish placement; JS clamps to avoid objective/bottom-bar overlap. */
-			top: var(--mobile-zoom-center, calc(25% + 30px)) !important;
-			height: var(--mobile-zoom-height, 57svh) !important;
-			transform: translateY(-50%) !important;
-			z-index: var(--z-zoom) !important;
+			top: var(--mobile-zoom-center, calc(25% + 30px));
+			height: var(--mobile-zoom-height, 57svh);
+			transform: translateY(-50%);
+			z-index: var(--z-zoom);
 			box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
 		}
 
@@ -11553,50 +11559,50 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		   Purple needs flex for justify-content to have any effect. */
 		body.zoomed-in #yellow-zone.zoom-focus,
 		body.zoomed-in #purple-zone.zoom-focus {
-			display: flex !important;
-			flex-direction: column !important;
-			align-items: center !important;
-			justify-content: center !important;
-			overflow: auto !important;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			overflow: auto;
 			-webkit-overflow-scrolling: touch;
 		}
 		/* Remove extra grid margins in zoom so it truly centers within the container. */
 		body.zoomed-in #yellow-zone.zoom-focus #yellow-grid.grid,
 		body.zoomed-in #purple-zone.zoom-focus #purple-grid.grid {
-			margin-top: 0 !important;
-			margin-bottom: 0 !important;
+			margin-top: 0;
+			margin-bottom: 0;
 		}
 		/* Green zoom: let JS handle scroll-centering to the start cell; don't use align-items which moves the grid. */
 		body.zoomed-in #green-zone.zoom-focus {
-			align-items: flex-start !important;
-			justify-content: flex-start !important;
+			align-items: flex-start;
+			justify-content: flex-start;
 		}
 
 		/* Red zone: center the 2×2 subgrids vertically within the fixed zoom container. */
 		body.zoomed-in #red-zone.zoom-focus.red-group {
-			display: grid !important;
-			grid-template-columns: repeat(2, max-content) !important;
-			justify-content: center !important;
-			gap: 18px !important;
-			align-content: center !important;
+			display: grid;
+			grid-template-columns: repeat(2, max-content);
+			justify-content: center;
+			gap: 18px;
+			align-content: center;
 		}
 
 		/* Red zone: ignore legacy min-height so it matches other zoomed zones. */
 		body.zoomed-in #red-zone.zoom-focus {
-			min-height: 0 !important;
-			max-width: 100vw !important;
+			min-height: 0;
+			max-width: 100vw;
 		}
 
 		/* Keep green/blue scrollable while zoomed. */
 		body.zoomed-in #green-zone.zoom-focus,
 		body.zoomed-in #blue-zone.zoom-focus {
-			overflow: auto !important;
+			overflow: auto;
 			-webkit-overflow-scrolling: touch;
 		}
 
 		/* Red can be bigger than the viewport; allow scrolling in the fixed-height zoom container. */
 		body.zoomed-in #red-zone.zoom-focus {
-			overflow: auto !important;
+			overflow: auto;
 			-webkit-overflow-scrolling: touch;
 		}
 	}
@@ -11606,9 +11612,9 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		/* Ensure desktop wrapper stays centered on very wide screens (override later rules) */
 		@media (min-width:2000px) {
 			body #desktop-wrapper {
-				max-width: 1600px !important;
-				margin-left: auto !important;
-				margin-right: auto !important;
+				max-width: 1600px;
+				margin-left: auto;
+				margin-right: auto;
 			}
 		}
 	</style>
@@ -11759,6 +11765,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		  <div id="red-grid2" data-color="rood" data-zone="red-grid2" class="zone" data-subgrid="2"></div>
 		  <div id="red-grid3" data-color="rood" data-zone="red-grid3" class="zone" data-subgrid="3"></div>
 		  <div id="red-grid4" data-color="rood" data-zone="red-grid4" class="zone" data-subgrid="4"></div>
+		  <div id="red-grid5" data-color="rood" data-zone="red-grid5" class="zone" data-subgrid="5" style="display:none;"></div>
+		  <div id="red-grid6" data-color="rood" data-zone="red-grid6" class="zone" data-subgrid="6" style="display:none;"></div>
 		</div>
 		<div id="original-card-zone">
 		<div class="zone" id="card-choice-zone">
@@ -17010,9 +17018,9 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		zone.removeAttribute('data-zoom-active');
 		// Blue zone: restore inline width constraints that were removed during zoom.
 		if (zone.id === 'blue-zone') {
-			if (zone._savedInlineWidth) zone.style.setProperty('width', zone._savedInlineWidth, 'important');
-			if (zone._savedInlineMinWidth) zone.style.setProperty('min-width', zone._savedInlineMinWidth, 'important');
-			if (zone._savedInlineMaxWidth) zone.style.setProperty('max-width', zone._savedInlineMaxWidth, 'important');
+			if (zone._savedInlineWidth) zone.style.setProperty('width', zone._savedInlineWidth);
+			if (zone._savedInlineMinWidth) zone.style.setProperty('min-width', zone._savedInlineMinWidth);
+			if (zone._savedInlineMaxWidth) zone.style.setProperty('max-width', zone._savedInlineMaxWidth);
 			delete zone._savedInlineWidth;
 			delete zone._savedInlineMinWidth;
 			delete zone._savedInlineMaxWidth;
@@ -19685,7 +19693,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	function startGlobalDragVisuals() {
 	  document.body.classList.add('dragging');
 
-	  // Sla inline stijl op en zet inline cursor: none !important (overruled bijna alles)
+	  // Sla inline stijl op en zet inline cursor: none (overruled bijna alles)
 	  const html = document.documentElement;
 	  const body = document.body;
 
@@ -20939,7 +20947,7 @@ document.addEventListener('pointermove', ev => {
 		// Inject small helper CSS for class-based toggles (avoid inline styles for grid chrome)
 		(function(){
 			try {
-				const css = '\n.grid--resizing{pointer-events:none;opacity:0.95!important;}\n.grid--hovered{transform:translate(var(--hover-x,0px),var(--hover-y,0px))!important;z-index:' + Z_INDEX_HOVER + '!important;}\n.use-transform-pos{will-change:transform;transform:translate3d(var(--dx,0px),var(--dy,0px),0);}\n';
+				const css = '\n.grid--resizing{pointer-events:none;opacity:0.95;}\n.grid--hovered{transform:translate(var(--hover-x,0px),var(--hover-y,0px));z-index:' + Z_INDEX_HOVER + ';}\n.use-transform-pos{will-change:transform;transform:translate3d(var(--dx,0px),var(--dy,0px),0);}\n';
 				const s = document.createElement('style');
 				s.setAttribute('data-generated','locus-grid-helpers');
 				s.textContent = css;
@@ -22028,7 +22036,7 @@ function optionalCellsTouchActive(zone, pendingCells) {
 			if (BATTERY_REDUCE_ANIM) {
 				const style = document.createElement('style');
 				style.id = 'battery-saver-style';
-				style.textContent = 'body.battery-saver *, body.battery-saver *::before, body.battery-saver *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }';
+				style.textContent = 'body.battery-saver *, body.battery-saver *::before, body.battery-saver *::after { animation-duration: 0.01ms; animation-iteration-count: 1; transition-duration: 0.01ms; }';
 				document.head && document.head.appendChild(style);
 				document.addEventListener('DOMContentLoaded', () => {
 					try { document.body.classList.add('battery-saver'); } catch (_) {}
@@ -26309,7 +26317,7 @@ function openShopModal(callback) {
 		branchBonusMultiplier: 2
 	  };
 	  
-	  // ROOD: Alle 6 grids actief met hogere moeilijkheid
+	  // ROOD: Alle 6 grids actief met hogere moeilijkheid (alleen wereld 3)
 	  const redConfigs = [
 		{ id: 'red-grid1', width: 6, height: 5, growth: 20 },
 		{ id: 'red-grid2', width: 7, height: 5, growth: 22 },
@@ -26318,6 +26326,12 @@ function openShopModal(callback) {
 		{ id: 'red-grid5', width: 8, height: 6, growth: 30 },
 		{ id: 'red-grid6', width: 8, height: 7, growth: 32 }
 	  ].filter(cfg => document.getElementById(cfg.id));
+	  
+	  // Toon red-grid5 en red-grid6 alleen in wereld 3
+	  ['red-grid5', 'red-grid6'].forEach(id => {
+		const el = document.getElementById(id);
+		if (el) el.style.display = '';
+	  });
 	  
 	  // Genereer alle grids
 	  const boardConfigs = [
@@ -26572,12 +26586,7 @@ function openShopModal(callback) {
 				widestRowCells = Math.max(widestRowCells, ...rows.map(r => (r.children ? r.children.length : 0)));
 			}
 		} catch (e) {}
-		const targetWidthPx = Math.max(1, Math.max(contentWidthPx, widestRowCells * cellSize) + 10);
-		// Use important to avoid any CSS !important overrides in later blocks.
-		blueZone.style.setProperty('width', `${targetWidthPx}px`, 'important');
-		blueZone.style.setProperty('min-width', `${targetWidthPx}px`, 'important');
-		blueZone.style.setProperty('max-width', `${targetWidthPx}px`, 'important');
-		
+
 		// WORLD 2 UX: Blauw zone hoogte = geel + paars + gap ertussen
 		let blueHeight;
 		if (yellowGrid && purpleGrid) {
@@ -31167,7 +31176,7 @@ function monitorScenarioProgress() {
 html, body { height: 100%; }
 body { margin: 0; padding: 0; background: ${lightMode ? 'white' : '#111'}; color: ${lightMode ? '#111' : '#eee'}; font-family: Arial, sans-serif; }
 #print-hide-icons .zone-info-btn, #print-hide-icons .zone-delete, #print-hide-icons .trash-btn,
-.zone-info-btn, .zone-delete, .trash-btn { display: none !important; }
+.zone-info-btn, .zone-delete, .trash-btn { display: none; }
 #print-root { width: fit-content; }
 .board { display: flex; gap: 14px; align-items: center; transform-origin: top left; }
 .column { display: flex; flex-direction: column; gap: 14px; align-items: center; }
@@ -31184,7 +31193,7 @@ body { margin: 0; padding: 0; background: ${lightMode ? 'white' : '#111'}; color
 	.cell { display: block; width: var(--cell-size); height: var(--cell-size); min-width: var(--cell-size); min-height: var(--cell-size); padding: 0; margin: 0; box-sizing: border-box; border: 1px solid ${lightMode ? '#b7b7b7' : '#777'}; background: ${lightMode ? 'rgba(255,255,255,0.92)' : '#1a1a1a'}; border-radius: 4px; }
 	.cell.bold-cell { border-style: solid; border-width: 2px; border-color: ${lightMode ? '#2d2d2d' : '#ddd'}; }
 	.cell.bold-cell.active { box-shadow: none; }
-.cell.void-cell { border-color: transparent !important; background: transparent !important; }
+.cell.void-cell { border-color: transparent; background: transparent; }
 .cell.active { background: ${lightMode ? '#f0f0f0' : '#2a2a2a'}; }
 	.root-cell { border-radius: 4px; }
 /* Zone-specific cell tinting (keeps the board recognizable, subtle tints). */
@@ -31208,7 +31217,7 @@ body { margin: 0; padding: 0; background: ${lightMode ? 'white' : '#111'}; color
 		/* Keep start/end/bold cells readable without heavy ink. */
 		.cell.bold-cell.active { filter: ${lightMode ? 'none' : 'none'}; }
 		${noBonuses ? '' : '.cell.gold-cell{outline:1px solid ' + (lightMode ? '#a98c2a' : '#c9a94a') + ';}'}
-		${noBonuses ? '.symbol,.trap-symbol,.coin{display:none !important;}' : ''}
+		${noBonuses ? '.symbol,.trap-symbol,.coin{display:none;}' : ''}
 		`;
 
 		// Collect existing page styles (all <style> and linked stylesheets) so print window matches game styling exactly.
@@ -31230,7 +31239,7 @@ body { margin: 0; padding: 0; background: ${lightMode ? 'white' : '#111'}; color
 		const printOverrides = `
 /* Minimal print overrides: hide UI elements, keep original colors and sizing */
 @page { size: A4 landscape; margin: 8mm; }
-body { background: transparent !important; }
+body { background: transparent; }
 .blur-overlay,
 #drag-overlay,
 #floating-preview,
@@ -31255,25 +31264,25 @@ body { background: transparent !important; }
 .objective-toast,
 .zone-nav-arrow,
 .zone-info-btn,
-.zone-info-popover { display: none !important; }
+.zone-info-popover { display: none; }
 
 /* Clip content to the zone bounds so grids do not overflow outside their zone */
-.zone { overflow: hidden !important; max-height: none !important; }
+.zone { overflow: hidden; max-height: none; }
 
 /* Grids should scroll inside their zones if needed; default to auto so clipped content is accessible in preview (but not visually overflowing). */
-.grid { display: grid !important; gap: var(--board-grid-gap,2px) !important; overflow: auto !important; max-height: none !important; box-sizing: border-box; }
+.grid { display: grid; gap: var(--board-grid-gap,2px); overflow: auto; max-height: none; box-sizing: border-box; }
 
 /* Green zone: center the inner grid so the start cell (print-focus) appears centered. */
 .zone[data-color="groen"] .grid,
-#green-zone .grid { align-content: center !important; justify-content: center !important; height: 100% !important; }
+#green-zone .grid { align-content: center; justify-content: center; height: 100%; }
 
 /* Blue zone: anchor content to the bottom so the grid appears to grow upwards. */
 .zone[data-color="blauw"] .grid,
-#blue-zone .grid { align-content: end !important; justify-content: center !important; height: 100% !important; }
+#blue-zone .grid { align-content: end; justify-content: center; height: 100%; }
 
 /* Red zone: keep standard clipping behavior but allow its internal grids to center. */
 .zone[data-color="rood"] .grid,
-#red-zone .grid { align-content: center !important; justify-content: center !important; }
+#red-zone .grid { align-content: center; justify-content: center; }
 
 /* Hide native scrollbars in print preview */
 * { scrollbar-width: none; -ms-overflow-style: none; }
@@ -32773,12 +32782,14 @@ body { background: transparent !important; }
 
 	/* 4. Desktop Landscape Fixes */
 	@media (min-width: 900px) {
-		#green-zone, #blue-zone {
+		#green-zone {
 			flex-shrink: 0; /* Prevent shrinking */
 			min-width: calc(13 * var(--cell-size));
 		}
 		#blue-zone {
 			min-height: 600px; /* Ensure it stays long */
+			width: 400px;
+			flex-shrink: 0; /* Prevent shrinking */
 		}
 		.board {
 			justify-content: center;
