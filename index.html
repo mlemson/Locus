@@ -26075,8 +26075,8 @@ function openShopModal(callback) {
 	  // Grotere vorm met diagonale scoring
 	  const yellowShape = {
 		pattern: [4, 6, 8, 10, 12, 12, 12, 12, 10, 8, 6, 4],
-		offsets: [5, 4, 3, 2, 1, 0, 0, 1, 2, 3, 4, 5],
-		boldCells: [[0,1], [0,2], [5,3], [5,10], [6,3], [6,10], [11,1], [11,2], [3,6], [3,7], [8,6], [8,7]]
+		offsets: [5, 4, 3, 2, 1, 1, 1, 1, 2, 3, 4, 5],
+		boldCells: [[0,1], [0,2], [5,4], [5,9], [6,4], [6,9], [11,1], [11,2], [3,6], [3,7], [8,6], [8,7]]
 	  };
 	  const yellowRows = yellowShape.pattern.length;
 	  // Use the true bounding width (max(offset + length)), not max(length)+max(offset).
@@ -26265,8 +26265,8 @@ function openShopModal(callback) {
 	  const greenMaxGrowth = 300 + subLevel * 15;
 	  window.greenGridConfig = {
 		world3: true,
-		minEndPoints: 12,
-		minEndCellPoints: 12,
+		minEndPoints: 18,
+		minEndCellPoints: 18,
 		maxEndCellPoints: 40,
 		branchBonusMultiplier: 2
 	  };
