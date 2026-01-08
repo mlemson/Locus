@@ -14144,7 +14144,25 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	*/
 	function getObjectiveById(id) {
 		if (!id) return null;
-		return OBJECTIVES.find(obj => obj.id === id) || null;
+		// Primary lookup: the generated OBJECTIVES list (one randomly selected objective per level).
+		const direct = OBJECTIVES.find(obj => obj.id === id) || null;
+		if (direct) return direct;
+		// Back-compat / save-compat:
+		// Saved objective IDs refer to OBJECTIVE_TEMPLATES entries, but OBJECTIVES is randomized per page load.
+		// Fall back to searching the templates so saved objectives can be restored deterministically.
+		try {
+			if (typeof OBJECTIVE_TEMPLATES === 'object' && OBJECTIVE_TEMPLATES) {
+				for (const [lvlKey, templates] of Object.entries(OBJECTIVE_TEMPLATES)) {
+					if (!Array.isArray(templates)) continue;
+					const found = templates.find(t => t && t.id === id);
+					if (found) {
+						const lvl = Number(lvlKey);
+						return { ...found, level: Number.isFinite(lvl) ? lvl : undefined };
+					}
+				}
+			}
+		} catch (e) {}
+		return null;
 	}
 
 	// Parse a Dutch free-text objective (e.g. "Haal 50 punten bij geel" or "Haal 10 punten bij alle kleuren")
@@ -26794,7 +26812,10 @@ function openShopModal(callback) {
 	  latestScoreSnapshot = { yellow: 0, red: 0, green: 0, purple: 0, blue: 0, bonus: 0, total: 0 };
 	  
 	  // Dan objectives resetten (zodat renderObjectivePanel de juiste scores ziet)
-	  resetObjectives();
+	  // Bij laden van een save: behoud de geladen objective state (currentObjectiveId + history).
+	  if (!(isLoadingGame && opts.preserveLoadedObjectives)) {
+		resetObjectives();
+	  }
 	  
 	  // NOTE: Do NOT call updateScore() here. The board from the previous level/run is
 	  // still mounted until rebuildGameBoards() runs. Calling updateScore() now would
@@ -26806,7 +26827,12 @@ function openShopModal(callback) {
 		for (let i = 0; i < bonusAmount; i++) addCoin();
 	  }
 		
+	  	if (!(isLoadingGame && opts.preserveLoadedObjectives)) {
 		setCurrentObjectiveForLevel(level);
+	  } else {
+		// Ensure UI reflects the loaded objective state.
+		try { renderObjectivePanel(); } catch (e) {}
+	  }
 	  turnCount = 0;
 	  selectedCardId = null;
 	  selectedCardElement = null;
@@ -27200,19 +27226,32 @@ function isWorld4CardAllowed(cardData) {
 		if (!Number.isFinite(loadedLevel)) loadedLevel = 1;
 		loadedLevel = Math.max(0, loadedLevel);
 		// Heuristic: if a save claims level 0 but contains evidence of later-level progress,
-		// infer the most likely level from objective history.
+		// infer the most likely level from objective history and purchased upgrades.
 		if (loadedLevel === 0) {
 			let inferred = 0;
 			try {
+				const parseLevelFromObjectiveId = (id) => {
+					if (!id) return null;
+					const s = String(id);
+					const m = s.match(/\blevel[-_](\d{1,2})\b/i);
+					if (!m) return null;
+					const n = Number(m[1]);
+					return Number.isFinite(n) ? n : null;
+				};
+
 				let maxCompletedLevel = 0;
-				if (Array.isArray(gameState.completedObjectives) && gameState.completedObjectives.length) {
-					gameState.completedObjectives.forEach(obj => {
-						const lvl = Number(obj && obj.level);
-						if (Number.isFinite(lvl)) maxCompletedLevel = Math.max(maxCompletedLevel, lvl);
-					});
+				// First: infer from saved objective IDs directly (works even when OBJECTIVES is randomized).
+				const ids = [];
+				if (gameState.currentObjectiveId) ids.push(gameState.currentObjectiveId);
+				if (Array.isArray(gameState.completedObjectiveIds)) ids.push(...gameState.completedObjectiveIds);
+				if (Array.isArray(gameState.completedObjectives)) {
+					gameState.completedObjectives.forEach(o => { if (o && o.id) ids.push(o.id); });
 				}
-				// If we have any completed objective beyond 0, the player is at least the next level.
-				if (maxCompletedLevel > 0) inferred = Math.max(inferred, maxCompletedLevel + 1);
+				ids.forEach(id => {
+					const lvl = parseLevelFromObjectiveId(id);
+					if (Number.isFinite(lvl)) maxCompletedLevel = Math.max(maxCompletedLevel, lvl);
+				});
+
 				// If currentObjectiveId maps to a known objective, that can also hint the current level.
 				try {
 					if (typeof getObjectiveById === 'function' && gameState.currentObjectiveId) {
@@ -27220,6 +27259,25 @@ function isWorld4CardAllowed(cardData) {
 						const lvl = Number(obj && obj.level);
 						if (Number.isFinite(lvl) && lvl > 0) inferred = Math.max(inferred, lvl);
 					}
+				} catch (e) {}
+
+				// If we have any objective evidence beyond 0, assume we're at least that level (or next).
+				if (maxCompletedLevel > 0) inferred = Math.max(inferred, maxCompletedLevel + 1);
+
+				// Second: infer from purchased upgrades (world2/world3-only upgrades imply higher levels).
+				try {
+					let minByUpgrades = 0;
+					if (gameState.upgrades && typeof gameState.upgrades === 'object') {
+						Object.entries(gameState.upgrades).forEach(([key, purchased]) => {
+							if (!purchased) return;
+							const meta = (typeof UNLOCK_PROGRESSION === 'object' && UNLOCK_PROGRESSION && UNLOCK_PROGRESSION.upgrades)
+								? UNLOCK_PROGRESSION.upgrades[key]
+								: null;
+							const lvl = Number(meta && meta.unlockedAtLevel);
+							if (Number.isFinite(lvl)) minByUpgrades = Math.max(minByUpgrades, lvl);
+						});
+					}
+					if (minByUpgrades > 0) inferred = Math.max(inferred, minByUpgrades);
 				} catch (e) {}
 			} catch (e) { inferred = 0; }
 			if (inferred > 0) {
@@ -27401,7 +27459,7 @@ function isWorld4CardAllowed(cardData) {
 		
 		// Start the loaded level (zal savedDeckState gebruiken)
 		isLoadingGame = true;
-		startLevel(currentLevel, { preserveLoadedCustomMeta: isCustomBoardSave });
+		startLevel(currentLevel, { preserveLoadedCustomMeta: isCustomBoardSave, preserveLoadedObjectives: true });
 		// Only restore the board snapshot for editor/scenario saves.
 		// Normal runs should rebuild the board from the level/world mapping.
 		if (isCustomBoardSave) {
