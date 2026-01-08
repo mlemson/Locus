@@ -2152,8 +2152,16 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 		justify-content: center;
 		pointer-events: none;
 		z-index: 20;
-		font-size: 44px;
-		opacity: 0.7;
+		color: rgba(0, 0, 0, 0.48);
+		opacity: 0.85;
+	}
+	body.dark-mode #world3-red-lock {
+		color: rgba(255, 255, 255, 0.38);
+	}
+	#world3-red-lock svg {
+		width: 44px;
+		height: 44px;
+		display: block;
 	}
 	#red-zone.red-group > .zone {
 		margin: 0;
@@ -11557,8 +11565,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	}
 
 	/* === Mobile zoom: make zoomed zones uniform (user request) ===
-	   Include phone-landscape (often >650px wide) by keying on coarse pointer + short height. */
-	@media (max-width: 650px), (max-height: 650px) and (pointer: coarse) {
+	   Apply to ALL touch devices (phones + tablets) so World 2/3 can't diverge from World 1 sizing. */
+	@media (max-width: 650px), (hover: none) and (pointer: coarse) {
 		body.zoomed-in #yellow-zone.zoom-focus,
 		body.zoomed-in #green-zone.zoom-focus,
 		body.zoomed-in #blue-zone.zoom-focus,
@@ -11788,7 +11796,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		<div id="red-zone"  class="zone red-group" data-color="rood">
 			<button class="zone-info-btn" type="button" aria-label="Info: Rood" aria-expanded="false">i</button>
 			<div class="zone-info-popover" role="tooltip" aria-hidden="true"></div>
-			<div id="world3-red-lock" aria-hidden="true">🔒</div>
+			<div id="world3-red-lock" aria-hidden="true">
+				<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+					<path d="M7.5 10V8a4.5 4.5 0 0 1 9 0v2" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" />
+					<rect x="6.25" y="10" width="11.5" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.75" />
+					<path d="M12 14v3" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" />
+				</svg>
+			</div>
 		  <div id="red-grid1" data-color="rood" data-zone="red-grid1" class="zone" data-subgrid="1"></div>
 		  <div id="red-grid2" data-color="rood" data-zone="red-grid2" class="zone" data-subgrid="2"></div>
 		  <div id="red-grid3" data-color="rood" data-zone="red-grid3" class="zone" data-subgrid="3"></div>
@@ -26700,7 +26714,7 @@ function openShopModal(callback) {
 	  try {
 		const isZoomedIn = document.body.classList.contains('zoomed-in');
 		const isMobileZoomSizing = (typeof window !== 'undefined' && window.matchMedia)
-			? window.matchMedia('(max-width: 650px), (max-height: 650px) and (pointer: coarse)').matches
+			? window.matchMedia('(max-width: 650px), (hover: none) and (pointer: coarse)').matches
 			: (window.innerWidth <= 650);
 		if (isZoomedIn && isMobileZoomSizing) {
 			['yellow-zone', 'green-zone', 'blue-zone', 'purple-zone', 'red-zone'].forEach(id => {
