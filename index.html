@@ -2136,12 +2136,24 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	#gold-zone--placeholder { background:#fffbea; height: 100px; width: 280px; box-shadow: 0 0 8px rgba(0,0,0,0.4); }
 	#red-zone,
 	#red-zone--placeholder { background:#de838c; height: auto; min-height: 323px;  margin: 15px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.12);
-	  box-sizing: border-box; padding: 10px; touch-action: manipulation; overflow: visible; }
+	  box-sizing: border-box; padding: 10px; touch-action: manipulation; overflow: visible; position: relative; }
 	#red-zone.red-group {
 		display: grid;
 		grid-template-columns: repeat(2, max-content);
 		justify-content: center;
 		gap: 18px;
+	}
+	/* World 3: lock overlay for the red-stage transition (does not participate in grid layout). */
+	#world3-red-lock {
+		position: absolute;
+		inset: 0;
+		display: none;
+		align-items: center;
+		justify-content: center;
+		pointer-events: none;
+		z-index: 20;
+		font-size: 44px;
+		opacity: 0.7;
 	}
 	#red-zone.red-group > .zone {
 		margin: 0;
@@ -11776,6 +11788,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		<div id="red-zone"  class="zone red-group" data-color="rood">
 			<button class="zone-info-btn" type="button" aria-label="Info: Rood" aria-expanded="false">i</button>
 			<div class="zone-info-popover" role="tooltip" aria-hidden="true"></div>
+			<div id="world3-red-lock" aria-hidden="true">🔒</div>
 		  <div id="red-grid1" data-color="rood" data-zone="red-grid1" class="zone" data-subgrid="1"></div>
 		  <div id="red-grid2" data-color="rood" data-zone="red-grid2" class="zone" data-subgrid="2"></div>
 		  <div id="red-grid3" data-color="rood" data-zone="red-grid3" class="zone" data-subgrid="3"></div>
@@ -18595,54 +18608,69 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 	/* === BLAUW SCORE ===
 	   Per rij met ≥1 actieve bold-cel: 1e rij → 6, 2e → 8, 3e → 10, enz. */
-	blue = calculateBlueScore('blue-grid', 3, 4, 8, cell);	/* === ROOD SCORE ===
-	Elk volledig gevuld subgrid geeft vaste punten
-	Score verdwijnt als grid weer onvolledig gemaakt wordt */
-['red-grid1', 'red-grid2', 'red-grid3', 'red-grid4'].forEach(id => {
-  const grid = document.getElementById(id);
-  if (!grid) return;
+	blue = calculateBlueScore('blue-grid', 3, 4, 8, cell);
 
-  const allCells = grid.querySelectorAll('.cell:not(.void-cell)');
-  const activeCells = grid.querySelectorAll('.cell.active');
+	/* === ROOD SCORE ===
+	   Elk volledig gevuld subgrid geeft vaste punten.
+	   World 3: stage 1 telt alleen grids 1-4, stage 2 telt alleen grids 5-6. */
+	(() => {
+		let computedRed = 0;
+		const stage = (isWorld3 && Number(world3RedStage) === 2) ? 2 : 1;
+		const activeIds = isWorld3
+			? (stage === 2 ? ['red-grid5', 'red-grid6'] : ['red-grid1', 'red-grid2', 'red-grid3', 'red-grid4'])
+			: ['red-grid1', 'red-grid2', 'red-grid3', 'red-grid4'];
 
-  const isFull = allCells.length > 0 && allCells.length === activeCells.length;
-  const wasFull = grid.dataset.completed === "true";
+		activeIds.forEach(id => {
+			const grid = document.getElementById(id);
+			if (!grid) return;
+			if (grid.style && grid.style.display === 'none') return;
+			const allCells = grid.querySelectorAll('.cell:not(.void-cell)');
+			const activeCells = grid.querySelectorAll('.cell.active:not(.void-cell)');
+			const isFull = allCells.length > 0 && allCells.length === activeCells.length;
+			const wasFull = grid.dataset.completed === 'true';
 			const configuredPoints = Number(grid.dataset.redTargetPoints);
-			const gained = (Number.isFinite(configuredPoints) && configuredPoints > 0) ? configuredPoints : (allCells.length * 2);
-			//  Grid wordt net VOLTOOID
-	  if (isFull && !wasFull) {
-	  	highlightEdgeCells(grid);
-		grid.dataset.completed = "true";
-		grid.dataset.score = gained; // sla eigen score op
+			const points = (Number.isFinite(configuredPoints) && configuredPoints > 0) ? configuredPoints : (allCells.length * 2);
+			if (isFull) computedRed += points;
 
+			if (isFull && !wasFull) {
+				try { highlightEdgeCells(grid); } catch (e) {}
+				grid.dataset.completed = 'true';
+				grid.dataset.score = String(points);
+				const middleIndex = Math.floor(allCells.length / 2);
+				const anchor = allCells[middleIndex];
+				if (anchor && anchor.getBoundingClientRect) {
+					const rect = anchor.getBoundingClientRect();
+					const scrollX = window.scrollX || window.pageXOffset;
+					const scrollY = window.scrollY || window.pageYOffset;
+					showScoreAnimation(
+						rect.left + rect.width / 2 + scrollX,
+						rect.top + rect.height / 2 + scrollY,
+						`+${points}`,
+						'red'
+					);
+				}
+			} else if (!isFull && wasFull) {
+				grid.dataset.completed = 'false';
+				grid.dataset.score = '0';
+			}
+		});
 
-		red += gained;
+		// World 3 stage progression trigger: when all 4 initial red grids are complete, unlock stage 2.
+		if (isWorld3 && Number(world3RedStage) !== 2) {
+			try {
+				const allFour = ['red-grid1', 'red-grid2', 'red-grid3', 'red-grid4'].every(id => isRedSubgridFull(id));
+				if (allFour) {
+					world3RedStage = 2;
+					applyWorld3RedStage(2);
+					try { saveGameState(); } catch (e) {}
+					// Recompute once after DOM swap so the displayed red score matches the active stage.
+					setTimeout(() => { try { updateScore(); } catch (e) {} }, 0);
+				}
+			} catch (e) {}
+		}
 
-		const middleIndex = Math.floor(allCells.length / 2);
-		const cell = allCells[middleIndex];
-		const rect = cell.getBoundingClientRect();
-		const scrollX = window.scrollX || window.pageXOffset;
-		const scrollY = window.scrollY || window.pageYOffset;
-
-		showScoreAnimation(
-		  rect.left + rect.width / 2 + scrollX,
-		  rect.top + rect.height / 2 + scrollY,
-		  "+" + gained,
-		  "red"
-		);
-	  }
-
-	  // 🔻 Grid wordt net ONTVOLLEDIGD (van vol → niet vol)
-	  if (!isFull && wasFull) {
-		grid.dataset.completed = "false";
-				const lost = parseInt(grid.dataset.score || gained);
-		red -= lost;
-		grid.dataset.score = 0;
-
-		const middleIndex = Math.floor(allCells.length / 2);
-		const cell = allCells[middleIndex];
-	  }
-	});
+		red = computedRed;
+	})();
 
 
     /* === GEEL SCORE ===
@@ -22072,6 +22100,62 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	// Variabelen die nodig zijn voor buildShapePool
 	let currentLevel = 1;
 	let currentWorld = 1; // Nieuwe variabele om bij te houden in welke wereld we zitten
+	// World 3 red-zone progression: stage 1 = grids 1-4 + lock, stage 2 = grids 5-6 (bigger) + no lock
+	let world3RedStage = 1;
+
+	function applyWorld3RedStage(stage) {
+		const redZone = document.getElementById('red-zone');
+		const lockEl = document.getElementById('world3-red-lock');
+		const isStage2 = Number(stage) === 2;
+		const isWorld3 = (typeof getWorldAndSubLevel === 'function') ? (Number(getWorldAndSubLevel(currentLevel)?.world || 1) === 3) : false;
+		const effectiveStage = (isWorld3 && isStage2) ? 2 : 1;
+		if (!isWorld3) {
+			// Outside World 3: keep classic layout (1-4 visible, 5-6 hidden) and hide lock.
+			['red-grid1','red-grid2','red-grid3','red-grid4'].forEach(id => {
+				const el = document.getElementById(id);
+				if (el) el.style.display = '';
+			});
+			['red-grid5','red-grid6'].forEach(id => {
+				const el = document.getElementById(id);
+				if (el) el.style.display = 'none';
+			});
+			if (lockEl) lockEl.style.display = 'none';
+			return;
+		}
+
+		world3RedStage = effectiveStage;
+		if (effectiveStage === 1) {
+			['red-grid1','red-grid2','red-grid3','red-grid4'].forEach(id => {
+				const el = document.getElementById(id);
+				if (el) el.style.display = '';
+			});
+			['red-grid5','red-grid6'].forEach(id => {
+				const el = document.getElementById(id);
+				if (el) el.style.display = 'none';
+			});
+			if (lockEl) lockEl.style.display = 'flex';
+		} else {
+			['red-grid1','red-grid2','red-grid3','red-grid4'].forEach(id => {
+				const el = document.getElementById(id);
+				if (el) el.style.display = 'none';
+			});
+			['red-grid5','red-grid6'].forEach(id => {
+				const el = document.getElementById(id);
+				if (el) el.style.display = '';
+			});
+			if (lockEl) lockEl.style.display = 'none';
+		}
+		// Ensure overlay never blocks red-zone interactions.
+		try { if (redZone) redZone.style.position = 'relative'; } catch (e) {}
+	}
+
+	function isRedSubgridFull(gridId) {
+		const grid = document.getElementById(gridId);
+		if (!grid || grid.style.display === 'none') return false;
+		const allCells = grid.querySelectorAll('.cell:not(.void-cell)');
+		const activeCells = grid.querySelectorAll('.cell.active:not(.void-cell)');
+		return allCells.length > 0 && allCells.length === activeCells.length;
+	}
 
 	// World 4 state: allowed colors + locked door colors
 	let world4AllowedColors = null;
@@ -25695,6 +25779,8 @@ function openShopModal(callback) {
 		// Fallback naar World 3 voor toekomstige worlds
 		rebuildGameBoards_World3();
 	  }
+	  // World 3 red progression visibility (and ensure 5/6 stay hidden in other worlds)
+	  try { applyWorld3RedStage(world === 3 ? world3RedStage : 0); } catch (e) {}
 	}
 
 	// WORLD 1: Originele grid layout (levels 1-10)
@@ -26437,11 +26523,8 @@ function openShopModal(callback) {
 		{ id: 'red-grid6', width: 8, height: 7, growth: 32 }
 	  ].filter(cfg => document.getElementById(cfg.id));
 	  
-	  // Toon red-grid5 en red-grid6 alleen in wereld 3
-	  ['red-grid5', 'red-grid6'].forEach(id => {
-		const el = document.getElementById(id);
-		if (el) el.style.display = '';
-	  });
+	  // World 3 red progression: stage visibility is handled via applyWorld3RedStage().
+	  // We still generate all 6 grids here so stage 2 can appear instantly.
 	  
 	  // Genereer alle grids
 	  const boardConfigs = [
@@ -26869,6 +26952,11 @@ function openShopModal(callback) {
 	  lastRoundFailureReason = null;
 	  const { world: levelWorld } = getWorldAndSubLevel(currentLevel);
 	  const world4Active = Number(levelWorld) === 4;
+	  // World 3 red progression resets per level (but should not reset during load).
+	  if (!isLoadingGame) {
+		world3RedStage = 1;
+		try { applyWorld3RedStage(Number(levelWorld) === 3 ? world3RedStage : 0); } catch (e) {}
+	  }
 		
 	  // Rebuild shape pool zodat nieuwe card categorieën beschikbaar zijn
 	  shapePool = buildShapePool();
@@ -27049,6 +27137,7 @@ function openShopModal(callback) {
 		  // Explicit run mode so loaders can distinguish normal vs custom/scenario sessions.
 		  runMode: isCustomBoardSession ? 'custom' : 'normal',
 		  currentLevel: currentLevel,
+		  world3RedStage: Number(world3RedStage) === 2 ? 2 : 1,
 		  customBoard: isCustomBoardSession,
 		  // totalTurns/currentStreak removed (unused UI)
 		  
@@ -27371,6 +27460,10 @@ function isWorld4CardAllowed(cardData) {
 		}
 		currentLevel = loadedLevel;
 		console.log('📂 Set currentLevel to:', currentLevel);
+		// Restore World 3 red progression stage (defaults to stage 1).
+		try {
+			world3RedStage = Number(gameState.world3RedStage) === 2 ? 2 : 1;
+		} catch (e) { world3RedStage = 1; }
 		turnCount = gameState.turnCount || 0;
 		// Loading a non-intro level should never keep the intro deck flag.
 		if (currentLevel > 0) {
@@ -27596,6 +27689,8 @@ function isWorld4CardAllowed(cardData) {
 		}
 		isLoadingGame = false;
 		savedDeckState = null; // Clear na gebruik
+		// Ensure the stage visibility is applied after load (in case DOM was rebuilt).
+		try { applyWorld3RedStage(Number(getWorldAndSubLevel(currentLevel)?.world || 1) === 3 ? world3RedStage : 0); } catch (e) {}
 		
 		updateBonusInventoryUI();
 		
