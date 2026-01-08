@@ -26695,6 +26695,27 @@ function openShopModal(callback) {
 	}
 
 	function adjustZoneSizesForWorld2() {
+	  // Mobile zoom: sizing is handled by CSS to keep all zoomed zones uniform across worlds.
+	  // IMPORTANT: Inline styles override CSS, so we must clear any previously-set widths/heights while zoomed.
+	  try {
+		const isZoomedIn = document.body.classList.contains('zoomed-in');
+		const isMobileZoomSizing = (typeof window !== 'undefined' && window.matchMedia)
+			? window.matchMedia('(max-width: 650px), (max-height: 650px) and (pointer: coarse)').matches
+			: (window.innerWidth <= 650);
+		if (isZoomedIn && isMobileZoomSizing) {
+			['yellow-zone', 'green-zone', 'blue-zone', 'purple-zone', 'red-zone'].forEach(id => {
+				const el = document.getElementById(id);
+				if (!el || !el.style) return;
+				el.style.removeProperty('width');
+				el.style.removeProperty('height');
+				el.style.removeProperty('min-width');
+				el.style.removeProperty('max-width');
+				el.style.removeProperty('min-height');
+				el.style.removeProperty('max-height');
+			});
+			return;
+		}
+	  } catch (e) {}
 	  // Gebruik de echte --cell-size CSS variabele voor consistente sizing tussen werelden
 	  const computedCellSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')) || 26;
 	  const cellSize = Math.max(18, Math.min(30, computedCellSize)); // Clamp between 18 and 30
