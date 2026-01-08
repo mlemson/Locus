@@ -17077,30 +17077,26 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			const yellowZone = document.getElementById('yellow-zone');
 			const greenZone = document.getElementById('green-zone');
 			const blueZone = document.getElementById('blue-zone');
-			if (!purpleZone || !yellowZone) return;
+			const column1 = document.querySelector('.column:nth-child(1)');
 			
-			// Calculate total height of column 1 (purple + yellow + gap)
+			if (!column1 || !purpleZone || !yellowZone) return;
+			
+			// Get the actual rendered height of column 1 content (purple + yellow + gap)
 			const purpleH = purpleZone.offsetHeight || 0;
 			const yellowH = yellowZone.offsetHeight || 0;
-			const gap = 12; // CSS gap between zones in a column
-			const targetH = purpleH + yellowH + gap;
+			const gap = 12; // CSS gap between zones
+			const column1ContentHeight = purpleH + yellowH + gap;
 			
-			if (targetH <= 0) return;
+			if (column1ContentHeight <= 0) return;
 			
-			// Apply to green zone (column 2 top zone)
-			if (greenZone) {
-				const currentGreenH = greenZone.offsetHeight || 0;
-				// Green should fill most of column 2; red takes the rest
-				// But at minimum, green should be at least as tall as purple
-				const greenTarget = Math.max(currentGreenH, purpleH);
-				greenZone.style.minHeight = `${greenTarget}px`;
+			// Apply to green zone - should match purple height minimum
+			if (greenZone && purpleH > 0) {
+				greenZone.style.minHeight = `${purpleH}px`;
 			}
 			
-			// Apply to blue zone (column 3, should match full column 1 height)
+			// Apply to blue zone - should match full column 1 content height
 			if (blueZone) {
-				const currentBlueH = blueZone.offsetHeight || 0;
-				const blueTarget = Math.max(currentBlueH, targetH);
-				blueZone.style.minHeight = `${blueTarget}px`;
+				blueZone.style.minHeight = `${column1ContentHeight}px`;
 			}
 		} catch (e) { console.warn('syncZoneHeights error:', e); }
 	}
@@ -17259,7 +17255,21 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		applyMobileZoomSizing(zone);
 		if (zone.id === 'red-zone') {
 			// Ensure World 3 red stage visibility is applied before showing the zoomed red zone.
-			try { applyWorld3RedStage(world3RedStage || 1); } catch (_) {}
+			console.log('🔴 Opening red-zone zoom. world3RedStage:', world3RedStage, 'currentLevel:', currentLevel);
+			try { 
+				applyWorld3RedStage(world3RedStage || 1);
+				// Also explicitly ensure the subgrids are visible
+				const gridsToShow = (world3RedStage === 2) 
+					? ['red-grid5', 'red-grid6'] 
+					: ['red-grid1', 'red-grid2', 'red-grid3', 'red-grid4'];
+				gridsToShow.forEach(id => {
+					const el = document.getElementById(id);
+					if (el) {
+						el.style.display = '';
+						console.log('🔴 Ensuring', id, 'is visible');
+					}
+				});
+			} catch (err) { console.error('Red zone stage error:', err); }
 			// Force visibility in case CSS/inline styles accidentally hid it.
 			zone.style.display = 'grid';
 			zone.style.opacity = '1';
@@ -27139,7 +27149,11 @@ function openShopModal(callback) {
 		}
 		
 		// Finally sync zone heights so green/blue match column 1 height
+		// Use double requestAnimationFrame to ensure DOM is fully laid out
 		try { syncZoneHeights(); } catch (e) {}
+		requestAnimationFrame(() => {
+			try { syncZoneHeights(); } catch (e) {}
+		});
 	  });
 	}
 
