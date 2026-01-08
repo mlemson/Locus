@@ -3075,11 +3075,22 @@ body.dark-mode .diamond-glyph { color: #bfefff; }
 	#tutorial-ghost .ghost-shape {
 	  width: 100%;
 	  height: 100%;
-	  background: linear-gradient(135deg, rgba(59,130,246,0.95), rgba(16,185,129,0.95));
+	  display: flex;
+	  align-items: center;
+	  justify-content: center;
+	  background: transparent;
 	  border-radius: 10px;
-	  box-shadow: 0 10px 24px rgba(0,0,0,0.35);
 	  animation: ghost-float 1.4s ease-in-out infinite;
 	  opacity: 0.95;
+	}
+	#tutorial-ghost .ghost-shape-grid {
+	  display: grid;
+	  align-items: center;
+	  justify-items: center;
+	}
+	#tutorial-ghost .ghost-shape-cell {
+	  box-sizing: border-box;
+	  box-shadow: 0 10px 24px rgba(0,0,0,0.30);
 	}
 	#tutorial-ghost .ghost-label {
 	  position: absolute;
@@ -14940,6 +14951,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 						window.loadedCustomLevelMetaCompleted = true;
 						showObjectiveToast(`Doel behaald: ${compiled.short || compiled.description}`);
 						showObjectiveCompletionPopup(compiled.short || compiled.description);
+						// Intro tutorial: stop highlighting card picker once the objective is achieved.
+						try {
+							if (tutorialState.active && currentLevel === 0) {
+								stopCardPickerHighlight();
+								try { highlightIntroPurpleCard(); } catch (_) {}
+							}
+						} catch (_) {}
 					}
 				} else if (window.loadedCustomLevelMetaCompleted) {
 					window.loadedCustomLevelMetaCompleted = false;
@@ -14980,6 +14998,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 					completedObjectives.push(objective);
 					showObjectiveToast(`Doel behaald: ${objective.short || objective.description}`);
 					showObjectiveCompletionPopup(objective.short || objective.description);
+					// Intro tutorial: stop highlighting card picker once the objective is achieved.
+					try {
+						if (tutorialState.active && currentLevel === 0) {
+							stopCardPickerHighlight();
+							try { highlightIntroPurpleCard(); } catch (_) {}
+						}
+					} catch (_) {}
 				}
 			} else if (completedObjectiveIds.has(objective.id)) {
 				// Objective can become un-achieved (e.g. undo). Keep UI/state in sync.
@@ -15258,6 +15283,70 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		return null;
 	}
 
+	function renderTutorialGhostShape(ghostShapeEl, shape, color) {
+		if (!ghostShapeEl) return;
+		ghostShapeEl.innerHTML = '';
+		if (!shape || !Array.isArray(shape) || !shape.length) return;
+		// Normalize ragged shapes so the ghost preview matches the card shape.
+		const cols = Math.max(...shape.map(row => (Array.isArray(row) ? row.length : 0)), 0);
+		const rows = shape.length;
+		if (!cols || !rows) return;
+		const paddedShape = shape.map(row => {
+			const copy = Array.isArray(row) ? row.slice() : [];
+			while (copy.length < cols) copy.push(0);
+			return copy;
+		});
+
+		// Keep the ghost roughly the same footprint as before (64x64),
+		// but render multi-cell shapes by shrinking per-cell size.
+		const maxBox = 64;
+		const maxDim = Math.max(rows, cols);
+		const gapPx = 4;
+		let cellSize = Math.floor((maxBox - gapPx * (maxDim - 1)) / maxDim);
+		cellSize = Math.max(10, Math.min(52, cellSize));
+		const cellRadius = Math.max(4, Math.min(10, Math.round(cellSize / 3)));
+
+		const colorCode = (typeof color === 'object' && color && color.code) ? color.code : null;
+		const colorName = (typeof color === 'object' && color && color.name) ? String(color.name).toLowerCase() : '';
+		let fillStyle = null;
+		if (colorCode === 'rainbow' || colorName.includes('multikleur') || colorName.includes('rainbow')) {
+			fillStyle = 'linear-gradient(45deg, #f06272, #fff25a, #4ed346, #5d90f0, #a35eff)';
+		} else if (colorName.includes('paars') || colorName.includes('purple')) {
+			// Preserve the existing tutorial purple look.
+			fillStyle = 'linear-gradient(135deg, #b490dc, #8f76b8)';
+		} else if (colorCode) {
+			fillStyle = colorCode;
+		} else {
+			// Fallback: preserve the existing default ghost look.
+			fillStyle = 'linear-gradient(135deg, rgba(59,130,246,0.95), rgba(16,185,129,0.95))';
+		}
+
+		const grid = document.createElement('div');
+		grid.className = 'ghost-shape-grid';
+		grid.style.gap = `${gapPx}px`;
+		grid.style.gridTemplateColumns = `repeat(${cols}, ${cellSize}px)`;
+		grid.style.gridTemplateRows = `repeat(${rows}, ${cellSize}px)`;
+
+		paddedShape.forEach((row) => {
+			row.forEach((val) => {
+				const cell = document.createElement('div');
+				cell.className = 'ghost-shape-cell';
+				cell.style.width = `${cellSize}px`;
+				cell.style.height = `${cellSize}px`;
+				cell.style.borderRadius = `${cellRadius}px`;
+				if (val) {
+					cell.style.background = fillStyle;
+				} else {
+					cell.style.visibility = 'hidden';
+					cell.style.boxShadow = 'none';
+				}
+				grid.appendChild(cell);
+			});
+		});
+
+		ghostShapeEl.appendChild(grid);
+	}
+
 	function showTutorialGhost(cardEl, cardData) {
 		const ghost = ensureTutorialOverlay() && tutorialState.ghost;
 		if (!ghost || !cardEl) return;
@@ -15294,11 +15383,11 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			else endX = Math.max(30, endX - 170);
 			ghost.style.background = 'rgba(143, 118, 184, 0.15)';
 			ghost.style.borderColor = '#8f76b8';
-			if (ghostShape) ghostShape.style.background = 'linear-gradient(135deg, #b490dc, #8f76b8)';
+			if (ghostShape) renderTutorialGhostShape(ghostShape, cardData?.matrix, cardData?.color);
 		} else {
 			ghost.style.background = 'rgba(255, 255, 255, 0.12)';
 			ghost.style.borderColor = 'rgba(255, 255, 255, 0.65)';
-			if (ghostShape) ghostShape.style.background = 'linear-gradient(135deg, rgba(59,130,246,0.95), rgba(16,185,129,0.95))';
+			if (ghostShape) renderTutorialGhostShape(ghostShape, cardData?.matrix, cardData?.color);
 		}
 		ghost.style.display = 'block';
 		ghost.style.transition = 'none';
@@ -15320,11 +15409,33 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	function highlightCardPicker() {
 		const cardZone = document.getElementById('card-choice-zone');
 		if (!cardZone) return;
+		// Intro tutorial: once the objective is achieved, don't keep highlighting "kies een kaart".
+		try {
+			if (tutorialState.active && currentLevel === 0 && typeof isCurrentObjectiveCompleted === 'function' && isCurrentObjectiveCompleted()) {
+				removeGlow(cardZone);
+				return;
+			}
+		} catch (_) {}
 		addGlow(cardZone, false);
 	}
 
 	function highlightIntroPurpleCard() {
 		if (!tutorialState.active || currentLevel !== 0) return;
+		// If the intro objective is already met, do NOT keep nudging the player to play a second purple card.
+		// This prevents the second purple tetris card from being highlighted after the goal is achieved.
+		try {
+			if (typeof isCurrentObjectiveCompleted === 'function' && isCurrentObjectiveCompleted()) {
+				const container = document.getElementById('card-options');
+				if (container) {
+					container
+						.querySelectorAll('.card-option[data-color="paars"], .card-option[data-color="purple"]')
+						.forEach(el => removeGlow(el));
+				}
+				const purpleZone = document.getElementById('purple-zone');
+				if (purpleZone) removeGlow(purpleZone);
+				return;
+			}
+		} catch (_) {}
 		const container = document.getElementById('card-options');
 		if (!container) return;
 		const purpleCard = container.querySelector('.card-option[data-color="paars"], .card-option[data-color="purple"]');
