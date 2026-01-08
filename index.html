@@ -16938,13 +16938,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		mobileZoomResizeBound = true;
 		window.addEventListener('resize', () => {
 			if (activeZoomZone) applyMobileZoomSizing(activeZoomZone);
-			// Keep column heights aligned when the viewport changes.
-			try { syncBoardColumnHeights(); } catch (e) {}
+			// Keep zone heights aligned when the viewport changes.
+			try { syncZoneHeights(); } catch (e) {}
 		}, { passive: true });
 		if (window.visualViewport) {
 			window.visualViewport.addEventListener('resize', () => {
 				if (activeZoomZone) applyMobileZoomSizing(activeZoomZone);
-				try { syncBoardColumnHeights(); } catch (e) {}
+				try { syncZoneHeights(); } catch (e) {}
 			}, { passive: true });
 		}
 	}
@@ -17070,39 +17070,39 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		});
 	}
 
-	// Make columns 2 and 3 at least as tall as column 1 (purple/yellow).
-	function syncBoardColumnHeights() {
-		const board = document.getElementById('board');
-		if (!board) return;
-		const cols = Array.from(board.querySelectorAll(':scope > .column'));
-		if (!cols.length) return;
-		const ref = cols[0];
-		// Remember existing min-heights so we don't wipe deliberate bumps (e.g., green-zone boost).
-		const existingMins = cols.map(col => {
-			const mh = (col && col.style) ? parseFloat(col.style.minHeight) : NaN;
-			return Number.isFinite(mh) ? mh : 0;
-		});
-		// Clear previous sizing so we measure natural layout height.
-		cols.forEach(col => {
-			try {
-				col.style.minHeight = '';
-				col.style.maxHeight = '';
-				col.style.height = '';
-			} catch (_) {}
-		});
-		const refRect = ref.getBoundingClientRect();
-		const refH = Math.ceil(refRect?.height || 0);
-		if (!refH) return;
-		// Apply to column 2 and 3 if they exist; leave column 4 (score/coins) alone.
-		[1, 2].forEach(idx => {
-			const col = cols[idx];
-			if (!col) return;
-			const colRect = col.getBoundingClientRect();
-			const naturalH = Math.ceil(colRect?.height || 0);
-			// Only bump up shorter columns; never shrink taller ones.
-			const targetH = Math.max(refH, naturalH, existingMins[idx] || 0);
-			col.style.minHeight = `${targetH}px`;
-		});
+	// Sync zone heights: make green and blue zones at least as tall as purple+yellow combined.
+	function syncZoneHeights() {
+		try {
+			const purpleZone = document.getElementById('purple-zone');
+			const yellowZone = document.getElementById('yellow-zone');
+			const greenZone = document.getElementById('green-zone');
+			const blueZone = document.getElementById('blue-zone');
+			if (!purpleZone || !yellowZone) return;
+			
+			// Calculate total height of column 1 (purple + yellow + gap)
+			const purpleH = purpleZone.offsetHeight || 0;
+			const yellowH = yellowZone.offsetHeight || 0;
+			const gap = 12; // CSS gap between zones in a column
+			const targetH = purpleH + yellowH + gap;
+			
+			if (targetH <= 0) return;
+			
+			// Apply to green zone (column 2 top zone)
+			if (greenZone) {
+				const currentGreenH = greenZone.offsetHeight || 0;
+				// Green should fill most of column 2; red takes the rest
+				// But at minimum, green should be at least as tall as purple
+				const greenTarget = Math.max(currentGreenH, purpleH);
+				greenZone.style.minHeight = `${greenTarget}px`;
+			}
+			
+			// Apply to blue zone (column 3, should match full column 1 height)
+			if (blueZone) {
+				const currentBlueH = blueZone.offsetHeight || 0;
+				const blueTarget = Math.max(currentBlueH, targetH);
+				blueZone.style.minHeight = `${blueTarget}px`;
+			}
+		} catch (e) { console.warn('syncZoneHeights error:', e); }
 	}
 
 	// Auto-zoom naar de juiste zone op basis van card kleur
@@ -22375,8 +22375,8 @@ function optionalCellsTouchActive(zone, pendingCells) {
 			});
 			if (lockEl) lockEl.style.display = 'none';
 		}
-		// Ensure overlay never blocks red-zone interactions.
-		try { if (redZone) redZone.style.position = 'relative'; } catch (e) {}
+		// NOTE: Do NOT set position here - zoom mode needs position:fixed to work.
+		// The lock overlay uses position:absolute which works fine with the parent's natural position.
 	}
 
 	function isRedSubgridFull(gridId) {
@@ -26946,9 +26946,6 @@ function openShopModal(callback) {
 			return;
 		}
 	  } catch (e) {}
-
-	  // Keep column heights aligned: use the purple/yellow column as the reference for columns 2 and 3.
-	  try { syncBoardColumnHeights(); } catch (e) {}
 	  // Gebruik de echte --cell-size CSS variabele voor consistente sizing tussen werelden
 	  const computedCellSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')) || 26;
 	  const cellSize = Math.max(18, Math.min(30, computedCellSize)); // Clamp between 18 and 30
@@ -26989,24 +26986,6 @@ function openShopModal(callback) {
 		purpleZone.style.width = `${purpleSize * cellSize + 30}px`;
 		purpleZone.style.height = `${purpleSize * cellSize + purpleChromePx}px`;
 	  }
-
-	  // Groen zone: zorg dat hij minstens zo hoog is als de referentie-kolom (paars/geel) voor symmetrie.
-	  try {
-		const greenZone = document.getElementById('green-zone');
-		if (greenZone) {
-			const purpleRect = purpleZone?.getBoundingClientRect?.();
-			const yellowRect = yellowZone?.getBoundingClientRect?.();
-			const refH = Math.max(
-				Math.ceil(purpleRect?.height || 0),
-				Math.ceil(yellowRect?.height || 0)
-			);
-			const currentH = Math.ceil((greenZone.getBoundingClientRect?.().height) || greenZone.offsetHeight || 0);
-			const targetH = Math.max(refH, currentH);
-			if (targetH) {
-				greenZone.style.minHeight = `${targetH}px`;
-			}
-		}
-	  } catch (_) {}
 
 	  // WORLD 2/3 UX: make yellow zone the same width as purple.
 	  try {
@@ -27104,7 +27083,7 @@ function openShopModal(callback) {
 			// Clear potentially stale inline sizing; we re-apply below when needed.
 			greenZone.style.removeProperty('width');
 			greenZone.style.removeProperty('height');
-			greenZone.style.removeProperty('min-height');
+			// NOTE: Don't remove min-height here - syncZoneHeights() manages it.
 			greenZone.style.removeProperty('max-height');
 			enableZoneDragScroll(greenZone, { ignoreSelectors: '#controls,#bottom-bar,#card-choice-zone,.card,.card-option' });
 			console.log('💚 Green zone: scroll enabled');
@@ -27158,6 +27137,9 @@ function openShopModal(callback) {
 			// Force anchor (ignore saved scroll) by calling resetGreenZoomScroll directly
 			resetGreenZoomScroll(greenZone);
 		}
+		
+		// Finally sync zone heights so green/blue match column 1 height
+		try { syncZoneHeights(); } catch (e) {}
 	  });
 	}
 
