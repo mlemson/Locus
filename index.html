@@ -17580,6 +17580,47 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			}
 		} catch (e) {}
 	  }
+
+	  // World 1 (green): avoid extremely tiny generations.
+	  // We grow the non-void cluster by adding frontier-adjacent cells until a minimum is reached.
+	  if (!isRed && gridId === 'green-grid' && worldNum === 1) {
+		try {
+			const maxCapacity = Math.max(1, Math.floor(rows) * Math.floor(cols));
+			// Target: at least ~25% of the grid should be generated (15x15 => 56 cells).
+			// This prevents rare cases where the cluster ends up as a very small cross.
+			let minRootCells = Math.floor(maxCapacity * 0.25);
+			minRootCells = Math.max(40, minRootCells);
+			minRootCells = Math.min(maxCapacity, minRootCells);
+
+			const frontierCells = () => {
+				const frontierSet = new Set();
+				clusterSet.forEach(idx => {
+					const r = Math.floor(idx / cols);
+					const c = idx % cols;
+					for (const d of dirs) {
+						const rr = r + d.r;
+						const cc = c + d.c;
+						if (!isInside(rr, cc)) continue;
+						const nIdx = toIndex(rr, cc);
+						if (!clusterSet.has(nIdx)) frontierSet.add(nIdx);
+					}
+				});
+				return Array.from(frontierSet);
+			};
+
+			if (clusterSet.size < minRootCells) {
+				let safety = 0;
+				const safetyLimit = Math.min(5000, maxCapacity * 20);
+				while (clusterSet.size < minRootCells && safety < safetyLimit) {
+					safety++;
+					const frontier = frontierCells();
+					if (!frontier.length) break;
+					const pick = frontier[Math.floor(Math.random() * frontier.length)];
+					clusterSet.add(pick);
+				}
+			}
+		} catch (e) {}
+	  }
 	  
 	  // NU: Maak ALLE cellen aan - actieve EN void cellen
 	  for(let r = 0; r < rows; r++) {
@@ -20340,6 +20381,42 @@ document.addEventListener('pointermove', ev => {
 		enterStickyDragPreview();
 		// Floating preview blijft zichtbaar - alleen kruisje of succesvolle plaatsing verbergt het
 	});
+
+	// If the player right-clicks while dragging (desktop), the browser may open a context menu and
+	// our normal pointerup flow may not run cleanup. Treat right-click as cancel and restore cursor.
+	document.addEventListener('pointerdown', ev => {
+		if (ev.button !== 2) return;
+		if (!draggedBlock && !document.body.classList.contains('dragging')) return;
+		try { ev.preventDefault(); } catch (e) {}
+		try { ev.stopPropagation(); } catch (e) {}
+		if (activeBonusPlacement) {
+			cancelActiveBonusPlacement({ updateInventory: true, hidePreview: true });
+		} else {
+			cleanupDragState({ clearBonus: false, hidePreview: true });
+		}
+	}, true);
+
+	// Also cancel on the actual context menu event (some browsers fire this without a pointerup).
+	document.addEventListener('contextmenu', ev => {
+		if (!draggedBlock && !document.body.classList.contains('dragging')) return;
+		try { ev.preventDefault(); } catch (e) {}
+		if (activeBonusPlacement) {
+			cancelActiveBonusPlacement({ updateInventory: true, hidePreview: true });
+		} else {
+			cleanupDragState({ clearBonus: false, hidePreview: true });
+		}
+	}, true);
+
+	// If a pointer gets canceled while dragging (e.g. OS gesture/context menu), ensure cursor restores.
+	document.addEventListener('pointercancel', ev => {
+		if (!draggedBlock && !document.body.classList.contains('dragging')) return;
+		if (dragPointerId !== null && ev.pointerId !== dragPointerId) return;
+		if (activeBonusPlacement) {
+			cancelActiveBonusPlacement({ updateInventory: true, hidePreview: true });
+		} else {
+			cleanupDragState({ clearBonus: false, hidePreview: true });
+		}
+	}, true);
 
 	// Desktop hover-drag: second click drops the piece.
 	document.addEventListener('pointerdown', ev => {
