@@ -26833,7 +26833,10 @@ function openShopModal(callback) {
 		// Ensure UI reflects the loaded objective state.
 		try { renderObjectivePanel(); } catch (e) {}
 	  }
-	  turnCount = 0;
+	  // Preserve turn counter if we are loading from a save (already set from savedDeckState.turnCount)
+	  if (!(isLoadingGame && savedDeckState)) {
+		turnCount = 0;
+	  }
 	  selectedCardId = null;
 	  selectedCardElement = null;
 	  selectedShape = null;
