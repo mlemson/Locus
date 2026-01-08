@@ -2025,12 +2025,12 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 		#green-zone,
 		#green-zone--placeholder {
 			/* Reduce the vertical gap to the red zone, keep L/R equal. */
-			margin: 15px 15px 8px 15px;
+			margin: 10px;
 		}
 		#red-zone,
 		#red-zone--placeholder {
 			/* Reduce the vertical gap to the green zone, keep L/R equal. */
-			margin: 8px 15px 15px 15px;
+			margin: 10px;
 		}
 
 		/* World 1: keep purple grid visually centered (equal margins on all sides). */
@@ -2150,7 +2150,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	#gold-zone,
 	#gold-zone--placeholder { background:#fffbea; height: 100px; width: 280px; box-shadow: 0 0 8px rgba(0,0,0,0.4); }
 	#red-zone,
-	#red-zone--placeholder { background:#de838c; height: auto; min-height: 323px;  margin: 15px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+	#red-zone--placeholder { background:#de838c; height: auto; margin: 10px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.12);
 	  box-sizing: border-box; padding: 10px; touch-action: manipulation; overflow: visible; position: relative; }
 	#red-zone.red-group {
 		display: grid;
@@ -2199,17 +2199,17 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	}
 	  
 	#red-grid1,
-	#red-grid1--placeholder { background:#de838c; margin: 15px; border-radius: 0; border:0; box-shadow: none; }
+	#red-grid1--placeholder { background:#de838c; margin: 10px; border-radius: 0; border:0; box-shadow: none; }
 	#red-grid2,
-	#red-grid2--placeholder { background:#de838c; margin: 15px; border-radius: 0; border:0; box-shadow: none; }
+	#red-grid2--placeholder { background:#de838c; margin: 10px; border-radius: 0; border:0; box-shadow: none; }
 	#red-grid3,
-	#red-grid3--placeholder { background:#de838c; margin: 15px; border-radius: 0; border:0; box-shadow: none; }
+	#red-grid3--placeholder { background:#de838c; margin: 10px; border-radius: 0; border:0; box-shadow: none; }
 	#red-grid4,
-	#red-grid4--placeholder { background:#de838c; margin: 15px; border-radius: 0; border:0; box-shadow: none; }
+	#red-grid4--placeholder { background:#de838c; margin: 10px; border-radius: 0; border:0; box-shadow: none; }
 	#red-grid5,
-	#red-grid5--placeholder { background:#de838c; margin: 15px; border-radius: 0; border:0; box-shadow: none; }
+	#red-grid5--placeholder { background:#de838c; margin: 10px; border-radius: 0; border:0; box-shadow: none; }
 	#red-grid6,
-	#red-grid6--placeholder { background:#de838c; margin: 15px; border-radius: 0; border:0; box-shadow: none; }
+	#red-grid6--placeholder { background:#de838c; margin: 10px; border-radius: 0; border:0; box-shadow: none; }
 	@media (min-width: 651px) {
 		#red-zone.red-group #red-grid1,
 		#red-zone.red-group #red-grid2,
@@ -15380,6 +15380,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	function showTutorialGhost(cardEl, cardData) {
 		const ghost = ensureTutorialOverlay() && tutorialState.ghost;
 		if (!ghost || !cardEl) return;
+		// If the intro objective is already met, do not show the ghost anymore.
+		try {
+			if (tutorialState.active && currentLevel === 0 && typeof isCurrentObjectiveCompleted === 'function' && isCurrentObjectiveCompleted()) {
+				hideTutorialGhost();
+				return;
+			}
+		} catch (_) {}
 		const cardRect = cardEl.getBoundingClientRect();
 		const placement = findFirstPlayablePlacement(cardData);
 		const targetRect = placement?.cell?.getBoundingClientRect();
@@ -16931,10 +16938,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		mobileZoomResizeBound = true;
 		window.addEventListener('resize', () => {
 			if (activeZoomZone) applyMobileZoomSizing(activeZoomZone);
+			// Keep column heights aligned when the viewport changes.
+			try { syncBoardColumnHeights(); } catch (e) {}
 		}, { passive: true });
 		if (window.visualViewport) {
 			window.visualViewport.addEventListener('resize', () => {
 				if (activeZoomZone) applyMobileZoomSizing(activeZoomZone);
+				try { syncBoardColumnHeights(); } catch (e) {}
 			}, { passive: true });
 		}
 	}
@@ -17057,6 +17067,36 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			} finally {
 				setTimeout(() => { zoneEl.dataset.suppressScrollSave = 'false'; }, 0);
 			}
+		});
+	}
+
+	// Make columns 2 and 3 at least as tall as column 1 (purple/yellow).
+	function syncBoardColumnHeights() {
+		const board = document.getElementById('board');
+		if (!board) return;
+		const cols = Array.from(board.querySelectorAll(':scope > .column'));
+		if (!cols.length) return;
+		const ref = cols[0];
+		// Clear previous sizing so we measure natural layout height.
+		cols.forEach(col => {
+			try {
+				col.style.minHeight = '';
+				col.style.maxHeight = '';
+				col.style.height = '';
+			} catch (_) {}
+		});
+		const refRect = ref.getBoundingClientRect();
+		const refH = Math.ceil(refRect?.height || 0);
+		if (!refH) return;
+		// Apply to column 2 and 3 if they exist; leave column 4 (score/coins) alone.
+		[1, 2].forEach(idx => {
+			const col = cols[idx];
+			if (!col) return;
+			const colRect = col.getBoundingClientRect();
+			const naturalH = Math.ceil(colRect?.height || 0);
+			// Only bump up shorter columns; never shrink taller ones.
+			const targetH = Math.max(refH, naturalH);
+			col.style.minHeight = `${targetH}px`;
 		});
 	}
 
@@ -17212,6 +17252,14 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		addZoneNavArrows();
 		bindMobileZoomResizeHandler();
 		applyMobileZoomSizing(zone);
+		if (zone.id === 'red-zone') {
+			// Ensure World 3 red stage visibility is applied before showing the zoomed red zone.
+			try { applyWorld3RedStage(world3RedStage || 1); } catch (_) {}
+			// Force visibility in case CSS/inline styles accidentally hid it.
+			zone.style.display = 'grid';
+			zone.style.opacity = '1';
+			zone.style.visibility = 'visible';
+		}
 		if (zone.id === 'green-zone') {
 			// Zoom: first time anchor to start; subsequent opens restore last zoom position.
 			restoreOrAnchorZoneScroll(zone, (z) => resetGreenZoomScroll(z));
@@ -26893,6 +26941,9 @@ function openShopModal(callback) {
 			return;
 		}
 	  } catch (e) {}
+
+	  // Keep column heights aligned: use the purple/yellow column as the reference for columns 2 and 3.
+	  try { syncBoardColumnHeights(); } catch (e) {}
 	  // Gebruik de echte --cell-size CSS variabele voor consistente sizing tussen werelden
 	  const computedCellSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')) || 26;
 	  const cellSize = Math.max(18, Math.min(30, computedCellSize)); // Clamp between 18 and 30
@@ -31687,13 +31738,13 @@ body { margin: 0; padding: 0; background: ${lightMode ? 'white' : '#111'}; color
 .board { display: flex; gap: 14px; align-items: center; transform-origin: top left; }
 .column { display: flex; flex-direction: column; gap: 14px; align-items: center; }
 .zone { background: transparent; padding: 10px; border-radius: 10px; box-shadow: none; border: 1px solid ${lightMode ? '#b9b9b9' : '#666'}; overflow: visible; max-height: none; }
-.zone.red-group { border-radius: 10px; align-self: flex-start; }
+.zone.red-group { padding 0px; border-radius: 10px; align-self: flex-start; }
 .zone[data-color="geel"] { background: ${lightMode ? (noBonuses ? '#fffdf4' : '#fff6cf') : 'transparent'}; }
 .zone[data-color="paars"] { background: ${lightMode ? (noBonuses ? '#fdf9ff' : '#f1e7ff') : 'transparent'}; }
 .zone[data-color="groen"] { background: ${lightMode ? (noBonuses ? '#f6fff6' : '#e1f7e1') : 'transparent'}; }
 .zone[data-color="blauw"] { background: ${lightMode ? (noBonuses ? '#f6fbff' : '#dff1ff') : 'transparent'}; }
 .zone[data-color="rood"] { background: ${lightMode ? (noBonuses ? '#fff7f7' : '#ffe3e3') : 'transparent'}; }
-.zone.red-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
+.zone.red-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0px; }
 .zone.red-group > .zone { padding: 6px; }
 	.grid { display: grid; gap: var(--board-grid-gap,2px); overflow: visible; max-height: none; grid-auto-columns: var(--cell-size); grid-auto-rows: var(--cell-size); }
 	.cell { display: block; width: var(--cell-size); height: var(--cell-size); min-width: var(--cell-size); min-height: var(--cell-size); padding: 0; margin: 0; box-sizing: border-box; border: 1px solid ${lightMode ? '#b7b7b7' : '#777'}; background: ${lightMode ? 'rgba(255,255,255,0.92)' : '#1a1a1a'}; border-radius: 4px; }
