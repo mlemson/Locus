@@ -22054,7 +22054,7 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	// Battery saver toggle: flip to false to disable the low-power tweaks below.
 	// Use var to avoid temporal dead zone when referenced earlier in the file.
 	var BATTERY_SAVER_ENABLED = true;
-	var BATTERY_SUPPRESS_LOGS = true;
+	var BATTERY_SUPPRESS_LOGS = false;
 	var BATTERY_THROTTLE_DRAG = true;
 	var BATTERY_REDUCE_ANIM = false;
 
@@ -26831,7 +26831,10 @@ function openShopModal(callback) {
 		setCurrentObjectiveForLevel(level);
 	  } else {
 		// Ensure UI reflects the loaded objective state.
-		try { renderObjectivePanel(); } catch (e) {}
+			try {
+				renderObjectivePanel();
+				if (!currentObjectiveId) setCurrentObjectiveForLevel(level);
+			} catch (e) {}
 	  }
 	  // Preserve turn counter if we are loading from a save (already set from savedDeckState.turnCount)
 	  if (!(isLoadingGame && savedDeckState)) {
@@ -27291,6 +27294,10 @@ function isWorld4CardAllowed(cardData) {
 		currentLevel = loadedLevel;
 		console.log('📂 Set currentLevel to:', currentLevel);
 		turnCount = gameState.turnCount || 0;
+		// Loading a non-intro level should never keep the intro deck flag.
+		if (currentLevel > 0) {
+			introDeckActive = false;
+		}
 		
 		// Restore scenario/editor meta early so startLevel can filter decks if needed
 		try { window.scenarioAllowedColors = isCustomBoardSave ? (gameState.scenarioAllowedColors || null) : null; } catch (e) {}
