@@ -13177,16 +13177,16 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			},
 			{
 				id: 'level-9-all-colors-15',
-				description: 'Level 9: Scoor minstens 15 punten in elke kleur.',
-				short: 'Level 9 - 15+ in elke kleur',
-				check: scores => scores.yellow >= 15 && scores.red >= 15 && scores.green >= 15 && scores.purple >= 15 && scores.blue >= 15,
+				description: 'Level 9: Scoor minstens 12 punten in elke kleur.',
+				short: 'Level 9 - 12+ in elke kleur',
+				check: scores => scores.yellow >= 12 && scores.red >= 12 && scores.green >= 12 && scores.purple >= 12 && scores.blue >= 12,
 				progress: scores => {
 					const parts = [
-						(scores.yellow >= 15 ? '✔geel' : ''),
-						(scores.red >= 15 ? '✔rood' : ''),
-						(scores.green >= 15 ? '✔groen' : ''),
-						(scores.purple >= 15 ? '✔paars' : ''),
-						(scores.blue >= 15 ? '✔blauw' : '')
+						(scores.yellow >= 12 ? '✔geel' : ''),
+						(scores.red >= 12 ? '✔rood' : ''),
+						(scores.green >= 12 ? '✔groen' : ''),
+						(scores.purple >= 12 ? '✔paars' : ''),
+						(scores.blue >= 12 ? '✔blauw' : '')
 					];
 					return parts.join(' ');
 				}
