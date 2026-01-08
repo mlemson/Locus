@@ -17045,15 +17045,29 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		zone.classList.add('zoom-focus');
 		zone.setAttribute('data-zoom-active', 'true');
 		activeZoomZone = zone;
-		// Blue zone: remove inline width constraints so CSS 100vw can take effect.
-		if (zone.id === 'blue-zone') {
-			zone._savedInlineWidth = zone.style.getPropertyValue('width');
-			zone._savedInlineMinWidth = zone.style.getPropertyValue('min-width');
-			zone._savedInlineMaxWidth = zone.style.getPropertyValue('max-width');
-			zone.style.removeProperty('width');
-			zone.style.removeProperty('min-width');
-			zone.style.removeProperty('max-width');
-		}
+		// Mobile/touch zoom: clear any world-specific inline sizing.
+		// World 2/3 sizing code sets pixel widths/heights inline; those override the uniform mobile zoom CSS.
+		try {
+			const isMobileZoomSizing = (typeof window !== 'undefined' && window.matchMedia)
+				? window.matchMedia('(max-width: 650px), (hover: none) and (pointer: coarse)').matches
+				: (window.innerWidth <= 650);
+			if (isMobileZoomSizing && zone && zone.style && ['yellow-zone','green-zone','blue-zone','purple-zone','red-zone'].includes(zone.id)) {
+				zone._savedInlineSizing = {
+					width: zone.style.getPropertyValue('width'),
+					height: zone.style.getPropertyValue('height'),
+					minWidth: zone.style.getPropertyValue('min-width'),
+					maxWidth: zone.style.getPropertyValue('max-width'),
+					minHeight: zone.style.getPropertyValue('min-height'),
+					maxHeight: zone.style.getPropertyValue('max-height')
+				};
+				zone.style.removeProperty('width');
+				zone.style.removeProperty('height');
+				zone.style.removeProperty('min-width');
+				zone.style.removeProperty('max-width');
+				zone.style.removeProperty('min-height');
+				zone.style.removeProperty('max-height');
+			}
+		} catch (e) {}
 		addZoneNavArrows();
 		bindMobileZoomResizeHandler();
 		applyMobileZoomSizing(zone);
@@ -17076,15 +17090,23 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		placeholderSyncQueue.delete(zone);
 		zone.classList.remove('zoom-focus');
 		zone.removeAttribute('data-zoom-active');
-		// Blue zone: restore inline width constraints that were removed during zoom.
-		if (zone.id === 'blue-zone') {
-			if (zone._savedInlineWidth) zone.style.setProperty('width', zone._savedInlineWidth);
-			if (zone._savedInlineMinWidth) zone.style.setProperty('min-width', zone._savedInlineMinWidth);
-			if (zone._savedInlineMaxWidth) zone.style.setProperty('max-width', zone._savedInlineMaxWidth);
-			delete zone._savedInlineWidth;
-			delete zone._savedInlineMinWidth;
-			delete zone._savedInlineMaxWidth;
-		}
+		// Restore world-specific inline sizing when leaving zoom.
+		try {
+			const saved = zone._savedInlineSizing;
+			if (saved && zone && zone.style) {
+				const restoreProp = (cssProp, val) => {
+					if (val != null && String(val).length) zone.style.setProperty(cssProp, val);
+					else zone.style.removeProperty(cssProp);
+				};
+				restoreProp('width', saved.width);
+				restoreProp('height', saved.height);
+				restoreProp('min-width', saved.minWidth);
+				restoreProp('max-width', saved.maxWidth);
+				restoreProp('min-height', saved.minHeight);
+				restoreProp('max-height', saved.maxHeight);
+				delete zone._savedInlineSizing;
+			}
+		} catch (e) {}
 		restoreFromBody(zone);
 		activeZoomZone = null;
 		document.body.classList.remove('zoomed-in');
