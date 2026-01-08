@@ -489,6 +489,19 @@
 			}
 		}
 
+		/* World 3 red can be much taller; keep it centered + scrollable on mid-size viewports.
+		   (≤650px uses the uniform fixed-height zoom rules later.) */
+		@media (min-width: 651px) and (max-width: 900px) {
+			body.zoomed-in #red-zone.zoom-focus {
+				top: 50%;
+				transform: translate(-50%, -50%) scale(0.95);
+				max-height: 85vh;
+				max-height: 85svh;
+				overflow: auto;
+				-webkit-overflow-scrolling: touch;
+			}
+		}
+
 		@media (max-width: 650px) {
 			body.zoomed-in #yellow-zone.zoom-focus,
 			body.zoomed-in #blue-zone.zoom-focus {
