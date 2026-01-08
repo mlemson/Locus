@@ -499,6 +499,8 @@
 				max-height: 85svh;
 				overflow: auto;
 				-webkit-overflow-scrolling: touch;
+				/* Ensure it stays above the blur overlay */
+				z-index: var(--z-zoom);
 			}
 		}
 
@@ -2204,13 +2206,28 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	#red-grid3--placeholder { background:#de838c; margin: 15px; border-radius: 0; border:0; box-shadow: none; }
 	#red-grid4,
 	#red-grid4--placeholder { background:#de838c; margin: 15px; border-radius: 0; border:0; box-shadow: none; }
+	#red-grid5,
+	#red-grid5--placeholder { background:#de838c; margin: 15px; border-radius: 0; border:0; box-shadow: none; }
+	#red-grid6,
+	#red-grid6--placeholder { background:#de838c; margin: 15px; border-radius: 0; border:0; box-shadow: none; }
 	@media (min-width: 651px) {
 		#red-zone.red-group #red-grid1,
 		#red-zone.red-group #red-grid2,
 		#red-zone.red-group #red-grid3,
-		#red-zone.red-group #red-grid4 {
+		#red-zone.red-group #red-grid4,
+		#red-zone.red-group #red-grid5,
+		#red-zone.red-group #red-grid6 {
 			margin: 0;
 		}
+	}
+	/* When red-zone is zoomed, remove subgrid margins so the container doesn't overflow. */
+	body.zoomed-in #red-zone.zoom-focus #red-grid1,
+	body.zoomed-in #red-zone.zoom-focus #red-grid2,
+	body.zoomed-in #red-zone.zoom-focus #red-grid3,
+	body.zoomed-in #red-zone.zoom-focus #red-grid4,
+	body.zoomed-in #red-zone.zoom-focus #red-grid5,
+	body.zoomed-in #red-zone.zoom-focus #red-grid6 {
+		margin: 0;
 	}
 
 	/* DARK MODE: Override zone kleuren met donkere gradient */
@@ -17367,13 +17384,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  // Red determinism: enforce a predictable number of active cells AND fixed points per subgrid.
 	  // Note: points are NOT derived from cells; red subgrids award fixed points when fully filled.
 	  const redTargetsById = {
-		'red-grid1': { tier: 'klein', cells: 8, points: 16 },
-		'red-grid2': { tier: 'midden', cells: 12, points: 30 },
-		'red-grid3': { tier: 'groot', cells: 16, points: 40 },
-		'red-grid4': { tier: 'mega', cells: 20, points: 50 },
+		'red-grid1': { tier: 'klein', cells: 12, points: 20 },
+		'red-grid2': { tier: 'midden', cells: 16, points: 35 },
+		'red-grid3': { tier: 'groot', cells: 20, points: 45 },
+		'red-grid4': { tier: 'mega', cells: 24, points: 58 },
 		// World 3 uses 6 red grids; reuse the mega tier unless overridden.
-		'red-grid5': { tier: 'mega', cells: 20, points: 50 },
-		'red-grid6': { tier: 'mega', cells: 20, points: 50 }
+		'red-grid5': { tier: 'mega', cells: 24, points: 80 },
+		'red-grid6': { tier: 'mega', cells: 24, points: 80 }
 	  };
 	  const opts = (options && typeof options === 'object') ? options : null;
 	  const preset = redTargetsById[gridId] || null;
