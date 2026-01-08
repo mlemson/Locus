@@ -26696,6 +26696,7 @@ function openShopModal(callback) {
 				widestRowCells = Math.max(widestRowCells, ...rows.map(r => (r.children ? r.children.length : 0)));
 			}
 		} catch (e) {}
+		const blueTargetWidthPx = Math.max(1, Math.round(Math.max(contentWidthPx, widestRowCells * cellSize)));
 
 		// WORLD 2 UX: Blauw zone hoogte = geel + paars + gap ertussen
 		let blueHeight;
@@ -26725,7 +26726,7 @@ function openShopModal(callback) {
 		// and later keep the user's last unzoomed scroll position.
 		restoreOrAnchorZoneScroll(blueZone, (z) => resetBlueZoomScroll(z));
 		enableZoneDragScroll(blueZone, { ignoreSelectors: '#controls,#bottom-bar,#card-choice-zone,.card,.card-option' });
-		console.log(`30a Blue zone: width=${targetWidthPx}px, scroll enabled, maxHeight=${tallZoneMaxVh}`);
+		console.log(`30a Blue zone: width=${blueTargetWidthPx}px, scroll enabled, maxHeight=${tallZoneMaxVh}`);
 	  }
 	  
 	  // Groen zone
