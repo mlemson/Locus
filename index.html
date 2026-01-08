@@ -17077,6 +17077,11 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		const cols = Array.from(board.querySelectorAll(':scope > .column'));
 		if (!cols.length) return;
 		const ref = cols[0];
+		// Remember existing min-heights so we don't wipe deliberate bumps (e.g., green-zone boost).
+		const existingMins = cols.map(col => {
+			const mh = (col && col.style) ? parseFloat(col.style.minHeight) : NaN;
+			return Number.isFinite(mh) ? mh : 0;
+		});
 		// Clear previous sizing so we measure natural layout height.
 		cols.forEach(col => {
 			try {
@@ -17095,7 +17100,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			const colRect = col.getBoundingClientRect();
 			const naturalH = Math.ceil(colRect?.height || 0);
 			// Only bump up shorter columns; never shrink taller ones.
-			const targetH = Math.max(refH, naturalH);
+			const targetH = Math.max(refH, naturalH, existingMins[idx] || 0);
 			col.style.minHeight = `${targetH}px`;
 		});
 	}
@@ -26984,6 +26989,24 @@ function openShopModal(callback) {
 		purpleZone.style.width = `${purpleSize * cellSize + 30}px`;
 		purpleZone.style.height = `${purpleSize * cellSize + purpleChromePx}px`;
 	  }
+
+	  // Groen zone: zorg dat hij minstens zo hoog is als de referentie-kolom (paars/geel) voor symmetrie.
+	  try {
+		const greenZone = document.getElementById('green-zone');
+		if (greenZone) {
+			const purpleRect = purpleZone?.getBoundingClientRect?.();
+			const yellowRect = yellowZone?.getBoundingClientRect?.();
+			const refH = Math.max(
+				Math.ceil(purpleRect?.height || 0),
+				Math.ceil(yellowRect?.height || 0)
+			);
+			const currentH = Math.ceil((greenZone.getBoundingClientRect?.().height) || greenZone.offsetHeight || 0);
+			const targetH = Math.max(refH, currentH);
+			if (targetH) {
+				greenZone.style.minHeight = `${targetH}px`;
+			}
+		}
+	  } catch (_) {}
 
 	  // WORLD 2/3 UX: make yellow zone the same width as purple.
 	  try {
