@@ -26888,6 +26888,20 @@ function openShopModal(callback) {
 	  
 	  boardConfigs.forEach(fn => fn());
 	  updateScore();
+	  // World 3: after regenerating the board, re-anchor the initial unzoomed view.
+	  // Without this, existing scroll memory can keep green at (0,0) instead of centered.
+	  try {
+		const greenMem = getZoneScrollMemory('green-zone');
+		if (greenMem && greenMem.normal) {
+			greenMem.normal.initialized = false;
+			greenMem.normal.level = currentLevel;
+		}
+		const blueMem = getZoneScrollMemory('blue-zone');
+		if (blueMem && blueMem.normal) {
+			blueMem.normal.initialized = false;
+			blueMem.normal.level = currentLevel;
+		}
+	  } catch (_) {}
 	  
 	  // Gebruik World 2 zone sizing (werkt ook voor World 3)
 	  adjustZoneSizesForWorld2();
