@@ -21824,14 +21824,30 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	  const metrics = getZoneMetrics(zone);
 	  const floorY = Number.isFinite(metrics.maxY) ? metrics.maxY : null;
 	  const touchesFloor = floorY !== null && pendingCells.some(cell => Number(cell.dataset.y) === floorY);
+	  
 	  // Blue: allow starting from ANY bold-cell (including portals)
+	  // Check both if the cell itself is bold, OR if any adjacent cell is bold
 	  const touchesBold = pendingCells.some(cell => {
-		return cell && cell.classList && cell.classList.contains('bold-cell');
+		if (!cell || !cell.classList) return false;
+		// Direct hit on bold cell
+		if (cell.classList.contains('bold-cell')) return true;
+		// Check if this cell is adjacent to a bold cell (allows shapes that touch but don't overlap the portal)
+		const x = Number(cell.dataset.x);
+		const y = Number(cell.dataset.y);
+		if (!Number.isFinite(x) || !Number.isFinite(y)) return false;
+		const neighbors = [
+			getCell(zone, x - 1, y),
+			getCell(zone, x + 1, y),
+			getCell(zone, x, y - 1),
+			getCell(zone, x, y + 1)
+		];
+		return neighbors.some(n => n && n.classList.contains('bold-cell'));
 	  });
+	  
 	  const hasActive = zoneHasActiveCells(zone);
 	  // If no active cells exist yet, allow placement when it touches floor OR any bold cell (including portals)
 	  if (!hasActive) return touchesFloor || touchesBold;
-	  // If there are active cells, touching floor or any bold-cell is acceptable
+	  // If there are active cells, touching floor or any bold-cell is acceptable, OR adjacent to active
 	  if (touchesFloor || touchesBold) return true;
 	  // Check ook optionele cellen voor adjacency
 	  const allCells = pendingCells.optionalCells ? [...pendingCells, ...pendingCells.optionalCells] : pendingCells;
@@ -21870,8 +21886,23 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	  // tenzij je aangrenzend bent aan een actieve cel OF je raakt een portal (bold-cell)
 	  const hasActive = zoneHasActiveCells(zone);
 	  
-	  // Check of er een bold-cell (portal) wordt geraakt
-	  const touchesBold = pendingCells.some(cell => cell && cell.classList && cell.classList.contains('bold-cell'));
+	  // Check of er een bold-cell (portal) wordt geraakt of aangeraakt
+	  const touchesBold = pendingCells.some(cell => {
+		if (!cell || !cell.classList) return false;
+		// Direct hit on bold cell
+		if (cell.classList.contains('bold-cell')) return true;
+		// Check if this cell is adjacent to a bold cell
+		const x = Number(cell.dataset.x);
+		const y = Number(cell.dataset.y);
+		if (!Number.isFinite(x) || !Number.isFinite(y)) return false;
+		const neighbors = [
+			getCell(zone, x - 1, y),
+			getCell(zone, x + 1, y),
+			getCell(zone, x, y - 1),
+			getCell(zone, x, y + 1)
+		];
+		return neighbors.some(n => n && n.classList.contains('bold-cell'));
+	  });
 	  
 	  // Als er nog geen actieve cellen zijn
 	  if (!hasActive) {
@@ -28783,7 +28814,6 @@ document.addEventListener('pointerdown', ev => {
 	// PHASE 3 REFACTOR: Helper function to rotate draggedBlock while preserving visual center
 	// BUG FIX: Also recompute offsetX/offsetY so drag positioning stays correct
 	// MOBILE FIX: Use actual rendered block size for accurate offsets
-	// TOUCH FIX: Use transform instead of left/top to prevent position jumping
 	function rotateDraggedBlockInPlace(newShape, color) {
 		if (!draggedBlock) return;
 		try {
@@ -28791,10 +28821,6 @@ document.addEventListener('pointerdown', ev => {
 			const beforeRect = draggedBlock.getBoundingClientRect();
 			const centerX = beforeRect.left + beforeRect.width / 2;
 			const centerY = beforeRect.top + beforeRect.height / 2;
-			
-			// Store current left/top values
-			const currentLeft = parseFloat(draggedBlock.style.left) || 0;
-			const currentTop = parseFloat(draggedBlock.style.top) || 0;
 			
 			const nextShape = cloneShape(newShape);
 			draggedShape = nextShape;
@@ -28812,9 +28838,8 @@ document.addEventListener('pointerdown', ev => {
 			if (Number.isFinite(centerX) && Number.isFinite(centerY) && afterRect.width > 0 && afterRect.height > 0) {
 				const newLeft = centerX - afterRect.width / 2;
 				const newTop = centerY - afterRect.height / 2;
-				// Set position directly without animation
-				draggedBlock.style.left = `${Math.round(newLeft)}px`;
-				draggedBlock.style.top = `${Math.round(newTop)}px`;
+				// Use setElPos which handles transform-based positioning correctly
+				setElPos(draggedBlock, newLeft, newTop);
 			}
 			
 			draggedBlock.style.opacity = '1';
