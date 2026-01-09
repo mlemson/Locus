@@ -32966,6 +32966,11 @@ body { background: transparent; }
 			  scaleBoardForDesktop();
 			  scaleBoardForMobile();
 		  renderTrapSummary();
+		  // Keep column heights aligned in ALL worlds (World 1 previously missed this sync).
+		  try {
+			  syncZoneHeights();
+			  requestAnimationFrame(() => { try { syncZoneHeights(); } catch (_) {} });
+		  } catch (_) {}
 		  autoCenterScrollableZones();
 		  
 	}
