@@ -18176,11 +18176,12 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		}
 		
 		// Clean up portal visual elements when portal cell becomes active
+		// BUT keep the bold-cell class so portal remains a valid start point for future placements
 		if (cell.classList.contains('portal-cell')) {
 			const portalSymbol = cell.querySelector('.portal-symbol');
 			if (portalSymbol) portalSymbol.remove();
 			cell.classList.remove('portal-cell');
-			// Keep bold-cell class for scoring logic
+			// IMPORTANT: Keep bold-cell class so the portal remains usable as a start position
 		}
 				// zorg dat achtergrond consistent wordt gezet: expliciete kleur (bv. van placeShape) of zoneColor
 				try {
@@ -21823,21 +21824,14 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	  const metrics = getZoneMetrics(zone);
 	  const floorY = Number.isFinite(metrics.maxY) ? metrics.maxY : null;
 	  const touchesFloor = floorY !== null && pendingCells.some(cell => Number(cell.dataset.y) === floorY);
-	  // Blue: only allow starting from the bottom-most bold row (the start / latest generated bold-cells).
-	  // Do NOT allow starting from any arbitrary bold-cell higher up in the river.
-	  let bottomBoldY = null;
-	  try {
-		const boldCells = Array.from(zone.querySelectorAll('.cell.bold-cell:not(.void-cell)'));
-		const boldYs = boldCells.map(c => Number(c.dataset.y)).filter(v => Number.isFinite(v));
-		if (boldYs.length) bottomBoldY = Math.max(...boldYs);
-	  } catch (e) {}
-	  const touchesBold = bottomBoldY !== null && pendingCells.some(cell => {
-		return cell && cell.classList && cell.classList.contains('bold-cell') && Number(cell.dataset.y) === bottomBoldY;
+	  // Blue: allow starting from ANY bold-cell (including portals)
+	  const touchesBold = pendingCells.some(cell => {
+		return cell && cell.classList && cell.classList.contains('bold-cell');
 	  });
 	  const hasActive = zoneHasActiveCells(zone);
-	  // If no active cells exist yet, allow placement when it touches floor OR a bold start cell
+	  // If no active cells exist yet, allow placement when it touches floor OR any bold cell (including portals)
 	  if (!hasActive) return touchesFloor || touchesBold;
-	  // If there are active cells, touching floor or bold-cell is acceptable
+	  // If there are active cells, touching floor or any bold-cell is acceptable
 	  if (touchesFloor || touchesBold) return true;
 	  // Check ook optionele cellen voor adjacency
 	  const allCells = pendingCells.optionalCells ? [...pendingCells, ...pendingCells.optionalCells] : pendingCells;
@@ -21873,19 +21867,25 @@ function optionalCellsTouchActive(zone, pendingCells) {
 
 	function validatePurplePlacement(zone, pendingCells) {
 	  // World 2 paars: je mag niet starten op de buitenste 2 ringen
-	  // tenzij je aangrenzend bent aan een actieve cel
+	  // tenzij je aangrenzend bent aan een actieve cel OF je raakt een portal (bold-cell)
 	  const hasActive = zoneHasActiveCells(zone);
 	  
-	  // Als er nog geen actieve cellen zijn, moet je NIET op outer ring starten
+	  // Check of er een bold-cell (portal) wordt geraakt
+	  const touchesBold = pendingCells.some(cell => cell && cell.classList && cell.classList.contains('bold-cell'));
+	  
+	  // Als er nog geen actieve cellen zijn
 	  if (!hasActive) {
-		// Check of alle pending cells NIET op de buitenste 2 ringen zitten
+		// Portal aanraken is altijd toegestaan
+		if (touchesBold) return true;
+		// Anders: check of alle pending cells NIET op de buitenste 2 ringen zitten
 		const allInner = pendingCells.every(cell => {
 		  return !cell.classList.contains('outer-ring-0') && !cell.classList.contains('outer-ring-1');
 		});
 		return allInner;
 	  }
 	  
-	  // Als er wel actieve cellen zijn, moet je aangrenzend zijn
+	  // Als er wel actieve cellen zijn: portal aanraken OF aangrenzend aan actief
+	  if (touchesBold) return true;
 	  // Check ook optionele cellen voor adjacency
 	  const allCells = pendingCells.optionalCells ? [...pendingCells, ...pendingCells.optionalCells] : pendingCells;
 	  return allCells.some(cell => hasAdjacentActiveCell(zone, cell));
@@ -26571,6 +26571,20 @@ function openShopModal(callback) {
 	  boardConfigs.forEach(fn => fn());
 	  updateScore();
 	  
+	  // World 2: reset scroll memory so green centers on start cell
+	  try {
+		const greenMem = getZoneScrollMemory('green-zone');
+		if (greenMem && greenMem.normal) {
+			greenMem.normal.initialized = false;
+			greenMem.normal.level = currentLevel;
+		}
+		const blueMem = getZoneScrollMemory('blue-zone');
+		if (blueMem && blueMem.normal) {
+			blueMem.normal.initialized = false;
+			blueMem.normal.level = currentLevel;
+		}
+	  } catch (_) {}
+	  
 	  // Pas zone groottes aan op basis van gegenereerde grids
 	  adjustZoneSizesForWorld2();
 	  
@@ -27211,21 +27225,27 @@ function openShopModal(callback) {
 			}
 		} catch (_) {}
 
-		// Green (World 2/3): keep the unzoomed view stable.
-		// Anchor to start cell only once per level; after that, restore saved normal scroll.
+		// Green (World 2/3): center on start cell initially, then preserve user scroll.
+		// Simple approach: if user hasn't scrolled yet, center on start. Otherwise restore their position.
 		if (greenZone && !document.body.classList.contains('zoomed-in')) {
-			try {
-				const mem = getZoneScrollMemory('green-zone');
-				if (mem && mem.normal) {
-					// "level" is an internal stamp (not persisted) to detect new boards.
-					if (mem.normal.level !== currentLevel) {
-						mem.normal.initialized = false;
-						mem.normal.level = currentLevel;
-					}
-				}
-				restoreOrAnchorZoneScroll(greenZone, (z) => resetGreenZoomScroll(z));
-			} catch (_) {
+			const mem = getZoneScrollMemory('green-zone');
+			// If this is a new level, reset the memory so we re-center on start
+			if (mem && mem.normal && mem.normal.level !== currentLevel) {
+				mem.normal.initialized = false;
+				mem.normal.level = currentLevel;
+			}
+			// Always ensure scroll tracking is bound
+			ensureZoneScrollTracking(greenZone);
+			// If not initialized yet, center on start cell
+			if (!mem || !mem.normal || !mem.normal.initialized) {
 				resetGreenZoomScroll(greenZone);
+				// Mark as initialized so future calls preserve user scroll
+				if (mem && mem.normal) {
+					mem.normal.left = greenZone.scrollLeft;
+					mem.normal.top = greenZone.scrollTop;
+					mem.normal.initialized = true;
+					mem.normal.level = currentLevel;
+				}
 			}
 		}
 		
@@ -28763,20 +28783,40 @@ document.addEventListener('pointerdown', ev => {
 	// PHASE 3 REFACTOR: Helper function to rotate draggedBlock while preserving visual center
 	// BUG FIX: Also recompute offsetX/offsetY so drag positioning stays correct
 	// MOBILE FIX: Use actual rendered block size for accurate offsets
+	// TOUCH FIX: Use transform instead of left/top to prevent position jumping
 	function rotateDraggedBlockInPlace(newShape, color) {
 		if (!draggedBlock) return;
 		try {
+			// Get current position BEFORE any changes
 			const beforeRect = draggedBlock.getBoundingClientRect();
 			const centerX = beforeRect.left + beforeRect.width / 2;
 			const centerY = beforeRect.top + beforeRect.height / 2;
+			
+			// Store current left/top values
+			const currentLeft = parseFloat(draggedBlock.style.left) || 0;
+			const currentTop = parseFloat(draggedBlock.style.top) || 0;
+			
 			const nextShape = cloneShape(newShape);
 			draggedShape = nextShape;
 			draggedBlock._shape = nextShape;
+			
+			// Render the new shape
 			renderBlock(draggedBlock, nextShape, color);
+			
+			// Force layout recalculation
+			draggedBlock.offsetHeight;
+			
 			const afterRect = draggedBlock.getBoundingClientRect();
+			
+			// Calculate new position to keep the visual center stable
 			if (Number.isFinite(centerX) && Number.isFinite(centerY) && afterRect.width > 0 && afterRect.height > 0) {
-				setElPos(draggedBlock, centerX - afterRect.width / 2, centerY - afterRect.height / 2);
+				const newLeft = centerX - afterRect.width / 2;
+				const newTop = centerY - afterRect.height / 2;
+				// Set position directly without animation
+				draggedBlock.style.left = `${Math.round(newLeft)}px`;
+				draggedBlock.style.top = `${Math.round(newTop)}px`;
 			}
+			
 			draggedBlock.style.opacity = '1';
 			draggedBlock.style.visibility = '';
 			if (!draggedBlock.style.position) draggedBlock.style.position = 'fixed';
@@ -33055,11 +33095,15 @@ body { background: transparent; }
 		}
 	  })();
 	  const greenShouldAutoCenter = !(greenMem && greenMem.normal && greenMem.normal.initialized);
-	  if (greenZone && !greenScrollDisabled && greenShouldAutoCenter && greenZone.scrollTop <= 2 && greenZone.scrollLeft <= 2) {
-		const greenStart = document.querySelector('#green-grid .cell.root-cell')
-		  || document.querySelector('#green-grid .cell.end-cell')
-		  || document.querySelector('#green-grid .cell.active');
-		if (greenStart) scrollChildIntoView(greenZone, greenStart, { alignX: 'center', alignY: 'center' });
+	  if (greenZone && !greenScrollDisabled && greenShouldAutoCenter) {
+		// Center on start cell using resetGreenZoomScroll which is more reliable
+		resetGreenZoomScroll(greenZone);
+		// Mark as initialized
+		if (greenMem && greenMem.normal) {
+			greenMem.normal.left = greenZone.scrollLeft;
+			greenMem.normal.top = greenZone.scrollTop;
+			greenMem.normal.initialized = true;
+		}
 	  }
 
 	  const blueZone = document.getElementById('blue-zone');
