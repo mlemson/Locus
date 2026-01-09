@@ -378,6 +378,7 @@
 			display: flex;
 			gap: 12px; /* ruimte tussen kolommen */
 			margin: 0 auto;
+			margin-top: 50px;
 			touch-action: manipulation;
 			position: relative;
 			z-index: 1;
@@ -1630,6 +1631,8 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 		.board {
 			gap: 2px;
 			margin: 0;
+			margin-top: 10px;
+			margin-left: 5px;
 			padding: 2px;
 			transform-origin: top left;
 			transition: transform 0.4s ease;	
@@ -2041,13 +2044,6 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 			align-items: center;
 			justify-content: center;
 		}
-
-		/* World 2 (mobile): make blue zone a bit taller (+50px).
-		   IMPORTANT: keep zoomed-in view consistent across worlds, so apply only when NOT zoomed. */
-		body.world-2:not(.zoomed-in) #blue-zone,
-		body.world-2:not(.zoomed-in) #blue-zone--placeholder {
-			height: 841px;
-		}
 	}
 	/* World 2: keep green zone square (same width, more height). */
 	body.world-2:not(.zoomed-in) #green-zone,
@@ -2117,7 +2113,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	#purple-zone,
 	#purple-zone--placeholder { background:#a48dcc; height: 310px;  }
 	#blue-zone,
-	#blue-zone--placeholder { background:#6ba8d8; height: 791px; }
+	#blue-zone--placeholder { background:#6ba8d8; height: 760px; }
 
 	/* Blue zone: vaste breedte, breder grid wordt scrollbaar */
 	#blue-zone {
@@ -17077,26 +17073,56 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			const yellowZone = document.getElementById('yellow-zone');
 			const greenZone = document.getElementById('green-zone');
 			const blueZone = document.getElementById('blue-zone');
+			const redZone = document.getElementById('red-zone');
 			const column1 = document.querySelector('.column:nth-child(1)');
-			
+			const column2 = document.querySelector('.column:nth-child(2)');
+
 			if (!column1 || !purpleZone || !yellowZone) return;
-			
-			// Get the actual rendered height of column 1 content (purple + yellow + gap)
-			const purpleH = purpleZone.offsetHeight || 0;
-			const yellowH = yellowZone.offsetHeight || 0;
-			const gap = 12; // CSS gap between zones
-			const column1ContentHeight = purpleH + yellowH + gap;
-			
-			if (column1ContentHeight <= 0) return;
-			
-			// Apply to green zone - should match purple height minimum
-			if (greenZone && purpleH > 0) {
-				greenZone.style.minHeight = `${purpleH}px`;
+			if (column1.offsetParent === null) return; // board hidden (e.g., mobile sidebar)
+
+			const getNumber = (val, fallback = 0) => {
+				const n = parseFloat(val);
+				return Number.isFinite(n) ? n : fallback;
+			};
+			const getMarginY = (el) => {
+				if (!el) return 0;
+				const cs = getComputedStyle(el);
+				return getNumber(cs.marginTop) + getNumber(cs.marginBottom);
+			};
+			const getInnerHeight = (el) => {
+				if (!el) return 0;
+				return Math.max(el.offsetHeight || 0, el.getBoundingClientRect().height || 0);
+			};
+
+			const columnStyles = getComputedStyle(column1);
+			const gap = (() => {
+				const rowGap = getNumber(columnStyles.rowGap);
+				const anyGap = getNumber(columnStyles.gap, 12);
+				return rowGap > 0 ? rowGap : anyGap;
+			})();
+			const column2Styles = column2 ? getComputedStyle(column2) : columnStyles;
+			const interZoneGap = (() => {
+				const rowGap = getNumber(column2Styles.rowGap);
+				const anyGap = getNumber(column2Styles.gap, gap);
+				return rowGap > 0 ? rowGap : anyGap;
+			})();
+
+			const purpleInner = getInnerHeight(purpleZone);
+			const yellowInner = getInnerHeight(yellowZone);
+			const column1ContentHeight = purpleInner + yellowInner + getMarginY(purpleZone) + getMarginY(yellowZone) + gap;
+
+			if (greenZone && column1ContentHeight > 0) {
+				const greenMargin = getMarginY(greenZone);
+				const redOuter = redZone ? (getInnerHeight(redZone) + getMarginY(redZone)) : 0;
+				const availableForGreen = column1ContentHeight - redOuter - interZoneGap - greenMargin;
+				const targetGreenHeight = Math.max(purpleInner, availableForGreen);
+				greenZone.style.minHeight = `${Math.round(targetGreenHeight)}px`;
 			}
-			
-			// Apply to blue zone - should match full column 1 content height
-			if (blueZone) {
-				blueZone.style.minHeight = `${column1ContentHeight}px`;
+
+			if (blueZone && column1ContentHeight > 0) {
+				const blueMargin = getMarginY(blueZone);
+				const targetBlueHeight = Math.max(0, column1ContentHeight - blueMargin);
+				blueZone.style.minHeight = `${Math.round(targetBlueHeight)}px`;
 			}
 		} catch (e) { console.warn('syncZoneHeights error:', e); }
 	}
@@ -18852,18 +18878,14 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 	/* === ROOD SCORE ===
 	   Elk volledig gevuld subgrid geeft vaste punten.
-	   World 3: stage 1 telt alleen grids 1-4, stage 2 telt alleen grids 5-6. */
+	   World 3: stage gating bepaalt zichtbaarheid, maar score blijft cumulatief over alle grids. */
 	(() => {
 		let computedRed = 0;
-		const stage = (isWorld3 && Number(world3RedStage) === 2) ? 2 : 1;
-		const activeIds = isWorld3
-			? (stage === 2 ? ['red-grid5', 'red-grid6'] : ['red-grid1', 'red-grid2', 'red-grid3', 'red-grid4'])
-			: ['red-grid1', 'red-grid2', 'red-grid3', 'red-grid4'];
+		const allRedIds = ['red-grid1', 'red-grid2', 'red-grid3', 'red-grid4', 'red-grid5', 'red-grid6'];
 
-		activeIds.forEach(id => {
+		allRedIds.forEach(id => {
 			const grid = document.getElementById(id);
 			if (!grid) return;
-			if (grid.style && grid.style.display === 'none') return;
 			const allCells = grid.querySelectorAll('.cell:not(.void-cell)');
 			const activeCells = grid.querySelectorAll('.cell.active:not(.void-cell)');
 			const isFull = allCells.length > 0 && allCells.length === activeCells.length;
@@ -18903,8 +18925,6 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 					world3RedStage = 2;
 					applyWorld3RedStage(2);
 					try { saveGameState(); } catch (e) {}
-					// Recompute once after DOM swap so the displayed red score matches the active stage.
-					setTimeout(() => { try { updateScore(); } catch (e) {} }, 0);
 				}
 			} catch (e) {}
 		}
@@ -26135,7 +26155,6 @@ function openShopModal(callback) {
 	  
 	  if (blueZone) {
 		blueZone.style.width = '180px';
-		blueZone.style.height = '791px';
 		blueZone.style.maxHeight = '';
 		blueZone.style.overflowX = '';
 		blueZone.style.overflowY = '';
@@ -27057,7 +27076,18 @@ function openShopModal(callback) {
 		}
 		// World 2 (mobile): user requested ~+50px extra height.
 		if (isWorld2 && isMobileLike && isCoarse) blueHeight += 50;
-		blueZone.style.height = `${blueHeight}px`;
+		// On smalle mobile/portrait layouts, don't force an explicit height; clamp to viewport.
+		const safeMargin = 140; // header + spacing buffer so blue doesn't exceed the viewport
+		const viewportH = Number(window.innerHeight) || 0;
+		if (isMobileLike) {
+			const maxAllowed = Math.max(200, viewportH - safeMargin);
+			const clamped = Math.max(0, Math.min(blueHeight, maxAllowed));
+			blueZone.style.removeProperty('height');
+			blueZone.style.minHeight = `${Math.round(clamped)}px`;
+		} else {
+			blueZone.style.height = `${blueHeight}px`;
+			blueZone.style.minHeight = `${blueHeight}px`;
+		}
 		// Verwijder maxHeight beperking zodat blauw echt even lang kan zijn als geel+paars
 		blueZone.style.maxHeight = 'none';
 		blueZone.style.overflowY = 'auto';
@@ -27728,10 +27758,8 @@ function isWorld4CardAllowed(cardData) {
 		}
 		currentLevel = loadedLevel;
 		console.log('📂 Set currentLevel to:', currentLevel);
-		// Restore World 3 red progression stage (defaults to stage 1).
-		try {
-			world3RedStage = Number(gameState.world3RedStage) === 2 ? 2 : 1;
-		} catch (e) { world3RedStage = 1; }
+		// World 3 red progression: always start at stage 1 on load (do not carry stage 2 across reloads).
+		world3RedStage = 1;
 		turnCount = gameState.turnCount || 0;
 		// Loading a non-intro level should never keep the intro deck flag.
 		if (currentLevel > 0) {
