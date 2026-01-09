@@ -2268,7 +2268,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	#green-zone .cell.active,
 	#green-zone--placeholder .cell.active { background: #92c28c; border-color: #c1ffa8; }
 	#green-zone .cell.end-cell.active,
-	#green-zone--placeholder .cell.end-cell.active {background-color: #5da35d; border-color: #518755; } 
+	#green-zone--placeholder .cell.end-cell.active {background-color: #5da35d !important; border-color: #518755 !important; } 
 #yellow-zone .cell.end-cell.active,
 #yellow-zone--placeholder .cell.end-cell.active { background-color: #cfae4a; border-color: #b8963c; }
 #purple-zone .cell.end-cell.active,
@@ -16925,7 +16925,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		let center = Math.round(minCenter + (isShortViewport ? 0 : 2));
 		center = Math.max(minCenter, Math.min(maxCenter, center));
 
-		zone.style.setProperty('--mobile-zoom-height', `${Math.round(height)}px`);
+		zone.style.setProperty('--mobile-zoom-height', `${Math.round(height + 12)}px`);
 		zone.style.setProperty('--mobile-zoom-center', `${Math.round(center - 12)}px`);
 	}
 
