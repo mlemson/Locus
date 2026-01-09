@@ -11620,7 +11620,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			margin: 0;
 
 			/* Center position matches existing yellow-ish placement; JS clamps to avoid objective/bottom-bar overlap. */
-			top: var(--mobile-zoom-center, calc(25% + 30px));
+			top: var(--mobile-zoom-center);
 			height: var(--mobile-zoom-height, 57svh);
 			transform: translateY(-50%);
 			z-index: var(--z-zoom);
@@ -16926,7 +16926,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		center = Math.max(minCenter, Math.min(maxCenter, center));
 
 		zone.style.setProperty('--mobile-zoom-height', `${Math.round(height)}px`);
-		zone.style.setProperty('--mobile-zoom-center', `${Math.round(center)}px`);
+		zone.style.setProperty('--mobile-zoom-center', `${Math.round(center - 12)}px`);
 	}
 
 	function bindMobileZoomResizeHandler() {
