@@ -17302,8 +17302,21 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			zone.style.visibility = 'visible';
 		}
 		if (zone.id === 'green-zone') {
-			// Zoom: first time anchor to start; subsequent opens restore last zoom position.
-			restoreOrAnchorZoneScroll(zone, (z) => resetGreenZoomScroll(z));
+			// World 1: zoomed green should not scroll.
+			try {
+				const worldInfo = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(currentLevel) : null;
+				if (worldInfo && worldInfo.world === 1) {
+					zone.classList.add('no-scroll');
+					zone.style.overflow = 'hidden';
+					zone.scrollTop = 0;
+					zone.scrollLeft = 0;
+				} else {
+					// Zoom: first time anchor to start; subsequent opens restore last zoom position.
+					restoreOrAnchorZoneScroll(zone, (z) => resetGreenZoomScroll(z));
+				}
+			} catch (_) {
+				restoreOrAnchorZoneScroll(zone, (z) => resetGreenZoomScroll(z));
+			}
 		}
 		if (zone.id === 'blue-zone') {
 			// Zoom: first time anchor to bottom start; subsequent opens restore last zoom position.
@@ -27076,10 +27089,10 @@ function openShopModal(callback) {
 		}
 		// World 2 (mobile): user requested ~+50px extra height.
 		if (isWorld2 && isMobileLike && isCoarse) blueHeight += 50;
-		// On smalle mobile/portrait layouts, don't force an explicit height; clamp to viewport.
+		// On smalle mobile/portrait layouts, don't force an explicit height; clamp to viewport (World 2 only).
 		const safeMargin = 140; // header + spacing buffer so blue doesn't exceed the viewport
 		const viewportH = Number(window.innerHeight) || 0;
-		if (isMobileLike) {
+		if (isWorld2 && isMobileLike) {
 			const maxAllowed = Math.max(200, viewportH - safeMargin);
 			const clamped = Math.max(0, Math.min(blueHeight, maxAllowed));
 			blueZone.style.removeProperty('height');
@@ -27098,6 +27111,10 @@ function openShopModal(callback) {
 		blueGrid.style.transform = '';
 		// World 2: unzoomed blue should start bottom-centered (bold start cells),
 		// and later keep the user's last unzoomed scroll position.
+		if (isWorld2) {
+			const mem = getZoneScrollMemory('blue-zone');
+			if (mem && mem.normal) mem.normal.initialized = false; // force anchor bottom on stage load
+		}
 		restoreOrAnchorZoneScroll(blueZone, (z) => resetBlueZoomScroll(z));
 		enableZoneDragScroll(blueZone, { ignoreSelectors: '#controls,#bottom-bar,#card-choice-zone,.card,.card-option' });
 		console.log(`30a Blue zone: width=${blueTargetWidthPx}px, scroll enabled, maxHeight=${tallZoneMaxVh}`);
