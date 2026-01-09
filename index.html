@@ -6808,8 +6808,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			display: flex;
 			position: fixed;
 			top: calc(env(safe-area-inset-top, 0px) + 0px);
-			left: 10px;
-			right: 10px;
+			left: 8px;
+			right: 8px;
 			z-index: calc(var(--z-blur) + 20);
 			justify-content: center;
 			pointer-events: none;
@@ -6821,8 +6821,10 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 		#mobile-objective-banner #objective-zone {
 			pointer-events: none;
-			width: min(100%, 328px);
-			padding: 10px 12px 8px;
+			width: min(100%, 400px);
+			margin: 0;
+			margin-top: 10px;
+			padding: 10px 8px 8px;
 			gap: 4px;
 			border-radius: 14px;
 			box-shadow: 0 12px 26px rgba(10,18,35,0.28);
@@ -17357,7 +17359,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		// Restore the unzoomed start position (green) / last known normal scroll (blue).
 		try {
 			if (zone.id === 'green-zone') {
-				requestAnimationFrame(() => resetGreenZoomScroll(zone));
+				// Never shift the unzoomed green view on zoom close; restore saved normal scroll if available.
+				requestAnimationFrame(() => restoreOrAnchorZoneScroll(zone, (z) => resetGreenZoomScroll(z)));
 			} else if (zone.id === 'blue-zone') {
 				restoreOrAnchorZoneScroll(zone, (z) => resetBlueZoomScroll(z));
 			}
@@ -27111,9 +27114,15 @@ function openShopModal(callback) {
 		blueGrid.style.transform = '';
 		// World 2: unzoomed blue should start bottom-centered (bold start cells),
 		// and later keep the user's last unzoomed scroll position.
-		if (isWorld2) {
+		if (isWorld2 || isWorld3) {
 			const mem = getZoneScrollMemory('blue-zone');
-			if (mem && mem.normal) mem.normal.initialized = false; // force anchor bottom on stage load
+			if (mem && mem.normal) {
+				// "level" is an internal stamp (not persisted) to detect new boards.
+				if (mem.normal.level !== currentLevel) {
+					mem.normal.initialized = false; // force anchor bottom on first layout of this level
+					mem.normal.level = currentLevel;
+				}
+			}
 		}
 		restoreOrAnchorZoneScroll(blueZone, (z) => resetBlueZoomScroll(z));
 		enableZoneDragScroll(blueZone, { ignoreSelectors: '#controls,#bottom-bar,#card-choice-zone,.card,.card-option' });
@@ -27188,11 +27197,22 @@ function openShopModal(callback) {
 			}
 		} catch (_) {}
 
-		// World 2 unzoomed: ALWAYS center on green start cell (reset scroll memory on layout changes).
-		// User wants start-cell in middle when unzoomed, regardless of previous scroll.
+		// Green (World 2/3): keep the unzoomed view stable.
+		// Anchor to start cell only once per level; after that, restore saved normal scroll.
 		if (greenZone && !document.body.classList.contains('zoomed-in')) {
-			// Force anchor (ignore saved scroll) by calling resetGreenZoomScroll directly
-			resetGreenZoomScroll(greenZone);
+			try {
+				const mem = getZoneScrollMemory('green-zone');
+				if (mem && mem.normal) {
+					// "level" is an internal stamp (not persisted) to detect new boards.
+					if (mem.normal.level !== currentLevel) {
+						mem.normal.initialized = false;
+						mem.normal.level = currentLevel;
+					}
+				}
+				restoreOrAnchorZoneScroll(greenZone, (z) => resetGreenZoomScroll(z));
+			} catch (_) {
+				resetGreenZoomScroll(greenZone);
+			}
 		}
 		
 		// Finally sync zone heights so green/blue match column 1 height
@@ -33003,6 +33023,9 @@ body { background: transparent; }
 	function autoCenterScrollableZones() {
 	  // Only auto-center when the user hasn't scrolled yet (prevents fighting the player).
 	  const greenZone = document.getElementById('green-zone');
+	  const greenMem = (() => {
+		try { return getZoneScrollMemory('green-zone'); } catch (_) { return null; }
+	  })();
 	  // World 1: green zone is intentionally non-scrollable (overflow hidden).
 	  // Avoid programmatically scrolling it, because that looks like a late layout shift.
 	  const greenScrollDisabled = (() => {
@@ -33017,7 +33040,8 @@ body { background: transparent; }
 			return false;
 		}
 	  })();
-	  if (greenZone && !greenScrollDisabled && greenZone.scrollTop <= 2 && greenZone.scrollLeft <= 2) {
+	  const greenShouldAutoCenter = !(greenMem && greenMem.normal && greenMem.normal.initialized);
+	  if (greenZone && !greenScrollDisabled && greenShouldAutoCenter && greenZone.scrollTop <= 2 && greenZone.scrollLeft <= 2) {
 		const greenStart = document.querySelector('#green-grid .cell.root-cell')
 		  || document.querySelector('#green-grid .cell.end-cell')
 		  || document.querySelector('#green-grid .cell.active');
@@ -33025,7 +33049,15 @@ body { background: transparent; }
 	  }
 
 	  const blueZone = document.getElementById('blue-zone');
-	  if (blueZone && blueZone.scrollTop <= 2) {
+	  const blueShouldAutoCenter = (() => {
+		try {
+			const mem = getZoneScrollMemory('blue-zone');
+			return !(mem && mem.normal && mem.normal.initialized);
+		} catch (_) {
+			return true;
+		}
+	  })();
+	  if (blueZone && blueShouldAutoCenter && blueZone.scrollTop <= 2) {
 		const boldCells = Array.from(document.querySelectorAll('#blue-grid .cell.bold-cell'));
 		if (boldCells.length) {
 			const maxY = Math.max(...boldCells.map(cell => Number(cell.dataset.y) || 0));
