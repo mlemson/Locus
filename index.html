@@ -28828,7 +28828,12 @@ function isWorld4CardAllowed(cardData) {
 				}
 				// Re-apply custom title/objective text in UI
 				if (gameState.loadedCustomLevelMeta && typeof setLoadedLevelMeta === 'function') {
-					setLoadedLevelMeta(gameState.loadedCustomLevelMeta.name, gameState.loadedCustomLevelMeta.objective);
+					setLoadedLevelMeta(gameState.loadedCustomLevelMeta.name, gameState.loadedCustomLevelMeta.objective, gameState.loadedCustomLevelMeta.scenarioId);
+					try {
+						// If this save was a scenario (e.g. 4.1/4.2), re-register its subgoals
+						const sid = (gameState.loadedCustomLevelMeta && gameState.loadedCustomLevelMeta.scenarioId) ? gameState.loadedCustomLevelMeta.scenarioId : '';
+						if (sid) registerScenarioSubgoals(sid, gameState.loadedCustomLevelMeta);
+					} catch (e) {}
 				}
 			} catch (e) { console.error('Failed to restore custom board after startLevel', e); }
 		}
@@ -31262,10 +31267,15 @@ function showFloatingPreview(shape, color, options = {}) {
 	}
 
 	// Set the visible level title and objective in the UI when loading a custom board
-	function setLoadedLevelMeta(name, objective) {
+	// Optional: pass `scenarioId` (e.g. '4.1') so scenario subgoals can be rehydrated on load.
+	function setLoadedLevelMeta(name, objective, scenarioId) {
 		try {
 			// Persist loaded custom level metadata and compile objective once
-			window.loadedCustomLevelMeta = { name: name ? String(name) : '', objective: objective == null ? '' : String(objective).trim() };
+			window.loadedCustomLevelMeta = {
+				name: name ? String(name) : '',
+				objective: objective == null ? '' : String(objective).trim(),
+				scenarioId: scenarioId == null ? '' : String(scenarioId).trim()
+			};
 			window.loadedCustomObjectiveCompiled = null;
 			window.loadedCustomLevelMetaCompleted = false;
 			if (window.loadedCustomLevelMeta.objective) {
@@ -31281,6 +31291,30 @@ function showFloatingPreview(shape, color, options = {}) {
 			if (currentEl) currentEl.innerHTML = `<strong>Doel:</strong> ${obj}`;
 		} catch (e) { /* ignore */ }
 	}
+
+// Scenario subgoals registration (used by World 4 prototype scenarios 4.1/4.2)
+function registerScenarioSubgoals(scenarioId, meta) {
+	try {
+		const sid = String(scenarioId || (meta && meta.scenarioId) || '').trim();
+		if (!sid) return;
+		if (sid === '4.1') {
+			const subgoals = [
+				{ title: 'Groen 5×5', text: 'Maak een 5×5 volledig actief blok in groen.', check: () => checkGridHasFilledSquare('green-grid', 5) },
+				{ title: 'Blauw kolom', text: 'Activeer een volledige kolom van 8 cellen in blauw.', check: () => checkGridHasFullColumn('blue-grid', 8) }
+			];
+			setScenarioSubgoals(subgoals);
+			return;
+		}
+		if (sid === '4.2') {
+			const subgoals = [
+				{ title: '4×4 Vorm', text: 'Maak een 4×4 volledig actief blok in groen.', check: () => checkGridHasFilledSquare('green-grid', 4) },
+				{ title: 'Sleutel activeren', text: 'Activeer de portal/sleutel in blauw.', check: () => checkBluePortalActive() }
+			];
+			setScenarioSubgoals(subgoals);
+			return;
+		}
+	} catch (e) { console.error(e); }
+}
 
 // --- Scenario helpers for World 4 prototypes (4.1, 4.2) ---
 function buildScenarioBoardHtml(scenarioId) {
@@ -31388,7 +31422,13 @@ function showPreLevelChoice(onPick) {
 function loadScenario(id, meta) {
 	const boardHtml = buildScenarioBoardHtml(id);
 	applyBoardHtmlToGame(boardHtml);
-	setLoadedLevelMeta(meta.name, meta.desc || '');
+	const scenarioId = (meta && meta.scenarioId) ? meta.scenarioId : id;
+	const objectiveText = (meta && meta.objective != null)
+		? meta.objective
+		: (String(scenarioId || '').trim().startsWith('4.') ? 'Voltooi alle subdoelen.' : (meta && meta.desc) ? meta.desc : '');
+	setLoadedLevelMeta(meta.name, objectiveText, scenarioId);
+	// Ensure subgoals are registered immediately (important for restore flows where wrappers may attach later)
+	try { registerScenarioSubgoals(scenarioId, meta); } catch (e) {}
 	// Restrict visible cards to the scenario colors (Dutch names)
 	window.scenarioAllowedColors = meta.allowedColors || null;
 	// Reset relevant game state so the scenario always starts with the scenario's
@@ -31513,21 +31553,8 @@ function checkBluePortalActive() {
 	window.loadScenario = function(id, meta) {
 		if (typeof origLoad === 'function') origLoad(id, meta);
 		try {
-			// Register subgoals per scenario. Provide robust checks.
-			if (id === '4.1' || (meta && meta.scenarioId === '4.1')) {
-				const subgoals = [
-					{ title: 'Groen 5×5', text: 'Maak een 5×5 volledig actief blok in groen.', check: () => checkGridHasFilledSquare('green-grid', 5) },
-					{ title: 'Blauw kolom', text: 'Activeer een volledige kolom van 8 cellen in blauw.', check: () => checkGridHasFullColumn('blue-grid', 8) }
-				];
-				setScenarioSubgoals(subgoals);
-			}
-			if (id === '4.2' || (meta && meta.scenarioId === '4.2')) {
-				const subgoals = [
-					{ title: '4×4 Vorm', text: 'Maak een 4×4 volledig actief blok in groen.', check: () => checkGridHasFilledSquare('green-grid', 4) },
-					{ title: 'Sleutel activeren', text: 'Activeer de portal/sleutel in blauw.', check: () => checkBluePortalActive() }
-				];
-				setScenarioSubgoals(subgoals);
-			}
+			// Back-compat: ensure scenario subgoals always register
+			registerScenarioSubgoals(id, meta);
 		} catch (e) { console.error(e); }
 	};
 })();
@@ -34088,15 +34115,15 @@ body { background: transparent; }
 		list.appendChild(examplesHeader);
 
 		const examples = [
-		  { id: 'world4-4.1', name: 'Wereld 4.1 - Groen + Blauw', desc: 'Rechthoekige groen + brede blauwe zone. Special: sleutel/portal + subdoelen.', allowedColors: ['groen','blauw'], scenarioId: '4.1' },
-		  { id: 'world4-4.2', name: 'Wereld 4.2 - Vormen & Shop', desc: 'Creatieve vormen in groen, lange blauwe strip met portal/key; 4x4 subdoelen en shop-stub.', allowedColors: ['groen','blauw'], scenarioId: '4.2' }
+		  { id: 'world4-4.1', name: 'Wereld 4.1 - Groen + Blauw', desc: 'Rechthoekige groen + brede blauwe zone. Special: sleutel/portal + subdoelen.', objective: 'Voltooi beide subdoelen: Groen 5×5 en Blauw kolom.', allowedColors: ['groen','blauw'], scenarioId: '4.1' },
+		  { id: 'world4-4.2', name: 'Wereld 4.2 - Vormen & Shop', desc: 'Creatieve vormen in groen, lange blauwe strip met portal/key; 4×4 subdoelen en shop-stub.', objective: 'Voltooi beide subdoelen: Groen 4×4 en Activeer de sleutel.', allowedColors: ['groen','blauw'], scenarioId: '4.2' }
 		];
 		examples.forEach(ex => {
 		  const item = document.createElement('div');
 		  item.style.display = 'flex'; item.style.gap = '8px'; item.style.alignItems = 'center'; item.style.marginBottom = '8px';
 		  const label = document.createElement('div'); label.style.flex = '1';
 		  const titleText = document.createElement('div'); titleText.textContent = ex.name; titleText.style.fontWeight = '600'; titleText.className = 'saved-title';
-		  const objText = document.createElement('div'); objText.className = 'saved-obj-text'; objText.textContent = ex.desc;
+		  const objText = document.createElement('div'); objText.className = 'saved-obj-text'; objText.textContent = ex.objective || ex.desc;
 		  label.appendChild(titleText); label.appendChild(objText);
 		  const loadBtn = document.createElement('button'); loadBtn.textContent = 'Laad in spel'; loadBtn.className = 'modal-btn primary';
 		  loadBtn.addEventListener('click', ()=>{ loadScenario(ex.scenarioId, ex); closeSavedLevelsModal(); });
