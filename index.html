@@ -19378,6 +19378,7 @@ let shopLevel2Used = false;
 	const worldInfo = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(safeLevel) : { world: 1 };
 	const isWorld2 = Number(worldInfo?.world || 1) === 2;
 	const isWorld3 = Number(worldInfo?.world || 1) === 3;
+	const isWorld4 = Number(worldInfo?.world || 1) === 4;
 	const greenGrid = document.getElementById('green-grid');
 
 		try { console.debug('updateScore:called', { cellId: cell ? (cell.id || null) : null, time: Date.now() }); } catch(e) {}
@@ -19389,7 +19390,7 @@ let shopLevel2Used = false;
 		Elk volledig gevuld subgrid geeft vaste punten (per subgrid).
 		Score verdwijnt als grid weer onvolledig gemaakt wordt. */
 		const activeEndCells = Array.from(document.querySelectorAll('#green-grid .cell.end-cell.active'));
-		if (!(isWorld2 || isWorld3) || !greenGrid) {
+		if (!(isWorld2 || isWorld3 || isWorld4) || !greenGrid) {
 			green = activeEndCells.length * 8;
 			if (cell != null && cell.classList.contains('end-cell') && cell.classList.contains('active')) {
 				const rect = cell.getBoundingClientRect();
