@@ -26772,6 +26772,14 @@ function openShopModal(callback) {
 		function placeDoor(zone, x, y, colorKey) {
 			const cell = getCell(zone, x, y);
 			if (!cell || cell.classList.contains('void-cell')) return null;
+			// Ensure door cells don't also act as bonus/coin/trap cells
+			try {
+				cell.classList.remove('gold-cell', 'trap-cell');
+				delete cell.dataset.trap;
+				delete cell.dataset.trapType;
+				delete cell.dataset.trapTriggered;
+				cell.querySelectorAll('.symbol,.trap-symbol').forEach(s => s.remove());
+			} catch (e) {}
 			cell.classList.add('door-cell');
 			cell.dataset.doorColor = String(colorKey);
 			ensureCellSymbol(cell, 'door-symbol', '🔒');
@@ -26781,6 +26789,14 @@ function openShopModal(callback) {
 		function placeKey(zone, x, y, colorKey) {
 			const cell = getCell(zone, x, y);
 			if (!cell || cell.classList.contains('void-cell')) return null;
+			// Ensure key cells don't also grant coins/bonuses/traps
+			try {
+				cell.classList.remove('gold-cell', 'trap-cell');
+				delete cell.dataset.trap;
+				delete cell.dataset.trapType;
+				delete cell.dataset.trapTriggered;
+				cell.querySelectorAll('.symbol,.trap-symbol').forEach(s => s.remove());
+			} catch (e) {}
 			cell.classList.add('key-cell');
 			cell.dataset.keyColor = String(colorKey);
 			cell.dataset.keyConsumed = 'false';
