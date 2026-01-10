@@ -14292,11 +14292,163 @@ let shopLevel2Used = false;
 				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 750
 			}
 		]
+		,
+		// WORLD 4 OBJECTIVES (Levels 31-40) - Deuren & sleutels + hogere targets
+		31: [
+			{
+				id: 'level-31-first-key',
+				description: 'Level 31: Ontgrendel 1 kleur (gebruik een sleutel).',
+				short: 'Level 31 - Eerste sleutel',
+				check: () => {
+					try { return (window.world4UnlockedColors instanceof Set) && window.world4UnlockedColors.size >= 1; } catch (e) { return false; }
+				}
+			},
+			{
+				id: 'level-31-score-total',
+				description: 'Level 31: Scoor 650 punten totaal.',
+				short: 'Level 31 - Totale score',
+				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 650
+			}
+		],
+		32: [
+			{
+				id: 'level-32-two-keys',
+				description: 'Level 32: Ontgrendel 2 kleuren (2 sleutels).',
+				short: 'Level 32 - Dubbele sleutel',
+				check: () => {
+					try { return (window.world4UnlockedColors instanceof Set) && window.world4UnlockedColors.size >= 2; } catch (e) { return false; }
+				}
+			},
+			{
+				id: 'level-32-green-master',
+				description: 'Level 32: Scoor 260 punten in groen.',
+				short: 'Level 32 - Groene meester',
+				check: scores => (scores.green || 0) >= 260
+			}
+		],
+		33: [
+			{
+				id: 'level-33-open-doors',
+				description: 'Level 33: Open 2 deuren (deur-cellen met groene rand).',
+				short: 'Level 33 - Deuren open',
+				check: () => {
+					try {
+						const open = document.querySelectorAll('.cell.door-cell.door-open');
+						return (open && open.length >= 2);
+					} catch (e) { return false; }
+				}
+			},
+			{
+				id: 'level-33-blue-score',
+				description: 'Level 33: Scoor 300 punten in blauw.',
+				short: 'Level 33 - Blauwe kracht',
+				check: scores => (scores.blue || 0) >= 300
+			}
+		],
+		34: [
+			{
+				id: 'level-34-total',
+				description: 'Level 34: Scoor 700 punten totaal.',
+				short: 'Level 34 - Hoog totaal',
+				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 700
+			},
+			{
+				id: 'level-34-coins',
+				description: 'Level 34: Verzamel 30+ munten.',
+				short: 'Level 34 - Muntjager',
+				check: scores => getCollectedCoinCount(scores) >= 30,
+				progress: scores => {
+					const collected = Math.max(0, Math.min(30, getCollectedCoinCount(scores)));
+					return `${collected}/30`;
+				}
+			}
+		],
+		35: [
+			{
+				id: 'level-35-three-keys',
+				description: 'Level 35: Ontgrendel 3 kleuren (alle sleutels).',
+				short: 'Level 35 - Sleutelmeester',
+				check: () => {
+					try { return (window.world4UnlockedColors instanceof Set) && window.world4UnlockedColors.size >= 3; } catch (e) { return false; }
+				}
+			},
+			{
+				id: 'level-35-yellow-score',
+				description: 'Level 35: Scoor 260 punten in geel.',
+				short: 'Level 35 - Gele meester',
+				check: scores => (scores.yellow || 0) >= 260
+			}
+		],
+		36: [
+			{
+				id: 'level-36-total',
+				description: 'Level 36: Scoor 750 punten totaal.',
+				short: 'Level 36 - Totale druk',
+				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 750
+			}
+		],
+		37: [
+			{
+				id: 'level-37-open-all-doors',
+				description: 'Level 37: Open 3 deuren.',
+				short: 'Level 37 - Alles open',
+				check: () => {
+					try {
+						const open = document.querySelectorAll('.cell.door-cell.door-open');
+						return (open && open.length >= 3);
+					} catch (e) { return false; }
+				}
+			},
+			{
+				id: 'level-37-purple-score',
+				description: 'Level 37: Scoor 320 punten in paars.',
+				short: 'Level 37 - Paarse power',
+				check: scores => (scores.purple || 0) >= 320
+			}
+		],
+		38: [
+			{
+				id: 'level-38-total',
+				description: 'Level 38: Scoor 800 punten totaal.',
+				short: 'Level 38 - 800 totaal',
+				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 800
+			}
+		],
+		39: [
+			{
+				id: 'level-39-activation',
+				description: 'Level 39: Activeer minstens 80% van alle zones.',
+				short: 'Level 39 - Activatie expert',
+				check: () => {
+					const zones = ['yellow-zone', 'purple-zone', 'blue-zone', 'green-zone',
+									   'red-grid1-zone', 'red-grid2-zone', 'red-grid3-zone', 'red-grid4-zone', 'red-grid5-zone', 'red-grid6-zone'];
+					let totalCells = 0;
+					let activeCells = 0;
+					zones.forEach(id => {
+						const zone = document.getElementById(id);
+						if (!zone || zone.style.display === 'none') return;
+						const cells = zone.querySelectorAll('.cell:not(.void-cell)');
+						const active = zone.querySelectorAll('.cell.active:not(.void-cell)');
+						totalCells += cells.length;
+						activeCells += active.length;
+					});
+					return totalCells > 0 && (activeCells / totalCells) >= 0.80;
+				}
+			}
+		],
+		40: [
+			{
+				id: 'level-40-world4-finale',
+				description: 'Level 40: Wereld 4 finale! Scoor 900 punten totaal.',
+				short: 'Level 40 - World 4 finale',
+				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 900
+			}
+		]
 	};
 
 	// Generate objectives array with random selection per level
 	const OBJECTIVES = [];
-	for (let level = 0; level <= 30; level++) { // Uitgebreid naar level 30 voor World 3
+	for (let level = 0; level <= 40; level++) { // Uitgebreid naar level 40 voor World 4
 		const templates = OBJECTIVE_TEMPLATES[level] || [];
 		if (templates.length > 0) {
 			// Pick a random objective from the 5 available for this level
