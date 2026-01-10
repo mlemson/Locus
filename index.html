@@ -4198,6 +4198,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		color: rgba(20,24,36,0.55);
 	}
 
+	.card-meta.card-meta--level2 {
+		font-weight: 800;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: #0f243a;
+	}
+
 	.card-effect {
 		margin-top: 6px;
 		font-size: 0.68rem;
@@ -4263,8 +4270,9 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		right: 6px;
 		width: 30px;
 		height: 30px;
-		display: grid;
-		place-items: center;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 		border-radius: 10px;
 		font-size: 0.68rem;
 		font-weight: 800;
@@ -4273,7 +4281,9 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		box-shadow: 0 8px 16px rgba(0,0,0,0.2);
 		pointer-events: none;
 		border: 1px solid rgba(12,22,36,0.12);
-		letter-spacing: 0.04em;
+		letter-spacing: 0;
+		text-align: center;
+		line-height: 1;
 	}
 
 	.card-echo-badge[data-variant="points"] {
@@ -12327,6 +12337,10 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  stake: 0,
 	  feedbackTimeout: null
 	};
+	let lastBlackHoleAutosave = 0;
+// Shop-sessie state voor Level 2 upgrades (Bonus Echo)
+let shopLevel2Variant = null;
+let shopLevel2Used = false;
 
 	const GOLDEN_COLOR = { name: 'gouden', code: '#f5d76e', isGolden: true };
 	const GOLDEN_FILL = 'linear-gradient(135deg, #fff4bf, #f5d76e, #d49f32)';
@@ -12429,7 +12443,11 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 				try {
 					UPGRADES.bonusEcho.purchased = true;
 					updateShopUpgradeUI();
-					showObjectiveToast('🔁 Level 2 upgrades ontgrendeld! Upgrade je kaarten voor 5 munten.');
+					// Direct één gratis Level 2 upgrade aanbieden bij ontgrendelen.
+					if (!shopLevel2Variant) shopLevel2Variant = pickBonusEchoVariant();
+					shopLevel2Used = false;
+					showObjectiveToast('🔁 Level 2 upgrades ontgrendeld! Kies meteen een kaart voor je eerste upgrade.');
+					startBonusEchoUpgradeFlow({ free: true, forcedVariant: shopLevel2Variant, markUsed: true });
 				} catch (e) { console.error('Failed to unlock Level 2 upgrade flow', e); }
 			}
 		},
@@ -17625,12 +17643,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  const baseRedPointRatio = (resolvedRedTargetCells > 0 && resolvedRedTargetPoints > 0)
 		? (resolvedRedTargetPoints / resolvedRedTargetCells)
 		: 2;
-	  const redDensityBoost = isRed && worldNum <= 2;
+	const redDensityBoost = isRed && (worldNum <= 2 || worldNum === 3);
 	  let redTargetActiveCells = (isRed && resolvedRedTargetCells > 0)
 		? Math.max(1, Math.floor(resolvedRedTargetCells))
 		: 0;
-	  if (redDensityBoost && redTargetActiveCells > 0) {
-		const extra = Math.max(2, Math.round(redTargetActiveCells * 0.15));
+	if (redDensityBoost && redTargetActiveCells > 0) {
+		const densityFactor = worldNum <= 2 ? 0.15 : 0.08;
+		const extra = Math.max(2, Math.round(redTargetActiveCells * densityFactor));
 		redTargetActiveCells += extra;
 		if (baseRedPointRatio > 0) {
 		  resolvedRedTargetPoints = Math.max(resolvedRedTargetPoints, Math.round(redTargetActiveCells * baseRedPointRatio));
@@ -17835,9 +17854,10 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		  let r = start.r, c = start.c;
 		  const dir = dirs[Math.floor(Math.random()*dirs.length)];
 		  
-		const redWideBias = isRed && worldNum <= 2;
-		// 25% kans op breedte voor niet-rood; voor wereld 1/2 rood ook bredere takken
-		const makeWide = (!isRed && Math.random() < 0.25) || (redWideBias && Math.random() < 0.55);
+		const redWideBias = isRed && (worldNum <= 2 || worldNum === 3);
+		const redWideChance = isRed ? (worldNum === 3 ? 0.35 : 0.55) : 0.25;
+		// 25% kans op breedte voor niet-rood; voor wereld 1/2 (en milder bij 3) rood ook bredere takken
+		const makeWide = (!isRed && Math.random() < 0.25) || (redWideBias && Math.random() < redWideChance);
 
 		  for(let i=0;i<len;i++){
 			if (isTallGreen && growthBudget <= 0) break;
@@ -18562,6 +18582,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  blackHoleState.coins = 0;
 	  blackHoleState.stake = 0;
 	  blackHoleState.gameOver = false;
+	  lastBlackHoleAutosave = 0;
 	  if (blackHoleState.feedbackTimeout) {
 		clearTimeout(blackHoleState.feedbackTimeout);
 		blackHoleState.feedbackTimeout = null;
@@ -21207,8 +21228,10 @@ document.addEventListener('pointermove', ev => {
 		  });
 		});
 	  }
-	  const meta = card.querySelector('.card-meta');
-	  if (meta) meta.textContent = `${rows}×${cols}`;
+	const meta = card.querySelector('.card-meta');
+	if (meta && !meta.classList.contains('card-meta--level2')) {
+		meta.textContent = `${rows}×${cols}`;
+	}
 	  card.cardShape = paddedShape;
 	}
 
@@ -22582,6 +22605,13 @@ function optionalCellsTouchActive(zone, pendingCells) {
 			});
 			if (lockEl) lockEl.style.display = 'none';
 		}
+		// Recenter green after stage flips to prevent layout drift on World 3.
+		setTimeout(() => {
+			try {
+				const greenZone = document.getElementById('green-zone');
+				if (greenZone) resetGreenZoomScroll(greenZone);
+			} catch (_) {}
+		}, 40);
 		// NOTE: Do NOT set position here - zoom mode needs position:fixed to work.
 		// The lock overlay uses position:absolute which works fine with the parent's natural position.
 	}
@@ -23131,7 +23161,13 @@ function getCollectedCoinCount(scores) {
 	  label.append(swatch, labelText);
 	const meta = document.createElement('div');
 	meta.classList.add('card-meta');
-	meta.textContent = rows && cols ? `${rows}×${cols}` : '';
+	if (isBonusEcho) {
+		meta.classList.add('card-meta--level2');
+		meta.textContent = 'LVL 2';
+		if (colorObj && colorObj.code) meta.style.color = colorObj.code;
+	} else {
+		meta.textContent = rows && cols ? `${rows}×${cols}` : '';
+	}
 	card.append(label, meta);
 
 	if (isBonusEcho) {
@@ -23834,6 +23870,16 @@ function getCollectedCoinCount(scores) {
 	  }
 	}
 
+	function ensureBoardVisibleAfterBlackHole() {
+		try {
+			document.body.classList.remove('blackhole-open');
+			const board = document.getElementById('board');
+			if (board && board.style.display === 'none') {
+				board.style.display = '';
+			}
+		} catch (_) {}
+	}
+
 	function handleBlackHoleCardClick(index) {
 	  if (blackHoleState.gameOver) return;
 	  if (typeof index !== 'number' || !blackHoleState.cards[index]) return;
@@ -23880,6 +23926,7 @@ function getCollectedCoinCount(scores) {
 
 	function openBlackHoleChallenge(trapRecord) {
 	  if (!blackHoleModalLayer || !blackHoleModal) return;
+	  try { saveGameState(); lastBlackHoleAutosave = Date.now(); } catch (_) {}
 	  resetBlackHoleState();
 	  blackHoleState.trap = trapRecord;
 	  blackHoleState.cards = generateBlackHoleCards();
@@ -23907,6 +23954,7 @@ function getCollectedCoinCount(scores) {
 	  showBlackHoleFeedback('🌀 Tijd voor bonuspunten!');
 	  blackHoleModalLayer.classList.add('show');
 	  blackHoleModalLayer.setAttribute('aria-hidden', 'false');
+	  document.body.classList.add('blackhole-open');
 	  if (blackHoleModal.focus) {
 		setTimeout(() => blackHoleModal.focus(), 80);
 	  }
@@ -23916,6 +23964,7 @@ function getCollectedCoinCount(scores) {
 	  if (!blackHoleModalLayer) return;
 	  blackHoleModalLayer.classList.remove('show');
 	  blackHoleModalLayer.setAttribute('aria-hidden', 'true');
+	  ensureBoardVisibleAfterBlackHole();
 	  showBlackHoleFeedback('');
 	  resetBlackHoleState();
 	}
@@ -23951,6 +24000,7 @@ function getCollectedCoinCount(scores) {
 	  resolveTrapById(trapRecord.id);
 	  closeBlackHoleModal();
 	  updateScore();
+	  try { if (lastBlackHoleAutosave) saveGameState(); } catch (_) {}
 	}
 
 	function forfeitBlackHoleChallenge() {
@@ -23968,6 +24018,7 @@ function getCollectedCoinCount(scores) {
 	  }
 	  closeBlackHoleModal();
 	  updateScore();
+	  try { if (lastBlackHoleAutosave) saveGameState(); } catch (_) {}
 	}
 
 	function updateDeckPreview() {
@@ -24412,7 +24463,13 @@ function getCollectedCoinCount(scores) {
 
 	const meta = document.createElement('div');
 	meta.classList.add('card-meta');
-	meta.textContent = `${cardData.matrix.length}×${cardData.matrix[0].length}`;
+	if (isBonusEchoCard) {
+		meta.classList.add('card-meta--level2');
+		meta.textContent = 'LVL 2';
+		if (cardData?.color?.code) meta.style.color = cardData.color.code;
+	} else {
+		meta.textContent = `${cardData.matrix.length}×${cardData.matrix[0].length}`;
+	}
 
 	if (inlineLabel) {
 		card.append(label, meta);
@@ -25559,8 +25616,11 @@ function getCollectedCoinCount(scores) {
 			const upgradeDesc = document.createElement('p');
 			upgradeDesc.classList.add('shop-upgrade-desc');
 			const upgradableCount = ownedDeckBlueprints.filter(bp => bp && !bp.isBonusEchoUpgrade).length;
+			const level2VariantKey = shopLevel2Variant || pickBonusEchoVariant();
+			const level2Meta = getBonusEchoUiCopy(level2VariantKey);
+			const level2Label = level2Meta?.sub ? level2Meta.sub.toUpperCase() : level2VariantKey.toUpperCase();
 			upgradeDesc.textContent = upgradableCount > 0
-				? 'Kies een kaart uit je deck en geef hem een willekeurige Level 2 variant (Points / Bonus / Replay).'
+				? `Deze shop: variant ${level2Label}. Je kunt één kaart upgraden.`
 				: 'Alle kaarten hebben al een Level 2 upgrade.';
 			const upgradeActions = document.createElement('div');
 			upgradeActions.classList.add('shop-upgrade-actions');
@@ -25568,14 +25628,20 @@ function getCollectedCoinCount(scores) {
 			const effectiveCost = debugMode ? 0 : BONUS_ECHO_UPGRADE_COST;
 			if (debugMode) {
 				buyBtn.textContent = 'Upgrade (gratis)';
-				buyBtn.disabled = upgradableCount === 0;
-				buyBtn.title = upgradableCount === 0 ? 'Geen kaarten om te upgraden' : 'Geef een kaart Level 2 (debug)';
+				buyBtn.disabled = upgradableCount === 0 || shopLevel2Used;
+				buyBtn.title = upgradableCount === 0
+					? 'Geen kaarten om te upgraden'
+					: (shopLevel2Used ? 'Je hebt al een Level 2 upgrade gedaan in deze shop' : 'Geef een kaart Level 2 (debug)');
 			} else {
-				buyBtn.innerHTML = `Upgrade (${BONUS_ECHO_UPGRADE_COST} ${coinIcon()})`;
-				buyBtn.disabled = coins < BONUS_ECHO_UPGRADE_COST || upgradableCount === 0;
-				buyBtn.title = upgradableCount === 0 ? 'Geen kaarten om te upgraden' : (coins < BONUS_ECHO_UPGRADE_COST ? 'Onvoldoende munten' : 'Geef een kaart Level 2');
+				buyBtn.innerHTML = shopLevel2Used
+					? 'Upgrade (reeds gebruikt)'
+					: `Upgrade (${BONUS_ECHO_UPGRADE_COST} ${coinIcon()})`;
+				buyBtn.disabled = shopLevel2Used || coins < BONUS_ECHO_UPGRADE_COST || upgradableCount === 0;
+				buyBtn.title = shopLevel2Used
+					? 'Je hebt deze shop al één Level 2 upgrade gedaan'
+					: (upgradableCount === 0 ? 'Geen kaarten om te upgraden' : (coins < BONUS_ECHO_UPGRADE_COST ? 'Onvoldoende munten' : 'Geef een kaart Level 2'));
 			}
-			buyBtn.addEventListener('click', () => startBonusEchoUpgradeFlow());
+			buyBtn.addEventListener('click', () => startBonusEchoUpgradeFlow({ forcedVariant: level2VariantKey }));
 			upgradeActions.appendChild(buyBtn);
 			upgradeCard.append(upgradeHeader, upgradeDesc, upgradeActions);
 			shopUpgradeContainer.appendChild(upgradeCard);
@@ -25608,27 +25674,33 @@ function getCollectedCoinCount(scores) {
 			return true;
 		}
 
-		function startBonusEchoUpgradeFlow() {
+		function startBonusEchoUpgradeFlow(options = {}) {
+			const { free = false, forcedVariant = null, markUsed = true } = options;
 			const candidates = getLevel2UpgradeCandidates();
 			if (!candidates.length) {
 				if (shopModalMessage) shopModalMessage.textContent = 'Geen kaarten om te upgraden.';
 				return;
 			}
+			if (shopLevel2Used) {
+				if (shopModalMessage) shopModalMessage.textContent = 'Je hebt deze shop al een Level 2 upgrade gedaan.';
+				return;
+			}
 			const coinsAvailable = getSpendableCoinCount();
-			if (!debugMode && coinsAvailable < BONUS_ECHO_UPGRADE_COST) {
+			if (!debugMode && !free && coinsAvailable < BONUS_ECHO_UPGRADE_COST) {
 				if (shopModalMessage) shopModalMessage.textContent = 'Onvoldoende munten voor Level 2.';
 				return;
 			}
 			if (shopModalMessage) shopModalMessage.textContent = 'Kies een kaart om te upgraden.';
 			openLevel2UpgradeModal(candidates, (pickedBlueprint) => {
 				if (!pickedBlueprint) return;
-				if (!debugMode && !spendCoins(BONUS_ECHO_UPGRADE_COST)) {
+				if (!debugMode && !free && !spendCoins(BONUS_ECHO_UPGRADE_COST)) {
 					if (shopModalMessage) shopModalMessage.textContent = 'Munten konden niet worden afgeschreven.';
 					return;
 				}
-				const variant = pickBonusEchoVariant();
+				const variant = forcedVariant || shopLevel2Variant || pickBonusEchoVariant();
 				if (!applyBonusEchoUpgradeToBlueprint(pickedBlueprint, variant)) return;
 				if (UPGRADES.bonusEcho) UPGRADES.bonusEcho.purchased = true;
+				if (markUsed) shopLevel2Used = true;
 				const variantLabel = (getBonusEchoUiCopy(variant).sub || variant).toUpperCase();
 				showObjectiveToast(`🔁 Level 2 (${variantLabel}) toegevoegd aan je kaart!`);
 				updateDeckPreview();
@@ -26126,6 +26198,9 @@ function openShopModal(callback) {
 	  }
 	  
 	  if (showUpgrades) {
+		// Kies één Level 2 variant voor deze shop-ronde en reset gebruiksvlag.
+		shopLevel2Variant = pickBonusEchoVariant();
+		shopLevel2Used = false;
 		if (upgradesSection) upgradesSection.style.display = '';
 		if (lowerGrid) lowerGrid.style.display = '';
 		updateShopUpgradeUI();
@@ -27149,6 +27224,14 @@ function openShopModal(callback) {
 	  
 	  // Gebruik World 2 zone sizing (werkt ook voor World 3)
 	  adjustZoneSizesForWorld2();
+	  // Extra safeguard: recentre green after sizing settles so it does not jump left on World 3.
+	  try {
+		const greenZone = document.getElementById('green-zone');
+		if (greenZone) {
+			requestAnimationFrame(() => resetGreenZoomScroll(greenZone));
+			setTimeout(() => resetGreenZoomScroll(greenZone), 120);
+		}
+	  } catch (_) {}
 	  
 	  console.log('🔥 World 3 grids generated for level', currentLevel, 'sublevel', subLevel);
 	}
