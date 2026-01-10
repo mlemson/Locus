@@ -17249,12 +17249,43 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			if (Math.min(w, h) >= 700) return;
 		}
 		if (activeZoomZone === zone) return;
+		
+		// IMPORTANT: Preserve green zone scroll position when opening OTHER zones
+		// This prevents the green zone from jumping when you zoom into yellow/purple/blue/red on mobile
+		const greenZone = document.getElementById('green-zone');
+		if (greenZone && zone.id !== 'green-zone') {
+			// Save the current green zone scroll before any DOM changes
+			// Store in both local variable AND global memory for persistence
+			const mem = getZoneScrollMemory('green-zone');
+			mem.normal.left = greenZone.scrollLeft;
+			mem.normal.top = greenZone.scrollTop;
+			mem.normal.initialized = true;
+			// Also store in a backup location for extra safety
+			greenZone._savedScrollBeforeOtherZoom = {
+				left: greenZone.scrollLeft,
+				top: greenZone.scrollTop
+			};
+		}
+		
 		closeZoom();
 		liftToBody(zone);
 		document.body.classList.add('zoomed-in');
 		zone.classList.add('zoom-focus');
 		zone.setAttribute('data-zoom-active', 'true');
 		activeZoomZone = zone;
+		
+		// Restore green zone scroll IMMEDIATELY after DOM changes (when opening a different zone)
+		if (greenZone && zone.id !== 'green-zone' && greenZone._savedScrollBeforeOtherZoom) {
+			const saved = greenZone._savedScrollBeforeOtherZoom;
+			greenZone.scrollLeft = saved.left;
+			greenZone.scrollTop = saved.top;
+			// Also restore after a frame to handle any CSS layout shifts
+			requestAnimationFrame(() => {
+				greenZone.scrollLeft = saved.left;
+				greenZone.scrollTop = saved.top;
+			});
+		}
+		
 		// Mobile/touch zoom: clear any world-specific inline sizing.
 		// World 2/3 sizing code sets pixel widths/heights inline; those override the uniform mobile zoom CSS.
 		try {
@@ -17329,6 +17360,22 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	function closeZoom() {
 		if (!activeZoomZone) return;
 		const zone = activeZoomZone;
+		
+		// IMPORTANT: Preserve green zone scroll when closing OTHER zones
+		const greenZone = document.getElementById('green-zone');
+		let savedGreenScroll = null;
+		if (greenZone && zone.id !== 'green-zone') {
+			// Use saved backup if available, otherwise current scroll
+			if (greenZone._savedScrollBeforeOtherZoom) {
+				savedGreenScroll = greenZone._savedScrollBeforeOtherZoom;
+			} else {
+				savedGreenScroll = {
+					left: greenZone.scrollLeft,
+					top: greenZone.scrollTop
+				};
+			}
+		}
+		
 		// Prevent zoom scroll values from being stored into the normal-mode memory during teardown.
 		try { zone.dataset.suppressScrollSave = 'true'; } catch (_) {}
 		// Scroll memory is handled via scroll listeners; no dataset storage.
@@ -17356,11 +17403,37 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		activeZoomZone = null;
 		document.body.classList.remove('zoomed-in');
 		removeZoneNavArrows();
+		
+		// Restore green zone scroll if we saved it (when closing a different zone)
+		if (savedGreenScroll && greenZone && zone.id !== 'green-zone') {
+			// Restore immediately
+			greenZone.scrollLeft = savedGreenScroll.left;
+			greenZone.scrollTop = savedGreenScroll.top;
+			// And after a frame to handle CSS layout shifts
+			requestAnimationFrame(() => {
+				greenZone.scrollLeft = savedGreenScroll.left;
+				greenZone.scrollTop = savedGreenScroll.top;
+			});
+			// And after a short delay for any final layout adjustments
+			setTimeout(() => {
+				greenZone.scrollLeft = savedGreenScroll.left;
+				greenZone.scrollTop = savedGreenScroll.top;
+				// Clean up the backup
+				delete greenZone._savedScrollBeforeOtherZoom;
+			}, 50);
+		}
+		
 		// Restore the unzoomed start position (green) / last known normal scroll (blue).
 		try {
 			if (zone.id === 'green-zone') {
-				// Never shift the unzoomed green view on zoom close; restore saved normal scroll if available.
-				requestAnimationFrame(() => restoreOrAnchorZoneScroll(zone, (z) => resetGreenZoomScroll(z)));
+				// When closing green zone itself, restore to normal scroll memory
+				const mem = getZoneScrollMemory('green-zone');
+				if (mem.normal.initialized) {
+					requestAnimationFrame(() => {
+						zone.scrollLeft = mem.normal.left || 0;
+						zone.scrollTop = mem.normal.top || 0;
+					});
+				}
 			} else if (zone.id === 'blue-zone') {
 				restoreOrAnchorZoneScroll(zone, (z) => resetBlueZoomScroll(z));
 			}
@@ -21825,13 +21898,15 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	  const floorY = Number.isFinite(metrics.maxY) ? metrics.maxY : null;
 	  const touchesFloor = floorY !== null && pendingCells.some(cell => Number(cell.dataset.y) === floorY);
 	  
-	  // Blue: allow starting from ANY bold-cell (including portals)
-	  // Check both if the cell itself is bold, OR if any adjacent cell is bold
-	  const touchesBold = pendingCells.some(cell => {
+	  // Blue: portals (bold-cells) zijn ALTIJD geldig als startpunt (direct erop plaatsen)
+	  const touchesPortal = pendingCells.some(cell => {
 		if (!cell || !cell.classList) return false;
-		// Direct hit on bold cell
-		if (cell.classList.contains('bold-cell')) return true;
-		// Check if this cell is adjacent to a bold cell (allows shapes that touch but don't overlap the portal)
+		return cell.classList.contains('bold-cell');
+	  });
+	  
+	  // Check if adjacent to any bold cell (allows shapes that touch but don't overlap the portal)
+	  const adjacentToBold = pendingCells.some(cell => {
+		if (!cell || !cell.classList) return false;
 		const x = Number(cell.dataset.x);
 		const y = Number(cell.dataset.y);
 		if (!Number.isFinite(x) || !Number.isFinite(y)) return false;
@@ -21845,10 +21920,14 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	  });
 	  
 	  const hasActive = zoneHasActiveCells(zone);
-	  // If no active cells exist yet, allow placement when it touches floor OR any bold cell (including portals)
-	  if (!hasActive) return touchesFloor || touchesBold;
-	  // If there are active cells, touching floor or any bold-cell is acceptable, OR adjacent to active
-	  if (touchesFloor || touchesBold) return true;
+	  // Als er nog geen actieve cellen zijn (eerste plaatsing)
+	  // Toegestaan: bodem raken OF portal/bold-cell (direct of aangrenzend)
+	  if (!hasActive) return touchesFloor || touchesPortal || adjacentToBold;
+	  
+	  // Als er wel actieve cellen zijn (volgende plaatsingen)
+	  // Toegestaan: bodem, portal (direct of aangrenzend), OF aangrenzend aan actieve cel
+	  if (touchesFloor || touchesPortal || adjacentToBold) return true;
+	  
 	  // Check ook optionele cellen voor adjacency
 	  const allCells = pendingCells.optionalCells ? [...pendingCells, ...pendingCells.optionalCells] : pendingCells;
 	  return allCells.some(cell => hasAdjacentActiveCell(zone, cell));
@@ -21882,41 +21961,39 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	}
 
 	function validatePurplePlacement(zone, pendingCells) {
-	  // World 2 paars: je mag niet starten op de buitenste 2 ringen
-	  // tenzij je aangrenzend bent aan een actieve cel OF je raakt een portal (bold-cell)
+	  // World 2/3 paars: plaatsingsregels
+	  // 1. Je mag overal in de binnengrid plaatsen (niet outer-ring-0 of outer-ring-1)
+	  // 2. Volgende plaatsingen: aangrenzend aan bestaande actieve cellen
+	  // UITZONDERING: portal-cells (NIET bold-cells!) mogen altijd als startpunt
+	  // Bold-cells zijn GEEN uitzondering bij paars!
+	  
 	  const hasActive = zoneHasActiveCells(zone);
 	  
-	  // Check of er een bold-cell (portal) wordt geraakt of aangeraakt
-	  const touchesBold = pendingCells.some(cell => {
+	  // Check of één van de pending cells een PORTAL is (portal-cell class, NIET bold-cell!)
+	  // Alleen portals zijn een uitzondering, bold-cells niet
+	  const touchesPortal = pendingCells.some(cell => {
 		if (!cell || !cell.classList) return false;
-		// Direct hit on bold cell
-		if (cell.classList.contains('bold-cell')) return true;
-		// Check if this cell is adjacent to a bold cell
-		const x = Number(cell.dataset.x);
-		const y = Number(cell.dataset.y);
-		if (!Number.isFinite(x) || !Number.isFinite(y)) return false;
-		const neighbors = [
-			getCell(zone, x - 1, y),
-			getCell(zone, x + 1, y),
-			getCell(zone, x, y - 1),
-			getCell(zone, x, y + 1)
-		];
-		return neighbors.some(n => n && n.classList.contains('bold-cell'));
+		return cell.classList.contains('portal-cell');
 	  });
 	  
-	  // Als er nog geen actieve cellen zijn
+	  // Als er nog geen actieve cellen zijn (eerste plaatsing)
 	  if (!hasActive) {
-		// Portal aanraken is altijd toegestaan
-		if (touchesBold) return true;
+		// Portal aanraken is altijd toegestaan (uitzondering)
+		if (touchesPortal) return true;
+		
 		// Anders: check of alle pending cells NIET op de buitenste 2 ringen zitten
+		// (dus alleen plaatsen in inner grid bij eerste plaatsing)
 		const allInner = pendingCells.every(cell => {
 		  return !cell.classList.contains('outer-ring-0') && !cell.classList.contains('outer-ring-1');
 		});
 		return allInner;
 	  }
 	  
-	  // Als er wel actieve cellen zijn: portal aanraken OF aangrenzend aan actief
-	  if (touchesBold) return true;
+	  // Als er wel actieve cellen zijn (volgende plaatsingen)
+	  // Optie 1: Direct op portal plaatsen (uitzondering)
+	  if (touchesPortal) return true;
+	  
+	  // Optie 2: Aangrenzend aan een actieve cel (normaal gedrag)
 	  // Check ook optionele cellen voor adjacency
 	  const allCells = pendingCells.optionalCells ? [...pendingCells, ...pendingCells.optionalCells] : pendingCells;
 	  return allCells.some(cell => hasAdjacentActiveCell(zone, cell));
@@ -26635,10 +26712,11 @@ function openShopModal(callback) {
 	  
 	  // GEEL: Mega diamant patroon - combinatie van World 1 kolommen + World 2 vormen
 	  // Grotere vorm met diagonale scoring
+	  // Fix: Offsets met 1 verminderd voor betere symmetrie op de zone
 	  const yellowShape = {
 		pattern: [4, 6, 8, 10, 12, 12, 12, 12, 10, 8, 6, 4],
-		offsets: [5, 4, 3, 2, 1, 1, 1, 1, 2, 3, 4, 5],
-		boldCells: [[0,1], [0,2], [5,4], [5,9], [6,4], [6,9], [11,1], [11,2], [3,6], [3,7], [8,6], [8,7]]
+		offsets: [4, 3, 2, 1, 0, 0, 0, 0, 1, 2, 3, 4],
+		boldCells: [[0,0], [0,1], [5,3], [5,8], [6,3], [6,8], [11,0], [11,1], [3,5], [3,6], [8,5], [8,6]]
 	  };
 	  const yellowRows = yellowShape.pattern.length;
 	  // Use the true bounding width (max(offset + length)), not max(length)+max(offset).
