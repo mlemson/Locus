@@ -2116,11 +2116,37 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	#blue-zone--placeholder { background:#6ba8d8; height: 760px; }
 
 	/* World 4: keep the 3 visible zones aligned (same height as the blue zone) */
-	body.world-4:not(.zoomed-in) #yellow-zone,
-	body.world-4:not(.zoomed-in) #green-zone {
-		height: 760px;
-		max-height: 760px;
-		overflow: auto;
+	@media (min-width: 651px) {
+		body.world-4:not(.zoomed-in) #yellow-zone,
+		body.world-4:not(.zoomed-in) #green-zone {
+			height: 760px;
+			max-height: 760px;
+			overflow: auto;
+		}
+
+		/* World 4: force the 3 active zones to be true side-by-side columns */
+		body.world-4:not(.zoomed-in) #board.board {
+			display: grid;
+			grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(280px, 360px);
+			align-items: start;
+			gap: 12px;
+		}
+		body.world-4:not(.zoomed-in) #board.board > .column:nth-child(1),
+		body.world-4:not(.zoomed-in) #board.board > .column:nth-child(2),
+		body.world-4:not(.zoomed-in) #board.board > .column:nth-child(3) {
+			display: contents;
+		}
+		body.world-4:not(.zoomed-in) #board.board > .column:nth-child(4) {
+			grid-column: 4;
+			grid-row: 2;
+			align-self: start;
+		}
+		body.world-4:not(.zoomed-in) #yellow-zone { grid-column: 1; grid-row: 1; }
+		body.world-4:not(.zoomed-in) #green-zone { grid-column: 2; grid-row: 1; }
+		body.world-4:not(.zoomed-in) #blue-zone { grid-column: 3; grid-row: 1; }
+		body.world-4:not(.zoomed-in) #purple-zone { grid-column: 1; grid-row: 2; }
+		body.world-4:not(.zoomed-in) #red-zone { grid-column: 2; grid-row: 2; }
+		body.world-4:not(.zoomed-in) #original-card-zone { grid-column: 4; grid-row: 1; }
 	}
 
 	/* World 4: keys/doors should visually match the active zone they are placed in */
@@ -17507,28 +17533,30 @@ let shopLevel2Used = false;
 				// Speler kan zelf kiezen waar te plaatsen
 				return;
 		}
-		
-	
-	if (targetZoneId) {
-		const targetZone = document.getElementById(targetZoneId);
-		if (targetZone) {
-			// World 4: never auto-zoom into inactive/hidden colors.
-			try {
-				const info = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(currentLevel) : null;
-				const isWorld4 = !!(info && Number(info.world) === 4);
-				if (isWorld4) {
-					const zc = String(targetZone.dataset && targetZone.dataset.color || '').toLowerCase();
-					if (Array.isArray(world4AllowedColors) && world4AllowedColors.length && zc && !world4AllowedColors.includes(zc)) return;
-					const cs = window.getComputedStyle ? window.getComputedStyle(targetZone) : null;
-					if (cs && (cs.display === 'none' || cs.visibility === 'hidden')) return;
-				}
-			} catch (_) {}
-			// Open zoom ook als het dezelfde zone is (voor hernieuwde selectie)
-			openZoom(targetZone);
+
+		if (targetZoneId) {
+			const targetZone = document.getElementById(targetZoneId);
+			if (targetZone) {
+				// World 4: never auto-zoom into inactive/hidden colors.
+				try {
+					const info = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(currentLevel) : null;
+					const isWorld4 = !!(info && Number(info.world) === 4);
+					if (isWorld4) {
+						const zc = String(targetZone.dataset && targetZone.dataset.color || '').toLowerCase();
+						if (Array.isArray(world4AllowedColors) && world4AllowedColors.length && zc && !world4AllowedColors.includes(zc)) return;
+						const cs = window.getComputedStyle ? window.getComputedStyle(targetZone) : null;
+						if (cs && (cs.display === 'none' || cs.visibility === 'hidden')) return;
+					}
+				} catch (_) {}
+				// Open zoom ook als het dezelfde zone is (voor hernieuwde selectie)
+				openZoom(targetZone);
+			}
 		}
 	}
-}
-	const ZONE_ORDER = ['purple-zone','yellow-zone','green-zone','red-zone','blue-zone'];	function renameIdsForClone(node, suffix) {
+
+	const ZONE_ORDER = ['purple-zone','yellow-zone','green-zone','red-zone','blue-zone'];
+
+	function renameIdsForClone(node, suffix) {
 	  if (node.id) node.id = `${node.id}${suffix}`;
 	  node.querySelectorAll('[id]').forEach(child => {
 		child.id = `${child.id}${suffix}`;
