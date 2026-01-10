@@ -4313,8 +4313,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 	.card-echo-tooltip {
 		position: absolute;
-		bottom: calc(100% + 8px);
-		left: 6px;
+		top: 8px;
+		left: 50%;
 		right: auto;
 		max-width: 240px;
 		padding: 8px 10px;
@@ -4326,7 +4326,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		line-height: 1.25;
 		opacity: 0;
 		pointer-events: none;
-		transform: translateY(6px);
+		transform: translateX(-50%) translateY(6px);
 		transition: opacity 0.16s ease, transform 0.16s ease;
 		z-index: 3;
 	}
@@ -4335,7 +4335,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	.card-bonus-echo:focus-within .card-echo-tooltip,
 	.card-bonus-echo.card-echo-tooltip-active .card-echo-tooltip {
 		opacity: 1;
-		transform: translateY(0);
+		transform: translateX(-50%) translateY(0);
 	}
 
 	body.dark-mode .card-option {
@@ -6352,7 +6352,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		pointer-events: none;
 	}
 
-	.shop-card .card-option > * {
+	.shop-card .card-option > :not(.card-echo-badge):not(.card-echo-tooltip) {
 		position: relative;
 		z-index: 1;
 	}
@@ -7640,7 +7640,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			pointer-events: none;
 		}
 
-		#bottom-bar #card-choice-zone .card-option > * {
+		#bottom-bar #card-choice-zone .card-option > :not(.card-echo-badge):not(.card-echo-tooltip) {
 			position: relative;
 			z-index: 1;
 		}
@@ -10771,9 +10771,9 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		display: none;
 	  }
 
-	  #card-choice-zone .card-option > * {
+	#card-choice-zone .card-option > :not(.card-echo-badge):not(.card-echo-tooltip) {
 		position: static;
-	  }
+	}
 
 	  /* Labels en metadata zichtbaar op desktop */
 	  #card-choice-zone .card-label {
