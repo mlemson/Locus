@@ -14765,6 +14765,19 @@ let shopLevel2Used = false;
 		total: 0
 	};
 	let dragGapMode = 'default';
+	// Drag move throttling (reduces CPU/battery drain on high-frequency pointermove events)
+	let dragMovePending = null;
+	let dragMoveRafId = null;
+	let lastProcessedDragClientX = null;
+	let lastProcessedDragClientY = null;
+	let lastProcessedDragAtMs = 0;
+	function cancelPendingDragMoveFrame() {
+		try {
+			if (dragMoveRafId) cancelAnimationFrame(dragMoveRafId);
+		} catch (_) {}
+		dragMoveRafId = null;
+		dragMovePending = null;
+	}
 
 	// Touch UX: lift the dragged block slightly above the finger.
 	// Keep this small; it only applies to real touch/pen pointer events.
@@ -14891,6 +14904,7 @@ let shopLevel2Used = false;
 		isPointerDragging = false;
 		dragPointerId = null;
 		dragHasMoved = false;
+		cancelPendingDragMoveFrame();
 	}
 
 	/* ============================================
@@ -19381,7 +19395,11 @@ let shopLevel2Used = false;
 	const isWorld4 = Number(worldInfo?.world || 1) === 4;
 	const greenGrid = document.getElementById('green-grid');
 
-		try { console.debug('updateScore:called', { cellId: cell ? (cell.id || null) : null, time: Date.now() }); } catch(e) {}
+		try {
+			if (window.debugScoreUpdates) {
+				console.debug('updateScore:called', { cellId: cell ? (cell.id || null) : null, time: Date.now() });
+			}
+		} catch(e) {}
 
     /* === GROEN SCORE === 
        Elke ingevulde eindcel = 8 punten */
@@ -20805,68 +20823,75 @@ document.addEventListener('keydown', ev => {
 	- FIX NOTE: `showZoomLens(...)` uses `cursorX`/`cursorY` from the pointer event for correct positioning.
 */
 
-document.addEventListener('pointermove', ev => {
+function processDragPointerMove(ev) {
 	if (!draggedBlock || !isPointerDragging) return;
 	if (dragPointerId !== null && ev.pointerId !== dragPointerId) return;
+	if (!draggedShape || !draggedColor) return;
+	if (!Array.isArray(draggedShape) || !draggedShape.length || !Array.isArray(draggedShape[0])) return;
+
+	const cursorX = Number(ev.clientX) || 0;
+	const cursorY = Number(ev.clientY) || 0;
+
+	// Skip redundant work when the cursor didn't really move.
+	if (lastProcessedDragClientX === cursorX && lastProcessedDragClientY === cursorY) return;
+	lastProcessedDragClientX = cursorX;
+	lastProcessedDragClientY = cursorY;
+	lastProcessedDragAtMs = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
 
 	if (!dragHasMoved) {
 		const isTouchPointer = (ev.pointerType === 'touch' || ev.pointerType === 'pen');
 		const moveThreshold = isTouchPointer ? 10 : 5;
-		const dx = Math.abs((Number(ev.clientX) || 0) - dragStartClientX);
-		const dy = Math.abs((Number(ev.clientY) || 0) - dragStartClientY);
+		const dx = Math.abs(cursorX - dragStartClientX);
+		const dy = Math.abs(cursorY - dragStartClientY);
 		if ((dx + dy) >= moveThreshold) {
 			dragHasMoved = true;
 		}
 	}
 
-	const overlay = document.getElementById('drag-overlay');		document.body.classList.add('dragging'); // optioneel, voor extra styling
-		overlay.style.display = 'block';
-
-		// Voeg draggedBlock als kind van overlay, zodat hij altijd boven alles zweeft
-		overlay.appendChild(draggedBlock);
-
-		// Verberg echte cursor
-		document.body.style.cursor = 'none';
-		document.documentElement.style.cursor = 'none';
-
-	// Toon control buttons in mobiel zonder touch tijdens drag
-	const isTouchPointer = (ev.pointerType === 'touch' || ev.pointerType === 'pen');
-	if (window.innerWidth <= MOBILE_BREAKPOINT && !isTouchPointer) {
-		addCardControlButtons();
+	const overlay = document.getElementById('drag-overlay');
+	if (overlay) {
+		if (!document.body.classList.contains('dragging')) document.body.classList.add('dragging');
+		if (overlay.style.display !== 'block') overlay.style.display = 'block';
+		// Only re-parent if needed (avoids pointless DOM operations each move).
+		if (draggedBlock.parentNode !== overlay) overlay.appendChild(draggedBlock);
 	}
 
-	  // PREVIEW MEESLEPEN
-	  const cursorX = ev.clientX;
-	  const cursorY = ev.clientY;
+	// Hide real cursor (set once; keep it cheap in the hot path)
+	if (document.body.style.cursor !== 'none') document.body.style.cursor = 'none';
+	if (document.documentElement.style.cursor !== 'none') document.documentElement.style.cursor = 'none';
 
-	  // For touch pointers only: add a small upward offset
-	  const touchOffsetY = getFingerLiftOffsetY(ev);
+	// Show control buttons on mobile mouse-drag, but don't recompute positions every move.
+	const isTouchPointer = (ev.pointerType === 'touch' || ev.pointerType === 'pen');
+	if (window.innerWidth <= MOBILE_BREAKPOINT && !isTouchPointer) {
+		const anyVisible = !!document.querySelector('.card-control-btn.visible');
+		if (!anyVisible) addCardControlButtons();
+	}
 
-	  // ===== Verplaats visueel het draggable blok =====
+	// For touch pointers only: add a small upward offset
+	const touchOffsetY = getFingerLiftOffsetY(ev);
+
+	// ===== Verplaats visueel het draggable blok =====
 	setElPos(draggedBlock, cursorX - offsetX, cursorY - offsetY - touchOffsetY);
-	  
-	  // DEBUG: Log hover positioning values
-	  if (window.debugHoverPosition) {
-		  console.log('Hover Debug:', {
-			  cursorX, cursorY,
-			  offsetX, offsetY,
-			  touchOffsetY,
-			  resultLeft: (cursorX - offsetX),
-			  resultTop: (cursorY - offsetY - touchOffsetY)
-		  });
-	  }
+
+	// DEBUG: Log hover positioning values
+	if (window.debugHoverPosition) {
+		console.log('Hover Debug:', {
+			cursorX, cursorY,
+			offsetX, offsetY,
+			touchOffsetY,
+			resultLeft: (cursorX - offsetX),
+			resultTop: (cursorY - offsetY - touchOffsetY)
+		});
+	}
 
 	// ===== Vind zones en cellen onder ALLE gevulde cellen van het blok =====
 	const prevPointerEvents = draggedBlock.style.pointerEvents;
 	draggedBlock.style.pointerEvents = 'none';
-	
+
 	// Detecteer zone onder cursor en pas gap aan VOOR het meten
 	const centerElem = document.elementFromPoint(cursorX, cursorY);
 	const detectedZone = centerElem ? centerElem.closest('.zone') : null;
 	const gapChanged = applyDragBlockGap(detectedZone);
-	
-	// Als gap is veranderd, wacht een frame en meet dan opnieuw
-	// Dit zorgt dat de browser de layout update kan doorvoeren
 	if (gapChanged) {
 		// Force een synchrone reflow door offsetHeight te lezen
 		void draggedBlock.offsetHeight;
@@ -20883,16 +20908,13 @@ document.addEventListener('pointermove', ev => {
 
 	// Verzamel alle hits van gevulde cellen via elementFromPoint
 	const cellHits = [];
-	
 	for (let row = 0; row < shapeHeight; row++) {
 		for (let col = 0; col < shapeWidth; col++) {
 			if (isSolidShapeCell(draggedShape[row][col])) {
 				const cellX = blockRect.left + (col * stepX) + (stepX / 2);
 				const cellY = blockRect.top + (row * stepY) + (stepY / 2);
-				
 				const elem = document.elementFromPoint(cellX, cellY);
 				const gridCell = elem ? elem.closest('.cell') : null;
-				
 				if (gridCell && gridCell.dataset.x !== undefined && gridCell.dataset.y !== undefined) {
 					const cellZone = gridCell.closest('.zone');
 					if (cellZone && !cellZone.classList.contains('zone-placeholder')) {
@@ -20909,47 +20931,40 @@ document.addEventListener('pointermove', ev => {
 			}
 		}
 	}
-	  
+
 	// Herstel pointer events
 	draggedBlock.style.pointerEvents = prevPointerEvents || '';
-	  
-	  // Als we geen hits hebben, bail
-	  if (cellHits.length === 0) {
-		// Preview uitgeschakeld
-		// if (lastZone) clearPreview(lastZone);
+
+	// Als we geen hits hebben, bail
+	if (cellHits.length === 0) {
 		lastZone = null;
 		lastBaseX = lastBaseY = null;
 		return;
-	  }
-	  
-	  // Kies de meest voorkomende zone (of eerste hit)
-	  const zoneCounts = {};
-	  cellHits.forEach(hit => {
+	}
+
+	// Kies de meest voorkomende zone (of eerste hit)
+	const zoneCounts = {};
+	cellHits.forEach(hit => {
 		const zoneId = hit.zone.id;
 		zoneCounts[zoneId] = (zoneCounts[zoneId] || 0) + 1;
-	  });
-	  const bestZoneId = Object.keys(zoneCounts).reduce((a, b) => zoneCounts[a] > zoneCounts[b] ? a : b);
-	  let zone = document.getElementById(bestZoneId);
-	  
-	  // Filter hits naar alleen deze zone
-	  const zoneHits = cellHits.filter(hit => hit.zone.id === bestZoneId);
-	  if (zoneHits.length === 0) {
+	});
+	const bestZoneId = Object.keys(zoneCounts).reduce((a, b) => zoneCounts[a] > zoneCounts[b] ? a : b);
+	let zone = document.getElementById(bestZoneId);
+
+	// Filter hits naar alleen deze zone
+	const zoneHits = cellHits.filter(hit => hit.zone.id === bestZoneId);
+	if (zoneHits.length === 0) {
 		lastZone = null;
 		lastBaseX = lastBaseY = null;
 		return;
-	  }
-	  
-	  // Bereken de baseX/baseY robuust vanuit ALLE hits.
-	  // De oude aanpak gebruikte alleen de "eerste" hit; als die sporadisch mist (gap/void/border),
-	  // dan verspringt de anchor (vaak 1 cel omhoog). We pakken nu de meest voorkomende baseX/baseY.
-	  const countOccurrences = (values) => {
+	}
+
+	const countOccurrences = (values) => {
 		const counts = new Map();
-		for (const v of values) {
-			counts.set(v, (counts.get(v) || 0) + 1);
-		}
+		for (const v of values) counts.set(v, (counts.get(v) || 0) + 1);
 		return counts;
-	  };
-	  const pickBest = (counts, previous) => {
+	};
+	const pickBest = (counts, previous) => {
 		let bestVal = null;
 		let bestCount = -Infinity;
 		for (const [val, cnt] of counts.entries()) {
@@ -20959,7 +20974,6 @@ document.addEventListener('pointermove', ev => {
 				continue;
 			}
 			if (cnt === bestCount) {
-				// Tie-break: prefer staying close to previous (prevents jitter), else smallest value.
 				if (Number.isFinite(previous)) {
 					const curDist = Math.abs(val - previous);
 					const bestDist = Math.abs(bestVal - previous);
@@ -20970,60 +20984,49 @@ document.addEventListener('pointermove', ev => {
 			}
 		}
 		return bestVal;
-	  };
+	};
 
-	  const baseXCandidates = zoneHits.map(h => h.gridX - h.shapeCol);
-	  const baseYCandidates = zoneHits.map(h => h.gridY - h.shapeRow);
-	  let baseX = pickBest(countOccurrences(baseXCandidates), lastBaseX);
-	  let baseY = pickBest(countOccurrences(baseYCandidates), lastBaseY);
-	  if (!Number.isFinite(baseX)) baseX = baseXCandidates[0];
-	  if (!Number.isFinite(baseY)) baseY = baseYCandidates[0];
-	  
-	  // Keep a representative hovered cell (used for zone detection below)
-	  const firstHit = zoneHits[0];
-	  let hoveredCell = firstHit.gridCell;
-	  
-	  // DEBUG: Log baseX/baseY calculation
-	  if (window.debugHoverPosition) {
-		  console.log('Base Position:', {
-			  firstHitGridX: firstHit.gridX,
-			  firstHitGridY: firstHit.gridY,
-			  shapeCol: firstHit.shapeCol,
-			  shapeRow: firstHit.shapeRow,
-			  calculatedBaseX: baseX,
-			  calculatedBaseY: baseY
-		  });
-	  }
+	const baseXCandidates = zoneHits.map(h => h.gridX - h.shapeCol);
+	const baseYCandidates = zoneHits.map(h => h.gridY - h.shapeRow);
+	let baseX = pickBest(countOccurrences(baseXCandidates), lastBaseX);
+	let baseY = pickBest(countOccurrences(baseYCandidates), lastBaseY);
+	if (!Number.isFinite(baseX)) baseX = baseXCandidates[0];
+	if (!Number.isFinite(baseY)) baseY = baseYCandidates[0];
+
+	const firstHit = zoneHits[0];
+	let hoveredCell = firstHit.gridCell;
+
+	if (window.debugHoverPosition) {
+		console.log('Base Position:', {
+			firstHitGridX: firstHit.gridX,
+			firstHitGridY: firstHit.gridY,
+			shapeCol: firstHit.shapeCol,
+			shapeRow: firstHit.shapeRow,
+			calculatedBaseX: baseX,
+			calculatedBaseY: baseY
+		});
+	}
 
 	const cellZone = hoveredCell.closest('.zone');
 	if (cellZone && !cellZone.classList.contains('zone-placeholder')) {
-	  zone = cellZone;
+		zone = cellZone;
 	}
 
 	if (!zone) {
-	  // Preview uitgeschakeld
-	  // if (lastZone) clearPreview(lastZone);
-	  lastZone = null;
-	  lastBaseX = lastBaseY = null;
-	  return;
+		lastZone = null;
+		lastBaseX = lastBaseY = null;
+		return;
 	}
 
 	if (zone !== lastZone) {
-	  // Preview uitgeschakeld
-	  // if (lastZone) clearPreview(lastZone);
-	  lastZone = zone;
-	  lastBaseX = lastBaseY = null;
+		lastZone = zone;
+		lastBaseX = lastBaseY = null;
 	}
-
-	// baseX en baseY zijn nu al berekend uit de cell hits
-	// shapeWidth en shapeHeight zijn al gedeclareerd boven
 
 	const metrics = getZoneMetrics(zone);
 	if (!metrics || metrics.maxX < metrics.minX || metrics.maxY < metrics.minY) {
-	  // Preview uitgeschakeld
-	  // clearPreview(zone);
-	  lastBaseX = lastBaseY = null;
-	  return;
+		lastBaseX = lastBaseY = null;
+		return;
 	}
 
 	const solidBounds = getSolidShapeBounds(draggedShape);
@@ -21036,66 +21039,79 @@ document.addEventListener('pointermove', ev => {
 	if (maxStartX < minStartX) maxStartX = minStartX;
 	if (maxStartY < minStartY) maxStartY = minStartY;
 
-	// Sla originele baseX/baseY op voordat speciale zone aanpassingen
-	const originalBaseX = baseX;
-	const originalBaseY = baseY;
-
 	if (zone.id === 'yellow-zone') {
-	  const yellowPlacement = getYellowPlacement(zone, baseX, baseY, draggedShape, metrics);
-	  baseX = yellowPlacement.baseX;
-	  baseY = yellowPlacement.baseY;
+		const yellowPlacement = getYellowPlacement(zone, baseX, baseY, draggedShape, metrics);
+		baseX = yellowPlacement.baseX;
+		baseY = yellowPlacement.baseY;
 	} else if (zone.id === 'blue-zone') {
-	  baseY = getStickyBaseY(zone, baseX, baseY, draggedShape);
+		baseY = getStickyBaseY(zone, baseX, baseY, draggedShape);
 	}
 
-	// Check of het blok NA de speciale zone aanpassingen nog steeds binnen de grenzen is
-	// Zo niet, dan is het niet plaatsbaar (geen forceren binnen grenzen)
 	const wouldFitX = baseX >= minStartX && baseX <= maxStartX;
 	const wouldFitY = baseY >= minStartY && baseY <= maxStartY;
-	
 	if (!wouldFitX || !wouldFitY) {
-		// Blok valt buiten de grid na speciale zone logica - niet plaatsbaar
-		if (draggedBlock) {
-			draggedBlock.style.opacity = '0.3';
-		}
+		if (draggedBlock) draggedBlock.style.opacity = '0.3';
 		lastBaseX = baseX;
 		lastBaseY = baseY;
 		return;
 	}
 
-	  // ===== Toon preview alleen bij verandering =====
-	  if (baseX !== lastBaseX || baseY !== lastBaseY) {
+	if (baseX !== lastBaseX || baseY !== lastBaseY) {
 		lastBaseX = baseX;
 		lastBaseY = baseY;
 
 		const zoneColor =
-		  zone.dataset.color ||
-		  zone.closest('.zone')?.dataset.color ||
-		  (zone.id.startsWith('red-grid') ? 'rood' : null);
+			zone.dataset.color ||
+			zone.closest('.zone')?.dataset.color ||
+			(zone.id.startsWith('red-grid') ? 'rood' : null);
 
 		const colorOk =
-		  zoneColor === draggedColor.name ||
-		  draggedColor.name === 'multikleur' ||
-		  (draggedColor.name === 'rood' && zoneColor === 'rood');
+			zoneColor === draggedColor.name ||
+			draggedColor.name === 'multikleur' ||
+			(draggedColor.name === 'rood' && zoneColor === 'rood');
 
 		const allowed = colorOk && canPlace(zone, baseX, baseY, draggedShape);
-		
-		// Update draggedBlock opacity gebaseerd op plaatsbaarheid
-		if (draggedBlock) {
-			if (allowed) {
-				draggedBlock.style.opacity = '1';
-			} else {
-				draggedBlock.style.opacity = '0.3';
-			}
-		}
-		
-		// Preview uitgeschakeld
-		// showPreview(zone, baseX, baseY, draggedShape, draggedColor, allowed);
-		
+		if (draggedBlock) draggedBlock.style.opacity = allowed ? '1' : '0.3';
+
 		// Zoom-lens disabled (remove the extra in-zoom placement preview panel).
 		hideZoomLens();
-	  }
-	});
+	}
+}
+
+document.addEventListener('pointermove', ev => {
+	if (!draggedBlock || !isPointerDragging) return;
+	if (dragPointerId !== null && ev.pointerId !== dragPointerId) return;
+
+	// Capture only the fields we use; throttle heavy work to at most 1x per animation frame.
+	dragMovePending = {
+		clientX: ev.clientX,
+		clientY: ev.clientY,
+		pointerId: ev.pointerId,
+		pointerType: ev.pointerType
+	};
+	if (dragMoveRafId) return;
+	const tick = () => {
+		// Clear the "scheduled" flag early so pointermove can queue the next frame.
+		dragMoveRafId = null;
+		const pending = dragMovePending;
+		if (!pending) return;
+
+		// Battery saver: throttle expensive hit-testing to ~30fps.
+		try {
+			if (BATTERY_SAVER_ENABLED && BATTERY_THROTTLE_DRAG) {
+				const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+				if ((now - (lastProcessedDragAtMs || 0)) < 33) {
+					dragMoveRafId = requestAnimationFrame(tick);
+					return;
+				}
+			}
+		} catch (_) {}
+
+		dragMovePending = null;
+		processDragPointerMove(pending);
+	};
+	dragMoveRafId = requestAnimationFrame(tick);
+});
 
 	// =============
 	// LOSLATEN
