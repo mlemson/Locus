@@ -4313,9 +4313,10 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 	.card-echo-tooltip {
 		position: absolute;
-		bottom: 42px;
-		right: 6px;
-		max-width: 220px;
+		bottom: calc(100% + 8px);
+		left: 6px;
+		right: auto;
+		max-width: 240px;
 		padding: 8px 10px;
 		background: rgba(12,18,28,0.92);
 		color: #f3f5ff;
@@ -14441,6 +14442,19 @@ let shopLevel2Used = false;
 		currentObjectiveId = objective ? objective.id : null;
 		renderObjectivePanel();
 	}
+
+	function isAllColorObjective(objective) {
+		if (!objective || !objective.description) return false;
+		const desc = String(objective.description || '');
+		return /(elke\s*kleur|alle\s*kleuren|in\s*de\s*kleuren)/i.test(desc);
+	}
+
+	function grantAllColorObjectiveBonuses(objective) {
+		if (!isAllColorObjective(objective)) return;
+		BONUS_ORDER.forEach(key => {
+			try { addBonusCharge(key, 2, { trackCollection: true }); } catch (e) {}
+		});
+	}
 	let objectiveToastTimeout = null;
 	let objectivePopupTimeout = null;
 
@@ -23141,8 +23155,6 @@ function getCollectedCoinCount(scores) {
 		badge.dataset.variant = variantKey;
 		badge.textContent = BONUS_ECHO_BADGE_TEXT[variantKey] || 'L2';
 		if (ready) badge.classList.add('card-echo-badge--ready');
-		const meta = getBonusEchoUiCopy(variantKey);
-		badge.title = meta?.desc || 'Level 2 kaart';
 		return badge;
 	}
 
@@ -23151,7 +23163,6 @@ function getCollectedCoinCount(scores) {
 		const meta = getBonusEchoUiCopy(variantKey);
 		const desc = meta?.desc || 'Level 2 kaart';
 		cardEl.dataset.bonusEchoDesc = desc;
-		try { cardEl.setAttribute('title', desc); } catch (e) {}
 		let tooltip = cardEl.querySelector('.card-echo-tooltip');
 		if (!tooltip) {
 			tooltip = document.createElement('div');
@@ -23182,7 +23193,6 @@ function getCollectedCoinCount(scores) {
 		const badge = cardEl.querySelector('.card-echo-badge');
 		if (badge) {
 			badge.setAttribute('aria-label', desc);
-			badge.setAttribute('title', desc);
 			badge.tabIndex = 0;
 			const stop = (ev) => { ev.stopPropagation(); };
 			badge.addEventListener('pointerdown', stop);
@@ -27799,6 +27809,13 @@ function openShopModal(callback) {
 				renderObjectivePanel();
 				if (!currentObjectiveId) setCurrentObjectiveForLevel(level);
 			} catch (e) {}
+	  }
+	  // Extra bonussen wanneer het doel "in elke kleur" vereist: 2 per kleur bij de start van het level.
+	  if (!isLoadingGame) {
+		try {
+			const objective = getObjectiveById(currentObjectiveId);
+			grantAllColorObjectiveBonuses(objective);
+		} catch (e) { console.warn('Kon all-color bonus grant niet toepassen', e); }
 	  }
 	  // Preserve turn counter if we are loading from a save (already set from savedDeckState.turnCount)
 	  if (!(isLoadingGame && savedDeckState)) {
