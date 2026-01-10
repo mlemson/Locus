@@ -13526,9 +13526,9 @@ let shopLevel2Used = false;
 			},
 			{
 				id: 'level-12-rainbow',
-				description: 'Level 12: Scoor 35 punten elke kleur.',
+				description: 'Level 12: Scoor 30 punten elke kleur.',
 				short: 'Level 12 - Regenboog',
-				check: scores => scores.yellow >= 35 && scores.red >= 35 && scores.green >= 35 && scores.purple >= 35 && scores.blue >= 35
+				check: scores => scores.yellow >= 30 && scores.red >= 30 && scores.green >= 30 && scores.purple >= 30 && scores.blue >= 30
 			}
 		],
 		13: [
@@ -13665,9 +13665,9 @@ let shopLevel2Used = false;
 			},
 			{
 				id: 'level-15-ultimate-balance',
-				description: 'Level 15: Scoor 50 punten in elke kleur.',
+				description: 'Level 15: Scoor 38 punten in elke kleur.',
 				short: 'Level 15 - Ultieme balans',
-				check: scores => scores.yellow >= 50 && scores.red >= 50 && scores.green >= 50 && scores.purple >= 50 && scores.blue >= 50
+				check: scores => scores.yellow >= 38 && scores.red >= 38 && scores.green >= 38 && scores.purple >= 38 && scores.blue >= 38
 			}
 		],
 		16: [
@@ -26080,6 +26080,26 @@ function openShopModal(callback) {
 			}
 		};
 
+		const SIZE_TIER_WEIGHTS = {
+			mini: 1,
+			standard: 1,
+			large: 1.35,
+			xl: 0.35,
+			xxl: 0.2
+		};
+
+		function pickWeightedSize(keys, exclude = new Set()) {
+			const pool = keys.filter(key => !exclude.has(key) && (SIZE_TIER_WEIGHTS[key] ?? 1) > 0);
+			if (!pool.length) return null;
+			const total = pool.reduce((sum, key) => sum + (SIZE_TIER_WEIGHTS[key] ?? 1), 0);
+			let target = Math.random() * total;
+			for (const key of pool) {
+				target -= (SIZE_TIER_WEIGHTS[key] ?? 1);
+				if (target <= 0) return key;
+			}
+			return pool[pool.length - 1];
+		}
+
 		// Which size tiers are available right now?
 		const availableSizeKeys = ['mini', 'standard'];
 		if (largeShopUnlocked) availableSizeKeys.push('large');
@@ -26115,7 +26135,7 @@ function openShopModal(callback) {
 		if (!largeShopUnlocked && availableSpecialFactories.length === 0) {
 			picked = ['mini', 'standard'];
 		} else {
-			const firstSize = pickUnique(availableSizeKeys, 1)[0] || 'standard';
+			const firstSize = pickWeightedSize(availableSizeKeys) || 'standard';
 			picked.push(firstSize);
 			// Second slot: either another size, or sometimes a special.
 			const allowSpecial = availableSpecialFactories.length > 0 && Math.random() < 0.35;
@@ -26126,7 +26146,8 @@ function openShopModal(callback) {
 				}
 			} else {
 				const remainingSizes = availableSizeKeys.filter(k => k !== firstSize);
-				picked.push(pickUnique(remainingSizes, 1)[0] || firstSize);
+				const secondSize = pickWeightedSize(remainingSizes, new Set([firstSize])) || firstSize;
+				picked.push(secondSize);
 			}
 		}
 
