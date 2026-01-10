@@ -2115,6 +2115,26 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	#blue-zone,
 	#blue-zone--placeholder { background:#6ba8d8; height: 760px; }
 
+	/* World 4: keep the 3 visible zones aligned (same height as the blue zone) */
+	body.world-4:not(.zoomed-in) #yellow-zone,
+	body.world-4:not(.zoomed-in) #green-zone {
+		height: 760px;
+		max-height: 760px;
+		overflow: auto;
+	}
+
+	/* World 4: keys/doors should visually match the active zone they are placed in */
+	.cell.key-cell[data-w4-ink="geel"],
+	.cell.door-cell[data-w4-ink="geel"] { color: rgba(170, 135, 20, 0.95); }
+	.cell.key-cell[data-w4-ink="groen"],
+	.cell.door-cell[data-w4-ink="groen"] { color: rgba(40, 140, 70, 0.95); }
+	.cell.key-cell[data-w4-ink="blauw"],
+	.cell.door-cell[data-w4-ink="blauw"] { color: rgba(60, 130, 210, 0.95); }
+	.cell.key-cell[data-w4-ink="paars"],
+	.cell.door-cell[data-w4-ink="paars"] { color: rgba(150, 110, 220, 0.95); }
+	.cell.key-cell[data-w4-ink="rood"],
+	.cell.door-cell[data-w4-ink="rood"] { color: rgba(220, 95, 95, 0.95); }
+
 	/* Blue zone: vaste breedte, breder grid wordt scrollbaar */
 	#blue-zone {
 		width: 180px;
@@ -17393,6 +17413,11 @@ let shopLevel2Used = false;
 
 	// Sync zone heights: make green and blue zones at least as tall as purple+yellow combined.
 	function syncZoneHeights() {
+		// World 4 uses a fixed 3-zone layout (yellow/green/blue); don't force World 2/3 height syncing.
+		try {
+			const info = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(currentLevel) : null;
+			if (info && Number(info.world) === 4) return;
+		} catch (_) {}
 		try {
 			const purpleZone = document.getElementById('purple-zone');
 			const yellowZone = document.getElementById('yellow-zone');
@@ -17487,6 +17512,17 @@ let shopLevel2Used = false;
 	if (targetZoneId) {
 		const targetZone = document.getElementById(targetZoneId);
 		if (targetZone) {
+			// World 4: never auto-zoom into inactive/hidden colors.
+			try {
+				const info = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(currentLevel) : null;
+				const isWorld4 = !!(info && Number(info.world) === 4);
+				if (isWorld4) {
+					const zc = String(targetZone.dataset && targetZone.dataset.color || '').toLowerCase();
+					if (Array.isArray(world4AllowedColors) && world4AllowedColors.length && zc && !world4AllowedColors.includes(zc)) return;
+					const cs = window.getComputedStyle ? window.getComputedStyle(targetZone) : null;
+					if (cs && (cs.display === 'none' || cs.visibility === 'hidden')) return;
+				}
+			} catch (_) {}
 			// Open zoom ook als het dezelfde zone is (voor hernieuwde selectie)
 			openZoom(targetZone);
 		}
@@ -17565,6 +17601,20 @@ let shopLevel2Used = false;
 	function openZoom(zone) {
 		// NOTE: Mobile zone zoom is enabled; only the placement zoom-lens is disabled elsewhere.
 		if (!zone || excludedZones.includes(zone.id)) return;
+		// Never allow zooming a hidden zone.
+		try {
+			const cs = window.getComputedStyle ? window.getComputedStyle(zone) : null;
+			if (cs && (cs.display === 'none' || cs.visibility === 'hidden')) return;
+		} catch (_) {}
+		// World 4: disallow zoom into inactive/locked colors (prevents hidden zones from reappearing).
+		try {
+			const info = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(currentLevel) : null;
+			const isWorld4 = !!(info && Number(info.world) === 4);
+			if (isWorld4 && Array.isArray(world4AllowedColors) && world4AllowedColors.length) {
+				const zc = String(zone.dataset && zone.dataset.color || '').toLowerCase();
+				if (zc && !world4AllowedColors.includes(zc)) return;
+			}
+		} catch (_) {}
 		// iPad/tablet UX: zoomed-in zones are unnecessary and can break layout.
 		if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) {
 			const w = window.innerWidth;
@@ -17638,24 +17688,25 @@ let shopLevel2Used = false;
 		if (zone.id === 'red-zone') {
 			// Ensure World 3 red stage visibility is applied before showing the zoomed red zone.
 			console.log('🔴 Opening red-zone zoom. world3RedStage:', world3RedStage, 'currentLevel:', currentLevel);
-			try { 
-				applyWorld3RedStage(world3RedStage || 1);
-				// Also explicitly ensure the subgrids are visible
-				const gridsToShow = (world3RedStage === 2) 
-					? ['red-grid5', 'red-grid6'] 
-					: ['red-grid1', 'red-grid2', 'red-grid3', 'red-grid4'];
-				gridsToShow.forEach(id => {
-					const el = document.getElementById(id);
-					if (el) {
-						el.style.display = '';
-						console.log('🔴 Ensuring', id, 'is visible');
-					}
-				});
+			try {
+				const info = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(currentLevel) : null;
+				const isWorld3 = !!(info && Number(info.world) === 3);
+				if (isWorld3) {
+					applyWorld3RedStage(world3RedStage || 1);
+					// Also explicitly ensure the subgrids are visible
+					const gridsToShow = (world3RedStage === 2)
+						? ['red-grid5', 'red-grid6']
+						: ['red-grid1', 'red-grid2', 'red-grid3', 'red-grid4'];
+					gridsToShow.forEach(id => {
+						const el = document.getElementById(id);
+						if (el) el.style.display = '';
+					});
+					// Force visibility in case CSS/inline styles accidentally hid it.
+					zone.style.display = 'grid';
+					zone.style.opacity = '1';
+					zone.style.visibility = 'visible';
+				}
 			} catch (err) { console.error('Red zone stage error:', err); }
-			// Force visibility in case CSS/inline styles accidentally hid it.
-			zone.style.display = 'grid';
-			zone.style.opacity = '1';
-			zone.style.visibility = 'visible';
 		}
 		if (zone.id === 'green-zone') {
 			// World 1: zoomed green should not scroll.
@@ -17788,10 +17839,35 @@ let shopLevel2Used = false;
 	function navigateToAdjacentZone(direction) {
 		if (!activeZoomZone) return;
 		const currentId = activeZoomZone.id;
-		const idx = ZONE_ORDER.indexOf(currentId);
+		const order = (() => {
+			try {
+				const info = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(currentLevel) : null;
+				const world = Number(info && info.world);
+				const allowed = (world === 4 && Array.isArray(world4AllowedColors) && world4AllowedColors.length)
+					? world4AllowedColors.slice()
+					: null;
+				const visible = ZONE_ORDER.filter(id => {
+					const z = document.getElementById(id);
+					if (!z) return false;
+					try {
+						const cs = window.getComputedStyle ? window.getComputedStyle(z) : null;
+						if (cs && (cs.display === 'none' || cs.visibility === 'hidden')) return false;
+					} catch (_) {}
+					if (allowed) {
+						const zc = String(z.dataset && z.dataset.color || '').toLowerCase();
+						if (zc && !allowed.includes(zc)) return false;
+					}
+					return true;
+				});
+				return visible.length ? visible : ZONE_ORDER;
+			} catch (e) {
+				return ZONE_ORDER;
+			}
+		})();
+		const idx = order.indexOf(currentId);
 		if (idx === -1) return;
-		let nextIdx = (idx + direction + ZONE_ORDER.length) % ZONE_ORDER.length;
-		const nextId = ZONE_ORDER[nextIdx];
+		let nextIdx = (idx + direction + order.length) % order.length;
+		const nextId = order[nextIdx];
 		const nextZone = document.getElementById(nextId);
 		if (nextZone) {
 			// close current and open next
@@ -17817,6 +17893,20 @@ let shopLevel2Used = false;
 		if (draggedBlock || draggedShape) return;
 		const mainZone = zone.closest('.red-group') || zone;
 		if (excludedZones.includes(zone.id) || (mainZone.id && excludedZones.includes(mainZone.id))) return;
+		// Disallow zooming hidden zones (World 4 staging hides locked colors).
+		try {
+			const cs = window.getComputedStyle ? window.getComputedStyle(mainZone) : null;
+			if (cs && (cs.display === 'none' || cs.visibility === 'hidden')) return;
+		} catch (_) {}
+		// World 4: disallow zoom into inactive/locked colors.
+		try {
+			const info = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(currentLevel) : null;
+			const isWorld4 = !!(info && Number(info.world) === 4);
+			if (isWorld4 && Array.isArray(world4AllowedColors) && world4AllowedColors.length) {
+				const zc = String(mainZone.dataset && mainZone.dataset.color || '').toLowerCase();
+				if (zc && !world4AllowedColors.includes(zc)) return;
+			}
+		} catch (_) {}
 		if (e.pointerType === 'mouse' || e.pointerType === 'pen' || typeof e.pointerType === 'undefined') {
 		  if (e.detail === 0 || e.detail > 1) return;
 		}
@@ -26898,6 +26988,11 @@ function openShopModal(callback) {
 				cell = findNearestStampableCell(zone, x, y, 12);
 			}
 			if (!cell) return null;
+			// Visual ink: always match the zone this door is placed in (active color).
+			try {
+				const ink = String(zone && zone.dataset ? (zone.dataset.color || '') : '').toLowerCase();
+				if (ink) cell.dataset.w4Ink = ink;
+			} catch (_) {}
 			// Ensure door cells don't also act as bonus/coin/trap cells
 			try {
 				cell.classList.remove('gold-cell', 'trap-cell');
@@ -26919,6 +27014,11 @@ function openShopModal(callback) {
 				cell = findNearestStampableCell(zone, x, y, 12);
 			}
 			if (!cell) return null;
+			// Visual ink: always match the zone this key is placed in (active color).
+			try {
+				const ink = String(zone && zone.dataset ? (zone.dataset.color || '') : '').toLowerCase();
+				if (ink) cell.dataset.w4Ink = ink;
+			} catch (_) {}
 			// Ensure key cells don't also grant coins/bonuses/traps
 			try {
 				cell.classList.remove('gold-cell', 'trap-cell');
@@ -28625,6 +28725,7 @@ function clearWorld4Locks() {
 				delete el.dataset.doorColor;
 				delete el.dataset.keyColor;
 				delete el.dataset.keyConsumed;
+				delete el.dataset.w4Ink;
 				const sym = el.querySelector && el.querySelector('.door-symbol,.key-symbol');
 				if (sym) sym.remove();
 			} catch (_) {}
