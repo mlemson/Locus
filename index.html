@@ -8563,6 +8563,21 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  box-shadow: inset 0 0 0 2px rgba(90, 200, 140, 0.65);
 	}
 
+	/* World 4: cells behind a door (unreachable until door is opened) */
+	.cell.locked-behind-door {
+	  position: relative;
+	  background: linear-gradient(135deg, rgba(0,0,0,0.45), rgba(0,0,0,0.15));
+	  border-color: rgba(30, 30, 35, 0.8);
+	  filter: saturate(0.55) brightness(0.85);
+	}
+	.cell.locked-behind-door::after {
+	  content: '';
+	  position: absolute;
+	  inset: 0;
+	  background: repeating-linear-gradient(45deg, rgba(255,255,255,0.04) 0, rgba(255,255,255,0.04) 7px, rgba(0,0,0,0.0) 7px, rgba(0,0,0,0.0) 14px);
+	  pointer-events: none;
+	}
+
 	/* World 4: sleutel/deur visuals */
 	.cell.door-cell {
 	  position: relative;
@@ -8570,6 +8585,9 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	.cell.door-cell:not(.door-open) {
 	  outline: 2px solid rgba(255, 120, 80, 0.75);
 	  outline-offset: -2px;
+	}
+	.cell.door-cell.door-armed:not(.door-open) {
+	  outline-color: rgba(255, 215, 0, 0.85);
 	}
 	.cell.door-cell.door-open {
 	  outline: 2px solid rgba(90, 200, 140, 0.9);
@@ -8580,10 +8598,15 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  inset: 0;
 	  display: grid;
 	  place-items: center;
-	  font-size: 14px;
-	  font-weight: 900;
+	  width: 100%;
+	  height: 100%;
 	  pointer-events: none;
 	  text-shadow: 0 1px 2px rgba(0,0,0,0.35);
+	}
+	.cell.door-cell .door-symbol svg {
+	  width: 14px;
+	  height: 14px;
+	  opacity: 0.95;
 	}
 	.cell.key-cell {
 	  position: relative;
@@ -8595,9 +8618,15 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  inset: 0;
 	  display: grid;
 	  place-items: center;
-	  font-size: 14px;
+	  width: 100%;
+	  height: 100%;
 	  pointer-events: none;
 	  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.35));
+	}
+	.cell.key-cell .key-symbol svg {
+	  width: 14px;
+	  height: 14px;
+	  opacity: 0.95;
 	}
 	.cell.key-cell.key-consumed {
 	  outline-color: rgba(90, 200, 140, 0.9);
@@ -18569,6 +18598,17 @@ let shopLevel2Used = false;
 				} catch (e) {}
 				try { showObjectiveToast(`🗝️ Sleutel gebruikt: ${keyColor} ontgrendeld!`); } catch (e) {}
 			}
+				// World 4: doors only open when you have the key AND activate the door-cell.
+				if (isWorld4 && cell.classList.contains('door-cell') && cell.dataset.doorId && !cell.classList.contains('door-open')) {
+					const doorColor = String(cell.dataset.doorColor || '').toLowerCase();
+					if (doorColor && !isWorld4ColorUnlocked(doorColor)) {
+						// In debug/click scenarios, refuse opening the door without the key.
+						cell.classList.remove('active');
+						try { showObjectiveToast('🔒 Je hebt eerst de sleutel nodig.'); } catch (e) {}
+					} else {
+						try { openWorld4Door(String(cell.dataset.doorId)); } catch (e) {}
+					}
+				}
 		} catch (e) {}
 				// zorg dat achtergrond consistent wordt gezet: expliciete kleur (bv. van placeShape) of zoneColor
 				try {
@@ -21824,20 +21864,31 @@ function clearElPos(el) {
 			return null;
 		  }
 
-			// World 4: blocked when the cell is locked behind a door of another color.
-			const lockedColor = String(target.dataset.lockedColor || target.dataset.doorColor || '').toLowerCase();
-			const isDoorClosed = !!target.dataset.doorColor && !target.classList.contains('door-open');
-			if (lockedColor && !isWorld4ColorUnlocked(lockedColor) && (isDoorClosed || target.dataset.lockedColor)) {
-				if (isOptional) continue;
-				window.lastPlacementFailure = {
-					zoneId: zone?.id || null,
-					reason: 'locked-color',
-					x: baseX + x,
-					y: baseY + y,
-					color: lockedColor
-				};
-				return null;
-			}
+			// World 4: door-gated regions are unreachable until the door is opened.
+			try {
+				const worldInfo = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(currentLevel) : null;
+				const isWorld4 = !!(worldInfo && Number(worldInfo.world) === 4);
+				if (isWorld4) {
+					// Door cell itself: requires the key for its color (unless already open)
+					if (target.dataset.doorId && target.dataset.doorColor && !target.classList.contains('door-open')) {
+						const doorColor = String(target.dataset.doorColor || '').toLowerCase();
+						if (doorColor && !isWorld4ColorUnlocked(doorColor)) {
+							if (isOptional) continue;
+							window.lastPlacementFailure = { zoneId: zone?.id || null, reason: 'door-needs-key', x: baseX + x, y: baseY + y, color: doorColor };
+							return null;
+						}
+					}
+					// Cells behind a door: require the door to be opened (key alone is not enough)
+					if (target.dataset.lockedDoorId) {
+						const doorId = String(target.dataset.lockedDoorId || '');
+						if (doorId && !isWorld4DoorOpen(doorId)) {
+							if (isOptional) continue;
+							window.lastPlacementFailure = { zoneId: zone?.id || null, reason: 'behind-door', x: baseX + x, y: baseY + y, doorId };
+							return null;
+						}
+					}
+				}
+			} catch (e) {}
 				if (target.classList.contains('active')) {
 					if (isOptional) {
 						// Optionele cel mag overlappen met een bestaand blok; wel onthouden voor adjacency.
@@ -26728,8 +26779,11 @@ function openShopModal(callback) {
 		// Clear any previous state for this level (board is already rebuilt at this point)
 		try { clearWorld4Locks(); } catch (e) {}
 
-		// Keep deck unrestricted for now; this is purely board gating.
-		try { setWorld4AllowedColors(null); } catch (e) {}
+		// World 4: show only 3 of the 5 color-zones at level start.
+		// The other 2 zones are hidden until their key is collected.
+		const baseVisible = ['geel', 'groen', 'blauw'];
+		const lockedColors = ['paars', 'rood'];
+		try { setWorld4AllowedColors(baseVisible); } catch (e) {}
 
 		const worldInfo = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(level) : null;
 		if (!worldInfo || Number(worldInfo.world) !== 4) return;
@@ -26737,12 +26791,25 @@ function openShopModal(callback) {
 		const greenZone = document.getElementById('green-zone');
 		const purpleZone = document.getElementById('purple-zone');
 		const blueZone = document.getElementById('blue-zone');
+		const yellowZone = document.getElementById('yellow-zone');
+		const redZone = document.getElementById('red-zone');
 		if (!greenZone) return;
 
-		// Choose 3 locked colors (Dutch names) and place a key for each.
-		const lockColors = ['geel', 'rood', 'paars'];
+		// Hide the locked zones at the start of the level.
+		try {
+			const hideZone = (colorKey) => {
+				const c = String(colorKey || '').toLowerCase();
+				if (c === 'rood') {
+					if (redZone) redZone.style.display = 'none';
+					return;
+				}
+				const z = document.querySelector(`.zone[data-color="${c}"]`) || document.getElementById(`${c}-zone`);
+				if (z) z.style.display = 'none';
+			};
+			lockedColors.forEach(hideZone);
+		} catch (e) {}
 
-		function ensureCellSymbol(cell, cls, text) {
+		function ensureCellSymbol(cell, cls, html) {
 			if (!cell) return;
 			try {
 				let el = cell.querySelector(`.${cls}`);
@@ -26751,25 +26818,31 @@ function openShopModal(callback) {
 					el.className = cls;
 					cell.appendChild(el);
 				}
-				el.textContent = text;
+				el.innerHTML = html;
 			} catch (e) {}
 		}
 
-		function markLockedSquare(zone, x0, y0, size, colorKey) {
-			if (!zone) return;
-			for (let y = 0; y < size; y++) {
-				for (let x = 0; x < size; x++) {
+		const ICON_KEY = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="12" r="3.25" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 12h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M18 12v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M15.5 12v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+		const ICON_DOOR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12.8 12.2h.01" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>';
+
+		function lockRegionBehindDoor(zone, doorId, x0, y0, w, h) {
+			if (!zone) return 0;
+			let locked = 0;
+			for (let y = 0; y < h; y++) {
+				for (let x = 0; x < w; x++) {
 					const cell = getCell(zone, x0 + x, y0 + y);
 					if (!cell) continue;
 					if (cell.classList.contains('void-cell')) continue;
 					if (cell.classList.contains('bold-cell')) continue;
-					cell.dataset.lockedColor = String(colorKey);
-					cell.classList.add('locked-cell');
+					cell.dataset.lockedDoorId = String(doorId);
+					cell.classList.add('locked-behind-door');
+					locked++;
 				}
 			}
+			return locked;
 		}
 
-		function placeDoor(zone, x, y, colorKey) {
+		function placeDoor(zone, x, y, doorId, colorKey) {
 			const cell = getCell(zone, x, y);
 			if (!cell || cell.classList.contains('void-cell')) return null;
 			// Ensure door cells don't also act as bonus/coin/trap cells
@@ -26781,8 +26854,9 @@ function openShopModal(callback) {
 				cell.querySelectorAll('.symbol,.trap-symbol').forEach(s => s.remove());
 			} catch (e) {}
 			cell.classList.add('door-cell');
+			cell.dataset.doorId = String(doorId);
 			cell.dataset.doorColor = String(colorKey);
-			ensureCellSymbol(cell, 'door-symbol', '🔒');
+			ensureCellSymbol(cell, 'door-symbol', ICON_DOOR);
 			return cell;
 		}
 
@@ -26800,34 +26874,41 @@ function openShopModal(callback) {
 			cell.classList.add('key-cell');
 			cell.dataset.keyColor = String(colorKey);
 			cell.dataset.keyConsumed = 'false';
-			ensureCellSymbol(cell, 'key-symbol', '🗝️');
+			ensureCellSymbol(cell, 'key-symbol', ICON_KEY);
 			return cell;
 		}
 
-		// Place doors + locked areas in the green zone (works across generated layouts)
-		// Coordinates are chosen to be near the top-left/mid/right to maximize chance they exist.
-		const doorSpecs = [
-			{ color: lockColors[0], door: { x: 4, y: 6 }, lock: { x: 6, y: 4, size: 4 } },
-			{ color: lockColors[1], door: { x: 10, y: 10 }, lock: { x: 12, y: 8, size: 4 } },
-			{ color: lockColors[2], door: { x: 16, y: 14 }, lock: { x: 18, y: 12, size: 4 } }
-		];
-		const placedDoors = [];
-		for (const spec of doorSpecs) {
-			const doorCell = placeDoor(greenZone, spec.door.x, spec.door.y, spec.color);
-			if (doorCell) {
-				placedDoors.push(doorCell);
-				markLockedSquare(greenZone, spec.lock.x, spec.lock.y, spec.lock.size, spec.color);
+		// Place one door per locked color, inside the locked color's own zone.
+		// The region "behind" the door is dark/unreachable until the door is activated.
+		try {
+			// Purple: lock a top-right block
+			if (purpleZone) {
+				const doorId = 'w4:door:paars:1';
+				// Door on the edge of the locked region
+				const doorCell = placeDoor(purpleZone, 9, 4, doorId, 'paars');
+				if (doorCell) {
+					lockRegionBehindDoor(purpleZone, doorId, 10, 2, 4, 5);
+				}
 			}
-		}
+			// Red: lock part of red-grid1 (small), keep it simple
+			const redGrid1 = document.getElementById('red-grid1');
+			if (redGrid1) {
+				const doorId = 'w4:door:rood:1';
+				const doorCell = placeDoor(redGrid1, 2, 1, doorId, 'rood');
+				if (doorCell) {
+					lockRegionBehindDoor(redGrid1, doorId, 3, 0, 3, 3);
+				}
+			}
+		} catch (e) {}
 
 		// Place keys in other zones when possible; fall back to green if needed.
-		const keyZones = [purpleZone, blueZone, greenZone].filter(Boolean);
+		const keyZones = [yellowZone, blueZone, greenZone].filter(Boolean);
 		const keyCoords = [
 			{ x: 1, y: 1 },
 			{ x: 2, y: 3 },
 			{ x: 3, y: 2 }
 		];
-		lockColors.forEach((colorKey, i) => {
+		lockedColors.forEach((colorKey, i) => {
 			let placed = false;
 			for (const z of keyZones) {
 				const coord = keyCoords[i % keyCoords.length];
@@ -28462,9 +28543,25 @@ function clearWorld4Locks() {
 	try {
 		world4UnlockedColors = new Set();
 		window.world4UnlockedColors = world4UnlockedColors;
-		// Remove any lingering door/key visuals
-		document.querySelectorAll('.door-cell,.key-cell').forEach(el => {
-			try { el.classList.remove('door-open'); } catch (_) {}
+		// Restore zone visibility (World 4 gating might have hidden some)
+		try {
+			['yellow-zone','green-zone','blue-zone','purple-zone','red-zone'].forEach(id => {
+				const z = document.getElementById(id);
+				if (z) z.style.display = '';
+			});
+		} catch (e) {}
+		// Remove any lingering door/key visuals + locked regions
+		document.querySelectorAll('.door-cell,.key-cell,.cell.locked-behind-door,.cell.locked-cell').forEach(el => {
+			try {
+				el.classList.remove('door-open','door-armed','door-cell','key-cell','key-consumed','locked-behind-door','locked-cell');
+				delete el.dataset.lockedDoorId;
+				delete el.dataset.doorId;
+				delete el.dataset.doorColor;
+				delete el.dataset.keyColor;
+				delete el.dataset.keyConsumed;
+				const sym = el.querySelector && el.querySelector('.door-symbol,.key-symbol');
+				if (sym) sym.remove();
+			} catch (_) {}
 		});
 	} catch (e) {}
 }
@@ -28481,19 +28578,72 @@ function unlockWorld4Color(color) {
 	if (world4UnlockedColors.has(key)) return;
 	world4UnlockedColors.add(key);
 	window.world4UnlockedColors = world4UnlockedColors;
-	// Unlock all cells gated by this color
-	document.querySelectorAll(`.cell[data-locked-color]`).forEach(cell => {
-		const c = String(cell.dataset.lockedColor || '').toLowerCase();
-		if (c !== key) return;
-		try { delete cell.dataset.lockedColor; } catch (_) {}
-		cell.classList.remove('locked-cell');
-	});
-	// Open matching doors
-	document.querySelectorAll(`.cell[data-door-color]`).forEach(cell => {
-		const c = String(cell.dataset.doorColor || '').toLowerCase();
-		if (c !== key) return;
-		cell.classList.add('door-open');
-	});
+	// Add to the allowed palette (hand cards become playable) and reveal the zone.
+	try {
+		if (!world4AllowedColors || !world4AllowedColors.length) {
+			setWorld4AllowedColors([key]);
+		} else if (!world4AllowedColors.includes(key)) {
+			setWorld4AllowedColors(world4AllowedColors.concat([key]));
+		}
+	} catch (e) {}
+	try {
+		if (key === 'rood') {
+			const rz = document.getElementById('red-zone');
+			if (rz) rz.style.display = '';
+		} else {
+			const z = document.querySelector(`.zone[data-color="${key}"]`) || document.getElementById(`${key}-zone`);
+			if (z) z.style.display = '';
+		}
+	} catch (e) {}
+	// Arm matching doors (visual cue); door still requires activation to open.
+	try {
+		document.querySelectorAll(`.cell.door-cell[data-door-color]`).forEach(cell => {
+			const c = String(cell.dataset.doorColor || '').toLowerCase();
+			if (c !== key) return;
+			cell.classList.add('door-armed');
+		});
+	} catch (e) {}
+	try { if (typeof renderCurrentHand === 'function') renderCurrentHand(); } catch (e) {}
+}
+
+function isWorld4DoorOpen(doorId) {
+	const id = String(doorId || '').trim();
+	if (!id) return false;
+	try {
+		const door = document.querySelector(`.cell.door-cell[data-door-id="${CSS.escape(id)}"]`);
+		return !!(door && door.classList.contains('door-open'));
+	} catch (e) {
+		// Fallback if CSS.escape isn't available
+		try {
+			const door = Array.from(document.querySelectorAll('.cell.door-cell')).find(el => String(el.dataset.doorId || '') === id);
+			return !!(door && door.classList.contains('door-open'));
+		} catch (_) { return false; }
+	}
+}
+
+function openWorld4Door(doorId) {
+	const id = String(doorId || '').trim();
+	if (!id) return;
+	let door = null;
+	try {
+		door = document.querySelector(`.cell.door-cell[data-door-id="${CSS.escape(id)}"]`);
+	} catch (e) {
+		door = Array.from(document.querySelectorAll('.cell.door-cell')).find(el => String(el.dataset.doorId || '') === id) || null;
+	}
+	if (!door) return;
+	if (!door.classList.contains('door-open')) {
+		door.classList.add('door-open');
+		door.classList.remove('door-armed');
+		try { showObjectiveToast('🚪 Deur geopend!'); } catch (e) {}
+	}
+	// Unlock the region behind this door
+	try {
+		document.querySelectorAll(`.cell[data-locked-door-id]`).forEach(cell => {
+			if (String(cell.dataset.lockedDoorId || '') !== id) return;
+			try { delete cell.dataset.lockedDoorId; } catch (_) {}
+			cell.classList.remove('locked-behind-door');
+		});
+	} catch (e) {}
 }
 
 function isWorld4CardAllowed(cardData) {
