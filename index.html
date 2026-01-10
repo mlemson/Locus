@@ -17018,6 +17018,24 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		}
 		return ZONE_SCROLL_MEMORY[zoneId];
 	}
+	function resetZoneScrollMemory(zoneId) {
+		if (!zoneId) return;
+		const mem = getZoneScrollMemory(zoneId);
+		['normal', 'zoom'].forEach(mode => {
+			if (!mem[mode]) mem[mode] = { left: 0, top: 0, initialized: false };
+			mem[mode].left = 0;
+			mem[mode].top = 0;
+			mem[mode].initialized = false;
+			mem[mode].level = currentLevel;
+		});
+	}
+	function resetZoneScrollState(zoneId, anchorFn) {
+		resetZoneScrollMemory(zoneId);
+		if (typeof anchorFn !== 'function') return;
+		const zoneEl = document.getElementById(zoneId);
+		if (!zoneEl) return;
+		try { anchorFn(zoneEl); } catch (_) {}
+	}
 	function getZoneScrollMode(zoneEl) {
 		if (!zoneEl) return 'normal';
 		return (document.body.classList.contains('zoomed-in') && zoneEl.classList.contains('zoom-focus')) ? 'zoom' : 'normal';
@@ -18916,7 +18934,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		Elk volledig gevuld subgrid geeft vaste punten (per subgrid).
 		Score verdwijnt als grid weer onvolledig gemaakt wordt. */
 		const activeEndCells = Array.from(document.querySelectorAll('#green-grid .cell.end-cell.active'));
-		if (!isWorld2 || !greenGrid) {
+		if (!(isWorld2 || isWorld3) || !greenGrid) {
 			green = activeEndCells.length * 8;
 			if (cell != null && cell.classList.contains('end-cell') && cell.classList.contains('active')) {
 				const rect = cell.getBoundingClientRect();
@@ -26681,16 +26699,8 @@ function openShopModal(callback) {
 	  
 	  // World 2: reset scroll memory so green centers on start cell
 	  try {
-		const greenMem = getZoneScrollMemory('green-zone');
-		if (greenMem && greenMem.normal) {
-			greenMem.normal.initialized = false;
-			greenMem.normal.level = currentLevel;
-		}
-		const blueMem = getZoneScrollMemory('blue-zone');
-		if (blueMem && blueMem.normal) {
-			blueMem.normal.initialized = false;
-			blueMem.normal.level = currentLevel;
-		}
+		resetZoneScrollState('green-zone', resetGreenZoomScroll);
+		resetZoneScrollState('blue-zone', resetBlueZoomScroll);
 	  } catch (_) {}
 	  
 	  // Pas zone groottes aan op basis van gegenereerde grids
@@ -26913,12 +26923,12 @@ function openShopModal(callback) {
 	  
 	  // ROOD: Alle 6 grids actief met hogere moeilijkheid (alleen wereld 3)
 	  const redConfigs = [
-		{ id: 'red-grid1', width: 6, height: 5, growth: 20 },
-		{ id: 'red-grid2', width: 7, height: 5, growth: 22 },
-		{ id: 'red-grid3', width: 7, height: 6, growth: 25 },
-		{ id: 'red-grid4', width: 7, height: 6, growth: 28 },
-		{ id: 'red-grid5', width: 8, height: 6, growth: 30 },
-		{ id: 'red-grid6', width: 8, height: 7, growth: 32 }
+		{ id: 'red-grid1', width: 6, height: 5, growth: 22 },
+		{ id: 'red-grid2', width: 7, height: 5, growth: 25 },
+		{ id: 'red-grid3', width: 7, height: 6, growth: 28 },
+		{ id: 'red-grid4', width: 7, height: 6, growth: 30 },
+		{ id: 'red-grid5', width: 8, height: 10, growth: 34 },
+		{ id: 'red-grid6', width: 8, height: 10, growth: 38 }
 	  ].filter(cfg => document.getElementById(cfg.id));
 	  
 	  // World 3 red progression: stage visibility is handled via applyWorld3RedStage().
@@ -27014,16 +27024,8 @@ function openShopModal(callback) {
 	  // World 3: after regenerating the board, re-anchor the initial unzoomed view.
 	  // Without this, existing scroll memory can keep green at (0,0) instead of centered.
 	  try {
-		const greenMem = getZoneScrollMemory('green-zone');
-		if (greenMem && greenMem.normal) {
-			greenMem.normal.initialized = false;
-			greenMem.normal.level = currentLevel;
-		}
-		const blueMem = getZoneScrollMemory('blue-zone');
-		if (blueMem && blueMem.normal) {
-			blueMem.normal.initialized = false;
-			blueMem.normal.level = currentLevel;
-		}
+		resetZoneScrollState('green-zone', resetGreenZoomScroll);
+		resetZoneScrollState('blue-zone', resetBlueZoomScroll);
 	  } catch (_) {}
 	  
 	  // Gebruik World 2 zone sizing (werkt ook voor World 3)
