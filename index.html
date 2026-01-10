@@ -5164,15 +5164,16 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		}
 
 		.deck-modal-grid {
-			grid-template-columns: repeat(auto-fit, minmax(64px, 1fr));
+			grid-template-columns: repeat(auto-fit, minmax(86px, 1fr));
 			gap: 12px;
 			padding: 0 2px;
 			max-height: 54vh;
 		}
 
 		.deck-modal-grid .card-option {
-			max-width: 82px;
-			min-height: 112px;
+			max-width: 104px;
+			min-width: 0;
+			min-height: 118px;
 			padding: 4px;
 			overflow: hidden;
 		}
@@ -5221,14 +5222,15 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		}
 
 		.deck-modal-grid {
-			grid-template-columns: repeat(auto-fit, minmax(58px, 1fr));
+			grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
 			gap: 10px;
 			max-height: 54vh;
 		}
 
 		.deck-modal-grid .card-option {
-			min-height: 72px;
-			max-width: 72px;
+			min-height: 98px;
+			max-width: 96px;
+			min-width: 0;
 			padding: 4px;
 			transform: none;
 			overflow: hidden;
@@ -23638,9 +23640,14 @@ function getCollectedCoinCount(scores) {
 		: (colorObj.code || '#a0a0a0'));
 	  swatch.style.background = fill;
 	  const labelText = document.createElement('span');
-	labelText.textContent = isGolden
-		? 'GOUD'
-		: (displayName ? displayName.toUpperCase() : 'KAART');
+	if (isBonusEcho) {
+		const variantCopy = (typeof getBonusEchoUiCopy === 'function') ? getBonusEchoUiCopy(blueprint.bonusEchoVariant || 'replay') : { sub: 'LVL 2' };
+		labelText.textContent = String(variantCopy?.sub || 'LVL 2').toUpperCase();
+	} else {
+		labelText.textContent = isGolden
+			? 'GOUD'
+			: (displayName ? displayName.toUpperCase() : 'KAART');
+	}
 	  label.append(swatch, labelText);
 	const meta = document.createElement('div');
 	meta.classList.add('card-meta');
@@ -23654,10 +23661,7 @@ function getCollectedCoinCount(scores) {
 	card.append(label, meta);
 
 	if (isBonusEcho) {
-		const replayCharges = Number(blueprint.bonusEchoReplaysAvailable || 0);
 		const variant = blueprint.bonusEchoVariant || 'replay';
-		const badge = createBonusEchoBadge(variant, variant === 'replay' && replayCharges > 0);
-		card.appendChild(badge);
 		attachBonusEchoTooltip(card, variant);
 	}
 	if (interactive && typeof options.onSelect === 'function') {
@@ -24940,9 +24944,14 @@ function getCollectedCoinCount(scores) {
 		? 'linear-gradient(135deg, #f06272, #fff25a, #4ed346, #5d90f0, #a35eff)'
 		: cardData.color.code);
 	const labelText = document.createElement('span');
-	labelText.textContent = isGoldenCard
-	  ? 'GOUD'
-	  : (displayName ? displayName.toUpperCase() : 'KAART');
+	if (isBonusEchoCard) {
+		const variantCopy = (typeof getBonusEchoUiCopy === 'function') ? getBonusEchoUiCopy(cardData.bonusEchoVariant || 'replay') : { sub: 'LVL 2' };
+		labelText.textContent = String(variantCopy?.sub || 'LVL 2').toUpperCase();
+	} else {
+		labelText.textContent = isGoldenCard
+		  ? 'GOUD'
+		  : (displayName ? displayName.toUpperCase() : 'KAART');
+	}
 	label.append(swatch, labelText);
 
 	const meta = document.createElement('div');
@@ -24969,10 +24978,7 @@ function getCollectedCoinCount(scores) {
 		effect.textContent = `⚡ BONUS BOOST: 2× ${labelColor}`;
 		card.appendChild(effect);
 	} else if (isBonusEchoCard) {
-		const replayCharges = Number(cardData.bonusEchoReplaysAvailable || 0);
 		const variant = cardData.bonusEchoVariant || 'replay';
-		const badge = createBonusEchoBadge(variant, variant === 'replay' && replayCharges > 0);
-		card.appendChild(badge);
 		attachBonusEchoTooltip(card, variant);
 	}
 
