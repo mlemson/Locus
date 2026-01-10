@@ -8563,6 +8563,46 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  box-shadow: inset 0 0 0 2px rgba(90, 200, 140, 0.65);
 	}
 
+	/* World 4: sleutel/deur visuals */
+	.cell.door-cell {
+	  position: relative;
+	}
+	.cell.door-cell:not(.door-open) {
+	  outline: 2px solid rgba(255, 120, 80, 0.75);
+	  outline-offset: -2px;
+	}
+	.cell.door-cell.door-open {
+	  outline: 2px solid rgba(90, 200, 140, 0.9);
+	  outline-offset: -2px;
+	}
+	.cell.door-cell .door-symbol {
+	  position: absolute;
+	  inset: 0;
+	  display: grid;
+	  place-items: center;
+	  font-size: 14px;
+	  font-weight: 900;
+	  pointer-events: none;
+	  text-shadow: 0 1px 2px rgba(0,0,0,0.35);
+	}
+	.cell.key-cell {
+	  position: relative;
+	  outline: 2px solid rgba(255, 215, 0, 0.85);
+	  outline-offset: -2px;
+	}
+	.cell.key-cell .key-symbol {
+	  position: absolute;
+	  inset: 0;
+	  display: grid;
+	  place-items: center;
+	  font-size: 14px;
+	  pointer-events: none;
+	  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.35));
+	}
+	.cell.key-cell.key-consumed {
+	  outline-color: rgba(90, 200, 140, 0.9);
+	}
+
 	/* Hover effect op cellen */
 	body.dark-mode .cell:hover {
 	  background: #31343b;
@@ -18360,6 +18400,24 @@ let shopLevel2Used = false;
 			cell.classList.remove('portal-cell');
 			// IMPORTANT: Keep bold-cell class so the portal remains usable as a start position
 		}
+
+		// World 4: key unlocks a door color when activated
+		try {
+			const worldInfo = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(currentLevel) : null;
+			const isWorld4 = !!(worldInfo && Number(worldInfo.world) === 4);
+			if (isWorld4 && cell.classList.contains('key-cell') && cell.dataset.keyColor && cell.dataset.keyConsumed !== 'true') {
+				const keyColor = String(cell.dataset.keyColor || '').toLowerCase();
+				cell.dataset.keyConsumed = 'true';
+				cell.classList.add('key-consumed');
+				try { unlockWorld4Color(keyColor); } catch (e) {}
+				// Remove the key glyph once consumed
+				try {
+					const sym = cell.querySelector('.key-symbol');
+					if (sym) sym.remove();
+				} catch (e) {}
+				try { showObjectiveToast(`🗝️ Sleutel gebruikt: ${keyColor} ontgrendeld!`); } catch (e) {}
+			}
+		} catch (e) {}
 				// zorg dat achtergrond consistent wordt gezet: expliciete kleur (bv. van placeShape) of zoneColor
 				try {
 					const rainbowGradient = 'linear-gradient(45deg, #f06272, #fff25a, #4ed346, #5d90f0, #a35eff)';
@@ -26497,12 +26555,127 @@ function openShopModal(callback) {
 		rebuildGameBoards_World2();
 	  } else if (world === 3) {
 		rebuildGameBoards_World3();
+	  } else if (world === 4) {
+		rebuildGameBoards_World4();
 	  } else {
 		// Fallback naar World 3 voor toekomstige worlds
 		rebuildGameBoards_World3();
 	  }
 	  // World 3 red progression visibility (and ensure 5/6 stay hidden in other worlds)
 	  try { applyWorld3RedStage(world === 3 ? world3RedStage : 0); } catch (e) {}
+	}
+
+	// WORLD 4: Board layout = World 3 sizing/layout, plus doors/keys gating
+	function rebuildGameBoards_World4() {
+		// Reuse World 3 generator for consistent field layout
+		rebuildGameBoards_World3();
+		try { applyWorld4LocksForLevel(currentLevel); } catch (e) { console.warn('World 4 locks failed', e); }
+	}
+
+	function applyWorld4LocksForLevel(level) {
+		// Clear any previous state for this level (board is already rebuilt at this point)
+		try { clearWorld4Locks(); } catch (e) {}
+
+		// Keep deck unrestricted for now; this is purely board gating.
+		try { setWorld4AllowedColors(null); } catch (e) {}
+
+		const worldInfo = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(level) : null;
+		if (!worldInfo || Number(worldInfo.world) !== 4) return;
+
+		const greenZone = document.getElementById('green-zone');
+		const purpleZone = document.getElementById('purple-zone');
+		const blueZone = document.getElementById('blue-zone');
+		if (!greenZone) return;
+
+		// Choose 3 locked colors (Dutch names) and place a key for each.
+		const lockColors = ['geel', 'rood', 'paars'];
+
+		function ensureCellSymbol(cell, cls, text) {
+			if (!cell) return;
+			try {
+				let el = cell.querySelector(`.${cls}`);
+				if (!el) {
+					el = document.createElement('span');
+					el.className = cls;
+					cell.appendChild(el);
+				}
+				el.textContent = text;
+			} catch (e) {}
+		}
+
+		function markLockedSquare(zone, x0, y0, size, colorKey) {
+			if (!zone) return;
+			for (let y = 0; y < size; y++) {
+				for (let x = 0; x < size; x++) {
+					const cell = getCell(zone, x0 + x, y0 + y);
+					if (!cell) continue;
+					if (cell.classList.contains('void-cell')) continue;
+					if (cell.classList.contains('bold-cell')) continue;
+					cell.dataset.lockedColor = String(colorKey);
+					cell.classList.add('locked-cell');
+				}
+			}
+		}
+
+		function placeDoor(zone, x, y, colorKey) {
+			const cell = getCell(zone, x, y);
+			if (!cell || cell.classList.contains('void-cell')) return null;
+			cell.classList.add('door-cell');
+			cell.dataset.doorColor = String(colorKey);
+			ensureCellSymbol(cell, 'door-symbol', '🔒');
+			return cell;
+		}
+
+		function placeKey(zone, x, y, colorKey) {
+			const cell = getCell(zone, x, y);
+			if (!cell || cell.classList.contains('void-cell')) return null;
+			cell.classList.add('key-cell');
+			cell.dataset.keyColor = String(colorKey);
+			cell.dataset.keyConsumed = 'false';
+			ensureCellSymbol(cell, 'key-symbol', '🗝️');
+			return cell;
+		}
+
+		// Place doors + locked areas in the green zone (works across generated layouts)
+		// Coordinates are chosen to be near the top-left/mid/right to maximize chance they exist.
+		const doorSpecs = [
+			{ color: lockColors[0], door: { x: 4, y: 6 }, lock: { x: 6, y: 4, size: 4 } },
+			{ color: lockColors[1], door: { x: 10, y: 10 }, lock: { x: 12, y: 8, size: 4 } },
+			{ color: lockColors[2], door: { x: 16, y: 14 }, lock: { x: 18, y: 12, size: 4 } }
+		];
+		const placedDoors = [];
+		for (const spec of doorSpecs) {
+			const doorCell = placeDoor(greenZone, spec.door.x, spec.door.y, spec.color);
+			if (doorCell) {
+				placedDoors.push(doorCell);
+				markLockedSquare(greenZone, spec.lock.x, spec.lock.y, spec.lock.size, spec.color);
+			}
+		}
+
+		// Place keys in other zones when possible; fall back to green if needed.
+		const keyZones = [purpleZone, blueZone, greenZone].filter(Boolean);
+		const keyCoords = [
+			{ x: 1, y: 1 },
+			{ x: 2, y: 3 },
+			{ x: 3, y: 2 }
+		];
+		lockColors.forEach((colorKey, i) => {
+			let placed = false;
+			for (const z of keyZones) {
+				const coord = keyCoords[i % keyCoords.length];
+				const keyCell = placeKey(z, coord.x, coord.y, colorKey);
+				if (keyCell) { placed = true; break; }
+			}
+			if (!placed) {
+				// last resort: try a few random-ish cells in green
+				for (let attempt = 0; attempt < 20 && !placed; attempt++) {
+					const x = 1 + (attempt % 8);
+					const y = 1 + Math.floor(attempt / 4);
+					const keyCell = placeKey(greenZone, x, y, colorKey);
+					if (keyCell) placed = true;
+				}
+			}
+		});
 	}
 
 	// WORLD 1: Originele grid layout (levels 1-10)
@@ -27465,6 +27638,7 @@ function openShopModal(callback) {
 	  const isWorld1 = !!(worldInfo && worldInfo.world === 1);
 	  const isWorld2 = !!(worldInfo && worldInfo.world === 2);
 	  const isWorld3 = !!(worldInfo && worldInfo.world === 3);
+	  const isWorld4 = !!(worldInfo && worldInfo.world === 4);
 	  const isPortrait = window.innerHeight > window.innerWidth;
 	  const isShortHeight = window.innerHeight <= 925;
 	  const isDesktopPortraitLayout = document.body.classList.contains('desktop-portrait')
@@ -27499,10 +27673,10 @@ function openShopModal(callback) {
 		purpleZone.style.height = `${purpleSize * cellSize + purpleChromePx}px`;
 	  }
 
-	  // WORLD 2/3 UX: make yellow zone the same width as purple.
+	  // WORLD 2/3/4 UX: make yellow zone the same width as purple.
 	  try {
 		const worldInfo = typeof getWorldAndSubLevel === 'function' ? getWorldAndSubLevel(currentLevel) : null;
-		if (worldInfo && (worldInfo.world === 2 || worldInfo.world === 3) && yellowZone && purpleZone) {
+		if (worldInfo && (worldInfo.world === 2 || worldInfo.world === 3 || worldInfo.world === 4) && yellowZone && purpleZone) {
 			// IMPORTANT: Yellow must FOLLOW Purple width (not the other way around).
 			// Do NOT use max(purple,yellow) here; that makes yellow only grow and never shrink.
 			const purpleW = (
@@ -27579,9 +27753,9 @@ function openShopModal(callback) {
 		blueGrid.style.margin = '0px';
 		blueGrid.style.justifyContent = 'start';
 		blueGrid.style.transform = '';
-		// World 2: unzoomed blue should start bottom-centered (bold start cells),
+		// World 2/3/4: unzoomed blue should start bottom-centered (bold start cells),
 		// and later keep the user's last unzoomed scroll position.
-		if (isWorld2 || isWorld3) {
+		if (isWorld2 || isWorld3 || isWorld4) {
 			const mem = getZoneScrollMemory('blue-zone');
 			if (mem && mem.normal) {
 				// "level" is an internal stamp (not persisted) to detect new boards.
@@ -27644,9 +27818,9 @@ function openShopModal(callback) {
 
 	  requestAnimationFrame(() => {
 		// World 2 request: green zone must be a SQUARE: height == width (unzoomed).
-		// World 3 request: keep green zone same format as World 2 (avoid overly tall zone).
+		// World 3/4 request: keep green zone same format as World 2 (avoid overly tall zone).
 		try {
-			if ((isWorld2 || isWorld3) && greenZone && !document.body.classList.contains('zoomed-in')) {
+			if ((isWorld2 || isWorld3 || isWorld4) && greenZone && !document.body.classList.contains('zoomed-in')) {
 				// Use the UNTRANSFORMED layout width as source of truth.
 				// If an ancestor is transform-scaled, getBoundingClientRect() returns the scaled width,
 				// and setting height to that value would be scaled again (ending up too short).
