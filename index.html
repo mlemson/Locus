@@ -4279,11 +4279,17 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		color: #0b1b2c;
 		background: linear-gradient(135deg, #e5f1ff, #d7e4ff);
 		box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-		pointer-events: none;
+		pointer-events: auto;
+		cursor: pointer;
 		border: 1px solid rgba(12,22,36,0.12);
 		letter-spacing: 0;
 		text-align: center;
 		line-height: 1;
+	}
+
+	.card-echo-badge:focus-visible {
+		outline: 2px solid rgba(255,255,255,0.9);
+		outline-offset: 2px;
 	}
 
 	.card-echo-badge[data-variant="points"] {
@@ -4303,6 +4309,32 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 	.card-echo-badge.card-echo-badge--ready {
 		box-shadow: 0 0 0 3px rgba(34,197,94,0.25), 0 8px 16px rgba(0,0,0,0.25);
+	}
+
+	.card-echo-tooltip {
+		position: absolute;
+		bottom: 42px;
+		right: 6px;
+		max-width: 220px;
+		padding: 8px 10px;
+		background: rgba(12,18,28,0.92);
+		color: #f3f5ff;
+		border-radius: 12px;
+		box-shadow: 0 14px 30px rgba(0,0,0,0.38);
+		font-size: 0.75rem;
+		line-height: 1.25;
+		opacity: 0;
+		pointer-events: none;
+		transform: translateY(6px);
+		transition: opacity 0.16s ease, transform 0.16s ease;
+		z-index: 3;
+	}
+
+	.card-bonus-echo:hover .card-echo-tooltip,
+	.card-bonus-echo:focus-within .card-echo-tooltip,
+	.card-bonus-echo.card-echo-tooltip-active .card-echo-tooltip {
+		opacity: 1;
+		transform: translateY(0);
 	}
 
 	body.dark-mode .card-option {
@@ -12007,7 +12039,6 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			<button id="new-game-btn" type="button">Nieuw Spel</button>
 			<button id="classic-mode-toggle" type="button" aria-pressed="false">Klassieke versie: uit</button>
 			<button id="debug-mode-toggle" type="button" aria-pressed="false">Debug modus: uit</button>
-			<button id="print-btn" type="button">Print</button>
 			<button id="menu-editor-btn" type="button">🛠️ Editor</button>
 			<button id="menu-open-levels-btn" type="button" onclick="showSavedLevelsModal()">Open level</button>
 			<button id="import-scenario-btn" type="button" onclick="importScenarioFile()">📤 Importeer scenario</button>
@@ -22361,15 +22392,15 @@ function optionalCellsTouchActive(zone, pendingCells) {
 		],
 		// Grote/creatieve vormen
 		large: [
-			{ name: 'Plus', matrix: [[0,1,0],[1,1,1],[0,1,0]], weight: 1 },
+			{ name: 'Plus', matrix: [[0,1,0],[1,1,1],[0,1,0]], weight: 0.5 },
 			{ name: 'U vorm', matrix: [[1,0,1],[1,1,1]], weight: 1 },
-			{ name: 'L groot', matrix: [[1,0],[1,0],[1,0],[1,1]], weight: 1 },
+			{ name: 'L groot', matrix: [[1,0],[1,0],[1,0],[1,1]], weight: 0.5 },
 			{ name: 'Kolom-L', matrix: [[1,0,0],[1,0,0],[1,1,1]], weight: 1 },
 			{ name: 'Trap', matrix: [[1,0,0],[1,1,0],[0,1,1]], weight: 1 },
 			{ name: 'Hoefijzer', matrix: [[1,1,0],[1,0,0],[1,1,0]], weight: 1 },
 			{ name: 'Pijl', matrix: [[0,0,1],[1,1,1],[0,1,0]], weight: 1 },
 			{ name: 'Lang 5', matrix: [[1],[1],[1],[1],[1]], weight: 1 },
-			{ name: 'Z dubbel', matrix: [[0,1],[1,0],[1,1]], weight: 1 },
+			{ name: 'Z dubbel', matrix: [[0,1],[1,0],[1,1]], weight: 0.5 },
 			{ name: 'Hoekspiegel', matrix: [[1,0,0],[1,1,1],[0,0,1]], weight: 1 }
 		],
 		// Gouden kaarten (speciale category)
@@ -22398,7 +22429,7 @@ function optionalCellsTouchActive(zone, pendingCells) {
 			{ name: 'Gouden Hoekspiegel', matrix: [[1,0,0],[1,1,1],[0,0,1]], weight: 1 },
 			// XL (6) shapes - golden variants
 			{ name: 'Gouden XL 2x3', matrix: [[1,1,1],[1,1,1]], weight: 1 },
-			{ name: 'Gouden XL Lang 6', matrix: [[1],[1],[1],[1],[1],[1]], weight: 1 },
+			{ name: 'Gouden XL Lang 6', matrix: [[1],[1],[1],[1],[1],[1]], weight: 0.5 },
 			// Extra large (7) shapes - golden variants
 			{ name: 'Gouden Extra Groot Randhoek', matrix: [[1,1,1],[1,0,0],[1,1,1]], weight: 0.08 },
 			{ name: 'Gouden Extra Groot Dubbele balk', matrix: [[1,1,1],[0,1,0],[1,1,1]], weight: 0.08 }
@@ -22414,7 +22445,7 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	// XL vormen (6 blokjes): pas na upgrade.
 	const XL_6_SHAPES = [
 		{ name: 'XL (6) - 2x3', matrix: [[1,1,1],[1,1,1]], weight: 1 },
-		{ name: 'XL (6) - Lang 6', matrix: [[1],[1],[1],[1],[1],[1]], weight: 1 }
+		{ name: 'XL (6) - Lang 6', matrix: [[1],[1],[1],[1],[1],[1]], weight: 0.5 }
 	];
 
 	const SHAPE_CATEGORY_WEIGHTS = {
@@ -22520,9 +22551,9 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	const BONUS_ECHO_UPGRADE_COST = 5;
 	const BONUS_ECHO_BONUS_REWARD = 2;
 	const BONUS_ECHO_VARIANTS = [
-		{ key: 'points', tag: 'L2', sub: 'POINTS', desc: 'Plaats op 2 bonussen voor +20 in deze kleur.' },
+		{ key: 'points', tag: 'L2', sub: 'POINTS', desc: 'Plaats op 2 bonussen voor +20 punten in deze kleur.' },
 		{ key: 'bonus', tag: 'L2', sub: 'BONUS', desc: 'Plaats op 2 bonussen voor +2 willekeurige bonussen.' },
-		{ key: 'replay', tag: 'L2', sub: 'REPLAY', desc: 'Plaats op 2 bonussen om deze kaart 1× opnieuw te mogen spelen (alleen deze kaart).' }
+		{ key: 'replay', tag: 'L2', sub: 'REPLAY', desc: 'Plaats op 2 bonussen om deze kaart dubbel te mogen spelen.' }
 	];
 	const BONUS_ECHO_BADGE_TEXT = { points: 'P', bonus: 'B', replay: 'R' };
 
@@ -23115,6 +23146,67 @@ function getCollectedCoinCount(scores) {
 		return badge;
 	}
 
+	function attachBonusEchoTooltip(cardEl, variantKey = 'replay') {
+		if (!cardEl) return null;
+		const meta = getBonusEchoUiCopy(variantKey);
+		const desc = meta?.desc || 'Level 2 kaart';
+		cardEl.dataset.bonusEchoDesc = desc;
+		try { cardEl.setAttribute('title', desc); } catch (e) {}
+		let tooltip = cardEl.querySelector('.card-echo-tooltip');
+		if (!tooltip) {
+			tooltip = document.createElement('div');
+			tooltip.className = 'card-echo-tooltip';
+			tooltip.textContent = desc;
+			cardEl.appendChild(tooltip);
+		} else {
+			tooltip.textContent = desc;
+		}
+
+		let hideTimer = null;
+		const showTooltip = (durationMs = 1800) => {
+			cardEl.classList.add('card-echo-tooltip-active');
+			if (hideTimer) clearTimeout(hideTimer);
+			hideTimer = window.setTimeout(() => {
+				cardEl.classList.remove('card-echo-tooltip-active');
+				hideTimer = null;
+			}, durationMs);
+		};
+		const hideTooltip = () => {
+			cardEl.classList.remove('card-echo-tooltip-active');
+			if (hideTimer) {
+				clearTimeout(hideTimer);
+				hideTimer = null;
+			}
+		};
+
+		const badge = cardEl.querySelector('.card-echo-badge');
+		if (badge) {
+			badge.setAttribute('aria-label', desc);
+			badge.setAttribute('title', desc);
+			badge.tabIndex = 0;
+			const stop = (ev) => { ev.stopPropagation(); };
+			badge.addEventListener('pointerdown', stop);
+			badge.addEventListener('pointerup', (ev) => {
+				stop(ev);
+				showTooltip(2000);
+			});
+			badge.addEventListener('click', (ev) => {
+				stop(ev);
+				showTooltip(2000);
+			});
+			badge.addEventListener('keydown', (ev) => {
+				if (ev.key === 'Enter' || ev.key === ' ') {
+					ev.preventDefault();
+					showTooltip(2000);
+				}
+			});
+		}
+
+		cardEl.addEventListener('pointerleave', hideTooltip);
+		cardEl.addEventListener('blur', hideTooltip, true);
+		return tooltip;
+	}
+
 	function buildDeckModalCard(blueprint, index, options = {}) {
 	  if (!blueprint || !deckModalContent) return null;
 	  const interactive = !!options.interactive;
@@ -23129,7 +23221,7 @@ function getCollectedCoinCount(scores) {
 		if (blueprint.shapeName) card.dataset.shapeName = blueprint.shapeName;
 	  card.tabIndex = interactive ? 0 : -1;
 	  card.style.cursor = interactive ? 'pointer' : 'default';
-	  card.style.pointerEvents = interactive ? 'auto' : 'none';
+	  card.style.pointerEvents = 'auto';
 	const isGolden = !!(blueprint.isGolden || blueprint.color?.isGolden);
 	const isBonusEcho = !!blueprint.isBonusEcho;
 	  const colorObj = cloneColor(blueprint.color || { name: '', code: '#cccccc' });
@@ -23137,6 +23229,7 @@ function getCollectedCoinCount(scores) {
 	  // Golden is a card modifier; do not paint the blocks gold.
 	  if (isGolden) colorObj.isGolden = false;
 	  card.dataset.golden = isGolden ? 'true' : 'false';
+	if (isBonusEcho) card.classList.add('card-bonus-echo');
 		const baseLabel = blueprint.shapeName || (displayName ? `${displayName} kaart` : 'Kaart');
 		card.dataset.cardLabel = baseLabel;
 		card.setAttribute('aria-label', baseLabel);
@@ -23175,6 +23268,7 @@ function getCollectedCoinCount(scores) {
 		const variant = blueprint.bonusEchoVariant || 'replay';
 		const badge = createBonusEchoBadge(variant, variant === 'replay' && replayCharges > 0);
 		card.appendChild(badge);
+		attachBonusEchoTooltip(card, variant);
 	}
 	if (interactive && typeof options.onSelect === 'function') {
 		card.addEventListener('click', () => options.onSelect(blueprint));
@@ -24489,6 +24583,7 @@ function getCollectedCoinCount(scores) {
 		const variant = cardData.bonusEchoVariant || 'replay';
 		const badge = createBonusEchoBadge(variant, variant === 'replay' && replayCharges > 0);
 		card.appendChild(badge);
+		attachBonusEchoTooltip(card, variant);
 	}
 
 	  // Pointer UX:
