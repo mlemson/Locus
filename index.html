@@ -4255,6 +4255,46 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		opacity: 0.82;
 	}
 
+	.card-option { position: relative; }
+
+	.card-echo-badge {
+		position: absolute;
+		bottom: 6px;
+		right: 6px;
+		width: 30px;
+		height: 30px;
+		display: grid;
+		place-items: center;
+		border-radius: 10px;
+		font-size: 0.68rem;
+		font-weight: 800;
+		color: #0b1b2c;
+		background: linear-gradient(135deg, #e5f1ff, #d7e4ff);
+		box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+		pointer-events: none;
+		border: 1px solid rgba(12,22,36,0.12);
+		letter-spacing: 0.04em;
+	}
+
+	.card-echo-badge[data-variant="points"] {
+		background: linear-gradient(135deg, #f7e58f, #f4c542);
+		color: #4c3600;
+	}
+
+	.card-echo-badge[data-variant="bonus"] {
+		background: linear-gradient(135deg, #b4f1d2, #6cd3a5);
+		color: #0f3825;
+	}
+
+	.card-echo-badge[data-variant="replay"] {
+		background: linear-gradient(135deg, #cfe2ff, #8fb2ff);
+		color: #0b1b2c;
+	}
+
+	.card-echo-badge.card-echo-badge--ready {
+		box-shadow: 0 0 0 3px rgba(34,197,94,0.25), 0 8px 16px rgba(0,0,0,0.25);
+	}
+
 	body.dark-mode .card-option {
 		background: linear-gradient(160deg, #2d3142 0%, #232635 45%, #1b1e2c 100%);
 		border-color: rgba(120,140,220,0.2);
@@ -12381,35 +12421,16 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		bonusEcho: {
 			id: 'bonusEcho',
 			name: 'Level 2 kaarten',
-			description: 'Ontgrendel Level 2 kaarten met 3 varianten (score / replay / bonusbeurt). Iedere kaart vraagt 2 bonussen. Kies direct 1 uit 3 varianten.',
-			cost: 16,
+			description: 'Ontgrendel Level 2 upgrades voor je deck. Kost 5 munten per upgrade, kies een kaart zonder eerdere upgrade.',
+			cost: 5,
 			icon: '🔁',
 			purchased: false,
 			onPurchase: () => {
 				try {
-					const isStandardTetromino = (entry) => {
-						if (!entry || entry.category !== 'standard' || !entry.matrix) return false;
-						const blocks = (typeof countShapeBlocks === 'function') ? countShapeBlocks(entry.matrix) : null;
-						return !blocks || blocks === 4;
-					};
-					const choices = buildRewardChoices({
-						count: 3,
-						filterFn: isStandardTetromino,
-						colorsPalette: NON_WILDCARD_COLORS,
-						blueprintOptions: { isBonusEcho: true }
-					});
-					showRewardPickerModal({
-						titleText: 'Kies je Level 2 kaart',
-						subtextHtml: 'Selecteer 1 van 3 level 2 kaarten.',
-						choices,
-						onPick: ({ blueprint, card }) => {
-							grantPickedBlueprintReward({ blueprint, card });
-							closeGoldenUnlockModal();
-							restoreGoldenUnlockModalCopy();
-							showObjectiveToast('🔁 Level 2 kaart toegevoegd! Kies een variant (score / replay / bonusbeurt) die 2 bonussen nodig heeft.');
-						}
-					});
-				} catch (e) { console.error('Failed to grant Level 2 (Bonus Echo) reward', e); }
+					UPGRADES.bonusEcho.purchased = true;
+					updateShopUpgradeUI();
+					showObjectiveToast('🔁 Level 2 upgrades ontgrendeld! Upgrade je kaarten voor 5 munten.');
+				} catch (e) { console.error('Failed to unlock Level 2 upgrade flow', e); }
 			}
 		},
 		multicolorBoost: {
@@ -20073,6 +20094,17 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			bonusEchoExtraTurns = Math.max(0, bonusEchoExtraTurns - 1);
 		}
 	  }
+	  if (placement && Array.isArray(placement.bonusEchoBonusesGranted) && placement.bonusEchoBonusesGranted.length) {
+		placement.bonusEchoBonusesGranted.forEach(entry => {
+			const key = typeof entry === 'string' ? entry : entry?.key;
+			const amount = typeof entry === 'object' && Number(entry.amount) ? Number(entry.amount) : 1;
+			if (key && bonusInventory[key] > 0) {
+				bonusInventory[key] = Math.max(0, bonusInventory[key] - amount);
+				totalBonusesCollected = Math.max(0, totalBonusesCollected - amount);
+			}
+		});
+		updateBonusInventoryUI();
+	  }
 	  updateScore();
 	  recomputeBonusEchoSequenceState();
 	  if (isBonusPlacement) {
@@ -22462,11 +22494,14 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	const BONUS_ECHO_REQUIRED_BONUSES = 2;
 	const BONUS_ECHO_SCORE_BONUS = 20;
 	const BONUS_ECHO_CARD_COST_BONUS = 4;
+	const BONUS_ECHO_UPGRADE_COST = 5;
+	const BONUS_ECHO_BONUS_REWARD = 2;
 	const BONUS_ECHO_VARIANTS = [
-		{ key: 'points', tag: 'SPECIAL', sub: '', desc: 'Plaats op 2 bonussen voor +20 in deze kleur.' },
-		{ key: 'replay', tag: 'SPECIAL', sub: '', desc: 'Scoort hij? Dan mag je deze kaart direct opnieuw spelen.' },
-		{ key: 'turn', tag: 'SPECIAL', sub: '', desc: 'Speel twee echo-kaarten na elkaar voor een bonusbeurt met je gespeelde kaarten.' }
+		{ key: 'points', tag: 'L2', sub: 'POINTS', desc: 'Plaats op 2 bonussen voor +20 in deze kleur.' },
+		{ key: 'bonus', tag: 'L2', sub: 'BONUS', desc: 'Plaats op 2 bonussen voor +2 willekeurige bonussen.' },
+		{ key: 'replay', tag: 'L2', sub: 'REPLAY', desc: 'Plaats op 2 bonussen om deze kaart 1× opnieuw te mogen spelen (alleen deze kaart).' }
 	];
+	const BONUS_ECHO_BADGE_TEXT = { points: 'P', bonus: 'B', replay: 'R' };
 
 	function pickBonusEchoVariant() {
 		if (!Array.isArray(BONUS_ECHO_VARIANTS) || !BONUS_ECHO_VARIANTS.length) return 'replay';
@@ -22478,7 +22513,7 @@ function optionalCellsTouchActive(zone, pendingCells) {
 		const meta = BONUS_ECHO_VARIANTS.find(v => v.key === variantKey) || BONUS_ECHO_VARIANTS[1];
 		return {
 			tag: meta.tag,
-			sub: '',
+			sub: meta.sub || '',
 			desc: meta.desc
 		};
 	}
@@ -22617,7 +22652,7 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	// Battery saver toggle: flip to false to disable the low-power tweaks below.
 	// Use var to avoid temporal dead zone when referenced earlier in the file.
 	var BATTERY_SAVER_ENABLED = true;
-	var BATTERY_SUPPRESS_LOGS = false;
+	var BATTERY_SUPPRESS_LOGS = true;
 	var BATTERY_THROTTLE_DRAG = true;
 	var BATTERY_REDUCE_ANIM = false;
 
@@ -22687,6 +22722,7 @@ function optionalCellsTouchActive(zone, pendingCells) {
 		// Golden is a card modifier, NOT a block color.
 		const isGolden = !!(blueprint && (blueprint.isGolden || blueprint.color?.isGolden));
 		if (isGolden) safeColor.isGolden = false;
+		const isEchoUpgrade = !!(blueprint.isBonusEcho || blueprint.isBonusEchoUpgrade);
 		return {
 			id: nextCardInstanceId(),
 			blueprintId: blueprint.blueprintId,
@@ -22696,9 +22732,10 @@ function optionalCellsTouchActive(zone, pendingCells) {
 			color: safeColor,
 			isGolden,
 			isBonusBoost: !!blueprint.isBonusBoost,
-			isBonusEcho: !!blueprint.isBonusEcho,
+			isBonusEcho: isEchoUpgrade,
 			bonusEchoVariant: blueprint.bonusEchoVariant || 'replay',
-			bonusEchoReplaysAvailable: Number(blueprint.bonusEchoReplaysAvailable || 0)
+			bonusEchoReplaysAvailable: Number(blueprint.bonusEchoReplaysAvailable || 0),
+			isBonusEchoUpgrade: !!blueprint.isBonusEchoUpgrade
 		};
 	}
 
@@ -23024,6 +23061,8 @@ function getCollectedCoinCount(scores) {
 	const blackHoleClaimBtn = document.getElementById('blackhole-claim-btn');
 	const blackHoleForfeitBtn = document.getElementById('blackhole-forfeit-btn');
 	const blackHoleFeedbackEl = document.getElementById('blackhole-feedback');
+	let deckModalMode = 'default';
+	let pendingLevel2UpgradeHandler = null;
 
 	if (blackHoleStakeInput) {
 		blackHoleStakeInput.addEventListener('input', () => {
@@ -23035,8 +23074,20 @@ function getCollectedCoinCount(scores) {
 		});
 	}
 
-	function buildDeckModalCard(blueprint, index) {
+	function createBonusEchoBadge(variantKey = 'replay', ready = false) {
+		const badge = document.createElement('div');
+		badge.classList.add('card-echo-badge');
+		badge.dataset.variant = variantKey;
+		badge.textContent = BONUS_ECHO_BADGE_TEXT[variantKey] || 'L2';
+		if (ready) badge.classList.add('card-echo-badge--ready');
+		const meta = getBonusEchoUiCopy(variantKey);
+		badge.title = meta?.desc || 'Level 2 kaart';
+		return badge;
+	}
+
+	function buildDeckModalCard(blueprint, index, options = {}) {
 	  if (!blueprint || !deckModalContent) return null;
+	  const interactive = !!options.interactive;
 	  const rows = Array.isArray(blueprint.matrix) ? blueprint.matrix.length : 0;
 	  const cols = rows > 0 && Array.isArray(blueprint.matrix[0]) ? blueprint.matrix[0].length : 0;
 		const card = document.createElement('div');
@@ -23046,9 +23097,9 @@ function getCollectedCoinCount(scores) {
 		card.dataset.shapeRows = String(rows);
 		if (blueprint.blueprintId) card.dataset.blueprintId = blueprint.blueprintId;
 		if (blueprint.shapeName) card.dataset.shapeName = blueprint.shapeName;
-	  card.tabIndex = -1;
-	  card.style.cursor = 'default';
-	  card.style.pointerEvents = 'none';
+	  card.tabIndex = interactive ? 0 : -1;
+	  card.style.cursor = interactive ? 'pointer' : 'default';
+	  card.style.pointerEvents = interactive ? 'auto' : 'none';
 	const isGolden = !!(blueprint.isGolden || blueprint.color?.isGolden);
 	const isBonusEcho = !!blueprint.isBonusEcho;
 	  const colorObj = cloneColor(blueprint.color || { name: '', code: '#cccccc' });
@@ -23084,46 +23135,19 @@ function getCollectedCoinCount(scores) {
 	card.append(label, meta);
 
 	if (isBonusEcho) {
-		label.style.display = 'none';
-		meta.style.display = 'none';
 		const replayCharges = Number(blueprint.bonusEchoReplaysAvailable || 0);
 		const variant = blueprint.bonusEchoVariant || 'replay';
-		// Center the block preview for the special card.
-		pattern.style.margin = '6px auto 12px auto';
-		pattern.style.justifyContent = 'center';
-		pattern.style.alignItems = 'center';
-		pattern.style.display = 'grid';
-
-		const effect = document.createElement('div');
-		effect.classList.add('card-effect', 'card-effect-echo');
-		effect.style.flexDirection = 'column';
-		effect.style.alignItems = 'center';
-		effect.style.gap = '6px';
-		effect.style.alignSelf = 'center';
-		effect.style.marginTop = '2px';
-		const textWrap = document.createElement('div');
-		textWrap.classList.add('card-effect-echo-text');
-		textWrap.style.alignItems = 'center';
-		const title = document.createElement('div');
-		title.classList.add('card-effect-echo-title');
-		const sub = document.createElement('div');
-		sub.classList.add('card-effect-echo-sub');
-		const readyNote = (variant === 'replay' && replayCharges > 0) ? ' • KLAAR' : '';
-		const copy = getBonusEchoUiCopy(variant, readyNote);
-		title.textContent = copy.tag;
-		sub.textContent = '';
-		sub.style.display = 'none';
-		textWrap.append(title, sub);
-		const iconBottom = document.createElement('div');
-		iconBottom.style.display = 'flex';
-		iconBottom.style.justifyContent = 'center';
-		const icon = document.createElement('span');
-		icon.classList.add('card-effect-echo-icon');
-		icon.textContent = '⟳';
-		iconBottom.appendChild(icon);
-		effect.append(textWrap, iconBottom);
-		effect.title = copy.desc;
-		card.appendChild(effect);
+		const badge = createBonusEchoBadge(variant, variant === 'replay' && replayCharges > 0);
+		card.appendChild(badge);
+	}
+	if (interactive && typeof options.onSelect === 'function') {
+		card.addEventListener('click', () => options.onSelect(blueprint));
+		card.addEventListener('keypress', (e) => {
+			if (e.key === 'Enter' || e.key === ' ') {
+				e.preventDefault();
+				options.onSelect(blueprint);
+			}
+		});
 	}
 	  return card;
 	}
@@ -23368,6 +23392,8 @@ function getCollectedCoinCount(scores) {
 
 	function openDeckModal() {
 	  if (!deckModalLayer) return;
+	  deckModalMode = 'default';
+	  if (deckModalSubtext) deckModalSubtext.textContent = '';
 	  populateDeckModalContent();
 	  deckModalLayer.classList.add('show');
 	  deckModalLayer.setAttribute('aria-hidden', 'false');
@@ -23378,7 +23404,44 @@ function getCollectedCoinCount(scores) {
 		deckModalLayer.classList.remove('show');
 		deckModalLayer.setAttribute('aria-hidden', 'true');
 	  }
+	  deckModalMode = 'default';
+	  pendingLevel2UpgradeHandler = null;
 	  if (deckPreviewEl) deckPreviewEl.focus();
+	}
+
+	function handleLevel2UpgradePick(blueprint) {
+		if (deckModalMode === 'level2-upgrade' && typeof pendingLevel2UpgradeHandler === 'function') {
+			pendingLevel2UpgradeHandler(blueprint);
+		}
+		pendingLevel2UpgradeHandler = null;
+		deckModalMode = 'default';
+		closeDeckModal();
+	}
+
+	function openLevel2UpgradeModal(candidates, onSelect) {
+		if (!deckModalLayer || !deckModalContent) return;
+		deckModalMode = 'level2-upgrade';
+		pendingLevel2UpgradeHandler = onSelect;
+		deckModalContent.innerHTML = '';
+		deckModalContent.classList.add('deck-modal-grid');
+		if (deckModalSubtext) deckModalSubtext.textContent = 'Kies een kaart zonder Level 2 upgrade.';
+		if (!Array.isArray(candidates) || candidates.length === 0) {
+			const empty = document.createElement('p');
+			empty.className = 'deck-modal-empty';
+			empty.textContent = 'Alle kaarten hebben al een Level 2 upgrade.';
+			deckModalContent.appendChild(empty);
+			deckModalLayer.classList.add('show');
+			deckModalLayer.setAttribute('aria-hidden', 'false');
+			return;
+		}
+		candidates.forEach((bp, idx) => {
+			const card = buildDeckModalCard(bp, idx, { interactive: true, onSelect: handleLevel2UpgradePick });
+			if (card) deckModalContent.appendChild(card);
+		});
+		applyCardSizing();
+		deckModalContent.scrollTop = 0;
+		deckModalLayer.classList.add('show');
+		deckModalLayer.setAttribute('aria-hidden', 'false');
 	}
 
 	function buildGoldenUnlockChoices(count = 3) {
@@ -24008,9 +24071,6 @@ function getCollectedCoinCount(scores) {
 		// - Multikleur: 5% basis, 20% met multikleur unlock, 50% met multikleur boost
 		// - Goud: 3% basis, 15% met gouden unlock
 		// - Extra large vormen komen mee in de “large” kans als de upgrade er is
-		if (hasUpgrade('bonusEcho') && Math.random() < 0.12) {
-			return instantiateBlueprint(createBonusEchoCardBlueprint());
-		}
 		const hasWildcardUnlock = hasUpgrade('wildcardCards');
 		const hasWildcardBoost = hasUpgrade('multicolorBoost');
 		const hasGoldUnlock = hasUpgrade('goldenCards');
@@ -24195,15 +24255,17 @@ function getCollectedCoinCount(scores) {
 	}
 
 	function setCardSelectionLock(lock, activeCardEl = null, options = {}) {
-		const { allowGolden = false, allowNormal = false } = options;
+		const { allowGolden = false, allowNormal = false, allowedCardIds = null } = options;
 		cardSelectionLocked = !!lock;
 		const cards = document.querySelectorAll('#card-choice-zone .card-option');
 		cards.forEach(card => {
 			const isActive = card === activeCardEl;
 			const isGoldenCard = card.dataset.golden === 'true';
+			const cardId = card.dataset.cardId;
 			
 			// Disable als: locked en niet actief en (niet toegestaan OF niet plaatsbaar)
-			const lockedOut = cardSelectionLocked && !isActive && !(
+			const isAllowedId = Array.isArray(allowedCardIds) && allowedCardIds.includes(cardId);
+			const lockedOut = cardSelectionLocked && !isActive && !isAllowedId && !(
 				(allowGolden && isGoldenCard) || (allowNormal && !isGoldenCard)
 			);
 			// PERFORMANCE:
@@ -24228,8 +24290,14 @@ function getCollectedCoinCount(scores) {
 		return !!document.querySelector('#card-choice-zone .card-option[data-golden="false"]');
 	}
 
+	function getBonusEchoReplayReadyCardIds() {
+		return currentHand
+			.filter(card => card && card.isBonusEcho && Number(card.bonusEchoReplaysAvailable || 0) > 0)
+			.map(card => card.id);
+	}
+
 	function hasBonusEchoReplayReady() {
-		return currentHand.some(card => card && card.isBonusEcho && Number(card.bonusEchoReplaysAvailable || 0) > 0);
+		return getBonusEchoReplayReadyCardIds().length > 0;
 	}
 
 	function resetTurnCardFlags() {
@@ -24239,10 +24307,12 @@ function getCollectedCoinCount(scores) {
 
 	function computeCardLockOptions() {
 		// Turn rule: max 1 normal card per turn; golden is always allowed.
-		const allowNormalByTurnRule = !nonGoldenCardPlayedThisTurn || hasBonusEchoReplayReady();
+		const replayReadyIds = getBonusEchoReplayReadyCardIds();
+		const allowNormalByTurnRule = !nonGoldenCardPlayedThisTurn;
 		return {
 			allowGolden: allowGoldenCardsInHand(),
-			allowNormal: allowNormalByTurnRule && hasNonGoldenCardsInHand()
+			allowNormal: allowNormalByTurnRule && hasNonGoldenCardsInHand(),
+			allowedCardIds: replayReadyIds
 		};
 	}
 
@@ -24360,36 +24430,8 @@ function getCollectedCoinCount(scores) {
 	} else if (isBonusEchoCard) {
 		const replayCharges = Number(cardData.bonusEchoReplaysAvailable || 0);
 		const variant = cardData.bonusEchoVariant || 'replay';
-		const effect = document.createElement('div');
-		effect.classList.add('card-effect', 'card-effect-echo');
-		effect.style.flexDirection = 'column';
-		effect.style.alignItems = 'center';
-		effect.style.gap = '6px';
-		effect.style.alignSelf = 'center';
-		effect.style.marginTop = inlineLabel ? '6px' : '10px';
-		const textWrap = document.createElement('div');
-		textWrap.classList.add('card-effect-echo-text');
-		textWrap.style.alignItems = 'center';
-		const title = document.createElement('div');
-		title.classList.add('card-effect-echo-title');
-		const sub = document.createElement('div');
-		sub.classList.add('card-effect-echo-sub');
-		const readyNote = (variant === 'replay' && replayCharges > 0) ? ' • KLAAR' : '';
-		const copy = getBonusEchoUiCopy(variant, readyNote);
-		title.textContent = copy.tag;
-		sub.textContent = '';
-		sub.style.display = 'none';
-		textWrap.append(title, sub);
-		const iconRow = document.createElement('div');
-		iconRow.style.display = 'flex';
-		iconRow.style.justifyContent = 'center';
-		const icon = document.createElement('span');
-		icon.classList.add('card-effect-echo-icon');
-		icon.textContent = '⟳';
-		iconRow.appendChild(icon);
-		effect.append(textWrap, iconRow);
-		effect.title = copy.desc;
-		card.appendChild(effect);
+		const badge = createBonusEchoBadge(variant, variant === 'replay' && replayCharges > 0);
+		card.appendChild(badge);
 	}
 
 	  // Pointer UX:
@@ -24970,59 +25012,54 @@ function getCollectedCoinCount(scores) {
 			bonusEchoStreak = 0;
 			lastCardWasBonusEcho = false;
 			lastBonusEchoVariant = null;
-			return { replayGranted: false, pointsAwarded: 0, extraTurnGranted: false, colorKey: null, variant: null };
+			return { replayGranted: false, pointsAwarded: 0, extraTurnGranted: false, colorKey: null, variant: null, bonusRewards: [] };
 		}
 		const variant = playedCard.bonusEchoVariant || 'replay';
 		const bonusClaims = Array.isArray(placementResult?.bonuses) ? placementResult.bonuses.filter(Boolean) : [];
 		const colorKey = getBonusKeyFromColorName(playedCard?.color?.name);
 		const meetsBonusRequirement = bonusClaims.length >= BONUS_ECHO_REQUIRED_BONUSES;
-		const pointsAwarded = (colorKey && meetsBonusRequirement) ? BONUS_ECHO_SCORE_BONUS : 0;
+		let pointsAwarded = 0;
 		let extraTurnGranted = false;
 		let replayGranted = false;
-		if (pointsAwarded > 0) {
-			colorScoreBonuses[colorKey] = Number(colorScoreBonuses[colorKey] || 0) + pointsAwarded;
-			if (variant === 'replay') replayGranted = true;
-			if (variant === 'turn') {
-				bonusEchoStreak = (lastCardWasBonusEcho && lastBonusEchoVariant === 'turn') ? bonusEchoStreak + 1 : 1;
-				lastCardWasBonusEcho = true;
-				lastBonusEchoVariant = 'turn';
-				if (bonusEchoStreak >= 2) {
-					bonusEchoExtraTurns += 1;
-					bonusEchoStreak = 0;
-					extraTurnGranted = true;
+		const bonusRewards = [];
+		if (meetsBonusRequirement) {
+			switch (variant) {
+				case 'points':
+					pointsAwarded = colorKey ? BONUS_ECHO_SCORE_BONUS : 0;
+					if (pointsAwarded > 0 && colorKey) {
+						colorScoreBonuses[colorKey] = Number(colorScoreBonuses[colorKey] || 0) + pointsAwarded;
+					}
+					break;
+				case 'bonus': {
+					for (let i = 0; i < BONUS_ECHO_BONUS_REWARD; i += 1) {
+						const key = BONUS_ORDER[Math.floor(Math.random() * BONUS_ORDER.length)];
+						if (key && BONUS_COLOR_CONFIG[key]) bonusRewards.push(key);
+					}
+					break;
 				}
-			} else {
-				bonusEchoStreak = 0;
-				lastCardWasBonusEcho = false;
-				lastBonusEchoVariant = null;
+				case 'replay':
+					replayGranted = true;
+					break;
+				default:
+					break;
 			}
 			const label = (BONUS_COLOR_CONFIG[colorKey]?.label) || playedCard?.color?.name || '';
-			const toastSuffix = extraTurnGranted ? ' en bonusbeurt klaar!' : '';
-			showObjectiveToast(`🔁 Bonus Echo: +${pointsAwarded} ${label}${toastSuffix}`);
-		} else {
-			bonusEchoStreak = 0;
-			lastCardWasBonusEcho = false;
-			lastBonusEchoVariant = null;
+			if (pointsAwarded > 0) {
+				showObjectiveToast(`🔁 Bonus Echo: +${pointsAwarded} ${label}`);
+			} else if (bonusRewards.length > 0) {
+				showObjectiveToast(`🔁 Bonus Echo: +${bonusRewards.length} bonussen`);
+			}
 		}
-		return { replayGranted, pointsAwarded, extraTurnGranted, colorKey, variant };
+		bonusEchoStreak = 0;
+		lastCardWasBonusEcho = false;
+		lastBonusEchoVariant = null;
+		return { replayGranted, pointsAwarded, extraTurnGranted, colorKey, variant, bonusRewards };
 	}
 
 	function recomputeBonusEchoSequenceState() {
 		bonusEchoStreak = 0;
 		lastCardWasBonusEcho = false;
 		lastBonusEchoVariant = null;
-		cardPlacementHistory.forEach(entry => {
-			const success = entry && entry.cardRef && entry.cardRef.isBonusEcho && entry.cardRef.bonusEchoVariant === 'turn' && Number(entry.bonusEchoPointsAdded || 0) > 0;
-			if (success) {
-				bonusEchoStreak = lastCardWasBonusEcho && lastBonusEchoVariant === 'turn' ? bonusEchoStreak + 1 : 1;
-				lastCardWasBonusEcho = true;
-				lastBonusEchoVariant = 'turn';
-			} else {
-				bonusEchoStreak = 0;
-				lastCardWasBonusEcho = false;
-				lastBonusEchoVariant = null;
-			}
-		});
 	}
 
 	function discardCurrentHand() {
@@ -25063,6 +25100,7 @@ function getCollectedCoinCount(scores) {
 	let bonusEchoPointsAdded = 0;
 	let bonusEchoExtraTurnGranted = false;
 	let bonusEchoColorKey = null;
+	let bonusEchoBonusesGranted = [];
 	// Bonus Boost card: after playing it, only that color's bonus is 2× (per level)
 	try {
 		if (playedCard && playedCard.isBonusBoost) {
@@ -25087,34 +25125,27 @@ function getCollectedCoinCount(scores) {
 	if (wasGolden) goldenCardPlayedThisTurn = true;
 	else nonGoldenCardPlayedThisTurn = true;
 	const coinSnapshot = (coinSnapshotBefore || []).map(state => ({ active: state.active, used: state.used }));
-	cardPlacementHistory.push({
-		cardRef: playedCard,
-		cardState: cardSnapshot,
-		handIndex,
-		cells: (placementResult.cells || []).filter(Boolean),
-		zoneId: placementResult.zoneId,
-		coinSnapshotBefore: coinSnapshot,
-		bonuses: Array.isArray(placementResult.bonuses) ? placementResult.bonuses.slice() : [],
-		turn: turnCount,
-		sequence: actionId,
-		wasGolden,
-		bonusEchoPointsAdded,
-		bonusEchoExtraTurnGranted,
-		bonusEchoColorKey
-	});
-	try {
-		document.dispatchEvent(new CustomEvent('locus:tutorial-card-placed', { detail: { placement: placementResult } }));
-	} catch (_) {}
 	if (playedCard && playedCard.isBonusEcho) {
 		const echoOutcome = applyBonusEchoOutcome(playedCard, placementResult);
 		bonusEchoReplayGranted = !!echoOutcome.replayGranted;
 		bonusEchoPointsAdded = Number(echoOutcome.pointsAwarded || 0);
 		bonusEchoExtraTurnGranted = !!echoOutcome.extraTurnGranted;
 		bonusEchoColorKey = echoOutcome.colorKey || null;
+		bonusEchoBonusesGranted = Array.isArray(echoOutcome.bonusRewards) ? echoOutcome.bonusRewards.filter(Boolean) : [];
 	} else {
 		bonusEchoStreak = 0;
 		lastCardWasBonusEcho = false;
 		lastBonusEchoVariant = null;
+	}
+	if (bonusEchoBonusesGranted.length > 0) {
+		const grants = [];
+		bonusEchoBonusesGranted.forEach(key => {
+			if (key && BONUS_COLOR_CONFIG[key]) {
+				const grantedAmount = grantBonusCharge(key);
+				if (grantedAmount > 0) grants.push({ key, amount: grantedAmount });
+			}
+		});
+		bonusEchoBonusesGranted = grants;
 	}
 	if (playedCard && playedCard.isBonusEcho) {
 		if (bonusEchoReplayGranted) {
@@ -25131,6 +25162,25 @@ function getCollectedCoinCount(scores) {
 	if (bonusEchoPointsAdded > 0) {
 		try { updateScore(); } catch (_) {}
 	}
+	cardPlacementHistory.push({
+		cardRef: playedCard,
+		cardState: cardSnapshot,
+		handIndex,
+		cells: (placementResult.cells || []).filter(Boolean),
+		zoneId: placementResult.zoneId,
+		coinSnapshotBefore: coinSnapshot,
+		bonuses: Array.isArray(placementResult.bonuses) ? placementResult.bonuses.slice() : [],
+		turn: turnCount,
+		sequence: actionId,
+		wasGolden,
+		bonusEchoPointsAdded,
+		bonusEchoExtraTurnGranted,
+		bonusEchoColorKey,
+		bonusEchoBonusesGranted
+	});
+	try {
+		document.dispatchEvent(new CustomEvent('locus:tutorial-card-placed', { detail: { placement: placementResult } }));
+	} catch (_) {}
 	// Golden cards are always extra; do not set per-turn locks.
 	try {
 		if (!bonusUseHintShown && currentHand.length === 0 && typeof getRemainingBonusCharges === 'function') {
@@ -25447,14 +25497,15 @@ function getCollectedCoinCount(scores) {
 		shopUpgradeContainer.innerHTML = '';
 		shopUpgradeContainer.style.display = '';
 		const upgradesSection = shopUpgradeContainer.closest('.shop-upgrades-section');
-		
 		const coins = getSpendableCoinCount();
-		// Filter voor alleen unlocked en niet-gekochte upgrades
+		const level2Unlocked = UNLOCK_PROGRESSION.isUpgradeUnlocked('bonusEcho', currentLevel, currentWorld);
+		// Filter voor alleen unlocked en niet-gekochte upgrades (exclusief level 2 consumable)
 		const availableUpgrades = Object.entries(UPGRADES).filter(([id, upgrade]) => {
+			if (id === 'bonusEcho') return false;
 			return !upgrade.purchased && UNLOCK_PROGRESSION.isUpgradeUnlocked(id, currentLevel, currentWorld);
 		});
 		
-		if (availableUpgrades.length === 0) {
+		if (availableUpgrades.length === 0 && !level2Unlocked) {
 			if (upgradesSection) upgradesSection.classList.add('shop-section--empty');
 			const emptyState = document.createElement('p');
 			emptyState.classList.add('shop-empty-state');
@@ -25498,7 +25549,96 @@ function getCollectedCoinCount(scores) {
 			upgradeCard.append(upgradeHeader, upgradeDesc, upgradeActions);
 			shopUpgradeContainer.appendChild(upgradeCard);
 		});
+
+		if (level2Unlocked) {
+			const upgradeCard = document.createElement('div');
+			upgradeCard.classList.add('shop-upgrade-card');
+			const upgradeHeader = document.createElement('div');
+			upgradeHeader.classList.add('shop-upgrade-header');
+			upgradeHeader.innerHTML = `<span class="upgrade-icon">🔁</span><span class="upgrade-name">Level 2 kaart</span>`;
+			const upgradeDesc = document.createElement('p');
+			upgradeDesc.classList.add('shop-upgrade-desc');
+			const upgradableCount = ownedDeckBlueprints.filter(bp => bp && !bp.isBonusEchoUpgrade).length;
+			upgradeDesc.textContent = upgradableCount > 0
+				? 'Kies een kaart uit je deck en geef hem een willekeurige Level 2 variant (Points / Bonus / Replay).'
+				: 'Alle kaarten hebben al een Level 2 upgrade.';
+			const upgradeActions = document.createElement('div');
+			upgradeActions.classList.add('shop-upgrade-actions');
+			const buyBtn = document.createElement('button');
+			const effectiveCost = debugMode ? 0 : BONUS_ECHO_UPGRADE_COST;
+			if (debugMode) {
+				buyBtn.textContent = 'Upgrade (gratis)';
+				buyBtn.disabled = upgradableCount === 0;
+				buyBtn.title = upgradableCount === 0 ? 'Geen kaarten om te upgraden' : 'Geef een kaart Level 2 (debug)';
+			} else {
+				buyBtn.innerHTML = `Upgrade (${BONUS_ECHO_UPGRADE_COST} ${coinIcon()})`;
+				buyBtn.disabled = coins < BONUS_ECHO_UPGRADE_COST || upgradableCount === 0;
+				buyBtn.title = upgradableCount === 0 ? 'Geen kaarten om te upgraden' : (coins < BONUS_ECHO_UPGRADE_COST ? 'Onvoldoende munten' : 'Geef een kaart Level 2');
+			}
+			buyBtn.addEventListener('click', () => startBonusEchoUpgradeFlow());
+			upgradeActions.appendChild(buyBtn);
+			upgradeCard.append(upgradeHeader, upgradeDesc, upgradeActions);
+			shopUpgradeContainer.appendChild(upgradeCard);
+		}
 	}
+
+		function getLevel2UpgradeCandidates() {
+			return ownedDeckBlueprints.filter(bp => bp && !bp.isBonusEchoUpgrade);
+		}
+
+		function applyBonusEchoUpgradeToBlueprint(blueprint, variantKey) {
+			if (!blueprint || blueprint.isBonusEchoUpgrade) return false;
+			const variant = variantKey || pickBonusEchoVariant();
+			blueprint.isBonusEchoUpgrade = true;
+			blueprint.isBonusEcho = true;
+			blueprint.bonusEchoVariant = variant;
+			blueprint.bonusEchoReplaysAvailable = 0;
+			const syncCard = (card) => {
+				if (card && card.blueprintId === blueprint.blueprintId) {
+					card.isBonusEchoUpgrade = true;
+					card.isBonusEcho = true;
+					card.bonusEchoVariant = variant;
+					card.bonusEchoReplaysAvailable = 0;
+				}
+			};
+			[currentHand, drawPile, discardPile].forEach(pile => {
+				if (!Array.isArray(pile)) return;
+				pile.forEach(syncCard);
+			});
+			return true;
+		}
+
+		function startBonusEchoUpgradeFlow() {
+			const candidates = getLevel2UpgradeCandidates();
+			if (!candidates.length) {
+				if (shopModalMessage) shopModalMessage.textContent = 'Geen kaarten om te upgraden.';
+				return;
+			}
+			const coinsAvailable = getSpendableCoinCount();
+			if (!debugMode && coinsAvailable < BONUS_ECHO_UPGRADE_COST) {
+				if (shopModalMessage) shopModalMessage.textContent = 'Onvoldoende munten voor Level 2.';
+				return;
+			}
+			if (shopModalMessage) shopModalMessage.textContent = 'Kies een kaart om te upgraden.';
+			openLevel2UpgradeModal(candidates, (pickedBlueprint) => {
+				if (!pickedBlueprint) return;
+				if (!debugMode && !spendCoins(BONUS_ECHO_UPGRADE_COST)) {
+					if (shopModalMessage) shopModalMessage.textContent = 'Munten konden niet worden afgeschreven.';
+					return;
+				}
+				const variant = pickBonusEchoVariant();
+				if (!applyBonusEchoUpgradeToBlueprint(pickedBlueprint, variant)) return;
+				if (UPGRADES.bonusEcho) UPGRADES.bonusEcho.purchased = true;
+				const variantLabel = (getBonusEchoUiCopy(variant).sub || variant).toUpperCase();
+				showObjectiveToast(`🔁 Level 2 (${variantLabel}) toegevoegd aan je kaart!`);
+				updateDeckPreview();
+				renderCurrentHand();
+				updateShopCoinDisplay();
+				updateShopUpgradeUI();
+				refreshShopCardButtons();
+				try { saveGameState(); } catch (_) {}
+			});
+		}
 
 function refreshShopCardButtons() {
 	if (!shopCardOptions) return;
@@ -25781,25 +25921,12 @@ function openShopModal(callback) {
 
 		// Specials are allowed but should not explode the amount of options.
 		const availableSpecialFactories = [];
-		const hasBonusEchoUpgrade = hasUpgrade('bonusEcho');
-		let bonusEchoFactory = null;
 		if (hasUpgrade('bonusBoost')) {
 			availableSpecialFactories.push(() => {
 				const boostCard = createBonusBoostShopCard();
 				boostCard.isBonusBoostShopCard = true;
 				return { option: boostCard, cost: calculateCardCost(boostCard), fixed: false };
 			});
-		}
-		if (hasBonusEchoUpgrade) {
-			bonusEchoFactory = () => {
-				const echoCard = createBonusEchoShopCard();
-				echoCard.isBonusEchoShopCard = true;
-				// Level 2 kaarten zijn prijzig: zorg voor een minimumprijs.
-				const baseCost = calculateCardCost(echoCard);
-				const cost = Math.max(baseCost, 8);
-				return { option: echoCard, cost, fixed: false };
-			};
-			availableSpecialFactories.push(bonusEchoFactory);
 		}
 		if (hasUpgrade('goldenCards')) {
 			availableSpecialFactories.push(() => {
@@ -25842,14 +25969,6 @@ function openShopModal(callback) {
 			if (!factory) return;
 			offers.push(factory());
 		});
-
-		// Ensure Level 2 (Bonus Echo) card appears when unlocked.
-		if (bonusEchoFactory) {
-			const hasEchoOffer = offers.some(o => o?.option?.isBonusEchoShopCard);
-			if (!hasEchoOffer) {
-				offers.unshift(bonusEchoFactory());
-			}
-		}
 
 		// Add the random (mystery) card once it is unlocked.
 		const randomCardUnlocked = (UNLOCK_PROGRESSION && typeof UNLOCK_PROGRESSION.isFeatureUnlocked === 'function')
