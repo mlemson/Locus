@@ -31833,6 +31833,13 @@ function buildScenarioBoardHtml(scenarioId) {
 			placeBonusSymbol(gg.querySelector('.cell[data-x="4"][data-y="4"]'), 'green');
 			placeBonusSymbol(bg.querySelector('.cell[data-x="10"][data-y="6"]'), 'blue');
 			placeBonusSymbol(bg.querySelector('.cell[data-x="18"][data-y="4"]'), 'blue');
+			placeBonusSymbol(gg.querySelector('.cell[data-x="6"][data-y="3"]'), 'green');
+			placeBonusSymbol(gg.querySelector('.cell[data-x="7"][data-y="6"]'), 'green');
+			placeBonusSymbol(bg.querySelector('.cell[data-x="6"][data-y="2"]'), 'blue');
+			placeBonusSymbol(bg.querySelector('.cell[data-x="13"][data-y="8"]'), 'blue');
+			// behind the door extra rewards
+			placeBonusSymbol(bg.querySelector('.cell[data-x="16"][data-y="2"]'), 'blue');
+			placeBonusSymbol(bg.querySelector('.cell[data-x="20"][data-y="7"]'), 'blue');
 		} catch (e) {}
 
 		// Keep other columns empty (applyBoardHtmlToGame will hide missing zones)
@@ -31899,6 +31906,11 @@ function buildScenarioBoardHtml(scenarioId) {
 			placeBonusSymbol(gg.querySelector('.cell[data-x="3"][data-y="5"]'), 'green');
 			placeBonusSymbol(gg.querySelector('.cell[data-x="9"][data-y="7"]'), 'green');
 			placeBonusSymbol(bg.querySelector('.cell[data-x="12"][data-y="3"]'), 'blue');
+			placeBonusSymbol(bg.querySelector('.cell[data-x="18"][data-y="5"]'), 'blue');
+			placeBonusSymbol(bg.querySelector('.cell[data-x="7"][data-y="1"]'), 'blue');
+			// behind the door extra rewards
+			placeBonusSymbol(gg.querySelector('.cell[data-x="8"][data-y="6"]'), 'green');
+			placeBonusSymbol(gg.querySelector('.cell[data-x="10"][data-y="8"]'), 'green');
 		} catch (e) {}
 	}
 
@@ -32011,6 +32023,26 @@ function loadScenario(id, meta) {
 	if (Array.isArray(meta && meta.startHand) && meta.startHand.length) {
 		currentHand = meta.startHand.map(resolveToInstance).filter(Boolean);
 	}
+
+	// Deal extra starting cards for scenarios (requested for 4.1/4.2 testing).
+	try {
+		const extra = Math.max(0, Math.floor(Number(meta?.extraStartCards || 0) || 0));
+		if (extra > 0) {
+			for (let i = 0; i < extra; i += 1) {
+				if (!Array.isArray(drawPile) || drawPile.length === 0) break;
+				const card = drawPile.shift();
+				if (card) currentHand.push(card);
+			}
+		}
+	} catch (e) {}
+
+	// Hard restrict: in scenarios, ensure the starting hand contains only allowed colors (plus multikleur).
+	try {
+		if (Array.isArray(window.scenarioAllowedColors) && Array.isArray(currentHand)) {
+			const allowed = window.scenarioAllowedColors;
+			currentHand = currentHand.filter(c => c && (allowed.includes((c.color && c.color.name) || '') || (c.color && c.color.name) === 'multikleur'));
+		}
+	} catch (e) {}
 
 	// If meta provides startCoins (number), apply to the coin UI
 	if (typeof meta?.startCoins === 'number') {
@@ -34656,8 +34688,8 @@ body { background: transparent; }
 		list.appendChild(examplesHeader);
 
 		const examples = [
-		  { id: 'world4-4.1', name: 'Wereld 4.1 - Groen + Blauw', desc: 'Rechthoekige groen + brede blauwe zone. Test: sleutel + deur met afgesloten gebied.', objective: 'Voltooi de subdoelen en open de deur met de sleutel.', allowedColors: ['groen','blauw'], scenarioId: '4.1' },
-		  { id: 'world4-4.2', name: 'Wereld 4.2 - Vormen & Deur', desc: 'Creatieve vormen + sleutel in blauw; deur in groen met groter afgesloten gebied.', objective: 'Voltooi subdoelen: 4×4 in groen, gebruik sleutel, open deur.', allowedColors: ['groen','blauw'], scenarioId: '4.2' }
+		  { id: 'world4-4.1', name: 'Wereld 4.1 - Groen + Blauw', desc: 'Rechthoekige groen + brede blauwe zone. Test: sleutel + deur met afgesloten gebied.', objective: 'Voltooi de subdoelen en open de deur met de sleutel.', allowedColors: ['groen','blauw'], extraStartCards: 3, scenarioId: '4.1' },
+		  { id: 'world4-4.2', name: 'Wereld 4.2 - Vormen & Deur', desc: 'Creatieve vormen + sleutel in blauw; deur in groen met groter afgesloten gebied.', objective: 'Voltooi subdoelen: 4×4 in groen, gebruik sleutel, open deur.', allowedColors: ['groen','blauw'], extraStartCards: 3, scenarioId: '4.2' }
 		];
 		examples.forEach(ex => {
 		  const item = document.createElement('div');
