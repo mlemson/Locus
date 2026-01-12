@@ -31709,10 +31709,14 @@ function registerScenarioSubgoals(scenarioId, meta) {
 		const isDoorOpen = (doorId) => {
 			try { return isWorld4DoorOpen(String(doorId || '')); } catch (e) { return false; }
 		};
+		const isColorUnlocked = (colorNl) => {
+			try { return isWorld4ColorUnlocked(String(colorNl || '').trim().toLowerCase()); } catch (e) { return false; }
+		};
 		if (sid === '4.1') {
 			const subgoals = [
 				{ title: 'Groen 5×5', text: 'Maak een 5×5 volledig actief blok in groen.', check: () => checkGridHasFilledSquare('green-grid', 5) },
-				{ title: 'Sleutel + Deur', text: 'Gebruik de sleutel en open daarna de deur.', check: () => isDoorOpen('sc:4.1:door:blauw:1') }
+				{ title: 'Sleutel', text: 'Activeer de sleutel in groen om blauw te unlocken.', check: () => isColorUnlocked('blauw') },
+				{ title: 'Deur', text: 'Open de blauwe deur om het gebied erachter vrij te spelen.', check: () => isDoorOpen('sc:4.1:door:blauw:1') }
 			];
 			setScenarioSubgoals(subgoals);
 			return;
@@ -31720,7 +31724,7 @@ function registerScenarioSubgoals(scenarioId, meta) {
 		if (sid === '4.2') {
 			const subgoals = [
 				{ title: '4×4 Vorm', text: 'Maak een 4×4 volledig actief blok in groen.', check: () => checkGridHasFilledSquare('green-grid', 4) },
-				{ title: 'Sleutel gebruiken', text: 'Activeer de sleutel in blauw.', check: () => checkBluePortalActive() },
+				{ title: 'Sleutel gebruiken', text: 'Gebruik de sleutel in blauw om groen te unlocken.', check: () => isColorUnlocked('groen') },
 				{ title: 'Deur openen', text: 'Open de deur in groen om het gebied erachter vrij te spelen.', check: () => isDoorOpen('sc:4.2:door:groen:1') }
 			];
 			setScenarioSubgoals(subgoals);
@@ -31749,6 +31753,23 @@ function buildScenarioBoardHtml(scenarioId) {
 	};
 	const KEY_HTML = '<span class="key-glyph" aria-hidden="true">🗝️</span>';
 	const DOOR_HTML = '<span class="door-glyph" aria-hidden="true">🚪</span>';
+	const placeBonusSymbol = (cell, bonusKey) => {
+		try {
+			if (!cell) return;
+			if (cell.classList.contains('void-cell') || cell.classList.contains('bold-cell')) return;
+			if (cell.classList.contains('gold-cell') || cell.classList.contains('trap-cell')) return;
+			if (cell.classList.contains('key-cell') || cell.classList.contains('door-cell')) return;
+			if (cell.querySelector('.symbol')) return;
+			const key = String(bonusKey || '').trim().toLowerCase();
+			// Hard restrict: scenario 4.1/4.2 only allow green/blue bonuses.
+			if (key !== 'green' && key !== 'blue') return;
+			const sym = document.createElement('div');
+			sym.classList.add('symbol', 'gray', key);
+			sym.style.setProperty('--symbol.color', key);
+			sym.setAttribute('aria-label', 'Bonus');
+			cell.appendChild(sym);
+		} catch (e) {}
+	};
 
 	// Column placeholders to match main layout so applyBoardHtmlToGame maps zones correctly
 	const col1 = document.createElement('div'); col1.className = 'column';
@@ -31808,6 +31829,10 @@ function buildScenarioBoardHtml(scenarioId) {
 					}
 				}
 			}
+			// Bonus symbols: ONLY green/blue (some behind the door)
+			placeBonusSymbol(gg.querySelector('.cell[data-x="4"][data-y="4"]'), 'green');
+			placeBonusSymbol(bg.querySelector('.cell[data-x="10"][data-y="6"]'), 'blue');
+			placeBonusSymbol(bg.querySelector('.cell[data-x="18"][data-y="4"]'), 'blue');
 		} catch (e) {}
 
 		// Keep other columns empty (applyBoardHtmlToGame will hide missing zones)
@@ -31868,6 +31893,12 @@ function buildScenarioBoardHtml(scenarioId) {
 					}
 				}
 			}
+		} catch (e) {}
+		// Bonus symbols: ONLY green/blue (some behind the door)
+		try {
+			placeBonusSymbol(gg.querySelector('.cell[data-x="3"][data-y="5"]'), 'green');
+			placeBonusSymbol(gg.querySelector('.cell[data-x="9"][data-y="7"]'), 'green');
+			placeBonusSymbol(bg.querySelector('.cell[data-x="12"][data-y="3"]'), 'blue');
 		} catch (e) {}
 	}
 
@@ -32045,7 +32076,15 @@ function checkBluePortalActive() {
 		const b = document.getElementById('blue-grid');
 		if (!b) return false;
 		const keyCell = b.querySelector('.key-cell');
-		return !!(keyCell && keyCell.classList.contains('active'));
+		if (!keyCell) return false;
+		// A "used" key is the actual gate in the mechanics: either consumed flag or unlocked color.
+		const consumed = String(keyCell.dataset.keyConsumed || '').toLowerCase() === 'true';
+		if (consumed) return true;
+		const unlocks = String(keyCell.dataset.keyColor || '').trim().toLowerCase();
+		if (unlocks) {
+			try { return isWorld4ColorUnlocked(unlocks); } catch (e) { return false; }
+		}
+		return false;
 	} catch (e) { return false; }
 }
 
