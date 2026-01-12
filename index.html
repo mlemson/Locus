@@ -8654,6 +8654,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  height: 14px;
 	  opacity: 0.95;
 	}
+	.cell.door-cell .door-symbol .door-glyph {
+	  display: inline-block;
+	  font-size: 16px;
+	  line-height: 1;
+	  opacity: 0.96;
+	  transform: translateY(0.5px);
+	}
 	.cell.key-cell {
 	  position: relative;
 	  outline: 2px solid rgba(255, 215, 0, 0.85);
@@ -8673,6 +8680,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  width: 14px;
 	  height: 14px;
 	  opacity: 0.95;
+	}
+	.cell.key-cell .key-symbol .key-glyph {
+	  display: inline-block;
+	  font-size: 16px;
+	  line-height: 1;
+	  opacity: 0.96;
+	  transform: translateY(0.5px);
 	}
 	.cell.key-cell.key-consumed {
 	  outline-color: rgba(90, 200, 140, 0.9);
@@ -18714,11 +18728,13 @@ let shopLevel2Used = false;
 			// IMPORTANT: Keep bold-cell class so the portal remains usable as a start position
 		}
 
-		// World 4: key unlocks a door color when activated
+		// World 4 (and scenarios): key unlocks a door color when activated
 		try {
 			const worldInfo = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(currentLevel) : null;
 			const isWorld4 = !!(worldInfo && Number(worldInfo.world) === 4);
-			if (isWorld4 && cell.classList.contains('key-cell') && cell.dataset.keyColor && cell.dataset.keyConsumed !== 'true') {
+			const isScenario = !!(window && window._locusScenarioMode);
+			const allowKeyDoorLogic = isWorld4 || isScenario;
+			if (allowKeyDoorLogic && cell.classList.contains('key-cell') && cell.dataset.keyColor && cell.dataset.keyConsumed !== 'true') {
 				const keyColor = String(cell.dataset.keyColor || '').toLowerCase();
 				cell.dataset.keyConsumed = 'true';
 				cell.classList.add('key-consumed');
@@ -18730,8 +18746,8 @@ let shopLevel2Used = false;
 				} catch (e) {}
 				try { showObjectiveToast(`🗝️ Sleutel gebruikt: ${keyColor} ontgrendeld!`); } catch (e) {}
 			}
-				// World 4: doors only open when you have the key AND activate the door-cell.
-				if (isWorld4 && cell.classList.contains('door-cell') && cell.dataset.doorId && !cell.classList.contains('door-open')) {
+				// World 4 (and scenarios): doors only open when you have the key AND activate the door-cell.
+				if (allowKeyDoorLogic && cell.classList.contains('door-cell') && cell.dataset.doorId && !cell.classList.contains('door-open')) {
 					const doorColor = String(cell.dataset.doorColor || '').toLowerCase();
 					if (doorColor && !isWorld4ColorUnlocked(doorColor)) {
 						// In debug/click scenarios, refuse opening the door without the key.
@@ -21999,11 +22015,13 @@ function clearElPos(el) {
 			return null;
 		  }
 
-			// World 4: door-gated regions are unreachable until the door is opened.
+			// World 4 (and scenarios): door-gated regions are unreachable until the door is opened.
 			try {
 				const worldInfo = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(currentLevel) : null;
 				const isWorld4 = !!(worldInfo && Number(worldInfo.world) === 4);
-				if (isWorld4) {
+				const isScenario = !!(window && window._locusScenarioMode);
+				const allowKeyDoorLogic = isWorld4 || isScenario;
+				if (allowKeyDoorLogic) {
 					// Door cell itself: requires the key for its color (unless already open)
 					if (target.dataset.doorId && target.dataset.doorColor && !target.classList.contains('door-open')) {
 						const doorColor = String(target.dataset.doorColor || '').toLowerCase();
@@ -26918,11 +26936,13 @@ function openShopModal(callback) {
 		// Clear any previous state for this level (board is already rebuilt at this point)
 		try { clearWorld4Locks(); } catch (e) {}
 
-		// World 4: show only 3 of the 5 color-zones at level start.
-		// The other 2 zones are hidden until their key is collected.
-		const baseVisible = ['geel', 'groen', 'blauw'];
-		const lockedColors = ['paars', 'rood'];
-		try { setWorld4AllowedColors(baseVisible); } catch (e) {}
+			// World 4: start with a limited palette (e.g. 3 of 5 zones).
+			// IMPORTANT: keys/doors should only involve the active colors (no references to inactive zones).
+			const ALL_W4_COLORS = ['geel', 'groen', 'blauw', 'paars', 'rood'];
+			const activeColors = ['geel', 'groen', 'blauw'];
+			const inactiveColors = ALL_W4_COLORS.filter(c => !activeColors.includes(c));
+			try { setWorld4AllowedColors(activeColors); } catch (e) {}
+			try { if (!(world4UnlockedColors instanceof Set)) world4UnlockedColors = new Set(); world4UnlockedColors.clear(); window.world4UnlockedColors = world4UnlockedColors; } catch (e) {}
 
 		const worldInfo = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(level) : null;
 		if (!worldInfo || Number(worldInfo.world) !== 4) return;
@@ -26934,7 +26954,7 @@ function openShopModal(callback) {
 		const redZone = document.getElementById('red-zone');
 		if (!greenZone) return;
 
-		// Hide the locked zones at the start of the level.
+		// Hide inactive zones at the start of the level.
 		try {
 			const hideZone = (colorKey) => {
 				const c = String(colorKey || '').toLowerCase();
@@ -26945,7 +26965,7 @@ function openShopModal(callback) {
 				const z = document.querySelector(`.zone[data-color="${c}"]`) || document.getElementById(`${c}-zone`);
 				if (z) z.style.display = 'none';
 			};
-			lockedColors.forEach(hideZone);
+			inactiveColors.forEach(hideZone);
 		} catch (e) {}
 
 		function ensureCellSymbol(cell, cls, html) {
@@ -26961,8 +26981,9 @@ function openShopModal(callback) {
 			} catch (e) {}
 		}
 
-		const ICON_KEY = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="12" r="3.25" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 12h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M18 12v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M15.5 12v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
-		const ICON_DOOR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12.8 12.2h.01" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>';
+		// Use the nicer 4.2-style glyphs (emoji) for immediate readability.
+		const ICON_KEY = '<span class="key-glyph" aria-hidden="true">🗝️</span>';
+		const ICON_DOOR = '<span class="door-glyph" aria-hidden="true">🚪</span>';
 
 		function isStampableCell(cell) {
 			if (!cell) return false;
@@ -27083,61 +27104,83 @@ function openShopModal(callback) {
 			return cell;
 		}
 
-		// Place one door per locked color, inside the locked color's own zone.
-		// The region "behind" the door is dark/unreachable until the door is activated.
-		try {
-			// Purple: lock a top-right block
-			if (purpleZone) {
-				const doorId = 'w4:door:paars:1';
-				// Door on the edge of the locked region
-				const doorCell = placeDoor(purpleZone, 9, 4, doorId, 'paars');
-				if (doorCell) {
-					tryLockRegion(purpleZone, doorId, [
-						{ x0: 10, y0: 2, w: 4, h: 5 },
-						{ x0: 9, y0: 2, w: 4, h: 5 },
-						{ x0: 10, y0: 3, w: 4, h: 4 },
-						{ x0: 8, y0: 2, w: 5, h: 4 }
-					]);
-				}
+		// Place doors/keys for active colors only.
+		// Each door locks a larger region in the SAME active zone, until its matching key is used.
+		const activeZonesByColor = {
+			geel: yellowZone,
+			groen: greenZone,
+			blauw: blueZone,
+			paars: purpleZone,
+			rood: document.getElementById('red-grid1') || redZone
+		};
+		const pickDoorColors = (() => {
+			try {
+				const info = getWorldAndSubLevel(level);
+				const sub = Number(info?.subLevel || 1);
+				const base = activeColors.slice();
+				if (!base.length) return [];
+				const start = ((sub - 1) % base.length + base.length) % base.length;
+				const first = base[start];
+				const second = base.length >= 2 ? base[(start + 1) % base.length] : null;
+				return [first, second].filter(Boolean);
+			} catch (e) {
+				return activeColors.slice(0, 2);
 			}
-			// Red: lock part of red-grid1 (small), keep it simple
-			const redGrid1 = document.getElementById('red-grid1');
-			if (redGrid1) {
-				const doorId = 'w4:door:rood:1';
-				const doorCell = placeDoor(redGrid1, 2, 1, doorId, 'rood');
-				if (doorCell) {
-					tryLockRegion(redGrid1, doorId, [
-						{ x0: 3, y0: 0, w: 3, h: 3 },
-						{ x0: 3, y0: 1, w: 3, h: 3 },
-						{ x0: 2, y0: 0, w: 3, h: 3 },
-						{ x0: 4, y0: 0, w: 2, h: 4 }
-					]);
-				}
-			}
-		} catch (e) {}
+		})();
 
-		// Place keys in other zones when possible; fall back to green if needed.
-		const keyZones = [yellowZone, blueZone, greenZone].filter(Boolean);
-		const keyCoords = [
-			{ x: 1, y: 1 },
-			{ x: 2, y: 3 },
-			{ x: 3, y: 2 }
-		];
-		lockedColors.forEach((colorKey, i) => {
+		const doorPlacements = {
+			geel: { x: 7, y: 3, regions: [
+				{ x0: 8, y0: 1, w: 7, h: 7 },
+				{ x0: 7, y0: 1, w: 7, h: 7 },
+				{ x0: 8, y0: 2, w: 6, h: 6 },
+				{ x0: 6, y0: 2, w: 7, h: 6 }
+			] },
+			blauw: { x: 6, y: 7, regions: [
+				{ x0: 7, y0: 5, w: 7, h: 7 },
+				{ x0: 6, y0: 5, w: 7, h: 7 },
+				{ x0: 7, y0: 6, w: 6, h: 6 },
+				{ x0: 5, y0: 5, w: 7, h: 6 }
+			] },
+			groen: { x: 4, y: 4, regions: [
+				{ x0: 5, y0: 3, w: 6, h: 6 },
+				{ x0: 4, y0: 3, w: 6, h: 6 },
+				{ x0: 5, y0: 4, w: 5, h: 5 },
+				{ x0: 3, y0: 3, w: 6, h: 5 }
+			] }
+		};
+
+		const placedDoors = [];
+		pickDoorColors.forEach((doorColor) => {
+			const zone = activeZonesByColor[doorColor];
+			if (!zone) return;
+			const doorId = `w4:door:${doorColor}:1`;
+			const placement = doorPlacements[doorColor] || { x: 4, y: 4, regions: [{ x0: 5, y0: 3, w: 6, h: 6 }] };
+			const doorCell = placeDoor(zone, placement.x, placement.y, doorId, doorColor);
+			if (!doorCell) return;
+			try { tryLockRegion(zone, doorId, placement.regions || []); } catch (e) {}
+			placedDoors.push({ doorColor, doorId });
+		});
+
+		// Place keys in a DIFFERENT active zone (when possible) to encourage cross-zone play.
+		const keyCoordsByColor = {
+			geel: { x: 2, y: 2 },
+			groen: { x: 2, y: 2 },
+			blauw: { x: 2, y: 2 }
+		};
+		placedDoors.forEach((d, i) => {
+			const targetDoorColor = d.doorColor;
+			const candidateZones = activeColors
+				.filter(c => c !== targetDoorColor)
+				.map(c => activeZonesByColor[c])
+				.filter(Boolean);
+			const fallbackZones = activeColors.map(c => activeZonesByColor[c]).filter(Boolean);
+			const zones = candidateZones.length ? candidateZones : fallbackZones;
 			let placed = false;
-			for (const z of keyZones) {
-				const coord = keyCoords[i % keyCoords.length];
-				const keyCell = placeKey(z, coord.x, coord.y, colorKey);
-				if (keyCell) { placed = true; break; }
-			}
-			if (!placed) {
-				// last resort: try a few random-ish cells in green
-				for (let attempt = 0; attempt < 20 && !placed; attempt++) {
-					const x = 1 + (attempt % 8);
-					const y = 1 + Math.floor(attempt / 4);
-					const keyCell = placeKey(greenZone, x, y, colorKey);
-					if (keyCell) placed = true;
-				}
+			for (let zi = 0; zi < zones.length && !placed; zi++) {
+				const z = zones[(zi + i) % zones.length];
+				const coord = keyCoordsByColor[String(targetDoorColor)] || { x: 1, y: 1 };
+				const keyCell = placeKey(z, coord.x, coord.y, targetDoorColor);
+				if (keyCell) placed = true;
 			}
 		});
 	}
@@ -31663,10 +31706,13 @@ function registerScenarioSubgoals(scenarioId, meta) {
 	try {
 		const sid = String(scenarioId || (meta && meta.scenarioId) || '').trim();
 		if (!sid) return;
+		const isDoorOpen = (doorId) => {
+			try { return isWorld4DoorOpen(String(doorId || '')); } catch (e) { return false; }
+		};
 		if (sid === '4.1') {
 			const subgoals = [
 				{ title: 'Groen 5×5', text: 'Maak een 5×5 volledig actief blok in groen.', check: () => checkGridHasFilledSquare('green-grid', 5) },
-				{ title: 'Blauw kolom', text: 'Activeer een volledige kolom van 8 cellen in blauw.', check: () => checkGridHasFullColumn('blue-grid', 8) }
+				{ title: 'Sleutel + Deur', text: 'Gebruik de sleutel en open daarna de deur.', check: () => isDoorOpen('sc:4.1:door:blauw:1') }
 			];
 			setScenarioSubgoals(subgoals);
 			return;
@@ -31674,7 +31720,8 @@ function registerScenarioSubgoals(scenarioId, meta) {
 		if (sid === '4.2') {
 			const subgoals = [
 				{ title: '4×4 Vorm', text: 'Maak een 4×4 volledig actief blok in groen.', check: () => checkGridHasFilledSquare('green-grid', 4) },
-				{ title: 'Sleutel activeren', text: 'Activeer de portal/sleutel in blauw.', check: () => checkBluePortalActive() }
+				{ title: 'Sleutel gebruiken', text: 'Activeer de sleutel in blauw.', check: () => checkBluePortalActive() },
+				{ title: 'Deur openen', text: 'Open de deur in groen om het gebied erachter vrij te spelen.', check: () => isDoorOpen('sc:4.2:door:groen:1') }
 			];
 			setScenarioSubgoals(subgoals);
 			return;
@@ -31687,6 +31734,21 @@ function buildScenarioBoardHtml(scenarioId) {
 	// Build a minimal board DOM for the scenario and return outerHTML.
 	const board = document.createElement('div');
 	board.className = 'board';
+
+	const ensureSymbol = (cell, cls, html) => {
+		try {
+			if (!cell) return;
+			let el = cell.querySelector(`.${cls}`);
+			if (!el) {
+				el = document.createElement('span');
+				el.className = cls;
+				cell.appendChild(el);
+			}
+			el.innerHTML = html;
+		} catch (e) {}
+	};
+	const KEY_HTML = '<span class="key-glyph" aria-hidden="true">🗝️</span>';
+	const DOOR_HTML = '<span class="door-glyph" aria-hidden="true">🚪</span>';
 
 	// Column placeholders to match main layout so applyBoardHtmlToGame maps zones correctly
 	const col1 = document.createElement('div'); col1.className = 'column';
@@ -31717,6 +31779,37 @@ function buildScenarioBoardHtml(scenarioId) {
 		bz.appendChild(bg);
 		col3.appendChild(bz);
 
+		// Add a simple key+door test:
+		// - Key in green unlocks a blue door
+		// - Region behind the blue door is locked until door is opened
+		try {
+			const keyCell = gg.querySelector('.cell[data-x="2"][data-y="2"]');
+			if (keyCell && !keyCell.classList.contains('void-cell')) {
+				keyCell.classList.add('key-cell');
+				keyCell.dataset.keyColor = 'blauw';
+				keyCell.dataset.keyConsumed = 'false';
+				keyCell.dataset.w4Ink = 'groen';
+				ensureSymbol(keyCell, 'key-symbol', KEY_HTML);
+			}
+			const doorCell = bg.querySelector('.cell[data-x="14"][data-y="3"]');
+			if (doorCell && !doorCell.classList.contains('void-cell')) {
+				doorCell.classList.add('door-cell');
+				doorCell.dataset.doorId = 'sc:4.1:door:blauw:1';
+				doorCell.dataset.doorColor = 'blauw';
+				doorCell.dataset.w4Ink = 'blauw';
+				ensureSymbol(doorCell, 'door-symbol', DOOR_HTML);
+				// Lock a larger region "behind" the door
+				for (let y = 1; y <= 8; y++) {
+					for (let x = 15; x <= 21; x++) {
+						const c = bg.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
+						if (!c || c.classList.contains('void-cell') || c.classList.contains('bold-cell')) continue;
+						c.dataset.lockedDoorId = 'sc:4.1:door:blauw:1';
+						c.classList.add('locked-behind-door');
+					}
+				}
+			}
+		} catch (e) {}
+
 		// Keep other columns empty (applyBoardHtmlToGame will hide missing zones)
 	}
 
@@ -31736,19 +31829,46 @@ function buildScenarioBoardHtml(scenarioId) {
 		gz.appendChild(gg);
 		col2.appendChild(gz);
 
-		// Blue: long winding strip with portal/key and a few locked cells
+		// Blue: long winding strip with key
 		const bz = document.createElement('div'); bz.className = 'zone'; bz.dataset.color = 'blauw'; bz.id = 'blue-zone';
 		const bg = document.createElement('div'); bg.className = 'grid'; bg.id = 'blue-grid'; bg.dataset.rows = '7'; bg.dataset.cols = '24';
 		for (let y=0;y<7;y++) for (let x=0;x<24;x++) {
 			const c = document.createElement('div'); c.className='cell'; c.dataset.x=String(x); c.dataset.y=String(y);
-			// make a small pocket for the portal
-			if (x===3 && y===3) { c.classList.add('portal-cell'); const s=document.createElement('span'); s.className='portal-symbol'; s.textContent='🗝️'; c.appendChild(s); }
+			// place the key (4.2-style)
+			if (x===3 && y===3) {
+				c.classList.add('key-cell');
+				c.dataset.keyColor = 'groen';
+				c.dataset.keyConsumed = 'false';
+				c.dataset.w4Ink = 'blauw';
+				ensureSymbol(c, 'key-symbol', KEY_HTML);
+			}
 			// occasional voids to create placement rhythm
 			if ((x%7===0) && (y===1 || y===5)) c.classList.add('void-cell');
 			bg.appendChild(c);
 		}
 		bz.appendChild(bg);
 		col3.appendChild(bz);
+
+		// Add a green door + a bigger locked region behind it
+		try {
+			const doorCell = gg.querySelector('.cell[data-x="6"][data-y="5"]');
+			if (doorCell && !doorCell.classList.contains('void-cell')) {
+				doorCell.classList.add('door-cell');
+				doorCell.dataset.doorId = 'sc:4.2:door:groen:1';
+				doorCell.dataset.doorColor = 'groen';
+				doorCell.dataset.w4Ink = 'groen';
+				ensureSymbol(doorCell, 'door-symbol', DOOR_HTML);
+				for (let y = 3; y <= 9; y++) {
+					for (let x = 7; x <= 10; x++) {
+						const c = gg.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
+						if (!c || c.classList.contains('void-cell') || c.classList.contains('bold-cell')) continue;
+						if (c === doorCell) continue;
+						c.dataset.lockedDoorId = 'sc:4.2:door:groen:1';
+						c.classList.add('locked-behind-door');
+					}
+				}
+			}
+		} catch (e) {}
 	}
 
 	board.appendChild(col1); board.appendChild(col2); board.appendChild(col3); board.appendChild(col4);
@@ -31788,6 +31908,22 @@ function showPreLevelChoice(onPick) {
 function loadScenario(id, meta) {
 	const boardHtml = buildScenarioBoardHtml(id);
 	applyBoardHtmlToGame(boardHtml);
+	// Scenarios 4.1/4.2 are World 4 prototypes: enable the World 4 key/door mechanics.
+	try {
+		currentWorld = 4;
+		document.body.classList.remove('world-1', 'world-2', 'world-3');
+		document.body.classList.add('world-4');
+	} catch (e) {}
+	try {
+		// Reset key state for a clean test run, but keep the scenario board intact.
+		world4UnlockedColors = new Set();
+		window.world4UnlockedColors = world4UnlockedColors;
+		if (meta && Array.isArray(meta.allowedColors) && meta.allowedColors.length) {
+			setWorld4AllowedColors(meta.allowedColors);
+		} else {
+			setWorld4AllowedColors(null);
+		}
+	} catch (e) {}
 	const scenarioId = (meta && meta.scenarioId) ? meta.scenarioId : id;
 	const objectiveText = (meta && meta.objective != null)
 		? meta.objective
@@ -31908,8 +32044,8 @@ function checkBluePortalActive() {
 	try {
 		const b = document.getElementById('blue-grid');
 		if (!b) return false;
-		const portal = b.querySelector('.portal-cell');
-		return !!(portal && portal.classList.contains('active'));
+		const keyCell = b.querySelector('.key-cell');
+		return !!(keyCell && keyCell.classList.contains('active'));
 	} catch (e) { return false; }
 }
 
@@ -32399,9 +32535,9 @@ function monitorScenarioProgress() {
 		try {
 			if (settings.world != null) {
 				const w = Math.floor(Number(settings.world));
-				if (w === 1 || w === 2 || w === 3) {
+				if (w === 1 || w === 2 || w === 3 || w === 4) {
 					currentWorld = w;
-					document.body.classList.remove('world-1', 'world-2', 'world-3');
+					document.body.classList.remove('world-1', 'world-2', 'world-3', 'world-4');
 					document.body.classList.add(`world-${w}`);
 				}
 			}
@@ -34481,8 +34617,8 @@ body { background: transparent; }
 		list.appendChild(examplesHeader);
 
 		const examples = [
-		  { id: 'world4-4.1', name: 'Wereld 4.1 - Groen + Blauw', desc: 'Rechthoekige groen + brede blauwe zone. Special: sleutel/portal + subdoelen.', objective: 'Voltooi beide subdoelen: Groen 5×5 en Blauw kolom.', allowedColors: ['groen','blauw'], scenarioId: '4.1' },
-		  { id: 'world4-4.2', name: 'Wereld 4.2 - Vormen & Shop', desc: 'Creatieve vormen in groen, lange blauwe strip met portal/key; 4×4 subdoelen en shop-stub.', objective: 'Voltooi beide subdoelen: Groen 4×4 en Activeer de sleutel.', allowedColors: ['groen','blauw'], scenarioId: '4.2' }
+		  { id: 'world4-4.1', name: 'Wereld 4.1 - Groen + Blauw', desc: 'Rechthoekige groen + brede blauwe zone. Test: sleutel + deur met afgesloten gebied.', objective: 'Voltooi de subdoelen en open de deur met de sleutel.', allowedColors: ['groen','blauw'], scenarioId: '4.1' },
+		  { id: 'world4-4.2', name: 'Wereld 4.2 - Vormen & Deur', desc: 'Creatieve vormen + sleutel in blauw; deur in groen met groter afgesloten gebied.', objective: 'Voltooi subdoelen: 4×4 in groen, gebruik sleutel, open deur.', allowedColors: ['groen','blauw'], scenarioId: '4.2' }
 		];
 		examples.forEach(ex => {
 		  const item = document.createElement('div');
