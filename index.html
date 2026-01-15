@@ -13795,9 +13795,9 @@ let shopLevel2Used = false;
 			},
 			{
 				id: 'level-15-ultimate-balance',
-				description: 'Level 15: Scoor 38 punten in elke kleur.',
+				description: 'Level 15: Scoor 25 punten in elke kleur.',
 				short: 'Level 15 - Ultieme balans',
-				check: scores => scores.yellow >= 38 && scores.red >= 38 && scores.green >= 38 && scores.purple >= 38 && scores.blue >= 38
+				check: scores => scores.yellow >= 25 && scores.red >= 25 && scores.green >= 25 && scores.purple >= 25 && scores.blue >= 25
 			}
 		],
 		16: [
@@ -13866,9 +13866,9 @@ let shopLevel2Used = false;
 			},
 			{
 				id: 'level-17-complete-mastery',
-				description: 'Level 17: Scoor 58 punten elke kleur.',
+				description: 'Level 17: Scoor 35 punten elke kleur.',
 				short: 'Level 17 - Complete meesterschap',
-				check: scores => scores.yellow >= 58 && scores.red >= 58 && scores.green >= 58 && scores.purple >= 58 && scores.blue >= 58
+				check: scores => scores.yellow >= 35 && scores.red >= 35 && scores.green >= 35 && scores.purple >= 35 && scores.blue >= 35
 			}
 		],
 		18: [
@@ -13962,16 +13962,16 @@ let shopLevel2Used = false;
 			},
 			{
 				id: 'level-20-perfect-balance',
-				description: 'Level 20: Scoor 100 punten in elke kleur.',
+				description: 'Level 20: Scoor 58 punten in elke kleur.',
 				short: 'Level 20 - Perfecte balans',
-				check: scores => scores.yellow >= 55 && scores.red >= 55 && scores.green >= 55 && scores.purple >= 55 && scores.blue >= 55,
+				check: scores => scores.yellow >= 58 && scores.red >= 58 && scores.green >= 58 && scores.purple >= 58 && scores.blue >= 58,
 				progress: scores => {
 					const parts = [
-						(scores.yellow >= 55 ? '✔geel' : ''),
-						(scores.red >= 55 ? '✔rood' : ''),
-						(scores.green >= 55 ? '✔groen' : ''),
-						(scores.purple >= 55 ? '✔paars' : ''),
-						(scores.blue >= 55 ? '✔blauw' : '')
+						(scores.yellow >= 58 ? '✔geel' : ''),
+						(scores.red >= 58 ? '✔rood' : ''),
+						(scores.green >= 58 ? '✔groen' : ''),
+						(scores.purple >= 58 ? '✔paars' : ''),
+						(scores.blue >= 58 ? '✔blauw' : '')
 					];
 					return parts.join(' ');
 				}
