@@ -13845,24 +13845,24 @@ let shopLevel2Used = false;
 			},
 			{
 				id: 'level-17-four-pillars',
-				description: 'Level 17: Scoor 70 punten in 4 verschillende kleuren.',
+				description: 'Level 17: Scoor 58 punten in 4 verschillende kleuren.',
 				short: 'Level 17 - Vier pilaren',
 				check: scores => {
 					const colorScores = [scores.yellow, scores.red, scores.green, scores.purple, scores.blue];
-					return colorScores.filter(s => s >= 48).length >= 4;
+					return colorScores.filter(s => s >= 58).length >= 4;
 				}
 			},
 			{
 				id: 'level-17-yellow-architect',
-				description: 'Level 17: Scoor 150 punten in geel.',
+				description: 'Level 17: Scoor 140 punten in geel.',
 				short: 'Level 17 - Gele architect',
-				check: scores => scores.yellow >= 80
+				check: scores => scores.yellow >= 140
 			},
 			{
 				id: 'level-17-blue-odyssey',
 				description: 'Level 17: Scoor 150 punten in blauw.',
 				short: 'Level 17 - Blauwe odyssee',
-				check: scores => scores.blue >= 70
+				check: scores => scores.blue >= 150
 			},
 			{
 				id: 'level-17-complete-mastery',
@@ -23116,6 +23116,9 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	let drawPile = [];
 	let discardPile = [];
 	let currentHand = [];
+	// Tracks if the player already received the starter picks for a given world.
+	// Keys are world numbers (1,2,3,...) stored as strings for safe serialization.
+	let starterPicksDoneByWorld = {};
 	let preLevelStarterPicksDone = false;
 	let preLevelStarterPicksInProgress = false;
 	let pendingShopCallback = null;
@@ -24145,7 +24148,7 @@ function getCollectedCoinCount(scores) {
 	}
 
 	function startStarterMiniRewardSequence(onComplete) {
-		const steps = 2;
+		const steps = 3;
 		let step = 1;
 		const colorPalette = NON_WILDCARD_COLORS.length ? NON_WILDCARD_COLORS : colors;
 		const filterMiniTiny = (e) => {
@@ -24167,7 +24170,7 @@ function getCollectedCoinCount(scores) {
 			});
 			showRewardPickerModal({
 				titleText: `🧩 Startpakket kaart (${step}/${steps})`,
-				subtextHtml: 'Kies 1 uit 3 compacte kaarten (max. 3 blokjes). Je krijgt twee keuzes voordat level 1.1 start.',
+				subtextHtml: 'Kies 1 uit 3 compacte kaarten (max. 3 blokjes). Je krijgt drie keuzes aan het begin van een wereld.',
 				choices,
 				onPick: ({ blueprint }) => {
 					grantToDeck(blueprint);
@@ -28393,10 +28396,16 @@ function openShopModal(callback) {
 		}
 	  } catch (e) {}
 
-	  // Voor level 1.1: altijd eerst 2 startkaarten kiezen (1 uit 3, twee keer)
+	  // Bij start van een wereld: altijd eerst 3 extra kaarten kiezen (1 uit 3, drie keer)
 	  try {
-		const isLevelOne = Number(level) === 1;
-		if (isLevelOne && !preLevelStarterPicksDone && !preLevelStarterPicksInProgress) {
+		const info = getWorldAndSubLevel(Number(level) || 0);
+		const world = Number(info && info.world) || 1;
+		const subLevel = Number(info && info.subLevel) || 1;
+		const isIntro = !!(info && info.intro);
+		const isWorldStart = (subLevel === 1) && !isIntro;
+		const worldKey = String(world);
+		const alreadyDoneForWorld = !!(starterPicksDoneByWorld && starterPicksDoneByWorld[worldKey]);
+		if (isWorldStart && !alreadyDoneForWorld && !preLevelStarterPicksInProgress && !isLoadingGame) {
 			// Switch off the intro deck before we start the starter picks, so the picks land on the standard deck
 			// and won't be wiped when we restart startLevel after the picker completes.
 			if (introDeckActive) {
@@ -28405,7 +28414,9 @@ function openShopModal(callback) {
 			}
 			preLevelStarterPicksInProgress = true;
 			startStarterMiniRewardSequence(() => {
-				preLevelStarterPicksDone = true;
+				starterPicksDoneByWorld[worldKey] = true;
+				// Back-compat: keep the old flag in sync for world 1.
+				if (world === 1) preLevelStarterPicksDone = true;
 				preLevelStarterPicksInProgress = false;
 				try { saveGameState(); } catch (e) {}
 				startLevel(level, options);
@@ -28660,6 +28671,7 @@ function openShopModal(callback) {
 			lastCardWasBonusEcho,
 			lastBonusEchoVariant
 		  },
+		  starterPicksDoneByWorld: { ...(starterPicksDoneByWorld || {}) },
 		  preLevelStarterPicksDone,
 		  
 		  // Objectives
@@ -28927,6 +28939,9 @@ function isWorld4CardAllowed(cardData) {
 		}
 		const savedBonusEchoState = gameState.bonusEchoState ? { ...gameState.bonusEchoState } : null;
 		const savedPreLevelStarterPicksDone = (typeof gameState.preLevelStarterPicksDone === 'boolean') ? gameState.preLevelStarterPicksDone : null;
+		const savedStarterPicksDoneByWorld = (gameState && gameState.starterPicksDoneByWorld && typeof gameState.starterPicksDoneByWorld === 'object')
+			? gameState.starterPicksDoneByWorld
+			: null;
 		
 		if (gameState.version !== '1.0') {
 		  console.warn('⚠️ Save version mismatch:', gameState.version);
@@ -29089,8 +29104,34 @@ function isWorld4CardAllowed(cardData) {
 		} else {
 			resetBonusEchoState();
 		}
-		// Restore starter pick completion so level 1 gating is respected after load
-		preLevelStarterPicksDone = !!savedPreLevelStarterPicksDone;
+		// Restore starter pick completion so world-start pickers are respected after load
+		starterPicksDoneByWorld = {};
+		if (savedStarterPicksDoneByWorld) {
+			try {
+				Object.keys(savedStarterPicksDoneByWorld).forEach((k) => {
+					starterPicksDoneByWorld[String(k)] = !!savedStarterPicksDoneByWorld[k];
+				});
+			} catch (e) { starterPicksDoneByWorld = {}; }
+			// Back-compat: ensure old boolean applies to world 1.
+			if (typeof savedPreLevelStarterPicksDone === 'boolean') {
+				starterPicksDoneByWorld['1'] = !!savedPreLevelStarterPicksDone;
+			}
+		} else {
+			// Back-compat + anti-surprise: older saves didn't track this per world.
+			// Infer that already-passed worlds are done, and if we're mid-world, mark the current world as done
+			// so loading doesn't immediately pop a picker.
+			try {
+				const info = getWorldAndSubLevel(Number(currentLevel) || 0);
+				const wNow = Number(info && info.world) || 1;
+				const sNow = Number(info && info.subLevel) || 1;
+				for (let w = 1; w < wNow; w += 1) starterPicksDoneByWorld[String(w)] = true;
+				if (sNow > 1) starterPicksDoneByWorld[String(wNow)] = true;
+			} catch (e) {}
+			if (typeof savedPreLevelStarterPicksDone === 'boolean') {
+				starterPicksDoneByWorld['1'] = !!savedPreLevelStarterPicksDone;
+			}
+		}
+		preLevelStarterPicksDone = !!starterPicksDoneByWorld['1'];
 		preLevelStarterPicksInProgress = false;
 		
 		// Restore objectives
@@ -29346,6 +29387,7 @@ function isWorld4CardAllowed(cardData) {
 	  Object.keys(UPGRADES).forEach(key => {
 		UPGRADES[key].purchased = false;
 	  });
+	  starterPicksDoneByWorld = {};
 	  preLevelStarterPicksDone = false;
 	  preLevelStarterPicksInProgress = false;
 	  
