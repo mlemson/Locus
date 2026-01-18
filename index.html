@@ -4357,6 +4357,16 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		box-shadow: 0 0 0 3px rgba(34,197,94,0.25), 0 8px 16px rgba(0,0,0,0.25);
 	}
 
+	.card-option.card-replay-ready .card-echo-badge {
+		animation: bonus-echo-replay-pulse 0.9s ease-out 1;
+	}
+
+	@keyframes bonus-echo-replay-pulse {
+		0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(74,144,226,0.55), 0 8px 16px rgba(0,0,0,0.2); }
+		55% { transform: scale(1.18); box-shadow: 0 0 0 8px rgba(74,144,226,0.25), 0 10px 20px rgba(0,0,0,0.3); }
+		100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(74,144,226,0), 0 8px 16px rgba(0,0,0,0.2); }
+	}
+
 	.card-echo-tooltip {
 		position: absolute;
 		top: 8px;
@@ -13754,11 +13764,11 @@ let shopLevel2Used = false;
 			},
 			{
 				id: 'level-14-balanced-power',
-				description: 'Level 14: Scoor 58 punten in 4 verschillende kleuren.',
+				description: 'Level 14: Scoor 32 punten in 4 verschillende kleuren.',
 				short: 'Level 14 - Gebalanceerde kracht',
 				check: scores => {
 					const colorScores = [scores.yellow, scores.red, scores.green, scores.purple, scores.blue];
-					return colorScores.filter(s => s >= 58).length >= 4;
+					return colorScores.filter(s => s >= 32).length >= 4;
 				}
 			},
 			{
@@ -13845,11 +13855,11 @@ let shopLevel2Used = false;
 			},
 			{
 				id: 'level-17-four-pillars',
-				description: 'Level 17: Scoor 58 punten in 4 verschillende kleuren.',
+				description: 'Level 17: Scoor 48 punten in 4 verschillende kleuren.',
 				short: 'Level 17 - Vier pilaren',
 				check: scores => {
 					const colorScores = [scores.yellow, scores.red, scores.green, scores.purple, scores.blue];
-					return colorScores.filter(s => s >= 58).length >= 4;
+					return colorScores.filter(s => s >= 48).length >= 4;
 				}
 			},
 			{
@@ -13895,13 +13905,13 @@ let shopLevel2Used = false;
 				description: 'Level 18: Voltooi minstens 3 van de 4 rode grids.',
 				short: 'Level 18 - Rood megagrid (3/4)',
 				check: () => {
-					const redZones = ['red-grid1-zone', 'red-grid2-zone', 'red-grid3-zone', 'red-grid4-zone'];
+					const redZones = ['red-grid1', 'red-grid2', 'red-grid3', 'red-grid4'];
 					let complete = 0;
 					for (const id of redZones) {
 						const zone = document.getElementById(id);
 						if (!zone) continue;
-						const cells = zone.querySelectorAll('.cell');
-						const active = zone.querySelectorAll('.cell.active');
+						const cells = zone.querySelectorAll('.cell:not(.void-cell)');
+						const active = zone.querySelectorAll('.cell.active:not(.void-cell)');
 						if (cells.length > 0 && cells.length === active.length) complete += 1;
 					}
 					return complete >= 3;
@@ -13923,13 +13933,13 @@ let shopLevel2Used = false;
 				id: 'level-19-blue-legend',
 				description: 'Level 19: Scoor 250 punten in blauw.',
 				short: 'Level 19 - Blauwe legende',
-				check: scores => scores.blue >= 70
+				check: scores => scores.blue >= 250
 			},
 			{
 				id: 'level-19-all-pillars',
-				description: 'Level 19: Scoor 80 punten elke kleur.',
+				description: 'Level 19: Scoor 50 punten in elke kleur.',
 				short: 'Level 19 - Alle pilaren',
-				check: scores => scores.yellow >= 80 && scores.red >= 80 && scores.green >= 80 && scores.purple >= 80 && scores.blue >= 80
+				check: scores => scores.yellow >= 50 && scores.red >= 50 && scores.green >= 50 && scores.purple >= 50 && scores.blue >= 50
 			},
 			{
 				id: 'level-19-red-completion',
@@ -13946,8 +13956,8 @@ let shopLevel2Used = false;
 					return zoneIds.some(id => {
 						const zone = document.getElementById(id);
 						if (!zone) return false;
-						const cells = zone.querySelectorAll('.cell');
-						const active = zone.querySelectorAll('.cell.active');
+						const cells = zone.querySelectorAll('.cell:not(.void-cell)');
+						const active = zone.querySelectorAll('.cell.active:not(.void-cell)');
 						return cells.length > 0 && cells.length === active.length;
 					});
 				}
@@ -13992,12 +14002,12 @@ let shopLevel2Used = false;
 				short: 'Level 20 - 2 volledige zones',
 				check: () => {
 					const colorZones = ['yellow-zone', 'purple-zone', 'blue-zone', 'green-zone'];
-					const redZones = ['red-grid1-zone', 'red-grid2-zone', 'red-grid3-zone', 'red-grid4-zone'];
+					const redZones = ['red-grid1', 'red-grid2', 'red-grid3', 'red-grid4'];
 					let complete = 0;
 					const isComplete = (zone) => {
 						if (!zone) return false;
-						const cells = zone.querySelectorAll('.cell');
-						const active = zone.querySelectorAll('.cell.active');
+						const cells = zone.querySelectorAll('.cell:not(.void-cell)');
+						const active = zone.querySelectorAll('.cell.active:not(.void-cell)');
 						return cells.length > 0 && cells.length === active.length;
 					};
 					for (const id of colorZones) {
@@ -14159,13 +14169,13 @@ let shopLevel2Used = false;
 				description: 'Level 24: Voltooi 3 van de 4 rode grids volledig.',
 				short: 'Level 24 - Rood imperium',
 				check: () => {
-					const redZones = ['red-grid1-zone', 'red-grid2-zone', 'red-grid3-zone', 'red-grid4-zone'];
+					const redZones = ['red-grid1', 'red-grid2', 'red-grid3', 'red-grid4'];
 					let complete = 0;
 					redZones.forEach(id => {
 						const zone = document.getElementById(id);
 						if (!zone) return;
-						const cells = zone.querySelectorAll('.cell');
-						const active = zone.querySelectorAll('.cell.active');
+						const cells = zone.querySelectorAll('.cell:not(.void-cell)');
+						const active = zone.querySelectorAll('.cell.active:not(.void-cell)');
 						if (cells.length > 0 && cells.length === active.length) complete++;
 					});
 					return complete >= 3;
@@ -14263,12 +14273,12 @@ let shopLevel2Used = false;
 				description: 'Level 26: Voltooi alle 4 rode grids volledig.',
 				short: 'Level 26 - Alle roden',
 				check: () => {
-					const redZones = ['red-grid1-zone', 'red-grid2-zone', 'red-grid3-zone', 'red-grid4-zone'];
+					const redZones = ['red-grid1', 'red-grid2', 'red-grid3', 'red-grid4'];
 					return redZones.every(id => {
 						const zone = document.getElementById(id);
 						if (!zone) return false;
-						const cells = zone.querySelectorAll('.cell');
-						const active = zone.querySelectorAll('.cell.active');
+						const cells = zone.querySelectorAll('.cell:not(.void-cell)');
+						const active = zone.querySelectorAll('.cell.active:not(.void-cell)');
 						return cells.length > 0 && cells.length === active.length;
 					});
 				}
@@ -14358,14 +14368,14 @@ let shopLevel2Used = false;
 				short: 'Level 29 - Activatie expert',
 				check: () => {
 					const zones = ['yellow-zone', 'purple-zone', 'blue-zone', 'green-zone', 
-								   'red-grid1-zone', 'red-grid2-zone', 'red-grid3-zone', 'red-grid4-zone', 'red-grid5-zone', 'red-grid6-zone'];
+							   'red-grid1', 'red-grid2', 'red-grid3', 'red-grid4', 'red-grid5', 'red-grid6'];
 					let totalCells = 0;
 					let activeCells = 0;
 					zones.forEach(id => {
 						const zone = document.getElementById(id);
 						if (!zone) return;
-						const cells = zone.querySelectorAll('.cell');
-						const active = zone.querySelectorAll('.cell.active');
+						const cells = zone.querySelectorAll('.cell:not(.void-cell)');
+						const active = zone.querySelectorAll('.cell.active:not(.void-cell)');
 						totalCells += cells.length;
 						activeCells += active.length;
 					});
@@ -14510,7 +14520,7 @@ let shopLevel2Used = false;
 				short: 'Level 39 - Activatie expert',
 				check: () => {
 					const zones = ['yellow-zone', 'purple-zone', 'blue-zone', 'green-zone',
-									   'red-grid1-zone', 'red-grid2-zone', 'red-grid3-zone', 'red-grid4-zone', 'red-grid5-zone', 'red-grid6-zone'];
+							   'red-grid1', 'red-grid2', 'red-grid3', 'red-grid4', 'red-grid5', 'red-grid6'];
 					let totalCells = 0;
 					let activeCells = 0;
 					zones.forEach(id => {
@@ -25003,6 +25013,18 @@ function getCollectedCoinCount(scores) {
 		card.append(label, meta);
 	}
 
+	const hasReplayReady = isBonusEchoCard && Number(cardData.bonusEchoReplaysAvailable || 0) > 0;
+	const justGrantedReplay = !!cardData.bonusEchoReplayJustGranted;
+	if (isBonusEchoCard) {
+		const variant = cardData.bonusEchoVariant || 'replay';
+		const badge = createBonusEchoBadge(variant, hasReplayReady);
+		card.appendChild(badge);
+		if (justGrantedReplay) {
+			card.classList.add('card-replay-ready');
+			cardData.bonusEchoReplayJustGranted = false;
+		}
+	}
+
 	if (isBonusBoostCard) {
 		const colorKey = getBonusKeyFromColorName(cardData?.color?.name);
 		const effect = document.createElement('div');
@@ -25590,7 +25612,8 @@ function getCollectedCoinCount(scores) {
 	  };
 	}
 
-	function applyBonusEchoOutcome(playedCard, placementResult) {
+	function applyBonusEchoOutcome(playedCard, placementResult, options = {}) {
+		const wasReplayPlay = !!options.wasReplayPlay;
 		if (!playedCard || !playedCard.isBonusEcho) {
 			bonusEchoStreak = 0;
 			lastCardWasBonusEcho = false;
@@ -25621,7 +25644,9 @@ function getCollectedCoinCount(scores) {
 					break;
 				}
 				case 'replay':
-					replayGranted = true;
+					if (!wasReplayPlay && Number(playedCard.bonusEchoReplaysAvailable || 0) <= 0) {
+						replayGranted = true;
+					}
 					break;
 				default:
 					break;
@@ -25676,6 +25701,7 @@ function getCollectedCoinCount(scores) {
 		lastCardWasBonusEcho = false;
 		lastBonusEchoVariant = null;
 	}
+	const wasReplayPlay = !!(playedCard && playedCard.isBonusEcho && Number(playedCard.bonusEchoReplaysAvailable || 0) > 0);
 	if (playedCard && playedCard.isBonusEcho && playedCard.bonusEchoReplaysAvailable > 0) {
 		playedCard.bonusEchoReplaysAvailable = Math.max(0, playedCard.bonusEchoReplaysAvailable - 1);
 	}
@@ -25709,7 +25735,7 @@ function getCollectedCoinCount(scores) {
 	else nonGoldenCardPlayedThisTurn = true;
 	const coinSnapshot = (coinSnapshotBefore || []).map(state => ({ active: state.active, used: state.used }));
 	if (playedCard && playedCard.isBonusEcho) {
-		const echoOutcome = applyBonusEchoOutcome(playedCard, placementResult);
+		const echoOutcome = applyBonusEchoOutcome(playedCard, placementResult, { wasReplayPlay });
 		bonusEchoReplayGranted = !!echoOutcome.replayGranted;
 		bonusEchoPointsAdded = Number(echoOutcome.pointsAwarded || 0);
 		bonusEchoExtraTurnGranted = !!echoOutcome.extraTurnGranted;
@@ -25732,7 +25758,8 @@ function getCollectedCoinCount(scores) {
 	}
 	if (playedCard && playedCard.isBonusEcho) {
 		if (bonusEchoReplayGranted) {
-			playedCard.bonusEchoReplaysAvailable = Number(playedCard.bonusEchoReplaysAvailable || 0) + 1;
+			playedCard.bonusEchoReplaysAvailable = Math.min(1, Number(playedCard.bonusEchoReplaysAvailable || 0) + 1);
+			playedCard.bonusEchoReplayJustGranted = true;
 			const discardIdx = discardPile.findIndex(card => card && card.id === playedCard.id);
 			if (discardIdx !== -1) discardPile.splice(discardIdx, 1);
 			currentHand.push(playedCard);
@@ -34939,4 +34966,3 @@ body { background: transparent; }
 
   </style>
 </html>
-
