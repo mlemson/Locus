@@ -16473,7 +16473,7 @@ let shopLevel2Used = false;
 		let target = null;
 		let chosenZone = null;
 		for (const z of zoneOrder) {
-			target = pickCandidateCell(zoneToGridId[z], { preferTop: z === 'blue' });
+			target = pickCandidateCell(zoneToGridId[z], { preferTop: false });
 			if (target) {
 				chosenZone = z;
 				break;
@@ -16524,9 +16524,7 @@ let shopLevel2Used = false;
 				selectedShape = shape;
 				selectedColor = colorObj;
 				if (rotateButton) rotateButton.disabled = false;
-				// For touch-initiated bonus drags, delay showing the mirror control
-				// until the block is placed/released to avoid accidental mirrors.
-				if (mirrorButton) mirrorButton.disabled = true;
+				if (mirrorButton) mirrorButton.disabled = false;
 				markActiveBonusButton('free');
 				
 				badge.setPointerCapture(event.pointerId);
@@ -16550,8 +16548,7 @@ let shopLevel2Used = false;
 				({ offsetX, offsetY } = computeShapeCenterOffsets(shape, actualCellSize));
 				const touchOffsetY = getFingerLiftOffsetY(event);
 				setElPos(draggedBlock, event.clientX - offsetX, event.clientY - offsetY - touchOffsetY);
-				// Controls are delayed for touch bonus drags; they will appear on release.
-				activeBonusPlacement.delayedControls = true;
+				addCardControlButtons();
 			} else {
 				activeBonusPlacement = {
 					colorKey: 'free',
@@ -16612,9 +16609,7 @@ let shopLevel2Used = false;
 		selectedShape = shape;
 		selectedColor = colorObj;
 		if (rotateButton) rotateButton.disabled = false;
-		// For touch-initiated bonus drags, delay showing the mirror control
-		// until the block is placed/released to avoid accidental mirrors.
-		if (mirrorButton) mirrorButton.disabled = true;
+		if (mirrorButton) mirrorButton.disabled = false;
 		markActiveBonusButton(colorKey);
 
 		// Maak het blok direct draggable vanaf pointer positie (niet op de badge),
@@ -16656,8 +16651,7 @@ let shopLevel2Used = false;
 		try { badge.setPointerCapture(event.pointerId); } catch {}
 		beginPointerDrag({ clientX: event.clientX, clientY: event.clientY, pointerId: event.pointerId || null });
 		startGlobalDragVisuals();
-		// Delay transform buttons (mirror) for touch bonus drags; they'll appear on release
-		activeBonusPlacement.delayedControls = true;
+		addCardControlButtons();
 
 			// Ensure correct sizing after any zoom/lift finishes
 			requestAnimationFrame(() => {
@@ -17401,8 +17395,8 @@ let shopLevel2Used = false;
 	function getZoneScrollMemory(zoneId) {
 		if (!ZONE_SCROLL_MEMORY[zoneId]) {
 			ZONE_SCROLL_MEMORY[zoneId] = {
-				normal: { left: 0, top: 0, initialized: false },
-				zoom: { left: 0, top: 0, initialized: false }
+				normal: { left: 0, top: 0, initialized: false, userSet: false },
+				zoom: { left: 0, top: 0, initialized: false, userSet: false }
 			};
 		}
 		return ZONE_SCROLL_MEMORY[zoneId];
@@ -17411,10 +17405,11 @@ let shopLevel2Used = false;
 		if (!zoneId) return;
 		const mem = getZoneScrollMemory(zoneId);
 		['normal', 'zoom'].forEach(mode => {
-			if (!mem[mode]) mem[mode] = { left: 0, top: 0, initialized: false };
+			if (!mem[mode]) mem[mode] = { left: 0, top: 0, initialized: false, userSet: false };
 			mem[mode].left = 0;
 			mem[mode].top = 0;
 			mem[mode].initialized = false;
+			mem[mode].userSet = false;
 			mem[mode].level = currentLevel;
 		});
 	}
@@ -17423,6 +17418,7 @@ let shopLevel2Used = false;
 		if (typeof anchorFn !== 'function') return;
 		const zoneEl = document.getElementById(zoneId);
 		if (!zoneEl) return;
+		try { zoneEl.__userScrollIntent = false; } catch (_) {}
 		try { anchorFn(zoneEl); } catch (_) {}
 	}
 	function getZoneScrollMode(zoneEl) {
@@ -17439,14 +17435,26 @@ let shopLevel2Used = false;
 	function ensureZoneScrollTracking(zoneEl) {
 		if (!zoneEl || zoneEl.__scrollTrackingBound) return;
 		zoneEl.__scrollTrackingBound = true;
+		if (!zoneEl.__userScrollIntentBound) {
+			const markUserScrollIntent = () => {
+				zoneEl.__userScrollIntent = true;
+			};
+			zoneEl.addEventListener('pointerdown', markUserScrollIntent, { passive: true });
+			zoneEl.addEventListener('touchstart', markUserScrollIntent, { passive: true });
+			zoneEl.addEventListener('wheel', markUserScrollIntent, { passive: true });
+			zoneEl.addEventListener('keydown', markUserScrollIntent);
+			zoneEl.__userScrollIntentBound = true;
+		}
 		zoneEl.addEventListener('scroll', () => {
 			if (zoneEl.dataset.suppressScrollSave === 'true') return;
 			const zoneId = zoneEl.id;
 			const mode = getZoneScrollMode(zoneEl);
 			const mem = getZoneScrollMemory(zoneId);
+			if (zoneId === 'green-zone' && !zoneEl.__userScrollIntent && !(mem[mode] && mem[mode].userSet)) return;
 			mem[mode].left = zoneEl.scrollLeft;
 			mem[mode].top = zoneEl.scrollTop;
 			mem[mode].initialized = true;
+			if (zoneId === 'green-zone') mem[mode].userSet = true;
 		}, { passive: true });
 	}
 	function restoreOrAnchorZoneScroll(zoneEl, anchorFn) {
@@ -17458,7 +17466,14 @@ let shopLevel2Used = false;
 			zoneEl.dataset.suppressScrollSave = 'true';
 			try {
 				clampZoneScroll(zoneEl);
-				if (mem[mode].initialized) {
+				if (zoneEl.id === 'green-zone' && !(mem[mode] && mem[mode].userSet)) {
+					if (typeof anchorFn === 'function') {
+						anchorFn(zoneEl);
+						clampZoneScroll(zoneEl);
+						mem[mode].left = zoneEl.scrollLeft;
+						mem[mode].top = zoneEl.scrollTop;
+					}
+				} else if (mem[mode].initialized) {
 					zoneEl.scrollLeft = mem[mode].left || 0;
 					zoneEl.scrollTop = mem[mode].top || 0;
 					clampZoneScroll(zoneEl);
@@ -20917,18 +20932,29 @@ function processDragPointerMove(ev) {
 	// Detecteer zone onder cursor en pas gap aan VOOR het meten
 	const centerElem = document.elementFromPoint(cursorX, cursorY);
 	const detectedZone = centerElem ? centerElem.closest('.zone') : null;
+	const shapeHeight = draggedShape.length;
+	const shapeWidth = draggedShape[0].length;
 	const gapChanged = applyDragBlockGap(detectedZone);
 	if (gapChanged) {
 		// Force een synchrone reflow door offsetHeight te lezen
 		void draggedBlock.offsetHeight;
+		// Recompute offsets so the draggable stays aligned with the grid
+		try {
+			const rectNow = draggedBlock.getBoundingClientRect();
+			const cellSize = Math.min(rectNow.width / shapeWidth, rectNow.height / shapeHeight);
+			if (dragGapMode === 'gapless') {
+				({ offsetX, offsetY } = computeShapeCenterOffsets(draggedShape, cellSize));
+			} else {
+				({ offsetX, offsetY } = computeShapeCenterOffsets(draggedShape));
+			}
+			setElPos(draggedBlock, cursorX - offsetX, cursorY - offsetY - touchOffsetY);
+		} catch (e) {}
 	}
 
 	// Meet blok NA eventuele gap-aanpassing
 	const blockRect = draggedBlock.getBoundingClientRect();
 
 	// Derive per-cell spacing from the rendered draggable block
-	const shapeHeight = draggedShape.length;
-	const shapeWidth = draggedShape[0].length;
 	const stepX = shapeWidth > 0 ? (blockRect.width / shapeWidth) : 0;
 	const stepY = shapeHeight > 0 ? (blockRect.height / shapeHeight) : 0;
 
@@ -27612,8 +27638,8 @@ function openShopModal(callback) {
 			pointsPerColumn: yellowColumnPoints,
 			diagonalShading: true,
 			diagonalLegend: true,
-			trapChance: trapChance,
-			maxTraps: maxTraps,
+			trapChance: trapChance * 0.5,
+			maxTraps: Math.max(0, Math.floor(maxTraps * 0.6)),
 			blackHoleChance: blackHoleChance
 		  });
 		  // Voeg handmatig bold cells toe op specifieke posities
@@ -29948,7 +29974,7 @@ document.addEventListener('pointerdown', ev => {
 				rotateBtn.classList.add('visible');
 				cancelBtn.classList.add('visible');
 				const isDelayingMirror = !!(activeBonusPlacement && activeBonusPlacement.delayedControls && isTouchDevice);
-				if (!isDelayingMirror && !isBonusDrag) {
+				if (!isDelayingMirror) {
 					mirrorBtn.classList.add('visible');
 					mirrorBtn.disabled = false;
 					try { delete mirrorBtn.dataset.delayed; } catch (e) { mirrorBtn.dataset.delayed = ''; }
