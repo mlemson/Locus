@@ -14758,6 +14758,14 @@ let shopLevel2Used = false;
 	// Version marker to help verify deployed updates on GitHub Pages
 	window.__locusVersion = window.__locusVersion || '2025-12-29-patch1';
 	console.debug && console.debug('Locus version:', window.__locusVersion);
+	let GRID_VERSION = 0;
+	function bumpGridVersion() {
+		GRID_VERSION += 1;
+		return GRID_VERSION;
+	}
+	function getGridVersion() {
+		return GRID_VERSION;
+	}
 	let draggedShape = null;
 	let draggedColor = null;
 	let isPointerDragging = false;
@@ -21863,6 +21871,8 @@ document.addEventListener('pointermove', ev => {
 		maxY: -1
 	  };
 	  if (!zone) return empty;
+	  const cacheVersion = getGridVersion();
+	  if (zone._metricsCache && zone._metricsVersion === cacheVersion) return zone._metricsCache;
 	  const cells = zone.querySelectorAll('.cell');
 	  if (!cells.length) return empty;
 	  let minX = Infinity;
@@ -21884,7 +21894,7 @@ document.addEventListener('pointermove', ev => {
 	  });
 	  if (!Number.isFinite(minX) || !Number.isFinite(maxX)) return empty;
 	  if (!Number.isFinite(minY) || !Number.isFinite(maxY)) return empty;
-	  return {
+	  const metrics = {
 		cols: maxX - minX + 1,
 		rows: maxY - minY + 1,
 		minX,
@@ -21892,6 +21902,9 @@ document.addEventListener('pointermove', ev => {
 		minY,
 		maxY
 	  };
+	  zone._metricsCache = metrics;
+	  zone._metricsVersion = cacheVersion;
+	  return metrics;
 	}
 
 	function getZonePriority(zone) {
@@ -21906,6 +21919,24 @@ document.addEventListener('pointermove', ev => {
 	// Helper om de juiste cell in een zone te pakken
 	function getCell(zone, x, y) {
 	  if (!zone) return null;
+	  try {
+		const cacheVersion = getGridVersion();
+		if (!zone._cellMap || zone._cellMapVersion !== cacheVersion) {
+			const map = new Map();
+			const cells = zone.querySelectorAll('.cell');
+			cells.forEach(cell => {
+				if (cell.classList.contains('void-cell') || cell.dataset.disabled === 'true') return;
+				const cx = cell.dataset.x;
+				const cy = cell.dataset.y;
+				if (cx === undefined || cy === undefined) return;
+				map.set(`${cx},${cy}`, cell);
+			});
+			zone._cellMap = map;
+			zone._cellMapVersion = cacheVersion;
+		}
+		const cached = zone._cellMap && zone._cellMap.get(`${x},${y}`);
+		if (cached) return cached;
+	  } catch (e) {}
 	  const cell = zone.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
 	  if (!cell) return null;
 	  if (cell.classList.contains('void-cell') || cell.dataset.disabled === 'true') return null;
@@ -26942,6 +26973,7 @@ function openShopModal(callback) {
 	  closeZoom();
 	  resetScoreState();
 	  historyStack.length = 0;
+	  bumpGridVersion();
 	  
 	  // Bepaal in welke world we zitten
 	  const { world, subLevel } = getWorldAndSubLevel(currentLevel);
