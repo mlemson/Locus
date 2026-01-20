@@ -5666,6 +5666,61 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		align-items: start;
 	}
 
+	/* Draft hand choice modal */
+	.draft-hand-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 16px;
+		margin-top: 12px;
+	}
+	.draft-hand-stack {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		padding: 12px;
+		border-radius: 14px;
+		border: 1px solid rgba(40,55,120,0.14);
+		background: linear-gradient(165deg, rgba(255,255,255,0.96), rgba(236,240,255,0.92));
+		box-shadow: 0 10px 24px rgba(10,12,20,0.12);
+		cursor: pointer;
+		transition: transform 0.2s ease, box-shadow 0.2s ease;
+	}
+	.draft-hand-stack:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 16px 30px rgba(10,12,20,0.18);
+	}
+	.draft-hand-stack-title {
+		font-weight: 700;
+		font-size: 0.85rem;
+		color: rgba(32,40,68,0.78);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+	.draft-hand-cards {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 10px;
+		justify-content: center;
+	}
+	.draft-hand-card {
+		pointer-events: none;
+		transform: none !important;
+	}
+	body.dark-mode .draft-hand-stack {
+		background: linear-gradient(165deg, rgba(34,38,58,0.96), rgba(26,30,48,0.92));
+		border-color: rgba(140,160,220,0.22);
+		box-shadow: 0 14px 30px rgba(0,0,0,0.4);
+	}
+	body.dark-mode .draft-hand-stack-title {
+		color: rgba(235,240,255,0.82);
+	}
+
+	@media (max-width: 720px) {
+		.draft-hand-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+
 	/* Modal close button styling */
 	.modal-close-btn {
 		position: absolute;
@@ -12302,6 +12357,23 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 				</div>
 				<div class="modal-actions">
 					<button id="shop-modal-skip">Naar volgend level</button>
+				</div>
+			</div>
+		</div>
+
+		<div id="draft-hand-layer" class="modal-overlay" aria-hidden="true">
+			<div id="draft-hand-modal" class="game-modal" role="dialog" aria-modal="true" aria-labelledby="draft-hand-title">
+				<h2 id="draft-hand-title">Kies je hand</h2>
+				<p id="draft-hand-subtext" class="modal-subtext">Kies één stapel kaarten om deze beurt te spelen.</p>
+				<div class="draft-hand-grid">
+					<button class="draft-hand-stack" type="button" data-stack="A">
+						<span class="draft-hand-stack-title">Stapel A</span>
+						<div class="draft-hand-cards" data-stack-cards="A"></div>
+					</button>
+					<button class="draft-hand-stack" type="button" data-stack="B">
+						<span class="draft-hand-stack-title">Stapel B</span>
+						<div class="draft-hand-cards" data-stack-cards="B"></div>
+					</button>
 				</div>
 			</div>
 		</div>
@@ -25691,21 +25763,67 @@ function getCollectedCoinCount(scores) {
 		return true;
 	}
 
-	function drawNextHand() {
-	  if (drawPile.length === 0) {
-		if (prepareBonusEchoExtraTurnDeck()) {
-			// Deck is refilled for the extra turn; continue with draw.
-		} else {
-		updateDrawButtonState();
-		return;
+	const DRAFT_HAND_CHOICE_ENABLED = true;
+	const DRAFT_HAND_STACK_SIZE = 3;
+	let pendingDraftChoice = null;
+
+	function closeDraftHandModal() {
+		if (draftHandLayer) {
+			draftHandLayer.classList.remove('show');
+			draftHandLayer.setAttribute('aria-hidden', 'true');
 		}
-	  }
-	  cardPlacementHistory = [];
-	  cardsPlayedThisTurn = 0;
-	resetTurnCardFlags();
-	bonusEchoFreePlays = 0;
-	  
-	  const createUpgradeCopy = (sourceCard, originTag) => {
+		pendingDraftChoice = null;
+	}
+
+	function renderDraftStack(container, cards) {
+		if (!container) return;
+		container.innerHTML = '';
+		(cards || []).forEach(card => {
+			const preview = createCardElement(card, true, { onSelect: null });
+			preview.classList.add('draft-hand-card');
+			preview.style.pointerEvents = 'none';
+			container.appendChild(preview);
+		});
+	}
+
+	function openDraftHandModal(stacks, onPick) {
+		if (!draftHandLayer || !draftHandModal) {
+			if (typeof onPick === 'function') onPick('A');
+			return;
+		}
+		pendingDraftChoice = { stacks, onPick };
+		const stackA = draftHandModal.querySelector('[data-stack-cards="A"]');
+		const stackB = draftHandModal.querySelector('[data-stack-cards="B"]');
+		renderDraftStack(stackA, stacks.stackA);
+		renderDraftStack(stackB, stacks.stackB);
+
+		draftHandModal.querySelectorAll('.draft-hand-stack').forEach(btn => {
+			btn.disabled = false;
+			btn.onclick = () => {
+				btn.disabled = true;
+				const pick = btn.dataset.stack === 'B' ? 'B' : 'A';
+				closeDraftHandModal();
+				if (typeof onPick === 'function') onPick(pick);
+			};
+		});
+
+		draftHandLayer.classList.add('show');
+		draftHandLayer.setAttribute('aria-hidden', 'false');
+		if (draftHandModal && draftHandModal.focus) {
+			setTimeout(() => draftHandModal.focus(), 60);
+		}
+	}
+
+	function buildDraftHandStacks(drawCount) {
+		const stackSize = Math.max(1, Number(drawCount || DRAFT_HAND_STACK_SIZE) || DRAFT_HAND_STACK_SIZE);
+		const total = Math.min(drawPile.length, stackSize * 2);
+		const drawn = drawPile.splice(0, total);
+		const stackA = drawn.slice(0, Math.min(stackSize, drawn.length));
+		const stackB = drawn.slice(stackA.length);
+		return { stackA, stackB };
+	}
+
+	function createUpgradeCopy(sourceCard, originTag) {
 		if (!sourceCard) return null;
 		const color = cloneColor(sourceCard.color);
 		return {
@@ -25721,40 +25839,75 @@ function getCollectedCoinCount(scores) {
 			bonusEchoReplaysAvailable: Number(sourceCard.bonusEchoReplaysAvailable || 0),
 			generatedByUpgrade: originTag || null
 		};
-	  };
+	}
 
+	function finalizeHandDraw(baseHand) {
+		const newHand = (Array.isArray(baseHand) ? baseHand.slice() : []);
+
+		// extraHandSize: maak een kopie van een random kaart uit het deck (blijft in deck)
+		if (hasUpgrade('extraHandSize') && drawPile.length > 0) {
+			const copyIndex = Math.floor(Math.random() * drawPile.length);
+			const copySource = drawPile[copyIndex];
+			const extraCopy = createUpgradeCopy(copySource, 'extraHandSize');
+			if (extraCopy) {
+				extraCopy.isDeckCopy = true; // Markeer als kopie
+				newHand.push(extraCopy);
+			}
+		}
+
+		if (hasUpgrade('luckyDraw') && drawPile.length > 0 && Math.random() < LUCKY_DRAW_COPY_CHANCE) {
+			const luckyIndex = Math.floor(Math.random() * drawPile.length);
+			const luckySource = drawPile[luckyIndex];
+			const luckyCopy = createUpgradeCopy(luckySource, 'luckyDraw');
+			if (luckyCopy) {
+				luckyCopy.isLuckyCopy = true;
+				newHand.push(luckyCopy);
+			}
+		}
+		currentHand = newHand;
+		turnCount += 1;
+		bonusUseHintShown = false;
+		updateTurnCounterDisplay();
+		renderCurrentHand();
+	}
+
+	function drawNextHand() {
+	  if (drawPile.length === 0) {
+		if (prepareBonusEchoExtraTurnDeck()) {
+			// Deck is refilled for the extra turn; continue with draw.
+		} else {
+		updateDrawButtonState();
+		return;
+		}
+	  }
+	  cardPlacementHistory = [];
+	  cardsPlayedThisTurn = 0;
+	resetTurnCardFlags();
+	bonusEchoFreePlays = 0;
+	  
 	  const BASE_HAND_DRAW = 3;
 	  const drawCount = Math.min(BASE_HAND_DRAW, drawPile.length);
+
+	  const shouldDraft = DRAFT_HAND_CHOICE_ENABLED && drawPile.length > drawCount;
+	  if (shouldDraft) {
+		const stacks = buildDraftHandStacks(drawCount);
+		openDraftHandModal(stacks, (pick) => {
+			const chosen = pick === 'B' ? stacks.stackB : stacks.stackA;
+			const rejected = pick === 'B' ? stacks.stackA : stacks.stackB;
+			(rejected || []).forEach(card => {
+				if (card && discardPile) discardPile.push(card);
+			});
+			finalizeHandDraw(chosen);
+			updateDeckPreview();
+		});
+		return;
+	  }
+
 	  const newHand = [];
 	  for (let i = 0; i < drawCount; i++) {
 		newHand.push(drawPile.shift());
 	  }
-
-	  // extraHandSize: maak een kopie van een random kaart uit het deck (blijft in deck)
-	  if (hasUpgrade('extraHandSize') && drawPile.length > 0) {
-		const copyIndex = Math.floor(Math.random() * drawPile.length);
-		const copySource = drawPile[copyIndex];
-		const extraCopy = createUpgradeCopy(copySource, 'extraHandSize');
-		if (extraCopy) {
-			extraCopy.isDeckCopy = true; // Markeer als kopie
-			newHand.push(extraCopy);
-		}
-	  }
-
-	  if (hasUpgrade('luckyDraw') && drawPile.length > 0 && Math.random() < LUCKY_DRAW_COPY_CHANCE) {
-		const luckyIndex = Math.floor(Math.random() * drawPile.length);
-		const luckySource = drawPile[luckyIndex];
-		const luckyCopy = createUpgradeCopy(luckySource, 'luckyDraw');
-		if (luckyCopy) {
-			luckyCopy.isLuckyCopy = true;
-			newHand.push(luckyCopy);
-		}
-	  }
-	  currentHand = newHand;
-	  turnCount += 1;
-	bonusUseHintShown = false;
-	  updateTurnCounterDisplay();
-	  renderCurrentHand();
+	  finalizeHandDraw(newHand);
 	}
 
 	function consumeCard(cardId) {
@@ -25999,6 +26152,8 @@ function getCollectedCoinCount(scores) {
 	const shopUpgradeContainer = document.getElementById('shop-upgrade-container');
 	const shopBonusContainer = document.getElementById('shop-bonus-container');
 	const shopModalSkip = document.getElementById('shop-modal-skip');
+	const draftHandLayer = document.getElementById('draft-hand-layer');
+	const draftHandModal = document.getElementById('draft-hand-modal');
 	const upgradeModalLayer = document.getElementById('upgrade-modal-layer');
 	const upgradeModalClose = document.getElementById('upgrade-modal-close');
 	const confirmCompleteLayer = document.getElementById('confirm-complete-layer');
@@ -26185,9 +26340,10 @@ function getCollectedCoinCount(scores) {
 
 	function hideAllModals() {
 		hideCompleteRoundConfirm();
-		[roundModalLayer, shopModalLayer, upgradeModalLayer].forEach(layer => {
+		[roundModalLayer, shopModalLayer, upgradeModalLayer, draftHandLayer].forEach(layer => {
 			if (layer) layer.classList.remove('show');
 		});
+		closeDraftHandModal();
 	}
 
 	function showRoundModal(success, score, coins, bonusCoins = 0) {
@@ -26696,9 +26852,11 @@ function openShopModal(callback) {
 			}
 		};
 
+		const MINI_SHOP_DISABLE_LEVEL = 4;
+		const miniShopDisabled = currentLevel >= MINI_SHOP_DISABLE_LEVEL && largeShopUnlocked;
 		const SIZE_TIER_WEIGHTS = {
-			mini: 1,
-			standard: 1,
+			mini: miniShopDisabled ? 0 : 0.45,
+			standard: 1.1,
 			large: 1.35,
 			xl: 0.35,
 			xxl: 0.2
@@ -26721,6 +26879,10 @@ function openShopModal(callback) {
 		if (largeShopUnlocked) availableSizeKeys.push('large');
 		if (hasUpgrade('xlBlocks') && Array.isArray(XL_6_SHAPES) && XL_6_SHAPES.length) availableSizeKeys.push('xl');
 		if (hasUpgrade('extraLargeBlocks') && Array.isArray(EXTRA_LARGE_7_SHAPES) && EXTRA_LARGE_7_SHAPES.length) availableSizeKeys.push('xxl');
+		if (miniShopDisabled) {
+			const idx = availableSizeKeys.indexOf('mini');
+			if (idx >= 0 && availableSizeKeys.length > 1) availableSizeKeys.splice(idx, 1);
+		}
 
 		// Specials are allowed but should not explode the amount of options.
 		const availableSpecialFactories = [];
