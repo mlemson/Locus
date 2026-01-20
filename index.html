@@ -5666,59 +5666,71 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		align-items: start;
 	}
 
-	/* Draft hand choice modal */
-	.draft-hand-grid {
-		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 16px;
-		margin-top: 12px;
+	/* Pre-world deck picker modal */
+	.preworld-pick-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
 	}
-	.draft-hand-stack {
+	.preworld-pick-budget {
+		font-weight: 700;
+		color: rgba(32,40,68,0.7);
+		background: rgba(40,55,120,0.08);
+		border-radius: 999px;
+		padding: 6px 12px;
+	}
+	.preworld-pick-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+		gap: 14px;
+		margin-top: 12px;
+		max-height: 60vh;
+		overflow: auto;
+	}
+	.preworld-pick-item {
+		border: 1px solid rgba(40,55,120,0.14);
+		background: rgba(255,255,255,0.96);
+		border-radius: 14px;
+		padding: 10px;
 		display: flex;
 		flex-direction: column;
-		gap: 10px;
-		padding: 12px;
-		border-radius: 14px;
-		border: 1px solid rgba(40,55,120,0.14);
-		background: linear-gradient(165deg, rgba(255,255,255,0.96), rgba(236,240,255,0.92));
-		box-shadow: 0 10px 24px rgba(10,12,20,0.12);
+		gap: 8px;
 		cursor: pointer;
-		transition: transform 0.2s ease, box-shadow 0.2s ease;
+		transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+		position: relative;
 	}
-	.draft-hand-stack:hover {
+	.preworld-pick-item.selected {
+		border-color: rgba(90,120,255,0.6);
+		box-shadow: 0 12px 24px rgba(70,90,180,0.2);
 		transform: translateY(-2px);
-		box-shadow: 0 16px 30px rgba(10,12,20,0.18);
 	}
-	.draft-hand-stack-title {
+	.preworld-pick-item.disabled {
+		opacity: 0.45;
+		cursor: not-allowed;
+	}
+	.preworld-cost {
+		position: absolute;
+		top: 8px;
+		right: 8px;
+		font-size: 0.75rem;
 		font-weight: 700;
-		font-size: 0.85rem;
-		color: rgba(32,40,68,0.78);
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
+		background: rgba(20,28,50,0.12);
+		border-radius: 999px;
+		padding: 4px 8px;
+		color: rgba(24,32,52,0.8);
 	}
-	.draft-hand-cards {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 10px;
-		justify-content: center;
-	}
-	.draft-hand-card {
-		pointer-events: none;
-		transform: none !important;
-	}
-	body.dark-mode .draft-hand-stack {
-		background: linear-gradient(165deg, rgba(34,38,58,0.96), rgba(26,30,48,0.92));
+	body.dark-mode .preworld-pick-item {
+		background: rgba(26,30,48,0.92);
 		border-color: rgba(140,160,220,0.22);
-		box-shadow: 0 14px 30px rgba(0,0,0,0.4);
 	}
-	body.dark-mode .draft-hand-stack-title {
-		color: rgba(235,240,255,0.82);
+	body.dark-mode .preworld-pick-budget {
+		background: rgba(120,140,200,0.18);
+		color: rgba(230,235,255,0.85);
 	}
-
-	@media (max-width: 720px) {
-		.draft-hand-grid {
-			grid-template-columns: 1fr;
-		}
+	body.dark-mode .preworld-cost {
+		background: rgba(255,255,255,0.12);
+		color: rgba(230,235,255,0.85);
 	}
 
 	/* Modal close button styling */
@@ -12361,19 +12373,16 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			</div>
 		</div>
 
-		<div id="draft-hand-layer" class="modal-overlay" aria-hidden="true">
-			<div id="draft-hand-modal" class="game-modal" role="dialog" aria-modal="true" aria-labelledby="draft-hand-title">
-				<h2 id="draft-hand-title">Kies je hand</h2>
-				<p id="draft-hand-subtext" class="modal-subtext">Kies één stapel kaarten om deze beurt te spelen.</p>
-				<div class="draft-hand-grid">
-					<button class="draft-hand-stack" type="button" data-stack="A">
-						<span class="draft-hand-stack-title">Stapel A</span>
-						<div class="draft-hand-cards" data-stack-cards="A"></div>
-					</button>
-					<button class="draft-hand-stack" type="button" data-stack="B">
-						<span class="draft-hand-stack-title">Stapel B</span>
-						<div class="draft-hand-cards" data-stack-cards="B"></div>
-					</button>
+		<div id="preworld-pick-layer" class="modal-overlay" aria-hidden="true">
+			<div id="preworld-pick-modal" class="game-modal" role="dialog" aria-modal="true" aria-labelledby="preworld-pick-title">
+				<div class="preworld-pick-header">
+					<h2 id="preworld-pick-title">Kies startkaarten</h2>
+					<div class="preworld-pick-budget">Budget: <span id="preworld-pick-budget">9</span>🪙</div>
+				</div>
+				<p id="preworld-pick-subtext" class="modal-subtext">Kaarten kosten 1🪙 per blok. Kies een combinatie tot 9🪙.</p>
+				<div id="preworld-pick-grid" class="preworld-pick-grid"></div>
+				<div class="modal-actions">
+					<button id="preworld-pick-confirm">Start level</button>
 				</div>
 			</div>
 		</div>
@@ -25763,66 +25772,6 @@ function getCollectedCoinCount(scores) {
 		return true;
 	}
 
-	const DRAFT_HAND_CHOICE_ENABLED = true;
-	const DRAFT_HAND_STACK_SIZE = 3;
-	let pendingDraftChoice = null;
-
-	function closeDraftHandModal() {
-		if (draftHandLayer) {
-			draftHandLayer.classList.remove('show');
-			draftHandLayer.setAttribute('aria-hidden', 'true');
-		}
-		pendingDraftChoice = null;
-	}
-
-	function renderDraftStack(container, cards) {
-		if (!container) return;
-		container.innerHTML = '';
-		(cards || []).forEach(card => {
-			const preview = createCardElement(card, true, { onSelect: null });
-			preview.classList.add('draft-hand-card');
-			preview.style.pointerEvents = 'none';
-			container.appendChild(preview);
-		});
-	}
-
-	function openDraftHandModal(stacks, onPick) {
-		if (!draftHandLayer || !draftHandModal) {
-			if (typeof onPick === 'function') onPick('A');
-			return;
-		}
-		pendingDraftChoice = { stacks, onPick };
-		const stackA = draftHandModal.querySelector('[data-stack-cards="A"]');
-		const stackB = draftHandModal.querySelector('[data-stack-cards="B"]');
-		renderDraftStack(stackA, stacks.stackA);
-		renderDraftStack(stackB, stacks.stackB);
-
-		draftHandModal.querySelectorAll('.draft-hand-stack').forEach(btn => {
-			btn.disabled = false;
-			btn.onclick = () => {
-				btn.disabled = true;
-				const pick = btn.dataset.stack === 'B' ? 'B' : 'A';
-				closeDraftHandModal();
-				if (typeof onPick === 'function') onPick(pick);
-			};
-		});
-
-		draftHandLayer.classList.add('show');
-		draftHandLayer.setAttribute('aria-hidden', 'false');
-		if (draftHandModal && draftHandModal.focus) {
-			setTimeout(() => draftHandModal.focus(), 60);
-		}
-	}
-
-	function buildDraftHandStacks(drawCount) {
-		const stackSize = Math.max(1, Number(drawCount || DRAFT_HAND_STACK_SIZE) || DRAFT_HAND_STACK_SIZE);
-		const total = Math.min(drawPile.length, stackSize * 2);
-		const drawn = drawPile.splice(0, total);
-		const stackA = drawn.slice(0, Math.min(stackSize, drawn.length));
-		const stackB = drawn.slice(stackA.length);
-		return { stackA, stackB };
-	}
-
 	function createUpgradeCopy(sourceCard, originTag) {
 		if (!sourceCard) return null;
 		const color = cloneColor(sourceCard.color);
@@ -25887,21 +25836,6 @@ function getCollectedCoinCount(scores) {
 	  
 	  const BASE_HAND_DRAW = 3;
 	  const drawCount = Math.min(BASE_HAND_DRAW, drawPile.length);
-
-	  const shouldDraft = DRAFT_HAND_CHOICE_ENABLED && drawPile.length > drawCount;
-	  if (shouldDraft) {
-		const stacks = buildDraftHandStacks(drawCount);
-		openDraftHandModal(stacks, (pick) => {
-			const chosen = pick === 'B' ? stacks.stackB : stacks.stackA;
-			const rejected = pick === 'B' ? stacks.stackA : stacks.stackB;
-			(rejected || []).forEach(card => {
-				if (card && discardPile) discardPile.push(card);
-			});
-			finalizeHandDraw(chosen);
-			updateDeckPreview();
-		});
-		return;
-	  }
 
 	  const newHand = [];
 	  for (let i = 0; i < drawCount; i++) {
@@ -26152,8 +26086,8 @@ function getCollectedCoinCount(scores) {
 	const shopUpgradeContainer = document.getElementById('shop-upgrade-container');
 	const shopBonusContainer = document.getElementById('shop-bonus-container');
 	const shopModalSkip = document.getElementById('shop-modal-skip');
-	const draftHandLayer = document.getElementById('draft-hand-layer');
-	const draftHandModal = document.getElementById('draft-hand-modal');
+	const preworldPickLayer = document.getElementById('preworld-pick-layer');
+	const preworldPickModal = document.getElementById('preworld-pick-modal');
 	const upgradeModalLayer = document.getElementById('upgrade-modal-layer');
 	const upgradeModalClose = document.getElementById('upgrade-modal-close');
 	const confirmCompleteLayer = document.getElementById('confirm-complete-layer');
@@ -26340,10 +26274,9 @@ function getCollectedCoinCount(scores) {
 
 	function hideAllModals() {
 		hideCompleteRoundConfirm();
-		[roundModalLayer, shopModalLayer, upgradeModalLayer, draftHandLayer].forEach(layer => {
+		[roundModalLayer, shopModalLayer, upgradeModalLayer, preworldPickLayer].forEach(layer => {
 			if (layer) layer.classList.remove('show');
 		});
-		closeDraftHandModal();
 	}
 
 	function showRoundModal(success, score, coins, bonusCoins = 0) {
@@ -28729,6 +28662,138 @@ function openShopModal(callback) {
 	  });
 	}
 
+		const PREWORLD_PICK_BUDGET = 9;
+
+		function closePreworldPickModal() {
+			if (preworldPickLayer) {
+				preworldPickLayer.classList.remove('show');
+				preworldPickLayer.setAttribute('aria-hidden', 'true');
+			}
+		}
+
+		function buildPreworldChoiceEntries() {
+			const entries = [];
+			const addList = (list, category) => {
+				if (!Array.isArray(list)) return;
+				list.forEach(entry => {
+					if (!entry || !entry.matrix) return;
+					entries.push({
+						name: entry.name || 'Kaart',
+						matrix: cloneShape(entry.matrix),
+						category: category || entry.category || 'standard'
+					});
+				});
+			};
+			addList(CARD_BLUEPRINTS && CARD_BLUEPRINTS.mini, 'mini');
+			addList(CARD_BLUEPRINTS && CARD_BLUEPRINTS.standard, 'standard');
+			addList(CARD_BLUEPRINTS && CARD_BLUEPRINTS.large, 'large');
+			addList(typeof XL_6_SHAPES !== 'undefined' ? XL_6_SHAPES : null, 'large');
+			addList(typeof EXTRA_LARGE_7_SHAPES !== 'undefined' ? EXTRA_LARGE_7_SHAPES : null, 'large');
+			const seen = new Set();
+			const out = [];
+			entries.forEach(entry => {
+				const key = `${entry.name}|${JSON.stringify(entry.matrix)}`;
+				if (seen.has(key)) return;
+				seen.add(key);
+				out.push(entry);
+			});
+			out.sort((a, b) => {
+				const diff = countShapeBlocks(a.matrix) - countShapeBlocks(b.matrix);
+				if (diff !== 0) return diff;
+				return String(a.name || '').localeCompare(String(b.name || ''));
+			});
+			return out;
+		}
+
+		function openPreworldPickModal(options = {}) {
+			const { onComplete } = options;
+			if (!preworldPickLayer || !preworldPickModal) {
+				if (typeof onComplete === 'function') onComplete([]);
+				return;
+			}
+			const budgetEl = document.getElementById('preworld-pick-budget');
+			const grid = document.getElementById('preworld-pick-grid');
+			const confirmBtn = document.getElementById('preworld-pick-confirm');
+			if (!grid || !confirmBtn) {
+				if (typeof onComplete === 'function') onComplete([]);
+				return;
+			}
+			let remaining = PREWORLD_PICK_BUDGET;
+			const selected = new Map();
+			const palette = (Array.isArray(NON_WILDCARD_COLORS) && NON_WILDCARD_COLORS.length)
+				? NON_WILDCARD_COLORS
+				: colors;
+
+			grid.innerHTML = '';
+			const entries = buildPreworldChoiceEntries();
+			entries.forEach((entry, index) => {
+				const color = cloneColor(palette[index % palette.length] || palette[0] || { name: 'grijs', code: '#a0a0a0' });
+				const previewBlueprint = {
+					shapeName: entry.name,
+					matrix: cloneShape(entry.matrix),
+					category: entry.category,
+					color
+				};
+				const card = buildDeckModalCard(previewBlueprint, index, { interactive: false });
+				if (card) card.classList.add('preworld-pick-card');
+				const cost = countShapeBlocks(entry.matrix);
+				const item = document.createElement('button');
+				item.type = 'button';
+				item.className = 'preworld-pick-item';
+				item.dataset.cost = String(cost);
+				item.dataset.key = `${entry.name}-${index}`;
+				const costBadge = document.createElement('div');
+				costBadge.className = 'preworld-cost';
+				costBadge.textContent = `${cost}🪙`;
+				item.appendChild(costBadge);
+				if (card) item.appendChild(card);
+				item.addEventListener('click', () => {
+					const key = item.dataset.key;
+					const isSelected = selected.has(key);
+					if (isSelected) {
+						selected.delete(key);
+						remaining += cost;
+						item.classList.remove('selected');
+					} else {
+						if (cost > remaining) return;
+						const bpEntry = { name: entry.name, matrix: entry.matrix, category: entry.category };
+						const blueprint = createCardBlueprint(bpEntry, color);
+						selected.set(key, blueprint);
+						remaining -= cost;
+						item.classList.add('selected');
+					}
+					updatePreworldPickUI();
+				});
+				grid.appendChild(item);
+			});
+
+			const updatePreworldPickUI = () => {
+				if (budgetEl) budgetEl.textContent = String(remaining);
+				grid.querySelectorAll('.preworld-pick-item').forEach(item => {
+					const cost = Number(item.dataset.cost || 0);
+					const isSelected = item.classList.contains('selected');
+					const disabled = !isSelected && cost > remaining;
+					item.classList.toggle('disabled', disabled);
+					item.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+				});
+				confirmBtn.disabled = false;
+			};
+			updatePreworldPickUI();
+
+			confirmBtn.onclick = () => {
+				confirmBtn.disabled = true;
+				const picks = Array.from(selected.values());
+				closePreworldPickModal();
+				if (typeof onComplete === 'function') onComplete(picks);
+			};
+
+			preworldPickLayer.classList.add('show');
+			preworldPickLayer.setAttribute('aria-hidden', 'false');
+			if (preworldPickModal && preworldPickModal.focus) {
+				setTimeout(() => preworldPickModal.focus(), 60);
+			}
+		}
+
 
 	function startLevel(level, options) {
 	  const opts = (options && typeof options === 'object') ? options : {};
@@ -28744,30 +28809,34 @@ function openShopModal(callback) {
 		}
 	  } catch (e) {}
 
-	  // Bij start van een wereld: altijd eerst 3 extra kaarten kiezen (1 uit 3, drie keer)
+	  // Bij start van een wereld: vooraf kaarten kiezen met budget
 	  try {
 		const info = getWorldAndSubLevel(Number(level) || 0);
 		const world = Number(info && info.world) || 1;
 		const subLevel = Number(info && info.subLevel) || 1;
-		const isIntro = !!(info && info.intro);
-		const isWorldStart = (subLevel === 1) && !isIntro;
+		const isWorldStart = (subLevel === 1) && Number(level) !== 0;
 		const worldKey = String(world);
 		const alreadyDoneForWorld = !!(starterPicksDoneByWorld && starterPicksDoneByWorld[worldKey]);
 		if (isWorldStart && !alreadyDoneForWorld && !preLevelStarterPicksInProgress && !isLoadingGame) {
-			// Switch off the intro deck before we start the starter picks, so the picks land on the standard deck
+			// Switch off the intro deck before we start the picker, so picks land on the standard deck
 			// and won't be wiped when we restart startLevel after the picker completes.
 			if (introDeckActive) {
 				introDeckActive = false;
 				resetDeckToStandard();
 			}
 			preLevelStarterPicksInProgress = true;
-			startStarterMiniRewardSequence(() => {
-				starterPicksDoneByWorld[worldKey] = true;
-				// Back-compat: keep the old flag in sync for world 1.
-				if (world === 1) preLevelStarterPicksDone = true;
-				preLevelStarterPicksInProgress = false;
-				try { saveGameState(); } catch (e) {}
-				startLevel(level, options);
+			openPreworldPickModal({
+				onComplete: (pickedBlueprints) => {
+					if (Array.isArray(pickedBlueprints) && pickedBlueprints.length) {
+						pickedBlueprints.forEach(bp => ownedDeckBlueprints.push(bp));
+					}
+					starterPicksDoneByWorld[worldKey] = true;
+					// Back-compat: keep the old flag in sync for world 1.
+					if (world === 1) preLevelStarterPicksDone = true;
+					preLevelStarterPicksInProgress = false;
+					try { saveGameState(); } catch (e) {}
+					startLevel(level, options);
+				}
 			});
 			return;
 		}
@@ -28963,7 +29032,13 @@ function openShopModal(callback) {
 	}
 
 	function resetDeckToStandard() {
-	  ownedDeckBlueprints = buildStandardDeckBlueprint();
+	  const base = buildStandardDeckBlueprint();
+	  if (typeof isTutorialCompleted === 'function' && isTutorialCompleted()) {
+		const intro = buildIntroTutorialDeckBlueprint();
+		ownedDeckBlueprints = base.concat(intro);
+		return;
+	  }
+	  ownedDeckBlueprints = base;
 	}
 
 	// ========== SAVE/LOAD SYSTEM ==========
@@ -29777,8 +29852,11 @@ function isWorld4CardAllowed(cardData) {
 	  // Reset coinsAwardedFromScore
 	  if (typeof coinsAwardedFromScore !== 'undefined') coinsAwardedFromScore = 0;
 	  
-	startLevel(0);
-	scheduleTutorialOnFirstRun();
+	const startLevelNum = (typeof isTutorialCompleted === 'function' && isTutorialCompleted()) ? 1 : 0;
+	startLevel(startLevelNum);
+	if (startLevelNum === 0) {
+		scheduleTutorialOnFirstRun();
+	}
 	}
 
 	function completeRound() {
