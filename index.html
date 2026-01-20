@@ -4220,6 +4220,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	.card-label {
 		display: inline-flex;
 		align-items: center;
+		justify-content: center;
 		gap: 6px;
 		padding: 5px 10px;
 		border-radius: 999px;
@@ -4229,19 +4230,15 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		letter-spacing: 0.065em;
 		text-transform: uppercase;
 		color: rgba(20,24,36,0.62);
-	}
-
-	.card-label-dot {
-		width: 9px;
-		height: 9px;
-		border-radius: 50%;
-		box-shadow: 0 0 5px rgba(0,0,0,0.26);
+		text-align: center;
 	}
 
 	.card-meta {
 		font-size: 0.72rem;
 		letter-spacing: 0.05em;
 		color: rgba(20,24,36,0.55);
+		text-align: center;
+		align-self: center;
 	}
 
 	.card-meta.card-meta--level2 {
@@ -4306,6 +4303,73 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		letter-spacing: 0.04em;
 		font-weight: 700;
 		opacity: 0.82;
+	}
+
+	.card-effect.card-effect-boost {
+		background: linear-gradient(135deg, #fff4cc, #ffd27a);
+		color: #5a3a00;
+		padding: 8px 10px;
+		border-radius: 12px;
+		box-shadow: 0 10px 22px rgba(0,0,0,0.16);
+		gap: 10px;
+		align-self: flex-start;
+		display: inline-flex;
+		align-items: center;
+	}
+
+	.card-effect-boost .card-effect-boost-icon {
+		width: 24px;
+		height: 24px;
+		border-radius: 7px;
+		background: linear-gradient(135deg, #ffd56b, #ffb347);
+		display: grid;
+		place-items: center;
+		color: #4c2a00;
+		font-weight: 800;
+		font-size: 14px;
+		box-shadow: 0 6px 14px rgba(0,0,0,0.16);
+	}
+
+	.card-effect-boost .card-effect-boost-text {
+		display: flex;
+		flex-direction: column;
+		line-height: 1.05;
+		gap: 1px;
+	}
+
+	.card-effect-boost .card-effect-boost-title {
+		font-size: 0.78rem;
+		letter-spacing: 0.07em;
+		font-weight: 800;
+	}
+
+	.card-effect-boost .card-effect-boost-sub {
+		font-size: 0.7rem;
+		letter-spacing: 0.04em;
+		font-weight: 700;
+		opacity: 0.82;
+	}
+
+	.card-boost-badge {
+		position: absolute;
+		bottom: 6px;
+		left: 6px;
+		width: 30px;
+		height: 30px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 10px;
+		font-size: 0.72rem;
+		font-weight: 800;
+		color: #5a3a00;
+		background: linear-gradient(135deg, #fff4cc, #ffd27a);
+		box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+		border: 1px solid rgba(90,58,0,0.2);
+		letter-spacing: 0;
+		text-align: center;
+		line-height: 1;
+		pointer-events: none;
 	}
 
 	.card-option { position: relative; }
@@ -4415,10 +4479,6 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		color: rgba(255,255,255,0.82);
 	}
 
-	body.dark-mode .card-label-dot {
-		box-shadow: 0 0 6px rgba(0,0,0,0.45);
-	}
-
 	body.dark-mode .card-meta {
 		color: rgba(255,255,255,0.65);
 	}
@@ -4432,6 +4492,25 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		background: linear-gradient(135deg, #1f2f4c, #1a2741);
 		color: #e7f2ff;
 		box-shadow: 0 10px 22px rgba(0,0,0,0.45);
+	}
+
+	body.dark-mode .card-effect.card-effect-boost {
+		background: linear-gradient(135deg, #3b2a12, #2a1f10);
+		color: #ffe9b0;
+		box-shadow: 0 10px 22px rgba(0,0,0,0.45);
+	}
+
+	body.dark-mode .card-effect-boost .card-effect-boost-icon {
+		background: linear-gradient(135deg, #ffcc66, #ffb347);
+		color: #2a1b00;
+		box-shadow: 0 6px 14px rgba(0,0,0,0.35);
+	}
+
+	body.dark-mode .card-boost-badge {
+		background: linear-gradient(135deg, #3b2a12, #2a1f10);
+		color: #ffe9b0;
+		border-color: rgba(255,233,176,0.2);
+		box-shadow: 0 8px 16px rgba(0,0,0,0.35);
 	}
 
 	body.dark-mode .card-effect-echo .card-effect-echo-icon {
@@ -5205,11 +5284,6 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			max-width: 100%;
 			overflow: hidden;
 			text-overflow: ellipsis;
-		}
-
-		.deck-modal-grid .card-option .card-label-dot {
-			width: 6px;
-			height: 6px;
 		}
 
 		.deck-modal-grid .card-option .card-meta {
@@ -6444,14 +6518,6 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		box-shadow: inset 0 0 0 1px rgba(40,55,120,0.16);
 	}
 
-	.shop-card .card-label-dot {
-		display: inline-block;
-		width: 10px;
-		height: 10px;
-		border-radius: 50%;
-		box-shadow: 0 0 6px rgba(0,0,0,0.2);
-	}
-
 	.shop-card .card-meta {
 		font-size: 0.75rem;
 		font-weight: 600;
@@ -6568,11 +6634,6 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			padding: 3px 6px;
 			font-size: 0.6rem;
 			gap: 3px;
-		}
-
-		.shop-card .card-label-dot {
-			width: 6px;
-			height: 6px;
 		}
 
 		.shop-card .card-meta {
@@ -7745,13 +7806,6 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			display: inline-block;
 		}
 
-		#bottom-bar #card-choice-zone .card-label-dot {
-			width: 6px;
-			height: 6px;
-			border-radius: 50%;
-			box-shadow: 0 0 3px rgba(0,0,0,0.22);
-		}
-
 		#bottom-bar #card-choice-zone .card-meta {
 			font-size: 0.6rem;
 			letter-spacing: 0.045em;
@@ -7776,10 +7830,6 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		body.dark-mode #bottom-bar #card-choice-zone .card-label {
 			background: rgba(255,255,255,0.08);
 			color: rgba(255,255,255,0.8);
-		}
-
-		body.dark-mode #bottom-bar #card-choice-zone .card-label-dot {
-			box-shadow: 0 0 6px rgba(0,0,0,0.45);
 		}
 
 		body.dark-mode #bottom-bar #card-choice-zone .card-meta {
@@ -12606,19 +12656,16 @@ let shopLevel2Used = false;
 		bonusEcho: {
 			id: 'bonusEcho',
 			name: 'Level 2 kaarten',
-			description: 'Ontgrendel Level 2 upgrades voor je deck. Kost 5 munten per upgrade, kies een kaart zonder eerdere upgrade.',
+			description: 'Ontgrendel Level 2 upgrades voor je deck. Koop dit één keer; daarna kun je in de shop kaarten upgraden voor 5 munten per kaart.',
 			cost: 5,
 			icon: '🔁',
 			purchased: false,
 			onPurchase: () => {
 				try {
 					UPGRADES.bonusEcho.purchased = true;
-					updateShopUpgradeUI();
-					// Direct één gratis Level 2 upgrade aanbieden bij ontgrendelen.
 					if (!shopLevel2Variant) shopLevel2Variant = pickBonusEchoVariant();
-					shopLevel2Used = false;
-					showObjectiveToast('🔁 Level 2 upgrades ontgrendeld! Kies meteen een kaart voor je eerste upgrade.');
-					startBonusEchoUpgradeFlow({ free: true, forcedVariant: shopLevel2Variant, markUsed: true });
+					showObjectiveToast('🔁 Level 2 upgrades ontgrendeld! Je kunt nu in de shop kaarten upgraden.');
+					updateShopUpgradeUI();
 				} catch (e) { console.error('Failed to unlock Level 2 upgrade flow', e); }
 			}
 		},
@@ -13115,7 +13162,7 @@ let shopLevel2Used = false;
 			{
 				id: 'intro-purple-8',
 				description: 'Haal 8 punten in paars.',
-				short: 'Intro - 8 punten paars',
+				short: 'Intro',
 				check: scores => scores.purple >= 8,
 				progress: scores => `${Math.min(scores.purple || 0, 8)}/8`
 			}
@@ -13124,31 +13171,31 @@ let shopLevel2Used = false;
 			{
 				id: 'level-1-total-10',
 				description: 'Haal 12 punten totaal.',
-				short: 'Level 1 - 12 punten totaal',
+				short: 'Level 1',
 				check: scores => scores.total >= 12
 			},
 			{
 				id: 'level-1-blue-8',
 				description: 'Scoor 8 punten in blauw.',
-				short: 'Level 1 - 8 punten blauw',
+				short: 'Level 1',
 				check: scores => scores.blue >= 8
 			},
 			{
 				id: 'level-1-yellow-6',
 				description: 'Voltooi 1 kolom in geel.',
-				short: 'Level 1 - 1 kolom geel',
+				short: 'Level 1',
 				check: () => checkYellowFullRows(1)
 			},
 			{
 				id: 'level-1-green-8',
 				description: 'Scoor 8 punten in groen.',
-				short: 'Level 1 - 8 punten groen',
+				short: 'Level 1',
 				check: scores => scores.green >= 8
 			},
 			{
 				id: 'level-1-purple-6',
 				description: 'Scoor 8 punten in paars.',
-				short: 'Level 1 - 8 punten paars',
+				short: 'Level 1',
 				check: scores => scores.purple >= 8
 			}
 		],
@@ -13156,25 +13203,25 @@ let shopLevel2Used = false;
 			{
 				id: 'level-2-total-20',
 				description: 'Haal 20 punten totaal.',
-				short: 'Level 2 - 20 punten totaal',
+				short: 'Level 2',
 				check: scores => scores.total >= 20
 			},
 			{
 				id: 'level-2-blue-yellow',
 				description: 'Scoor 12 punten in geel en 6 in blauw.',
-				short: 'Level 2 - 6 blauw + 12 geel',
+				short: 'Level 2',
 				check: scores => scores.blue >= 6 && scores.yellow >= 12
 			},
 			{
 				id: 'level-2-green-purple',
 				description: 'Scoor 8 punten in groen en paars.',
-				short: 'Level 2 - 8 groen + 8 paars',
+				short: 'Level 2',
 				check: scores => scores.green >= 8 && scores.purple >= 8
 			},
 			{
 				id: 'level-2-bonus-collect-6',
 				description: 'Verzamel 6 bonussen.',
-				short: 'Level 2 - 6 bonussen',
+				short: 'Level 2',
 				check: scores => (scores?.bonusesCollected || 0) >= 6,
 				progress: scores => {
 					const collected = Math.max(0, Math.min(6, (scores?.bonusesCollected || 0)));
@@ -13186,19 +13233,19 @@ let shopLevel2Used = false;
 			{
 				id: 'level-3-tricolor',
 				description: 'Level 3: Scoor 8 punten in paars, blauw én geel.',
-				short: 'Level 3 - 8 in paars/blauw/geel',
+				short: 'Level 3',
 				check: scores => scores.purple >= 8 && scores.blue >= 8 && scores.yellow >= 8
 			},
 			{
 				id: 'level-3-total-30',
 				description: 'Level 3: Haal 30 punten totaal.',
-				short: 'Level 3 - 30 punten totaal',
+				short: 'Level 3',
 				check: scores => scores.total >= 30
 			},
 			{
 				id: 'level-3-yellow-rows-2',
 				description: 'Level 3: Voltooi 2 gele kolommen.',
-				short: 'Level 3 - 2 gele kolommen',
+				short: 'Level 3',
 				check: () => checkYellowFullRows(2),
 				progress: () => {
 					const yellowConfig = window.yellowGridConfig || {};
@@ -13213,13 +13260,13 @@ let shopLevel2Used = false;
 			{
 				id: 'level-3-green',
 				description: 'Level 3: Scoor 16 punten in groen.',
-				short: 'Level 3 - 8 in groen',
+				short: 'Level 3',
 				check: scores => scores.green >= 16
 			},
 			{
 				id: 'level-3-blue-14',
 				description: 'Level 3: Scoor 20 punten in blauw',
-				short: 'Level 3 - 20 punten blauw',
+				short: 'Level 3',
 				check: scores => scores.blue >= 20
 			}
 		],
@@ -13227,13 +13274,13 @@ let shopLevel2Used = false;
 			{
 				id: 'level-4-total-40',
 				description: 'Level 4: Haal 35 punten totaal.',
-				short: 'Level 4 - 35 punten totaal',
+				short: 'Level 4',
 				check: scores => scores.total >= 35
 			},
 			{
 				id: 'level-4-all-colors-6',
 				description: 'Level 4: Scoor minstens 6 punten in de kleuren geel, groen, paars en blauw.',
-				short: 'Level 4 - 6+ in elke kleur',
+				short: 'Level 4',
 				check: scores => scores.yellow >= 6 && scores.green >= 6 && scores.purple >= 6 && scores.blue >= 6,
 				progress: scores => {
 					const parts = [
@@ -13248,7 +13295,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-4-bonus-12',
 			description: 'Level 4: Verzamel 12 bonussen.',
-				short: 'Level4 - 12 bonussen',
+				short: 'Level 4',
 				check: scores => (scores?.bonusesCollected || 0) >= 12,
 				progress: scores => {
 					const collected = Math.max(0, Math.min(12, (scores?.bonusesCollected || 0)));
@@ -13258,7 +13305,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-4-purple-yellow',
 				description: 'Level 4: Scoor 8 in paars en 12 in geel.',
-				short: 'Level 4 - 8 paars + 12 geel',
+				short: 'Level 4',
 				check: scores => scores.purple >= 8 && scores.yellow >= 12
 			}
 		],
@@ -13266,25 +13313,25 @@ let shopLevel2Used = false;
 			{
 				id: 'level-5-total-50',
 				description: 'Level 5: Haal 40 punten totaal.',
-				short: 'Level 5 - 40 punten totaal',
+				short: 'Level 5',
 				check: scores => scores.total >= 40
 			},
 			{
 				id: 'level-5-yellow-rows-3',
 				description: 'Level 5: Scoor 16 punten in geel.',
-				short: 'Level 5 - 16 punten geel',
+				short: 'Level 5',
 				check: scores => scores.yellow >= 16
 			},
 			{
 				id: 'level-5-blue-18',
 				description: 'Level 5: Scoor 30 punten in blauw.',
-				short: 'Level 5 - 30 punten blauw',
+				short: 'Level 5',
 				check: scores => scores.blue >= 30
 			},
 			{
 				id: 'level-5-red-20',
 				description: 'Level 5: Scoor 20 punten in rood.',
-				short: 'Level 5 - 20 punten rood',
+				short: 'Level 5',
 				check: scores => scores.red >= 20
 			}
 		],
@@ -13292,25 +13339,25 @@ let shopLevel2Used = false;
 			{
 				id: 'level-6-total-60',
 				description: 'Level 6: Haal 50 punten totaal.',
-				short: 'Level 6 - 50 punten totaal',
+				short: 'Level 6',
 				check: scores => scores.total >= 50
 			},
 			{
 				id: 'level-6-green-20',
 				description: 'Level 6: Scoor 24 punten in groen en 12 in geel.',
-				short: 'Level 6 - 24 punten groen',
+				short: 'Level 6',
 				check: scores => scores.green >= 24 && scores.yellow >= 12
 			},
 			{
 				id: 'level-6-tricolor-advanced',
 				description: 'Level 6: Scoor 12 punten in paars, blauw en geel.',
-				short: 'Level 6 - 12+ in paars/blauw/geel',
+				short: 'Level 6',
 				check: scores => scores.purple >= 12 && scores.blue >= 12 && scores.yellow >= 12
 			},
 			{
 				id: 'level-6-bonus-18',
 				description: 'Level 6: Verzamel 18 bonussen.',
-				short: 'Level 6 - 18 bonussen',
+				short: 'Level 6',
 				check: scores => (scores?.bonusesCollected || 0) >= 18,
 				progress: scores => {
 					const collected = Math.max(0, Math.min(18, (scores?.bonusesCollected || 0)));
@@ -13320,7 +13367,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-6-purple-18',
 				description: 'Level 6: Scoor 18 punten in paars.',
-				short: 'Level 6 - 18 punten paars',
+				short: 'Level 6',
 				check: scores => scores.purple >= 18
 			},
 		],
@@ -13328,13 +13375,13 @@ let shopLevel2Used = false;
 			{
 				id: 'level-7-total-70',
 				description: 'Level 7: Haal 60 punten totaal.',
-				short: 'Level 7 - 60 punten totaal',
+				short: 'Level 7',
 				check: scores => scores.total >= 60
 			},
 			{
 				id: 'level-7-yellow-rows-5',
 				description: 'Level 7: Voltooi 3 gele kolommen.',
-				short: 'Level 7 - 3 gele kolommen',
+				short: 'Level 7',
 				check: () => checkYellowFullRows(3),
 				progress: () => {
 					const yellowConfig = window.yellowGridConfig || {};
@@ -13349,7 +13396,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-7-all-colors-10',
 				description: 'Level 7: Scoor minstens 10 punten in elke kleur.',
-				short: 'Level 7 - 10+ in elke kleur',
+				short: 'Level 7',
 				check: scores => scores.yellow >= 10 && scores.red >= 10 && scores.green >= 10 && scores.purple >= 10 && scores.blue >= 10,
 				progress: scores => {
 					const parts = [
@@ -13365,13 +13412,13 @@ let shopLevel2Used = false;
 			{
 				id: 'level-7-blue-purple',
 				description: 'Level 7: Scoor 50 punten in blauw',
-				short: 'Level 7 - 50 punten blauw',
+				short: 'Level 7',
 				check: scores => scores.blue >= 50
 			},
 			{
 				id: 'level-7-red-35',
 				description: 'Level 7: Scoor 35 punten in rood.',
-				short: 'Level 7 - 35 punten rood',
+				short: 'Level 7',
 				check: scores => scores.red >= 35
 			}
 		],
@@ -13379,13 +13426,13 @@ let shopLevel2Used = false;
 			{
 				id: 'level-8-total-85',
 				description: 'Level 8: Haal 85 punten totaal.',
-				short: 'Level 8 - 85 punten totaal',
+				short: 'Level 8',
 				check: scores => scores.total >= 85
 			},
 			{
 				id: 'level-8-yellow-rows-6',
 				description: 'Level 8: Voltooi 3 gele kolommen.',
-				short: 'Level 8 - 3 gele kolommen',
+				short: 'Level 8',
 				check: () => checkYellowFullRows(3),
 				progress: () => {
 					const yellowConfig = window.yellowGridConfig || {};
@@ -13400,13 +13447,13 @@ let shopLevel2Used = false;
 			{
 				id: 'level-8-green-purple-ring',
 				description: 'Level 8: Scoor 24 punten in paars.',
-				short: 'Level 8 - 24 punten paars',
+				short: 'Level 8',
 				check: scores => scores.purple >= 24
 			},
 			{
 				id: 'level-8-bonus-24',
 				description: 'Level 8: Verzamel 24 bonussen.',
-				short: 'Level 8 - 24 bonussen',
+				short: 'Level 8',
 				check: scores => (scores?.bonusesCollected || 0) >= 24,
 				progress: scores => {
 					const collected = Math.max(0, Math.min(24, (scores?.bonusesCollected || 0)));
@@ -13416,7 +13463,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-8-quad-color',
 				description: 'Level 8: Scoor 14 punten in geel, groen, paars én blauw.',
-				short: 'Level 8 - 14+ in 4 kleuren',
+				short: 'Level 8',
 				check: scores => scores.yellow >= 14 && scores.green >= 14 && scores.purple >= 14 && scores.blue >= 14,
 				progress: scores => {
 					const parts = [
@@ -13433,13 +13480,13 @@ let shopLevel2Used = false;
 			{
 				id: 'level-9-total-100',
 				description: 'Level 9: Haal 100 punten totaal.',
-				short: 'Level 9 - 100 punten totaal',
+				short: 'Level 9',
 				check: scores => scores.total >= 100
 			},
 			{
 				id: 'level-9-yellow-rows-7',
 				description: 'Level 9: Voltooi 4 gele kolommen.',
-				short: 'Level 9 - 4 gele kolommen',
+				short: 'Level 9',
 				check: () => checkYellowFullRows(4),
 				progress: () => {
 					const yellowConfig = window.yellowGridConfig || {};
@@ -13454,7 +13501,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-9-all-colors-15',
 				description: 'Level 9: Scoor minstens 12 punten in elke kleur.',
-				short: 'Level 9 - 12+ in elke kleur',
+				short: 'Level 9',
 				check: scores => scores.yellow >= 12 && scores.red >= 12 && scores.green >= 12 && scores.purple >= 12 && scores.blue >= 12,
 				progress: scores => {
 					const parts = [
@@ -13470,13 +13517,13 @@ let shopLevel2Used = false;
 			{
 				id: 'level-9-blue-25',
 				description: 'Level 9: Scoor 75 punten in blauw.',
-				short: 'Level 9 - 75 punten blauw',
+				short: 'Level 9',
 				check: scores => scores.blue >= 75
 			},
 			{
 				id: 'level-9-combo-master',
 				description: 'Level 9: Scoor 20 punten in rood, 2 gele kolommen en 18 bonussen.',
-				short: 'Level 9 - Combo master',
+				short: 'Level 9',
 				check: scores => scores.red >= 20 && checkYellowFullRows(2) && ((scores?.bonusesCollected || 0) >= 18),
 				progress: scores => {
 					const yellowConfig = window.yellowGridConfig || {};
@@ -13495,25 +13542,25 @@ let shopLevel2Used = false;
 			{
 				id: 'level-10-total-120',
 				description: 'Level 10: Haal 120 punten totaal.',
-				short: 'Level 10 - 120 punten totaal',
+				short: 'Level 10',
 				check: scores => scores.total >= 120
 			},
 			{
 				id: 'level-10-yellow-rows-8',
 				description: 'Level 10: Scoor 70 punten in geel.',
-				short: 'Level 10 - 70 punten geel',
+				short: 'Level 10',
 				check: scores => scores.yellow >= 70
 			},
 			{
 				id: 'level-10-perfect-balance',
 				description: 'Level 10: Scoor minstens 20 punten in elke kleur.',
-				short: 'Level 10 - Perfecte balans',
+				short: 'Level 10',
 				check: scores => scores.yellow >= 20 && scores.red >= 20 && scores.green >= 20 && scores.purple >= 20 && scores.blue >= 20
 			},
 			{
 				id: 'level-10-purple-ring',
 				description: 'Level 10: Vul de volledige buitenrand van het paarse veld.',
-				short: 'Level 10 - Paarse rand vol',
+				short: 'Level 10',
 				check: () => checkPurpleOuterRingComplete()
 			}
 		],
@@ -13523,13 +13570,13 @@ let shopLevel2Used = false;
 			{
 				id: 'level-11-world2-intro',
 				description: 'Level 11: Welkom in Wereld 2! Scoor 40 punten totaal.',
-				short: 'Level 11 - Wereld 2 intro',
+				short: 'Level 11',
 				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 40
 			},
 			{
 				id: 'level-11-shape-master',
 				description: 'Level 11: Voltooi 1 diagonale lijn van minstens 5 cellen in geel.',
-				short: 'Level 11 - Diagonaal meester',
+				short: 'Level 11',
 				check: () => {
 					// Check of er een diagonaal van 5+ cellen volledig actief is
 					const yellowZone = document.getElementById('yellow-zone');
@@ -13560,13 +13607,13 @@ let shopLevel2Used = false;
 			{
 				id: 'level-11-long-path',
 				description: 'Level 11: Scoor 50 punten in blauw.',
-				short: 'Level 11 - Lange reis',
+				short: 'Level 11',
 				check: scores => scores.blue >= 50
 			},
 			{
 				id: 'level-11-purple-expansion',
 				description: 'Level 11: Scoor 40 punten in paars.',
-				short: 'Level 11 - Paarse expansie',
+				short: 'Level 11',
 				check: scores => scores.purple >= 40
 			},
 		],
@@ -13574,19 +13621,19 @@ let shopLevel2Used = false;
 			{
 				id: 'level-12-deep-roots',
 				description: 'Level 12: Scoor 50 punten in groen.',
-				short: 'Level 12 - Diepe wortels',
+				short: 'Level 12',
 				check: scores => scores.green >= 50
 			},
 			{
 				id: 'level-12-red-connection',
 				description: 'Level 12: Scoor 45 punten in rood.',
-				short: 'Level 12 - Rode verbinding',
+				short: 'Level 12',
 				check: scores => scores.red >= 45
 			},
 			{
 				id: 'level-12-yellow-precision',
 				description: 'Level 12: Voltooi 2 diagonale lijnen van minimaal 5 cellen in geel.',
-				short: 'Level 12 - Gele artiest',
+				short: 'Level 12',
 				check: () => {
 					const yellowZone = document.getElementById('yellow-zone');
 					if (!yellowZone) return false;
@@ -13657,7 +13704,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-12-bonus-rush',
 				description: 'Level 12: Verzamel 30 bonussen.',
-				short: 'Level 12 - Bonus rush',
+				short: 'Level 12',
 				check: scores => (scores?.bonusesCollected || 0) >= 30,
 				progress: scores => {
 					const collected = Math.max(0, Math.min(30, (scores?.bonusesCollected || 0)));
@@ -13667,7 +13714,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-12-rainbow',
 				description: 'Level 12: Scoor 23 punten in elke kleur.',
-				short: 'Level 12 - Regenboog',
+				short: 'Level 12',
 				check: scores => scores.yellow >= 23 && scores.red >= 23 && scores.green >= 23 && scores.purple >= 23 && scores.blue >= 23
 			}
 		],
@@ -13675,31 +13722,31 @@ let shopLevel2Used = false;
 			{
 				id: 'level-13-mega-blue',
 				description: 'Level 13: Scoor 70 punten in blauw.',
-				short: 'Level 13 - Mega blauw',
+				short: 'Level 13',
 				check: scores => scores.blue >= 70
 			},
 			{
 				id: 'level-13-purple-perfect',
 				description: 'Level 13: Scoor 70 punten in paars.',
-				short: 'Level 13 - Paars 70 punten',
+				short: 'Level 13',
 				check: scores => scores.purple >= 70
 			},
 			{
 				id: 'level-13-green-giant',
 				description: 'Level 13: Scoor 70 punten in groen.',
-				short: 'Level 13 - Groene reus',
+				short: 'Level 13',
 				check: scores => scores.green >= 70
 			},
 			{
 				id: 'level-13-red-master',
 				description: 'Level 13: Scoor 58 punten in rood.',
-				short: 'Level 13 - Rood 58 punten',
+				short: 'Level 13',
 				check: scores => scores.red >= 58
 			},
 			{
 				id: 'level-13-yellow-artisan',
 				description: 'Level 13: Maak een kruis tussen de dikgedrukte cellen in geel.',
-				short: 'Level 13 - Gele precisie',
+				short: 'Level 13',
 				check: () => {
 					const yellowZone = document.getElementById('yellow-zone');
 					if (!yellowZone) return false;
@@ -13759,13 +13806,13 @@ let shopLevel2Used = false;
 			{
 				id: 'level-14-total-score',
 				description: 'Level 14: Scoor 200 punten in totaal.',
-				short: 'Level 14 - Totale score',
+				short: 'Level 14',
 				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 200
 			},
 			{
 				id: 'level-14-balanced-power',
 				description: 'Level 14: Scoor 32 punten in 4 verschillende kleuren.',
-				short: 'Level 14 - Gebalanceerde kracht',
+				short: 'Level 14',
 				check: scores => {
 					const colorScores = [scores.yellow, scores.red, scores.green, scores.purple, scores.blue];
 					return colorScores.filter(s => s >= 32).length >= 4;
@@ -13774,13 +13821,13 @@ let shopLevel2Used = false;
 			{
 				id: 'level-14-blue-marathon',
 				description: 'Level 14: Scoor 90 punten in blauw.',
-				short: 'Level 14 - Blauwe marathon',
+				short: 'Level 14',
 				check: scores => scores.blue >= 90
 			},
 			{
 				id: 'level-14-multi-color-focus',
 				description: 'Level 14: Scoor 60 punten in groen en paars.',
-				short: 'Level 14 - Multi-kleur focus',
+				short: 'Level 14',
 				check: scores => scores.green >= 60 && scores.purple >= 60
 			}
 		],
@@ -13788,25 +13835,25 @@ let shopLevel2Used = false;
 			{
 				id: 'level-15-green-legend',
 				description: 'Level 15: Scoor 80 punten in groen.',
-				short: 'Level 15 - Groene legende',
+				short: 'Level 15',
 				check: scores => scores.green >= 80
 			},
 			{
 				id: 'level-15-red-network',
 				description: 'Level 15: Scoor 70 punten in rood.',
-				short: 'Level 15 - Rood netwerk',
+				short: 'Level 15',
 				check: scores => scores.red >= 70
 			},
 			{
 				id: 'level-15-yellow-perfect',
 				description: 'Level 15: Scoor 80 punten in geel.',
-				short: 'Level 15 - Gele perfectie',
+				short: 'Level 15',
 				check: scores => scores.yellow >= 80
 			},
 			{
 				id: 'level-15-ultimate-balance',
 				description: 'Level 15: Scoor 25 punten in elke kleur.',
-				short: 'Level 15 - Ultieme balans',
+				short: 'Level 15',
 				check: scores => scores.yellow >= 25 && scores.red >= 25 && scores.green >= 25 && scores.purple >= 25 && scores.blue >= 25
 			}
 		],
@@ -13814,31 +13861,31 @@ let shopLevel2Used = false;
 			{
 				id: 'level-16-total-domination',
 				description: 'Level 16: Scoor 280 punten totaal.',
-				short: 'Level 16 - Totale dominantie',
+				short: 'Level 16',
 				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 280
 			},
 			{
 				id: 'level-16-blue-epic',
 				description: 'Level 16: Scoor 120 punten in blauw.',
-				short: 'Level 16 - Blauwe epic',
+				short: 'Level 16',
 				check: scores => scores.blue >= 120
 			},
 			{
 				id: 'level-16-purple-titan',
 				description: 'Level 16: Scoor 110 punten in paars.',
-				short: 'Level 16 - Paarse titaan',
+				short: 'Level 16',
 				check: scores => scores.purple >= 110
 			},
 			{
 				id: 'level-16-green-depths',
 				description: 'Level 16: Scoor 120 punten in groen.',
-				short: 'Level 16 - Groene dieptes',
+				short: 'Level 16',
 				check: scores => scores.green >= 120
 			},
 			{
 				id: 'level-16-bonus-legend',
 				description: 'Level 16: Haal 40 bonussen.',
-				short: 'Level 16 - Bonus legende',
+				short: 'Level 16',
 				check: scores => (scores?.bonusesCollected || 0) >= 40,
 				progress: scores => {
 					const collected = Math.max(0, Math.min(40, (scores?.bonusesCollected || 0)));
@@ -13850,13 +13897,13 @@ let shopLevel2Used = false;
 			{
 				id: 'level-17-red-empire',
 				description: 'Level 17: Scoor 78 punten in rood.',
-				short: 'Level 17 - Rood rijk',
+				short: 'Level 17',
 				check: scores => scores.red >= 78
 			},
 			{
 				id: 'level-17-four-pillars',
 				description: 'Level 17: Scoor 48 punten in 4 verschillende kleuren.',
-				short: 'Level 17 - Vier pilaren',
+				short: 'Level 17',
 				check: scores => {
 					const colorScores = [scores.yellow, scores.red, scores.green, scores.purple, scores.blue];
 					return colorScores.filter(s => s >= 48).length >= 4;
@@ -13865,19 +13912,19 @@ let shopLevel2Used = false;
 			{
 				id: 'level-17-yellow-architect',
 				description: 'Level 17: Scoor 140 punten in geel.',
-				short: 'Level 17 - Gele architect',
+				short: 'Level 17',
 				check: scores => scores.yellow >= 140
 			},
 			{
 				id: 'level-17-blue-odyssey',
 				description: 'Level 17: Scoor 150 punten in blauw.',
-				short: 'Level 17 - Blauwe odyssee',
+				short: 'Level 17',
 				check: scores => scores.blue >= 150
 			},
 			{
 				id: 'level-17-complete-mastery',
 				description: 'Level 17: Scoor 35 punten elke kleur.',
-				short: 'Level 17 - Complete meesterschap',
+				short: 'Level 17',
 				check: scores => scores.yellow >= 35 && scores.red >= 35 && scores.green >= 35 && scores.purple >= 35 && scores.blue >= 35
 			}
 		],
@@ -13885,25 +13932,25 @@ let shopLevel2Used = false;
 			{
 				id: 'level-18-mega-score',
 				description: 'Level 18: Scoor 300 punten totaal.',
-				short: 'Level 18 - Mega score',
+				short: 'Level 18',
 				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 300
 			},
 			{
 				id: 'level-18-green-abyss',
 				description: 'Level 18: Scoor 200 punten in groen.',
-				short: 'Level 18 - Groene afgrond',
+				short: 'Level 18',
 				check: scores => scores.green >= 200
 			},
 			{
 				id: 'level-18-purple-overlord',
 				description: 'Level 18: Scoor 140 punten in paars.',
-				short: 'Level 18 - Paarse overlord',
+				short: 'Level 18',
 				check: scores => scores.purple >= 140
 			},
 			{
 				id: 'level-18-red-megagrid',
 				description: 'Level 18: Voltooi minstens 3 van de 4 rode grids.',
-				short: 'Level 18 - Rood megagrid (3/4)',
+				short: 'Level 18',
 				check: () => {
 					const redZones = ['red-grid1', 'red-grid2', 'red-grid3', 'red-grid4'];
 					let complete = 0;
@@ -13920,7 +13967,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-18-bonus-titan',
 				description: 'Level 18: Haal 35 bonussen.',
-				short: 'Level 18 - Bonus titaan',
+				short: 'Level 18',
 				check: scores => (scores?.bonusesCollected || 0) >= 35,
 				progress: scores => {
 					const collected = Math.max(0, Math.min(35, (scores?.bonusesCollected || 0)));
@@ -13932,25 +13979,25 @@ let shopLevel2Used = false;
 			{
 				id: 'level-19-blue-legend',
 				description: 'Level 19: Scoor 250 punten in blauw.',
-				short: 'Level 19 - Blauwe legende',
+				short: 'Level 19',
 				check: scores => scores.blue >= 250
 			},
 			{
 				id: 'level-19-all-pillars',
 				description: 'Level 19: Scoor 50 punten in elke kleur.',
-				short: 'Level 19 - Alle pilaren',
+				short: 'Level 19',
 				check: scores => scores.yellow >= 50 && scores.red >= 50 && scores.green >= 50 && scores.purple >= 50 && scores.blue >= 50
 			},
 			{
 				id: 'level-19-red-completion',
 				description: 'Level 19: Scoor 120 punten in rood.',
-				short: 'Level 19 - Rode voltooiing',
+				short: 'Level 19',
 				check: scores => scores.red >= 120
 			},
 			{
 				id: 'level-19-perfect-world',
 				description: 'Level 19: Voltooi één zone perfect (alle cellen actief).',
-				short: 'Level 19 - 1 perfecte zone',
+				short: 'Level 19',
 				check: () => {
 					const zoneIds = ['yellow-zone', 'purple-zone', 'blue-zone', 'green-zone'];
 					return zoneIds.some(id => {
@@ -13966,14 +14013,14 @@ let shopLevel2Used = false;
 		20: [
 			{
 				id: 'level-20-ultimate',
-				description: 'Level 20: Scoor 400 punten totaal (ultieme uitdaging).',
-				short: 'Level 20 - Ultiem',
+				description: 'Level 20: Scoor 400 punten totaal.',
+				short: 'Level 20',
 				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 400
 			},
 			{
 				id: 'level-20-perfect-balance',
 				description: 'Level 20: Scoor 58 punten in elke kleur.',
-				short: 'Level 20 - Perfecte balans',
+				short: 'Level 20',
 				check: scores => scores.yellow >= 58 && scores.red >= 58 && scores.green >= 58 && scores.purple >= 58 && scores.blue >= 58,
 				progress: scores => {
 					const parts = [
@@ -13989,7 +14036,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-20-bonus-god',
 				description: 'Level 20: Haal 40 bonussen.',
-				short: 'Level 20 - Bonus god',
+				short: 'Level 20',
 				check: scores => (scores?.bonusesCollected || 0) >= 40,
 				progress: scores => {
 					const collected = Math.max(0, Math.min(40, (scores?.bonusesCollected || 0)));
@@ -13999,7 +14046,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-20-complete-all',
 				description: 'Level 20: Voltooi minstens 2 zones volledig (alle cellen actief).',
-				short: 'Level 20 - 2 volledige zones',
+				short: 'Level 20',
 				check: () => {
 					const colorZones = ['yellow-zone', 'purple-zone', 'blue-zone', 'green-zone'];
 					const redZones = ['red-grid1', 'red-grid2', 'red-grid3', 'red-grid4'];
@@ -14022,7 +14069,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-20-world2-master',
 				description: 'Level 20: Meester van Wereld 2 - Scoor 100 punten in elke kleur.',
-				short: 'Level 20 - Wereld 2 meester',
+				short: 'Level 20',
 				check: scores => {
 					const colorScores = [scores.yellow, scores.red, scores.green, scores.purple, scores.blue];
 					return colorScores.filter(s => s >= 100).length === 5;
@@ -14044,25 +14091,25 @@ let shopLevel2Used = false;
 			{
 				id: 'level-21-world3-intro',
 				description: 'Level 21: Welkom in Wereld 3! Scoor 100 punten totaal.',
-				short: 'Level 21 - Wereld 3 intro',
+				short: 'Level 21',
 				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 100
 			},
 			{
 				id: 'level-21-blue-marathon',
 				description: 'Level 21: Scoor 75 punten in blauw.',
-				short: 'Level 21 - Blauwe marathon',
+				short: 'Level 21',
 				check: scores => scores.blue >= 75
 			},
 			{
 				id: 'level-21-green-explorer',
 				description: 'Level 21: Scoor 72 punten in groen.',
-				short: 'Level 21 - Groene verkenner',
+				short: 'Level 21',
 				check: scores => scores.green >= 72
 			},
 			{
 				id: 'level-21-balanced-champion',
 				description: 'Level 21: Scoor 45 punten elke kleur.',
-				short: 'Level 21 - Gebalanceerde kampioen',
+				short: 'Level 21',
 				check: scores => scores.yellow >= 45 && scores.red >= 45 && scores.green >= 45 && scores.purple >= 45 && scores.blue >= 45,
 				progress: scores => {
 					const parts = [
@@ -14080,25 +14127,25 @@ let shopLevel2Used = false;
 			{
 				id: 'level-22-purple-domination',
 				description: 'Level 22: Scoor 100 punten in paars.',
-				short: 'Level 22 - Paarse dominantie',
+				short: 'Level 22',
 				check: scores => scores.purple >= 100
 			},
 			{
 				id: 'level-22-red-network',
 				description: 'Level 22: Scoor 55 punten in rood.',
-				short: 'Level 22 - Rood netwerk',
+				short: 'Level 22',
 				check: scores => scores.red >= 55
 			},
 			{
 				id: 'level-22-yellow-diamond',
 				description: 'Level 22: Scoor 75 punten in geel.',
-				short: 'Level 22 - Gele diamant',
+				short: 'Level 22',
 				check: scores => scores.yellow >= 75
 			},
 			{
 				id: 'level-22-coin-master',
 				description: 'Level 22: Verzamel 15+ munten in dit level.',
-				short: 'Level 22 - Munt meester',
+				short: 'Level 22',
 				check: scores => getCollectedCoinCount(scores) >= 15,
 				progress: scores => {
 					const collected = Math.max(0, Math.min(15, getCollectedCoinCount(scores)));
@@ -14108,7 +14155,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-22-dual-focus',
 				description: 'Level 22: Scoor 100 punten in groen en blauw.',
-				short: 'Level 22 - Dubbele focus',
+				short: 'Level 22',
 				check: scores => scores.green >= 100 && scores.blue >= 100
 			}
 		],
@@ -14116,25 +14163,25 @@ let shopLevel2Used = false;
 			{
 				id: 'level-23-total-power',
 				description: 'Level 23: Scoor 300 punten totaal.',
-				short: 'Level 23 - Totale kracht',
+				short: 'Level 23',
 				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 300
 			},
 			{
 				id: 'level-23-blue-split-master',
 				description: 'Level 23: Scoor 250 punten in blauw.',
-				short: 'Level 23 - Split meester',
+				short: 'Level 23',
 				check: scores => scores.blue >= 250
 			},
 			{
 				id: 'level-23-green-depth',
 				description: 'Level 23: Scoor 200 punten in groen.',
-				short: 'Level 23 - Groene diepte',
+				short: 'Level 23',
 				check: scores => scores.green >= 200
 			},
 			{
 				id: 'level-23-triple-threat',
 				description: 'Level 23: Scoor 75 punten in 3 kleuren.',
-				short: 'Level 23 - Drievoudige dreiging',
+				short: 'Level 23',
 				check: scores => {
 					const colorScores = [scores.yellow, scores.red, scores.green, scores.purple, scores.blue];
 					return colorScores.filter(s => s >= 75).length >= 3;
@@ -14145,7 +14192,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-24-extreme-balance',
 				description: 'Level 24: Scoor 65 punten in elke kleur',
-				short: 'Level 24 - Extreme balans',
+				short: 'Level 24',
 				check: scores => scores.yellow >= 65 && scores.red >= 65 && scores.green >= 65 && scores.purple >= 65 && scores.blue >= 65,
 				progress: scores => {
 					const parts = [
@@ -14161,13 +14208,13 @@ let shopLevel2Used = false;
 			{
 				id: 'level-24-yellow-mastery',
 				description: 'Level 24: Scoor 120 punten in geel.',
-				short: 'Level 24 - Gele meesterschap',
+				short: 'Level 24',
 				check: scores => scores.yellow >= 120
 			},
 			{
 				id: 'level-24-red-empire',
 				description: 'Level 24: Voltooi 3 van de 4 rode grids volledig.',
-				short: 'Level 24 - Rood imperium',
+				short: 'Level 24',
 				check: () => {
 					const redZones = ['red-grid1', 'red-grid2', 'red-grid3', 'red-grid4'];
 					let complete = 0;
@@ -14184,7 +14231,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-24-bonus-rush',
 				description: 'Level 24: Verzamel 40 bonussen.',
-				short: 'Level 24 - Bonus rush',
+				short: 'Level 24',
 				check: scores => (scores?.bonusesCollected || 0) >= 40,
 				progress: scores => {
 					const collected = Math.max(0, Math.min(40, (scores?.bonusesCollected || 0)));
@@ -14194,7 +14241,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-24-blue-depths',
 				description: 'Level 24: Scoor 300 punten in blauw.',
-				short: 'Level 24 - Blauwe dieptes',
+				short: 'Level 24',
 				check: scores => scores.blue >= 300
 			}
 		],
@@ -14202,13 +14249,13 @@ let shopLevel2Used = false;
 			{
 				id: 'level-25-halfway-champion',
 				description: 'Level 25: Scoor 450 punten totaal.',
-				short: 'Level 25 - Halverwege kampioen',
+				short: 'Level 25',
 				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 450
 			},
 			{
 				id: 'level-25-purple-complete',
 				description: 'Level 25: Verbind de vier buitenste dikgedrukte paarse cellen  met elkaar.',
-				short: 'Level 25 - Paars verbonden',
+				short: 'Level 25',
 				check: () => {
 					const purpleZone = document.getElementById('purple-zone');
 					if (!purpleZone) return false;
@@ -14259,7 +14306,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-25-coin-hoarder',
 				description: 'Level 25: Verzamel 25+ munten.',
-				short: 'Level 25 - Munt verzamelaar',
+				short: 'Level 25',
 				check: scores => getCollectedCoinCount(scores) >= 25,
 				progress: scores => {
 					const collected = Math.max(0, Math.min(25, getCollectedCoinCount(scores)));
@@ -14271,7 +14318,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-26-all-reds',
 				description: 'Level 26: Voltooi alle 4 rode grids volledig.',
-				short: 'Level 26 - Alle roden',
+				short: 'Level 26',
 				check: () => {
 					const redZones = ['red-grid1', 'red-grid2', 'red-grid3', 'red-grid4'];
 					return redZones.every(id => {
@@ -14286,7 +14333,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-26-five-colors',
 				description: 'Level 26: Scoor 70 punten in elke kleur.',
-				short: 'Level 26 - Vijf kleuren',
+				short: 'Level 26',
 				check: scores => scores.yellow >= 70 && scores.red >= 70 && scores.green >= 70 && scores.purple >= 70 && scores.blue >= 70,
 				progress: scores => {
 					const parts = [
@@ -14304,13 +14351,13 @@ let shopLevel2Used = false;
 			{
 				id: 'level-27-purple-ring',
 				description: 'Level 27: Voltooi de buitenste ring van paars.',
-				short: 'Level 27 - Paarse ring',
+				short: 'Level 27',
 				check: scores => checkPurpleOuterRingComplete()
 			},
 			{
 				id: 'level-27-mega-total',
 				description: 'Level 27: Scoor 450 punten totaal.',
-				short: 'Level 27 - Mega totaal',
+				short: 'Level 27',
 				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 450
 			}
 		],
@@ -14318,19 +14365,19 @@ let shopLevel2Used = false;
 			{
 				id: 'level-28-blue-master',
 				description: 'Level 28: Scoor 350 punten in blauw.',
-				short: 'Level 28 - Blauwe meester',
+				short: 'Level 28',
 				check: scores => scores.blue >= 350
 			},
 			{
 				id: 'level-28-yellow-emperor',
 				description: 'Level 28: Scoor 200 punten in geel.',
-				short: 'Level 28 - Gele keizer',
+				short: 'Level 28',
 				check: scores => scores.yellow >= 200
 			},
 			{
 				id: 'level-28-zone-complete',
 				description: 'Level 28: Voltooi een zone volledig (alle cellen in geel, paars of groen).',
-				short: 'Level 28 - Zone meester',
+				short: 'Level 28',
 				check: () => {
 					const zones = ['yellow-zone', 'purple-zone', 'green-zone'];
 					let complete = 0;
@@ -14347,7 +14394,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-28-coin-emperor',
 				description: 'Level 28: Verzamel 35+ munten.',
-				short: 'Level 28 - Munt keizer',
+				short: 'Level 28',
 				check: scores => getCollectedCoinCount(scores) >= 35,
 				progress: scores => {
 					const collected = Math.max(0, Math.min(35, getCollectedCoinCount(scores)));
@@ -14359,13 +14406,13 @@ let shopLevel2Used = false;
 			{
 				id: 'level-29-penultimate',
 				description: 'Level 29: Op naar de finale! Scoor 600 punten totaal.',
-				short: 'Level 29 - Bijna daar',
+				short: 'Level 29',
 				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 600
 			},
 			{
 				id: 'level-29-all-zones-active',
 				description: 'Level 29: Activeer minstens 75% van alle zones.',
-				short: 'Level 29 - Activatie expert',
+				short: 'Level 29',
 				check: () => {
 					const zones = ['yellow-zone', 'purple-zone', 'blue-zone', 'green-zone', 
 							   'red-grid1', 'red-grid2', 'red-grid3', 'red-grid4', 'red-grid5', 'red-grid6'];
@@ -14387,7 +14434,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-30-ultimate-champion',
 				description: 'Level 30: FINALE! Scoor 750 punten totaal.',
-				short: 'Level 30 - Ultieme kampioen',
+				short: 'Level 30',
 				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 750
 			}
 		]
@@ -14397,7 +14444,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-31-first-key',
 				description: 'Level 31: Ontgrendel 1 kleur (gebruik een sleutel).',
-				short: 'Level 31 - Eerste sleutel',
+				short: 'Level 31',
 				check: () => {
 					try { return (window.world4UnlockedColors instanceof Set) && window.world4UnlockedColors.size >= 1; } catch (e) { return false; }
 				}
@@ -14405,7 +14452,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-31-score-total',
 				description: 'Level 31: Scoor 650 punten totaal.',
-				short: 'Level 31 - Totale score',
+				short: 'Level 31',
 				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 650
 			}
 		],
@@ -14413,7 +14460,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-32-two-keys',
 				description: 'Level 32: Ontgrendel 2 kleuren (2 sleutels).',
-				short: 'Level 32 - Dubbele sleutel',
+				short: 'Level 32',
 				check: () => {
 					try { return (window.world4UnlockedColors instanceof Set) && window.world4UnlockedColors.size >= 2; } catch (e) { return false; }
 				}
@@ -14421,7 +14468,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-32-green-master',
 				description: 'Level 32: Scoor 260 punten in groen.',
-				short: 'Level 32 - Groene meester',
+				short: 'Level 32',
 				check: scores => (scores.green || 0) >= 260
 			}
 		],
@@ -14429,7 +14476,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-33-open-doors',
 				description: 'Level 33: Open 2 deuren (deur-cellen met groene rand).',
-				short: 'Level 33 - Deuren open',
+				short: 'Level 33',
 				check: () => {
 					try {
 						const open = document.querySelectorAll('.cell.door-cell.door-open');
@@ -14440,7 +14487,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-33-blue-score',
 				description: 'Level 33: Scoor 300 punten in blauw.',
-				short: 'Level 33 - Blauwe kracht',
+				short: 'Level 33',
 				check: scores => (scores.blue || 0) >= 300
 			}
 		],
@@ -14448,13 +14495,13 @@ let shopLevel2Used = false;
 			{
 				id: 'level-34-total',
 				description: 'Level 34: Scoor 700 punten totaal.',
-				short: 'Level 34 - Hoog totaal',
+				short: 'Level 34',
 				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 700
 			},
 			{
 				id: 'level-34-coins',
 				description: 'Level 34: Verzamel 30+ munten.',
-				short: 'Level 34 - Muntjager',
+				short: 'Level 34',
 				check: scores => getCollectedCoinCount(scores) >= 30,
 				progress: scores => {
 					const collected = Math.max(0, Math.min(30, getCollectedCoinCount(scores)));
@@ -14466,7 +14513,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-35-three-keys',
 				description: 'Level 35: Ontgrendel 3 kleuren (alle sleutels).',
-				short: 'Level 35 - Sleutelmeester',
+				short: 'Level 35',
 				check: () => {
 					try { return (window.world4UnlockedColors instanceof Set) && window.world4UnlockedColors.size >= 3; } catch (e) { return false; }
 				}
@@ -14474,7 +14521,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-35-yellow-score',
 				description: 'Level 35: Scoor 260 punten in geel.',
-				short: 'Level 35 - Gele meester',
+				short: 'Level 35',
 				check: scores => (scores.yellow || 0) >= 260
 			}
 		],
@@ -14482,7 +14529,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-36-total',
 				description: 'Level 36: Scoor 750 punten totaal.',
-				short: 'Level 36 - Totale druk',
+				short: 'Level 36',
 				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 750
 			}
 		],
@@ -14490,7 +14537,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-37-open-all-doors',
 				description: 'Level 37: Open 3 deuren.',
-				short: 'Level 37 - Alles open',
+				short: 'Level 37',
 				check: () => {
 					try {
 						const open = document.querySelectorAll('.cell.door-cell.door-open');
@@ -14501,7 +14548,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-37-purple-score',
 				description: 'Level 37: Scoor 320 punten in paars.',
-				short: 'Level 37 - Paarse power',
+				short: 'Level 37',
 				check: scores => (scores.purple || 0) >= 320
 			}
 		],
@@ -14509,7 +14556,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-38-total',
 				description: 'Level 38: Scoor 800 punten totaal.',
-				short: 'Level 38 - 800 totaal',
+				short: 'Level 38',
 				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 800
 			}
 		],
@@ -14517,7 +14564,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-39-activation',
 				description: 'Level 39: Activeer minstens 80% van alle zones.',
-				short: 'Level 39 - Activatie expert',
+				short: 'Level 39',
 				check: () => {
 					const zones = ['yellow-zone', 'purple-zone', 'blue-zone', 'green-zone',
 							   'red-grid1', 'red-grid2', 'red-grid3', 'red-grid4', 'red-grid5', 'red-grid6'];
@@ -14539,7 +14586,7 @@ let shopLevel2Used = false;
 			{
 				id: 'level-40-world4-finale',
 				description: 'Level 40: Wereld 4 finale! Scoor 900 punten totaal.',
-				short: 'Level 40 - World 4 finale',
+				short: 'Level 40',
 				check: scores => ((scores.yellow + scores.red + scores.green + scores.purple + scores.blue) + (scores?.bonus || 0)) >= 900
 			}
 		]
@@ -16252,7 +16299,10 @@ let shopLevel2Used = false;
 			.filter(key => BONUS_COLOR_CONFIG[key])
 			.filter(key => !isBonusUpgraded(key));
 		if (!available.length) {
-			if (!silent) showObjectiveToast('✨ Alle bonus upgrades zijn al actief.');
+			if (!silent) {
+				const fallback = offerFreeRandomLevel2UpgradeFromBonusShop();
+				if (!fallback) showObjectiveToast('✨ Alle bonus upgrades zijn al actief.');
+			}
 			return null;
 		}
 		const key = available[Math.floor(Math.random() * available.length)];
@@ -16263,6 +16313,31 @@ let shopLevel2Used = false;
 			showObjectiveToast(`🏪 Gratis bonus upgrade: ${meta?.colorName || key}!`);
 		}
 		return key;
+	}
+
+	function offerFreeRandomLevel2UpgradeFromBonusShop() {
+		try {
+			if (typeof getLevel2UpgradeCandidates !== 'function' || typeof applyBonusEchoUpgradeToBlueprint !== 'function') return null;
+			const candidates = getLevel2UpgradeCandidates();
+			if (!candidates || !candidates.length) {
+				showObjectiveToast('✨ Alle kaarten hebben al een Level 2 upgrade.');
+				return null;
+			}
+			const variant = pickBonusEchoVariant();
+			openLevel2UpgradeModal(candidates, (pickedBlueprint) => {
+				if (!pickedBlueprint) return;
+				if (!applyBonusEchoUpgradeToBlueprint(pickedBlueprint, variant)) return;
+				const variantLabel = (getBonusEchoUiCopy(variant).sub || variant).toUpperCase();
+				showObjectiveToast(`🔁 Gratis Level 2 (${variantLabel}) toegevoegd aan je kaart!`);
+				updateDeckPreview();
+				renderCurrentHand();
+				try { updateShopCoinDisplay(); } catch (_) {}
+				try { saveGameState(); } catch (_) {}
+			});
+			return variant;
+		} catch (_) {
+			return null;
+		}
 	}
 
 	function openRandomFreeBonusUpgradeModal() {
@@ -17355,8 +17430,10 @@ let shopLevel2Used = false;
 		// Offset-based centering is more stable across resizes/zoom.
 		const maxLeft = Math.max(0, greenZone.scrollWidth - greenZone.clientWidth);
 		const maxTop = Math.max(0, greenZone.scrollHeight - greenZone.clientHeight);
-		const desiredLeft = (startCell.offsetLeft + startCell.offsetWidth / 2) - (greenZone.clientWidth / 2);
-		const desiredTop = (startCell.offsetTop + startCell.offsetHeight / 2) - (greenZone.clientHeight / 2);
+		const gridOffsetLeft = Number(grid.offsetLeft || 0);
+		const gridOffsetTop = Number(grid.offsetTop || 0);
+		const desiredLeft = (gridOffsetLeft + startCell.offsetLeft + startCell.offsetWidth / 2) - (greenZone.clientWidth / 2);
+		const desiredTop = (gridOffsetTop + startCell.offsetTop + startCell.offsetHeight / 2) - (greenZone.clientHeight / 2);
 		greenZone.scrollLeft = Math.max(0, Math.min(maxLeft, desiredLeft));
 		greenZone.scrollTop = Math.max(0, Math.min(maxTop, desiredTop));
 	}
@@ -21720,7 +21797,7 @@ document.addEventListener('pointermove', ev => {
 	  }
 	const meta = card.querySelector('.card-meta');
 	if (meta && !meta.classList.contains('card-meta--level2')) {
-		meta.textContent = `${rows}×${cols}`;
+		meta.textContent = 'LVL 1';
 	}
 	  card.cardShape = paddedShape;
 	}
@@ -23718,6 +23795,7 @@ function getCollectedCoinCount(scores) {
 	  card.style.pointerEvents = 'auto';
 	const isGolden = !!(blueprint.isGolden || blueprint.color?.isGolden);
 	const isBonusEcho = !!blueprint.isBonusEcho;
+	const isBonusBoost = !!blueprint.isBonusBoost;
 	  const colorObj = cloneColor(blueprint.color || { name: '', code: '#cccccc' });
 	  const displayName = getColorDisplayName(colorObj);
 	  // Golden is a card modifier; do not paint the blocks gold.
@@ -23734,13 +23812,6 @@ function getCollectedCoinCount(scores) {
 	  updateCardPattern(card, blueprint.matrix, colorObj);
 	  const label = document.createElement('div');
 	  label.classList.add('card-label');
-	  const swatch = document.createElement('span');
-	  swatch.classList.add('card-label-dot');
-	  // Golden is a modifier; keep the swatch showing the base color.
-	  const fill = (colorObj.code === 'rainbow'
-		? 'linear-gradient(135deg, #f06272, #fff25a, #4ed346, #5d90f0, #a35eff)'
-		: (colorObj.code || '#a0a0a0'));
-	  swatch.style.background = fill;
 	  const labelText = document.createElement('span');
 	if (isBonusEcho) {
 		const variantCopy = (typeof getBonusEchoUiCopy === 'function') ? getBonusEchoUiCopy(blueprint.bonusEchoVariant || 'replay') : { sub: 'LVL 2' };
@@ -23750,7 +23821,7 @@ function getCollectedCoinCount(scores) {
 			? 'GOUD'
 			: (displayName ? displayName.toUpperCase() : 'KAART');
 	}
-	  label.append(swatch, labelText);
+	  label.append(labelText);
 	const meta = document.createElement('div');
 	meta.classList.add('card-meta');
 	if (isBonusEcho) {
@@ -23758,9 +23829,16 @@ function getCollectedCoinCount(scores) {
 		meta.textContent = 'LVL 2';
 		if (colorObj && colorObj.code) meta.style.color = colorObj.code;
 	} else {
-		meta.textContent = rows && cols ? `${rows}×${cols}` : '';
+		meta.textContent = 'LVL 1';
 	}
 	card.append(label, meta);
+
+	if (isBonusBoost) {
+		const boostBadge = document.createElement('div');
+		boostBadge.classList.add('card-boost-badge');
+		boostBadge.textContent = '2×';
+		card.appendChild(boostBadge);
+	}
 
 	if (isBonusEcho) {
 		const variant = blueprint.bonusEchoVariant || 'replay';
@@ -25039,12 +25117,6 @@ function getCollectedCoinCount(scores) {
 
 	const label = document.createElement('div');
 	label.classList.add('card-label');
-	const swatch = document.createElement('span');
-	swatch.classList.add('card-label-dot');
-	// Golden is a modifier; keep the swatch showing the base color.
-	swatch.style.background = (cardData.color.code === 'rainbow'
-		? 'linear-gradient(135deg, #f06272, #fff25a, #4ed346, #5d90f0, #a35eff)'
-		: cardData.color.code);
 	const labelText = document.createElement('span');
 	if (isBonusEchoCard) {
 		const variantCopy = (typeof getBonusEchoUiCopy === 'function') ? getBonusEchoUiCopy(cardData.bonusEchoVariant || 'replay') : { sub: 'LVL 2' };
@@ -25054,7 +25126,7 @@ function getCollectedCoinCount(scores) {
 		  ? 'GOUD'
 		  : (displayName ? displayName.toUpperCase() : 'KAART');
 	}
-	label.append(swatch, labelText);
+	label.append(labelText);
 
 	const meta = document.createElement('div');
 	meta.classList.add('card-meta');
@@ -25063,7 +25135,7 @@ function getCollectedCoinCount(scores) {
 		meta.textContent = 'LVL 2';
 		if (cardData?.color?.code) meta.style.color = cardData.color.code;
 	} else {
-		meta.textContent = `${cardData.matrix.length}×${cardData.matrix[0].length}`;
+		meta.textContent = 'LVL 1';
 	}
 
 	if (inlineLabel) {
@@ -25085,12 +25157,29 @@ function getCollectedCoinCount(scores) {
 	if (isBonusBoostCard) {
 		const colorKey = getBonusKeyFromColorName(cardData?.color?.name);
 		const effect = document.createElement('div');
-		effect.classList.add('card-effect');
+		effect.classList.add('card-effect', 'card-effect-boost');
 		const labelColor = (colorKey && BONUS_COLOR_CONFIG[colorKey])
 			? BONUS_COLOR_CONFIG[colorKey].label
 			: (cardData?.color?.name || '');
-		effect.textContent = `⚡ BONUS BOOST: 2× ${labelColor}`;
+		const icon = document.createElement('span');
+		icon.classList.add('card-effect-boost-icon');
+		icon.textContent = '⚡';
+		const textWrap = document.createElement('span');
+		textWrap.classList.add('card-effect-boost-text');
+		const title = document.createElement('span');
+		title.classList.add('card-effect-boost-title');
+		title.textContent = 'BONUS BOOST';
+		const sub = document.createElement('span');
+		sub.classList.add('card-effect-boost-sub');
+		sub.textContent = `2× ${labelColor}`;
+		textWrap.append(title, sub);
+		effect.append(icon, textWrap);
 		card.appendChild(effect);
+
+		const boostBadge = document.createElement('div');
+		boostBadge.classList.add('card-boost-badge');
+		boostBadge.textContent = '2×';
+		card.appendChild(boostBadge);
 	} else if (isBonusEchoCard) {
 		const variant = cardData.bonusEchoVariant || 'replay';
 		attachBonusEchoTooltip(card, variant);
@@ -26165,10 +26254,9 @@ function getCollectedCoinCount(scores) {
 		shopUpgradeContainer.style.display = '';
 		const upgradesSection = shopUpgradeContainer.closest('.shop-upgrades-section');
 		const coins = getSpendableCoinCount();
-		const level2Unlocked = UNLOCK_PROGRESSION.isUpgradeUnlocked('bonusEcho', currentLevel, currentWorld);
-		// Filter voor alleen unlocked en niet-gekochte upgrades (exclusief level 2 consumable)
+		const level2Unlocked = !!(typeof hasUpgrade === 'function' ? hasUpgrade('bonusEcho') : (UPGRADES.bonusEcho && UPGRADES.bonusEcho.purchased));
+		// Filter voor alleen unlocked en niet-gekochte upgrades
 		const availableUpgrades = Object.entries(UPGRADES).filter(([id, upgrade]) => {
-			if (id === 'bonusEcho') return false;
 			return !upgrade.purchased && UNLOCK_PROGRESSION.isUpgradeUnlocked(id, currentLevel, currentWorld);
 		});
 		
@@ -26230,26 +26318,24 @@ function getCollectedCoinCount(scores) {
 			const level2Meta = getBonusEchoUiCopy(level2VariantKey);
 			const level2Label = level2Meta?.sub ? level2Meta.sub.toUpperCase() : level2VariantKey.toUpperCase();
 			upgradeDesc.textContent = upgradableCount > 0
-				? `Deze shop: variant ${level2Label}. Je kunt één kaart upgraden.`
+				? `Deze shop: variant ${level2Label}. Upgrade kaarten voor ${BONUS_ECHO_UPGRADE_COST} munten per kaart.`
 				: 'Alle kaarten hebben al een Level 2 upgrade.';
 			const upgradeActions = document.createElement('div');
 			upgradeActions.classList.add('shop-upgrade-actions');
 			const buyBtn = document.createElement('button');
 			const effectiveCost = debugMode ? 0 : BONUS_ECHO_UPGRADE_COST;
 			if (debugMode) {
-				buyBtn.textContent = 'Upgrade (gratis)';
-				buyBtn.disabled = upgradableCount === 0 || shopLevel2Used;
+				buyBtn.textContent = `Upgrade (gratis) • ${level2Label}`;
+				buyBtn.disabled = upgradableCount === 0;
 				buyBtn.title = upgradableCount === 0
 					? 'Geen kaarten om te upgraden'
-					: (shopLevel2Used ? 'Je hebt al een Level 2 upgrade gedaan in deze shop' : 'Geef een kaart Level 2 (debug)');
+					: `Upgrade met ${level2Label} (debug)`;
 			} else {
-				buyBtn.innerHTML = shopLevel2Used
-					? 'Upgrade (reeds gebruikt)'
-					: `Upgrade (${BONUS_ECHO_UPGRADE_COST} ${coinIcon()})`;
-				buyBtn.disabled = shopLevel2Used || coins < BONUS_ECHO_UPGRADE_COST || upgradableCount === 0;
-				buyBtn.title = shopLevel2Used
-					? 'Je hebt deze shop al één Level 2 upgrade gedaan'
-					: (upgradableCount === 0 ? 'Geen kaarten om te upgraden' : (coins < BONUS_ECHO_UPGRADE_COST ? 'Onvoldoende munten' : 'Geef een kaart Level 2'));
+				buyBtn.innerHTML = `Upgrade ${level2Label} (${BONUS_ECHO_UPGRADE_COST} ${coinIcon()})`;
+				buyBtn.disabled = coins < BONUS_ECHO_UPGRADE_COST || upgradableCount === 0;
+				buyBtn.title = upgradableCount === 0
+					? 'Geen kaarten om te upgraden'
+					: (coins < BONUS_ECHO_UPGRADE_COST ? 'Onvoldoende munten' : `Upgrade met ${level2Label}`);
 			}
 			buyBtn.addEventListener('click', () => startBonusEchoUpgradeFlow({ forcedVariant: level2VariantKey }));
 			upgradeActions.appendChild(buyBtn);
@@ -26291,10 +26377,6 @@ function getCollectedCoinCount(scores) {
 				if (shopModalMessage) shopModalMessage.textContent = 'Geen kaarten om te upgraden.';
 				return;
 			}
-			if (shopLevel2Used) {
-				if (shopModalMessage) shopModalMessage.textContent = 'Je hebt deze shop al een Level 2 upgrade gedaan.';
-				return;
-			}
 			const coinsAvailable = getSpendableCoinCount();
 			if (!debugMode && !free && coinsAvailable < BONUS_ECHO_UPGRADE_COST) {
 				if (shopModalMessage) shopModalMessage.textContent = 'Onvoldoende munten voor Level 2.';
@@ -26310,7 +26392,6 @@ function getCollectedCoinCount(scores) {
 				const variant = forcedVariant || shopLevel2Variant || pickBonusEchoVariant();
 				if (!applyBonusEchoUpgradeToBlueprint(pickedBlueprint, variant)) return;
 				if (UPGRADES.bonusEcho) UPGRADES.bonusEcho.purchased = true;
-				if (markUsed) shopLevel2Used = true;
 				const variantLabel = (getBonusEchoUiCopy(variant).sub || variant).toUpperCase();
 				showObjectiveToast(`🔁 Level 2 (${variantLabel}) toegevoegd aan je kaart!`);
 				updateDeckPreview();
@@ -27769,10 +27850,10 @@ function openShopModal(callback) {
 		},
 		
 		// Rood: 4 grids met verschillende groottes (smaller maar hoger)
-		// World 2: 50% minder symbols en coins
+		// World 2: iets meer symbols/coins dan voorheen (+~30%)
 		...redConfigs.map(cfg => () => {
-		  // 50% reduction: minSymbols 3->2, maxSymbols 6->3, maxCoins 3->2
-		  const grid = generateRoots(cfg.id, cfg.height, cfg.width, cfg.growth, 0.35, 0.03, 2, 3, 2, true, 0, 0, 0, { showPointsLabel: true });
+		  // Slight boost: minSymbols 3, maxSymbols 4, maxCoins 3, coinChance +~30%
+		  const grid = generateRoots(cfg.id, cfg.height, cfg.width, cfg.growth, 0.35, 0.04, 3, 4, 3, true, 0, 0, 0, { showPointsLabel: true });
 		  // Markeer bonus grids visueel
 		  if (cfg.bonus) {
 			const zone = document.getElementById(cfg.id.replace('-grid', '-zone'));
