@@ -5393,8 +5393,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 		/* Shop lower grid - force side by side with flexbox */
 		.shop-lower-grid {
-			display: flex;
-			flex-direction: row;
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 			gap: 10px;
 			width: 100%;
 		}
@@ -5661,7 +5661,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	
 	.shop-lower-grid {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 		gap: 24px 28px;
 		align-items: start;
 	}
@@ -30111,11 +30111,13 @@ document.addEventListener('pointerdown', ev => {
 				if (showMirror) {
 					mirrorBtn.classList.add('visible');
 					mirrorBtn.disabled = false;
+					mirrorBtn.style.display = '';
 					try { delete mirrorBtn.dataset.delayed; } catch (e) { mirrorBtn.dataset.delayed = ''; }
 				} else {
 					// Keep mirror hidden and disabled until later (or for bonus drags)
 					mirrorBtn.classList.remove('visible');
 					mirrorBtn.disabled = true;
+					mirrorBtn.style.display = 'none';
 					mirrorBtn.dataset.delayed = isDelayingMirror ? 'true' : '';
 				}
 
