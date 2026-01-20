@@ -5423,7 +5423,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 		.shop-upgrade-container {
 			display: grid;
-			grid-template-columns: repeat(2, minmax(0, 1fr));
+			grid-template-columns: 1fr;
 			gap: 10px;
 			width: 100%;
 		}
@@ -6057,7 +6057,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		border: none;
 		box-shadow: none;
 		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
+		grid-template-columns: 1fr;
 		gap: 12px;
 		width: 100%;
 	}
@@ -21497,6 +21497,10 @@ document.addEventListener('pointermove', ev => {
 		}
 
 		// Invalid drop: on desktop the piece disappears.
+		if (activeBonusPlacement && activeBonusPlacement.colorKey === 'purchased') {
+			cancelActiveBonusPlacement({ updateInventory: true, hidePreview: true });
+			return;
+		}
 		cancelDesktopHoverDragKeepSelection({ showPreview: false });
 	}, true);
 
@@ -23599,6 +23603,22 @@ function getCollectedCoinCount(scores) {
 	  // Desktop mouse can also use direct drag for purchased blocks (simpler UX)
 	  // Skip hover-follow mode for purchased placement entirely.
 
+	  if (!isMobileLayout && !isTouchDevice) {
+		activeBonusPlacement = {
+			colorKey: 'purchased',
+			pointerId: null,
+			sticky: false,
+			shape: cloneShape(shape),
+			purchasedPlacement: true,
+			desktopHover: true
+		};
+		lastZone = null;
+		lastBaseX = null;
+		lastBaseY = null;
+		startDesktopHoverDragFromSelection(previewEl || document.getElementById('purchased-block-preview'), shape, colorObj);
+		return;
+	  }
+
 	  // Touch: direct drag behavior - blok volgt de vinger
 	  const block = makeDraggable(shape, colorObj);
 	  block.classList.add('bonus-draggable', 'purchased-placement');
@@ -25540,7 +25560,7 @@ function getCollectedCoinCount(scores) {
 			coinSnapshotBefore: coinSnapshot,
 			bonuses: Array.isArray(placementResult.bonuses) ? placementResult.bonuses.slice() : [],
 			sequence: actionId,
-			bonusSpent: false
+			bonusSpent: true
 		});
 		updateDrawButtonState();
 		try {
@@ -26345,7 +26365,7 @@ function getCollectedCoinCount(scores) {
 	}
 
 		function getLevel2UpgradeCandidates() {
-			return ownedDeckBlueprints.filter(bp => bp && !bp.isBonusEchoUpgrade);
+			return ownedDeckBlueprints.filter(bp => bp && !bp.isBonusEchoUpgrade && !bp.isBonusEcho);
 		}
 
 		function applyBonusEchoUpgradeToBlueprint(blueprint, variantKey) {
@@ -30087,15 +30107,16 @@ document.addEventListener('pointerdown', ev => {
 				rotateBtn.classList.add('visible');
 				cancelBtn.classList.add('visible');
 				const isDelayingMirror = !!(activeBonusPlacement && activeBonusPlacement.delayedControls && isTouchDevice);
-				if (!isDelayingMirror) {
+				const showMirror = !isBonusDrag && !isDelayingMirror;
+				if (showMirror) {
 					mirrorBtn.classList.add('visible');
 					mirrorBtn.disabled = false;
 					try { delete mirrorBtn.dataset.delayed; } catch (e) { mirrorBtn.dataset.delayed = ''; }
 				} else {
-					// Keep mirror hidden and disabled until later
+					// Keep mirror hidden and disabled until later (or for bonus drags)
 					mirrorBtn.classList.remove('visible');
 					mirrorBtn.disabled = true;
-					mirrorBtn.dataset.delayed = 'true';
+					mirrorBtn.dataset.delayed = isDelayingMirror ? 'true' : '';
 				}
 
 		// Position buttons for touch devices:
