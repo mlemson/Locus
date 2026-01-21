@@ -27325,6 +27325,25 @@ function openShopModal(callback) {
 	  pendingShopCallback = null;
 	}
 
+function resetWorldLayoutStyles() {
+	const zoneIds = ['yellow-zone', 'purple-zone', 'green-zone', 'blue-zone', 'red-zone'];
+	const gridIds = ['yellow-grid', 'purple-grid', 'green-grid', 'blue-grid'];
+	zoneIds.forEach(id => {
+		const el = document.getElementById(id);
+		if (!el || !el.style) return;
+		['width','height','min-width','max-width','min-height','max-height','overflow','overflow-x','overflow-y','transform'].forEach(prop => {
+			try { el.style.removeProperty(prop); } catch (_) {}
+		});
+	});
+	gridIds.forEach(id => {
+		const el = document.getElementById(id);
+		if (!el || !el.style) return;
+		['margin','margin-left','margin-right','margin-top','margin-bottom','justify-content','transform'].forEach(prop => {
+			try { el.style.removeProperty(prop); } catch (_) {}
+		});
+	});
+}
+
 	function rebuildGameBoards() {
 	  // Scenario sessions use an imported board; never regenerate the level boards in that mode.
 	  // This prevents upgrade callbacks (e.g., blackHoleAccess) from overwriting the imported layout.
@@ -27338,6 +27357,7 @@ function openShopModal(callback) {
 	  resetScoreState();
 	  historyStack.length = 0;
 	  bumpGridVersion();
+	  try { resetWorldLayoutStyles(); } catch (e) {}
 	  
 	  // Bepaal in welke world we zitten
 	  const { world, subLevel } = getWorldAndSubLevel(currentLevel);
@@ -27375,6 +27395,12 @@ function openShopModal(callback) {
 	  }
 	  // World 3 red progression visibility (and ensure 5/6 stay hidden in other worlds)
 	  try { applyWorld3RedStage(world === 3 ? world3RedStage : 0); } catch (e) {}
+	  // Ensure layout is rebuilt after world switches (prevents stale sizing/layout state).
+	  try {
+		if (typeof moveGameElements === 'function') {
+			requestAnimationFrame(() => { try { moveGameElements(); } catch (_) {} });
+		}
+	  } catch (e) {}
 	}
 
 	// WORLD 4: Board layout = World 3 sizing/layout, plus doors/keys gating
