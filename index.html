@@ -17699,9 +17699,23 @@ let shopLevel2Used = false;
 			startCell = greenZone.querySelector('#green-grid .cell.bold-cell:not(.void-cell)') || null;
 		}
 		if (!startCell) return;
-		// Offset-based centering is more stable across resizes/zoom.
 		const maxLeft = Math.max(0, greenZone.scrollWidth - greenZone.clientWidth);
 		const maxTop = Math.max(0, greenZone.scrollHeight - greenZone.clientHeight);
+		// Use viewport geometry to avoid offset/transform drift on zoomed containers.
+		const zoneRect = greenZone.getBoundingClientRect();
+		const cellRect = startCell.getBoundingClientRect();
+		if (zoneRect.width && zoneRect.height && cellRect.width && cellRect.height) {
+			const zoneCenterX = zoneRect.left + zoneRect.width / 2;
+			const zoneCenterY = zoneRect.top + zoneRect.height / 2;
+			const cellCenterX = cellRect.left + cellRect.width / 2;
+			const cellCenterY = cellRect.top + cellRect.height / 2;
+			const desiredLeft = greenZone.scrollLeft + (cellCenterX - zoneCenterX);
+			const desiredTop = greenZone.scrollTop + (cellCenterY - zoneCenterY);
+			greenZone.scrollLeft = Math.max(0, Math.min(maxLeft, desiredLeft));
+			greenZone.scrollTop = Math.max(0, Math.min(maxTop, desiredTop));
+			return;
+		}
+		// Fallback: offset-based centering.
 		const gridOffsetLeft = Number(grid.offsetLeft || 0);
 		const gridOffsetTop = Number(grid.offsetTop || 0);
 		const desiredLeft = (gridOffsetLeft + startCell.offsetLeft + startCell.offsetWidth / 2) - (greenZone.clientWidth / 2);
