@@ -28761,12 +28761,7 @@ function openShopModal(callback) {
 				seen.add(key);
 				out.push(entry);
 			});
-			out.sort((a, b) => {
-				const diff = countShapeBlocks(a.matrix) - countShapeBlocks(b.matrix);
-				if (diff !== 0) return diff;
-				return String(a.name || '').localeCompare(String(b.name || ''));
-			});
-			return out;
+			return shuffleArray(out);
 		}
 
 		function openPreworldPickModal(options = {}) {
