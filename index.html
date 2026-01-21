@@ -18162,30 +18162,20 @@ let shopLevel2Used = false;
 					zone.scrollTop = 0;
 					zone.scrollLeft = 0;
 				} else {
-					// Zoom: first time anchor to start; subsequent opens restore last zoom position.
-					restoreOrAnchorZoneScroll(zone, (z) => resetGreenZoomScroll(z));
-					// Keep the anchored position from drifting after late layout/viewport changes.
-					requestAnimationFrame(() => {
-						if (activeZoomZone !== zone) return;
+					// Zoom: always center on the start cell.
+					resetGreenZoomScroll(zone, { force: true });
+					try {
 						const mem = getZoneScrollMemory('green-zone');
-						const hasUserIntent = !!zone.__userScrollIntent || zone.dataset.dragScrolling === 'true' || (mem && mem.zoom && mem.zoom.userSet);
-						if (hasUserIntent) return;
-						const desiredLeft = zone.scrollLeft;
-						const desiredTop = zone.scrollTop;
-						const reapply = () => {
-							if (activeZoomZone !== zone) return;
-							const memNow = getZoneScrollMemory('green-zone');
-							const hasIntentNow = !!zone.__userScrollIntent || zone.dataset.dragScrolling === 'true' || (memNow && memNow.zoom && memNow.zoom.userSet);
-							if (hasIntentNow) return;
-							zone.scrollLeft = desiredLeft;
-							zone.scrollTop = desiredTop;
-						};
-						requestAnimationFrame(reapply);
-						setTimeout(reapply, 120);
-					});
+						if (mem && mem.zoom) {
+							mem.zoom.left = zone.scrollLeft;
+							mem.zoom.top = zone.scrollTop;
+							mem.zoom.initialized = true;
+							mem.zoom.userSet = false;
+						}
+					} catch (_) {}
 				}
 			} catch (_) {
-				restoreOrAnchorZoneScroll(zone, (z) => resetGreenZoomScroll(z));
+				resetGreenZoomScroll(zone, { force: true });
 			}
 		}
 		if (zone.id === 'blue-zone') {
