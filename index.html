@@ -17678,8 +17678,15 @@ let shopLevel2Used = false;
 		}
 	}
 
-	function resetGreenZoomScroll(greenZone) {
+	function resetGreenZoomScroll(greenZone, options = {}) {
 		if (!greenZone) return;
+		const { force = false } = options || {};
+		try {
+			if (!force && document.body.classList.contains('zoomed-in') && greenZone.classList.contains('zoom-focus')) {
+				const mem = getZoneScrollMemory('green-zone');
+				if (mem && mem.zoom && mem.zoom.initialized) return;
+			}
+		} catch (_) {}
 		const grid = document.getElementById('green-grid');
 		if (!grid) return;
 		const sx = Number(grid.dataset.startX);
@@ -28950,14 +28957,9 @@ function resetWorldLayoutStyles() {
 				const key = `${entry.name}|${JSON.stringify(entry.matrix)}`;
 				if (seen.has(key)) return;
 				seen.add(key);
-				if (countShapeBlocks(entry.matrix) <= 6) out.push(entry);
+				if (countShapeBlocks(entry.matrix) <= 5) out.push(entry);
 			});
-			return out.sort((a, b) => {
-				const costA = countShapeBlocks(a.matrix);
-				const costB = countShapeBlocks(b.matrix);
-				if (costA !== costB) return costA - costB;
-				return String(a.name || '').localeCompare(String(b.name || ''), 'nl');
-			});
+			return shuffleArray(out);
 		}
 
 		function openPreworldPickModal(options = {}) {
