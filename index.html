@@ -4943,11 +4943,14 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		transform: none;
 		width: 100%;
 		max-width: 120px;
-		min-height: 132px;
+		min-height: 140px;
+		height: 140px;
 		margin: 0 auto;
 		padding: 8px;
 		gap: 8px;
-		justify-content: flex-start;
+		justify-content: center;
+		align-items: center;
+		text-align: center;
 	}
 
 	/* The deck overview modal is a read-only preview: clicking should NOT select cards there. */
@@ -4964,6 +4967,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 	.deck-modal-grid .card-pattern {
 		gap: 3px;
+		margin: 0 auto;
 	}
 
 	/* Deck overview: smaller preview cells than the selectable hand cards. */
@@ -5262,12 +5266,17 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		.deck-modal-grid .card-option {
 			max-width: 82px;
 			min-height: 128px;
+			height: 128px;
 			padding: 4px;
 			overflow: hidden;
+			justify-content: center;
+			align-items: center;
+			text-align: center;
 		}
 
 		.deck-modal-grid .card-pattern {
 			gap: 2px;
+			margin: 0 auto;
 		}
 
 		.deck-modal-grid .card-option {
@@ -5312,14 +5321,19 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 		.deck-modal-grid .card-option {
 			min-height: 104px;
+			height: 104px;
 			max-width: 72px;
 			padding: 4px;
 			transform: none;
 			overflow: hidden;
+			justify-content: center;
+			align-items: center;
+			text-align: center;
 		}
 
 		.deck-modal-grid .card-pattern {
 			gap: var(--preview-gap);
+			margin: 0 auto;
 		}
 
 		.deck-modal-grid .card-option {
