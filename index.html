@@ -17683,11 +17683,16 @@ let shopLevel2Used = false;
 			try {
 				clampZoneScroll(zoneEl);
 				if (zoneEl.id === 'green-zone' && !(mem[mode] && mem[mode].userSet)) {
-					if (typeof anchorFn === 'function') {
+					if (mem[mode] && mem[mode].initialized) {
+						zoneEl.scrollLeft = mem[mode].left || 0;
+						zoneEl.scrollTop = mem[mode].top || 0;
+						clampZoneScroll(zoneEl);
+					} else if (typeof anchorFn === 'function') {
 						anchorFn(zoneEl);
 						clampZoneScroll(zoneEl);
 						mem[mode].left = zoneEl.scrollLeft;
 						mem[mode].top = zoneEl.scrollTop;
+						mem[mode].initialized = true;
 					}
 				} else if (mem[mode].initialized) {
 					zoneEl.scrollLeft = mem[mode].left || 0;
@@ -23051,6 +23056,8 @@ function optionalCellsTouchActive(zone, pendingCells) {
 
 	function placeShape(zone, baseX, baseY, shape, color) {
 	  if (!zone) return null;
+	  const totalScoreEl = document.getElementById('total-score');
+	  const scoreBefore = Number(totalScoreEl?.textContent || 0) || 0;
 	  const rawColorCode = typeof color === 'string'
 		? color
 		: (color?.code);
@@ -23090,10 +23097,12 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	// Portals blijven op hun plaats staan voor het hele level
 	
 	currentPlacementId = previousPlacementId;
+	const scoreAfter = Number(totalScoreEl?.textContent || 0) || 0;
 	return {
 		zoneId: zone.id,
 		cells: placements,
-		bonuses
+		bonuses,
+		scoreDelta: scoreAfter - scoreBefore
 	};
 }	// ========== KAARTEN SYSTEEM ==========
 	// Centraal systeem voor alle kaart blueprints
@@ -23273,8 +23282,8 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	const BONUS_ECHO_UPGRADE_COST = 5;
 	const BONUS_ECHO_BONUS_REWARD = 2;
 	const BONUS_ECHO_VARIANTS = [
-		{ key: 'points', tag: 'L2', sub: 'POINTS', desc: 'Plaats op 2 bonussen voor +20 punten in deze kleur.' },
-		{ key: 'bonus', tag: 'L2', sub: 'BONUS', desc: 'Plaats op 2 bonussen voor +2 willekeurige bonussen.' },
+		{ key: 'points', tag: 'L2', sub: 'POINTS', desc: 'Plaats op 2 coins voor +20 punten in deze kleur.' },
+		{ key: 'bonus', tag: 'L2', sub: 'BONUS', desc: 'Scoor punten met deze kaart voor +2 willekeurige bonussen.' },
 		{ key: 'replay', tag: 'L2', sub: 'REPLAY', desc: 'Plaats op 2 bonussen om deze kaart dubbel te mogen spelen.' }
 	];
 	const BONUS_ECHO_BADGE_TEXT = { points: 'P', bonus: 'B', replay: 'R' };
@@ -25955,40 +25964,48 @@ function getCollectedCoinCount(scores) {
 		const bonusClaims = Array.isArray(placementResult?.bonuses) ? placementResult.bonuses.filter(Boolean) : [];
 		const colorKey = getBonusKeyFromColorName(playedCard?.color?.name);
 		const meetsBonusRequirement = bonusClaims.length >= BONUS_ECHO_REQUIRED_BONUSES;
+		const coinsClaimed = Array.isArray(placementResult?.cells)
+			? placementResult.cells.filter(cell => cell && cell.classList && cell.classList.contains('gold-cell')).length
+			: 0;
+		const meetsCoinRequirement = coinsClaimed >= 2;
+		const scoreDelta = Number(placementResult?.scoreDelta || 0) || 0;
+		const scoredPoints = scoreDelta > 0;
 		let pointsAwarded = 0;
 		let extraTurnGranted = false;
 		let replayGranted = false;
 		const bonusRewards = [];
-		if (meetsBonusRequirement) {
-			switch (variant) {
-				case 'points':
+		switch (variant) {
+			case 'points':
+				if (meetsCoinRequirement) {
 					pointsAwarded = colorKey ? BONUS_ECHO_SCORE_BONUS : 0;
 					if (pointsAwarded > 0 && colorKey) {
 						colorScoreBonuses[colorKey] = Number(colorScoreBonuses[colorKey] || 0) + pointsAwarded;
 					}
-					break;
-				case 'bonus': {
+				}
+				break;
+			case 'bonus': {
+				if (scoredPoints) {
 					for (let i = 0; i < BONUS_ECHO_BONUS_REWARD; i += 1) {
 						const key = BONUS_ORDER[Math.floor(Math.random() * BONUS_ORDER.length)];
 						if (key && BONUS_COLOR_CONFIG[key]) bonusRewards.push(key);
 					}
-					break;
 				}
-				case 'replay':
-					if (!wasReplayPlay && Number(playedCard.bonusEchoReplaysAvailable || 0) <= 0) {
-						replayGranted = true;
-					}
-					break;
-				default:
-					break;
+				break;
 			}
+			case 'replay':
+				if (meetsBonusRequirement && !wasReplayPlay && Number(playedCard.bonusEchoReplaysAvailable || 0) <= 0) {
+					replayGranted = true;
+				}
+				break;
+			default:
+				break;
+		}
 			const label = (BONUS_COLOR_CONFIG[colorKey]?.label) || playedCard?.color?.name || '';
 			if (pointsAwarded > 0) {
 				showObjectiveToast(`🔁 Bonus Echo: +${pointsAwarded} ${label}`);
 			} else if (bonusRewards.length > 0) {
 				showObjectiveToast(`🔁 Bonus Echo: +${bonusRewards.length} bonussen`);
 			}
-		}
 		bonusEchoStreak = 0;
 		lastCardWasBonusEcho = false;
 		lastBonusEchoVariant = null;
@@ -28775,7 +28792,12 @@ function openShopModal(callback) {
 				seen.add(key);
 				out.push(entry);
 			});
-			return shuffleArray(out);
+			return out.sort((a, b) => {
+				const costA = countShapeBlocks(a.matrix);
+				const costB = countShapeBlocks(b.matrix);
+				if (costA !== costB) return costA - costB;
+				return String(a.name || '').localeCompare(String(b.name || ''), 'nl');
+			});
 		}
 
 		function openPreworldPickModal(options = {}) {
