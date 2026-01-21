@@ -2446,6 +2446,22 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	  filter: brightness(1.06);
 	}
 
+	/* WORLD 3 (Yellow): alternate shading per ring (dark-light-dark) to match ring scoring. */
+	body.world-3 #yellow-grid .cell.ring-shade-odd:not(.void-cell):not(.active) {
+	  filter: brightness(1.02);
+	}
+	body.world-3 #yellow-grid .cell.ring-shade-even:not(.void-cell):not(.active) {
+	  filter: brightness(0.965);
+	}
+
+	/* WORLD 1 (Yellow): alternate shading per column to match column scoring. */
+	body.world-1 #yellow-grid .cell.col-shade-odd:not(.void-cell):not(.active) {
+	  filter: brightness(0.97);
+	}
+	body.world-1 #yellow-grid .cell.col-shade-even:not(.void-cell):not(.active) {
+	  filter: brightness(1.02);
+	}
+
 	/* WORLD 2 (Purple): Buitenste 2 ringen met subtiel andere achtergrondkleur */
 	#purple-grid .cell.outer-ring-0:not(.void-cell):not(.active) {
 	  /* Buitenste ring: iets lichter (subtiel) */
@@ -17018,6 +17034,8 @@ let shopLevel2Used = false;
 					avoidAdjacentBold: false,
 					diagonalShading: false,
 					diagonalLegend: false,
+					ringShading: false,
+					columnShading: false,
 					fixedBoldCells: null,
 					outerRingShade: false,
 					trimLeft: false,
@@ -17391,6 +17409,13 @@ let shopLevel2Used = false;
 						else cell.classList.add('diag-shade-even');
 					}
 
+					// WORLD 1 (Yellow): tag cells by column parity for alternating column shading.
+					if (containerId === 'yellow-grid' && options.columnShading) {
+						const colParity = ((c % 2) + 2) % 2;
+						if (colParity === 1) cell.classList.add('col-shade-odd');
+						else cell.classList.add('col-shade-even');
+					}
+
 				if (boldIndices.has(idx)) cell.classList.add('bold-cell');
 				if (ensuredPairSet.has(`${c},${r}`)) cell.classList.add('purple-pair-cell');
 
@@ -17434,6 +17459,54 @@ let shopLevel2Used = false;
 			}
 		}
 		container.appendChild(frag);
+
+		// World 3 (Yellow): ring-based shading to match ring scoring (alternating light/dark per ring).
+		if (containerId === 'yellow-grid' && options.ringShading) {
+			const cells = Array.from(container.querySelectorAll('.cell:not(.void-cell)'));
+			const cellByCoord = new Map();
+			cells.forEach(c => {
+				const x = Number(c.dataset.x);
+				const y = Number(c.dataset.y);
+				if (Number.isFinite(x) && Number.isFinite(y)) {
+					cellByCoord.set(`${x},${y}`, c);
+				}
+			});
+			const tryGet = (x, y) => cellByCoord.get(`${x},${y}`) || null;
+			const boundary = [];
+			for (const c of cellByCoord.values()) {
+				const x = Number(c.dataset.x);
+				const y = Number(c.dataset.y);
+				if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+				if (!tryGet(x - 1, y) || !tryGet(x + 1, y) || !tryGet(x, y - 1) || !tryGet(x, y + 1)) {
+					boundary.push(c);
+				}
+			}
+			const depthByCell = new Map();
+			const q = [];
+			boundary.forEach(c => {
+				depthByCell.set(c, 0);
+				q.push(c);
+			});
+			while (q.length) {
+				const cur = q.shift();
+				const curDepth = depthByCell.get(cur) || 0;
+				const x = Number(cur.dataset.x);
+				const y = Number(cur.dataset.y);
+				const neigh = [tryGet(x - 1, y), tryGet(x + 1, y), tryGet(x, y - 1), tryGet(x, y + 1)].filter(Boolean);
+				for (const n of neigh) {
+					if (!depthByCell.has(n)) {
+						depthByCell.set(n, curDepth + 1);
+						q.push(n);
+					}
+				}
+			}
+			depthByCell.forEach((depth, cell) => {
+				const parity = (Number(depth) || 0) % 2;
+				cell.dataset.ringDepth = String(depth);
+				cell.classList.toggle('ring-shade-odd', parity === 1);
+				cell.classList.toggle('ring-shade-even', parity === 0);
+			});
+		}
 
 			if (containerId === 'yellow-grid') {
 				const puntenEl = document.getElementById('yellow-punten');
@@ -27617,7 +27690,7 @@ function openShopModal(callback) {
 	  const blackHoleOnlyMaxTraps = hasBlackHoleUpgrade && !shouldGenerateTraps ? 1 : 0;
 
 	  const boardConfigs = [
-		() => createGrid('yellow-grid', yellowRows, yellowCols, { goldCells: true, symbols: true, minSymbols: 8, maxSymbols: 8, coinChance: 0.22, maxCoins: 17, rowLengths: yellowRowPattern, rowOffsets: yellowRowOffsets, boldColumns: [0], pointsPerColumn: yellowColumnPoints, trapChance: trapChance || blackHoleOnlyChance, maxTraps: maxTraps || blackHoleOnlyMaxTraps, blackHoleChance: hasBlackHoleUpgrade ? 1.0 : 0 }),
+		() => createGrid('yellow-grid', yellowRows, yellowCols, { goldCells: true, symbols: true, minSymbols: 8, maxSymbols: 8, coinChance: 0.22, maxCoins: 17, rowLengths: yellowRowPattern, rowOffsets: yellowRowOffsets, boldColumns: [0], pointsPerColumn: yellowColumnPoints, columnShading: true, trapChance: trapChance || blackHoleOnlyChance, maxTraps: maxTraps || blackHoleOnlyMaxTraps, blackHoleChance: hasBlackHoleUpgrade ? 1.0 : 0 }),
 		() => {
 			const isIntroLevel = Number(currentLevel || 0) === 0;
 			const purpleOptions = {
@@ -28328,8 +28401,9 @@ function openShopModal(callback) {
 			rowOffsets: yellowShape.offsets,
 			boldColumns: [],
 			pointsPerColumn: yellowColumnPoints,
-			diagonalShading: true,
-			diagonalLegend: true,
+			diagonalShading: false,
+			diagonalLegend: false,
+			ringShading: true,
 			trimRight: true,
 			trapChance: trapChance,
 			maxTraps: Math.floor(maxTraps * 0.4),
@@ -34965,9 +35039,9 @@ body { background: transparent; }
 					if (bonus && bottomRight && !bottomRight.contains(bonus)) {
 						bottomRight.appendChild(bonus);
 					}
-					// Coins (counter + buy button) under the cards in portrait bottom layout.
-					if (coins && bottomCenter && !bottomCenter.contains(coins)) {
-						bottomCenter.appendChild(coins);
+					// Coins (counter + buy button) under the bonuses in portrait bottom layout.
+					if (coins && bottomRight && !bottomRight.contains(coins)) {
+						bottomRight.appendChild(coins);
 					}
 				} else {
 					// Landscape mode: gebruik sidebar layout
