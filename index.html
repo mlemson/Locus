@@ -15,7 +15,28 @@
 						e.preventDefault();
 					}
 				};
+				const canScroll = (el) => {
+					if (!el || !el.closest) return false;
+					if (el.closest('#green-zone, #blue-zone, #card-options, #preworld-pick-grid, #deck-modal-content, #blackhole-card-grid')) return true;
+					let node = el;
+					while (node && node !== document.body && node !== document.documentElement) {
+						try {
+							const style = window.getComputedStyle(node);
+							const overflowY = style.overflowY;
+							const overflowX = style.overflowX;
+							const canScrollY = (overflowY === 'auto' || overflowY === 'scroll') && node.scrollHeight > node.clientHeight + 1;
+							const canScrollX = (overflowX === 'auto' || overflowX === 'scroll') && node.scrollWidth > node.clientWidth + 1;
+							if (canScrollY || canScrollX) return true;
+						} catch (_) {}
+						node = node.parentElement;
+					}
+					return false;
+				};
+				const blockPageScroll = (e) => {
+					if (!canScroll(e.target)) e.preventDefault();
+				};
 				window.addEventListener('touchmove', blockPinch, { passive: false });
+				window.addEventListener('touchmove', blockPageScroll, { passive: false });
 				window.addEventListener('gesturestart', e => e.preventDefault());
 				window.addEventListener('gesturechange', e => e.preventDefault());
 				window.addEventListener('gestureend', e => e.preventDefault());
@@ -78,6 +99,10 @@
 				padding: 10px;
 				min-height: 100%;
 				width: 100%;
+				overflow: hidden;
+				overflow-x: hidden;
+				overflow-y: hidden;
+				overscroll-behavior: none;
 				background: var(--color-dark-bg);
 				/*
 					IMPORTANT (mobile/iOS): never put emoji fonts before system UI fonts.
@@ -96,6 +121,14 @@
 				align-items: start;
 				color: var(--color-text-light);
 				transition: background-color 0.3s, color 0.3s;
+			}
+
+			@media (max-width: 900px), (hover: none) and (pointer: coarse) {
+				html, body {
+					height: 100%;
+					overflow: hidden;
+					overscroll-behavior: none;
+				}
 			}
 
 		:root {
