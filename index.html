@@ -17616,11 +17616,12 @@ let shopLevel2Used = false;
 			const zoneId = zoneEl.id;
 			const mode = getZoneScrollMode(zoneEl);
 			const mem = getZoneScrollMemory(zoneId);
-			if (zoneId === 'green-zone' && !zoneEl.__userScrollIntent && !(mem[mode] && mem[mode].userSet)) return;
+			const hasUserIntent = !!zoneEl.__userScrollIntent || zoneEl.dataset.dragScrolling === 'true';
+			if (zoneId === 'green-zone' && !hasUserIntent && !(mem[mode] && mem[mode].userSet) && mode !== 'zoom') return;
 			mem[mode].left = zoneEl.scrollLeft;
 			mem[mode].top = zoneEl.scrollTop;
 			mem[mode].initialized = true;
-			if (zoneId === 'green-zone') mem[mode].userSet = true;
+			if (zoneId === 'green-zone' && hasUserIntent) mem[mode].userSet = true;
 		}, { passive: true });
 	}
 	function restoreOrAnchorZoneScroll(zoneEl, anchorFn) {
@@ -17981,6 +17982,21 @@ let shopLevel2Used = false;
 	function closeZoom() {
 		if (!activeZoomZone) return;
 		const zone = activeZoomZone;
+		// Persist zoom scroll position before tearing down zoom state.
+		try {
+			if (zone && (zone.id === 'green-zone' || zone.id === 'blue-zone')) {
+				const mem = getZoneScrollMemory(zone.id);
+				if (mem && mem.zoom) {
+					mem.zoom.left = zone.scrollLeft;
+					mem.zoom.top = zone.scrollTop;
+					mem.zoom.initialized = true;
+					if (zone.id === 'green-zone') {
+						const hasUserIntent = !!zone.__userScrollIntent || zone.dataset.dragScrolling === 'true';
+						if (hasUserIntent) mem.zoom.userSet = true;
+					}
+				}
+			}
+		} catch (_) {}
 		
 		// IMPORTANT: Preserve green zone scroll when closing OTHER zones
 		const greenZone = document.getElementById('green-zone');
@@ -29033,12 +29049,7 @@ function openShopModal(callback) {
 
 	function resetDeckToStandard() {
 	  const base = buildStandardDeckBlueprint();
-	  if (typeof isTutorialCompleted === 'function' && isTutorialCompleted()) {
-		const intro = buildIntroTutorialDeckBlueprint();
-		ownedDeckBlueprints = base.concat(intro);
-		return;
-	  }
-	  ownedDeckBlueprints = base;
+		ownedDeckBlueprints = base;
 	}
 
 	// ========== SAVE/LOAD SYSTEM ==========
@@ -34928,6 +34939,8 @@ body { background: transparent; }
 	}
 
 	function autoCenterScrollableZones() {
+		// Do not auto-center while zoomed-in; it causes jumps on mobile.
+		if (document.body.classList.contains('zoomed-in')) return;
 	  // Only auto-center when the user hasn't scrolled yet (prevents fighting the player).
 	  const greenZone = document.getElementById('green-zone');
 	  const greenMem = (() => {
