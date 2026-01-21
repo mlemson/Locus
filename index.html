@@ -28856,15 +28856,13 @@ function openShopModal(callback) {
 			addList(CARD_BLUEPRINTS && CARD_BLUEPRINTS.mini, 'mini');
 			addList(CARD_BLUEPRINTS && CARD_BLUEPRINTS.standard, 'standard');
 			addList(CARD_BLUEPRINTS && CARD_BLUEPRINTS.large, 'large');
-			addList(typeof XL_6_SHAPES !== 'undefined' ? XL_6_SHAPES : null, 'large');
-			addList(typeof EXTRA_LARGE_7_SHAPES !== 'undefined' ? EXTRA_LARGE_7_SHAPES : null, 'large');
 			const seen = new Set();
 			const out = [];
 			entries.forEach(entry => {
 				const key = `${entry.name}|${JSON.stringify(entry.matrix)}`;
 				if (seen.has(key)) return;
 				seen.add(key);
-				out.push(entry);
+				if (countShapeBlocks(entry.matrix) <= 6) out.push(entry);
 			});
 			return out.sort((a, b) => {
 				const costA = countShapeBlocks(a.matrix);
