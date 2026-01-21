@@ -5687,6 +5687,23 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		margin-top: 12px;
 		max-height: 60vh;
 		overflow: auto;
+		scrollbar-width: thin;
+		scrollbar-color: rgba(80,110,200,0.45) rgba(30,36,58,0.12);
+	}
+	.preworld-pick-grid::-webkit-scrollbar {
+		width: 10px;
+	}
+	.preworld-pick-grid::-webkit-scrollbar-track {
+		background: rgba(30,36,58,0.12);
+		border-radius: 999px;
+	}
+	.preworld-pick-grid::-webkit-scrollbar-thumb {
+		background: linear-gradient(180deg, rgba(110,140,255,0.85), rgba(80,110,200,0.75));
+		border-radius: 999px;
+		border: 2px solid rgba(30,36,58,0.12);
+	}
+	.preworld-pick-grid::-webkit-scrollbar-thumb:hover {
+		background: linear-gradient(180deg, rgba(130,160,255,0.95), rgba(90,120,220,0.9));
 	}
 	.preworld-pick-item {
 		border: 1px solid rgba(40,55,120,0.14);
@@ -5712,13 +5729,26 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	.preworld-cost {
 		position: absolute;
 		top: 8px;
-		right: 8px;
+		left: 8px;
 		font-size: 0.75rem;
 		font-weight: 700;
-		background: rgba(20,28,50,0.12);
+		background: linear-gradient(135deg, rgba(40,60,140,0.9), rgba(65,85,170,0.85));
 		border-radius: 999px;
 		padding: 4px 8px;
-		color: rgba(24,32,52,0.8);
+		color: #f3f6ff;
+		box-shadow: 0 6px 14px rgba(25,35,70,0.25);
+		z-index: 2;
+	}
+	.preworld-pick-warning {
+		margin-top: 8px;
+		padding: 8px 12px;
+		border-radius: 10px;
+		font-size: 0.85rem;
+		font-weight: 600;
+		background: rgba(255,196,0,0.12);
+		color: #a06a00;
+		border: 1px solid rgba(255,196,0,0.35);
+		display: none;
 	}
 	body.dark-mode .preworld-pick-item {
 		background: rgba(26,30,48,0.92);
@@ -5729,8 +5759,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		color: rgba(230,235,255,0.85);
 	}
 	body.dark-mode .preworld-cost {
-		background: rgba(255,255,255,0.12);
-		color: rgba(230,235,255,0.85);
+		background: linear-gradient(135deg, rgba(80,110,220,0.9), rgba(60,80,170,0.85));
+		color: rgba(240,245,255,0.95);
+	}
+	body.dark-mode .preworld-pick-warning {
+		background: rgba(255,196,0,0.12);
+		color: rgba(255,214,120,0.95);
+		border-color: rgba(255,196,0,0.35);
 	}
 
 	/* Modal close button styling */
@@ -23504,6 +23539,7 @@ function optionalCellsTouchActive(zone, pendingCells) {
 
 	function buildStandardDeckBlueprint() {
 	  const standardShapes = shapePool.filter(entry => entry.category === 'standard');
+		  const desiredCount = 6;
 	  
 	  // Als shapePool leeg is of geen standard shapes heeft, rebuild de pool
 	  if (standardShapes.length === 0) {
@@ -23513,7 +23549,7 @@ function optionalCellsTouchActive(zone, pendingCells) {
 		if (retryStandardShapes.length === 0) {
 		  console.error('❌ Still no standard shapes after rebuild!');
 		  // Fallback: gebruik alle shapes als laatste redmiddel
-		  return shapePool.slice(0, 6).map((entry, idx) => {
+			  return shapePool.slice(0, desiredCount).map((entry, idx) => {
 			const color = NON_WILDCARD_COLORS[idx % NON_WILDCARD_COLORS.length];
 			return createCardBlueprint(entry, color);
 		  });
@@ -23521,7 +23557,19 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	  }
 	  
 	  const shuffled = shuffleArray([...standardShapes]);
-	  const picks = shuffled.slice(0, 6);
+		  const picks = shuffled.slice(0, desiredCount);
+		  // If too few standard shapes are available, top up with other unlocked shapes.
+		  if (picks.length < desiredCount) {
+			const already = new Set(picks.map(p => `${p.name}|${JSON.stringify(p.matrix)}`));
+			const pool = shuffleArray(shapePool.filter(entry => {
+				const key = `${entry.name}|${JSON.stringify(entry.matrix)}`;
+				return !already.has(key);
+			}));
+			for (const entry of pool) {
+				if (picks.length >= desiredCount) break;
+				picks.push(entry);
+			}
+		  }
 	  const baseColors = [...NON_WILDCARD_COLORS];
 	  let colorIndex = 0;
 	  return picks.map(entry => {
@@ -28730,11 +28778,19 @@ function openShopModal(callback) {
 			const budgetEl = document.getElementById('preworld-pick-budget');
 			const grid = document.getElementById('preworld-pick-grid');
 			const confirmBtn = document.getElementById('preworld-pick-confirm');
+			const subtextEl = document.getElementById('preworld-pick-subtext');
 			if (!grid || !confirmBtn) {
 				if (typeof onComplete === 'function') onComplete([]);
 				return;
 			}
 			let remaining = PREWORLD_PICK_BUDGET;
+			let warningEl = document.getElementById('preworld-pick-warning');
+			if (!warningEl && subtextEl && subtextEl.parentElement) {
+				warningEl = document.createElement('div');
+				warningEl.id = 'preworld-pick-warning';
+				warningEl.className = 'preworld-pick-warning';
+				subtextEl.parentElement.insertBefore(warningEl, subtextEl.nextSibling);
+			}
 			const selected = new Map();
 			const palette = (Array.isArray(NON_WILDCARD_COLORS) && NON_WILDCARD_COLORS.length)
 				? NON_WILDCARD_COLORS
@@ -28792,12 +28848,28 @@ function openShopModal(callback) {
 					item.classList.toggle('disabled', disabled);
 					item.setAttribute('aria-disabled', disabled ? 'true' : 'false');
 				});
+				if (warningEl) {
+					if (remaining > 0) {
+						warningEl.textContent = `Je hebt nog ${remaining}🪙 over. Gebruik ze voor extra startkaarten.`;
+						warningEl.style.display = 'block';
+					} else {
+						warningEl.textContent = '';
+						warningEl.style.display = 'none';
+					}
+				}
 				confirmBtn.disabled = false;
 			};
 			updatePreworldPickUI();
 
 			confirmBtn.onclick = () => {
 				confirmBtn.disabled = true;
+				if (remaining > 0) {
+					const proceed = window.confirm(`Je hebt nog ${remaining}🪙 over. Wil je toch starten?`);
+					if (!proceed) {
+						confirmBtn.disabled = false;
+						return;
+					}
+				}
 				const picks = Array.from(selected.values());
 				closePreworldPickModal();
 				if (typeof onComplete === 'function') onComplete(picks);
