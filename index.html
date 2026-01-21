@@ -16541,7 +16541,7 @@ let shopLevel2Used = false;
 				renderCurrentHand();
 				try { updateShopCoinDisplay(); } catch (_) {}
 				try { saveGameState(); } catch (_) {}
-			});
+			}, variant);
 			return variant;
 		} catch (_) {
 			return null;
@@ -24013,6 +24013,7 @@ function getCollectedCoinCount(scores) {
 
 	const deckModalLayer = document.getElementById('deck-modal-layer');
 	const deckModalContent = document.getElementById('deck-modal-content');
+	const deckModalTitle = document.getElementById('deck-modal-title');
 	const deckModalSubtext = document.getElementById('deck-modal-subtext');
 	const deckModalClose = document.getElementById('deck-modal-close');
 	const deckPreviewEl = document.getElementById('deck-preview');
@@ -24021,6 +24022,7 @@ function getCollectedCoinCount(scores) {
 	const goldenUnlockTitle = document.getElementById('golden-unlock-title');
 	const goldenUnlockContent = document.getElementById('golden-unlock-content');
 	const goldenUnlockSubtext = document.getElementById('golden-unlock-subtext');
+	const DECK_MODAL_DEFAULT_TITLE = deckModalTitle ? deckModalTitle.textContent : 'Deckoverzicht';
 	const GOLDEN_UNLOCK_DEFAULT_TITLE = goldenUnlockTitle ? goldenUnlockTitle.textContent : '✨ Kies je eerste gouden kaart';
 	const GOLDEN_UNLOCK_DEFAULT_SUBTEXT = goldenUnlockSubtext ? goldenUnlockSubtext.innerHTML : 'Je hebt <strong>Gouden Kaarten</strong> ontgrendeld. Kies er 1 uit 3.';
 	const blackHoleModalLayer = document.getElementById('blackhole-modal-layer');
@@ -24436,6 +24438,7 @@ function getCollectedCoinCount(scores) {
 	function openDeckModal() {
 	  if (!deckModalLayer) return;
 	  deckModalMode = 'default';
+	  if (deckModalTitle) deckModalTitle.textContent = DECK_MODAL_DEFAULT_TITLE;
 	  if (deckModalSubtext) deckModalSubtext.textContent = '';
 	  populateDeckModalContent();
 	  deckModalLayer.classList.add('show');
@@ -24449,6 +24452,7 @@ function getCollectedCoinCount(scores) {
 	  }
 	  deckModalMode = 'default';
 	  pendingLevel2UpgradeHandler = null;
+	  if (deckModalTitle) deckModalTitle.textContent = DECK_MODAL_DEFAULT_TITLE;
 	  if (deckPreviewEl) deckPreviewEl.focus();
 	}
 
@@ -24461,13 +24465,18 @@ function getCollectedCoinCount(scores) {
 		closeDeckModal();
 	}
 
-	function openLevel2UpgradeModal(candidates, onSelect) {
+	function openLevel2UpgradeModal(candidates, onSelect, variantKey = null) {
 		if (!deckModalLayer || !deckModalContent) return;
 		deckModalMode = 'level2-upgrade';
 		pendingLevel2UpgradeHandler = onSelect;
 		deckModalContent.innerHTML = '';
 		deckModalContent.classList.add('deck-modal-grid');
-		if (deckModalSubtext) deckModalSubtext.textContent = 'Kies een kaart zonder Level 2 upgrade.';
+		const resolvedVariant = variantKey || shopLevel2Variant || pickBonusEchoVariant();
+		const variantMeta = getBonusEchoUiCopy(resolvedVariant);
+		const variantLabel = (variantMeta?.sub || resolvedVariant).toUpperCase();
+		const variantDesc = variantMeta?.desc || 'Level 2 upgrade.';
+		if (deckModalTitle) deckModalTitle.textContent = `Level 2 upgrade • ${variantLabel}`;
+		if (deckModalSubtext) deckModalSubtext.textContent = `Type: ${variantLabel} — ${variantDesc} Kies een kaart zonder Level 2 upgrade.`;
 		if (!Array.isArray(candidates) || candidates.length === 0) {
 			const empty = document.createElement('p');
 			empty.className = 'deck-modal-empty';
@@ -26665,15 +26674,16 @@ function getCollectedCoinCount(scores) {
 			upgradeCard.classList.add('shop-upgrade-card');
 			const upgradeHeader = document.createElement('div');
 			upgradeHeader.classList.add('shop-upgrade-header');
-			upgradeHeader.innerHTML = `<span class="upgrade-icon">🔁</span><span class="upgrade-name">Level 2 kaart</span>`;
 			const upgradeDesc = document.createElement('p');
 			upgradeDesc.classList.add('shop-upgrade-desc');
 			const upgradableCount = ownedDeckBlueprints.filter(bp => bp && !bp.isBonusEchoUpgrade).length;
 			const level2VariantKey = shopLevel2Variant || pickBonusEchoVariant();
 			const level2Meta = getBonusEchoUiCopy(level2VariantKey);
 			const level2Label = level2Meta?.sub ? level2Meta.sub.toUpperCase() : level2VariantKey.toUpperCase();
+			const level2Desc = level2Meta?.desc || 'Level 2 upgrade.';
+			upgradeHeader.innerHTML = `<span class="upgrade-icon">🔁</span><span class="upgrade-name">Level 2 • ${level2Label}</span>`;
 			upgradeDesc.textContent = upgradableCount > 0
-				? `Deze shop: variant ${level2Label}. Upgrade kaarten voor ${BONUS_ECHO_UPGRADE_COST} munten per kaart.`
+				? `Type: ${level2Label} — ${level2Desc} Upgrade kaarten voor ${BONUS_ECHO_UPGRADE_COST} munten per kaart.`
 				: 'Alle kaarten hebben al een Level 2 upgrade.';
 			const upgradeActions = document.createElement('div');
 			upgradeActions.classList.add('shop-upgrade-actions');
@@ -26738,13 +26748,13 @@ function getCollectedCoinCount(scores) {
 				return;
 			}
 			if (shopModalMessage) shopModalMessage.textContent = 'Kies een kaart om te upgraden.';
+			const variant = forcedVariant || shopLevel2Variant || pickBonusEchoVariant();
 			openLevel2UpgradeModal(candidates, (pickedBlueprint) => {
 				if (!pickedBlueprint) return;
 				if (!debugMode && !free && !spendCoins(BONUS_ECHO_UPGRADE_COST)) {
 					if (shopModalMessage) shopModalMessage.textContent = 'Munten konden niet worden afgeschreven.';
 					return;
 				}
-				const variant = forcedVariant || shopLevel2Variant || pickBonusEchoVariant();
 				if (!applyBonusEchoUpgradeToBlueprint(pickedBlueprint, variant)) return;
 				if (UPGRADES.bonusEcho) UPGRADES.bonusEcho.purchased = true;
 				const variantLabel = (getBonusEchoUiCopy(variant).sub || variant).toUpperCase();
@@ -26755,7 +26765,7 @@ function getCollectedCoinCount(scores) {
 				updateShopUpgradeUI();
 				refreshShopCardButtons();
 				try { saveGameState(); } catch (_) {}
-			});
+			}, variant);
 		}
 
 function refreshShopCardButtons() {
