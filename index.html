@@ -20449,23 +20449,13 @@ let shopLevel2Used = false;
 		});
 	} catch (e) {}
 
-	// Trap penalties should apply to the *affected color* (harder objectives), not only total.
-	// Apply only the delta since last calculation so penalties do not stack each update.
+	// Trap penalties should apply to the *affected color* and remain stable across updates.
 	const trapPenaltyBreakdown = getTrapPenaltyBreakdown();
-	const penaltyDelta = {
-	  yellow: (Number(trapPenaltyBreakdown.yellow) || 0) - (Number(lastTrapPenaltyBreakdown.yellow) || 0),
-	  green: (Number(trapPenaltyBreakdown.green) || 0) - (Number(lastTrapPenaltyBreakdown.green) || 0),
-	  purple: (Number(trapPenaltyBreakdown.purple) || 0) - (Number(lastTrapPenaltyBreakdown.purple) || 0),
-	  blue: (Number(trapPenaltyBreakdown.blue) || 0) - (Number(lastTrapPenaltyBreakdown.blue) || 0),
-	  red: (Number(trapPenaltyBreakdown.red) || 0) - (Number(lastTrapPenaltyBreakdown.red) || 0),
-	  other: (Number(trapPenaltyBreakdown.other) || 0) - (Number(lastTrapPenaltyBreakdown.other) || 0),
-	  total: (Number(trapPenaltyBreakdown.total) || 0) - (Number(lastTrapPenaltyBreakdown.total) || 0)
-	};
-	yellow -= penaltyDelta.yellow;
-	green -= penaltyDelta.green;
-	purple -= penaltyDelta.purple;
-	blue -= penaltyDelta.blue;
-	red -= penaltyDelta.red;
+	yellow -= Number(trapPenaltyBreakdown.yellow) || 0;
+	green -= Number(trapPenaltyBreakdown.green) || 0;
+	purple -= Number(trapPenaltyBreakdown.purple) || 0;
+	blue -= Number(trapPenaltyBreakdown.blue) || 0;
+	red -= Number(trapPenaltyBreakdown.red) || 0;
 	// Add any persistent score buffs granted by Bonus Echo cards.
 	const bonusScore = colorScoreBonuses || {};
 	yellow += Number(bonusScore.yellow || 0);
