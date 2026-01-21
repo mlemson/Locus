@@ -23497,7 +23497,7 @@ function optionalCellsTouchActive(zone, pendingCells) {
 		if (retryStandardShapes.length === 0) {
 		  console.error('❌ Still no standard shapes after rebuild!');
 		  // Fallback: gebruik alle shapes als laatste redmiddel
-		  return shapePool.slice(0, 9).map((entry, idx) => {
+		  return shapePool.slice(0, 6).map((entry, idx) => {
 			const color = NON_WILDCARD_COLORS[idx % NON_WILDCARD_COLORS.length];
 			return createCardBlueprint(entry, color);
 		  });
@@ -23505,7 +23505,7 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	  }
 	  
 	  const shuffled = shuffleArray([...standardShapes]);
-	  const picks = shuffled.slice(0, 9);
+	  const picks = shuffled.slice(0, 6);
 	  const baseColors = [...NON_WILDCARD_COLORS];
 	  let colorIndex = 0;
 	  return picks.map(entry => {
