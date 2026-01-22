@@ -15042,8 +15042,6 @@ let shopLevel2Used = false;
 	let activeTraps = [];
 	let trapIdCounter = 0;
 	let lastTrapHighlightId = null;
-	let trapScoreOffset = 0;
-	let trapColorOffsets = { yellow: 0, red: 0, green: 0, purple: 0, blue: 0, other: 0 };
 	let lastTrapPenaltyBreakdown = {
 		yellow: 0,
 		red: 0,
@@ -19716,13 +19714,6 @@ let shopLevel2Used = false;
 	  cell.dataset.trapInstanceId = trapId;
 	  cell.classList.add('trap-triggered');
 	  activeTraps.push(prospective);
-	  if (penaltyValue > 0 && cell.dataset.trapPenaltyApplied !== 'true') {
-		cell.dataset.trapPenaltyApplied = 'true';
-		const colorKey = getTrapColorKey(normalizedZone);
-		cell.dataset.trapColorKey = colorKey;
-		trapColorOffsets[colorKey] = Number(trapColorOffsets[colorKey] || 0) - penaltyValue;
-		trapScoreOffset -= penaltyValue;
-	  }
 	  lastTrapHighlightId = trapId;
 	  if (!silent && penaltyValue > 0) {
 		const rect = cell.getBoundingClientRect();
@@ -19751,13 +19742,6 @@ let shopLevel2Used = false;
 	  const trapId = cell.dataset.trapInstanceId;
 	  const trapKey = getTrapKey({ cell, id: trapId, zoneId: cell.dataset?.zoneId });
 	  if (cell.dataset.trapPenaltyApplied === 'true') {
-		const trapType = cell.dataset.trapType || 'pit';
-		const penaltyValue = (trapType === 'blackHole') ? 0 : TRAP_PENALTY;
-		if (penaltyValue > 0) {
-			const colorKey = cell.dataset.trapColorKey || getTrapColorKey(cell.dataset.zoneId || cell.closest('.grid')?.id || '');
-			trapColorOffsets[colorKey] = Number(trapColorOffsets[colorKey] || 0) + penaltyValue;
-			trapScoreOffset += penaltyValue;
-		}
 		delete cell.dataset.trapPenaltyApplied;
 		delete cell.dataset.trapColorKey;
 	  }
@@ -19803,8 +19787,6 @@ let shopLevel2Used = false;
 	function resetTrapState() {
 	  activeTraps = [];
 	  lastTrapHighlightId = null;
-	  trapScoreOffset = 0;
-	  trapColorOffsets = { yellow: 0, red: 0, green: 0, purple: 0, blue: 0, other: 0 };
 	  lastTrapPenaltyBreakdown = {
 		yellow: 0,
 		red: 0,
@@ -20514,14 +20496,13 @@ let shopLevel2Used = false;
 		});
 	} catch (e) {}
 
-	// Trap penalties are a one-time score offset (applied on trigger, refunded on undo).
+	// Trap penalties should apply to the affected color and remain stable across updates.
 	const trapPenaltyBreakdown = getTrapPenaltyBreakdown();
-	const trapOffsets = trapColorOffsets || {};
-	yellow += Number(trapOffsets.yellow || 0);
-	green += Number(trapOffsets.green || 0);
-	purple += Number(trapOffsets.purple || 0);
-	blue += Number(trapOffsets.blue || 0);
-	red += Number(trapOffsets.red || 0);
+	yellow -= Number(trapPenaltyBreakdown.yellow) || 0;
+	green -= Number(trapPenaltyBreakdown.green) || 0;
+	purple -= Number(trapPenaltyBreakdown.purple) || 0;
+	blue -= Number(trapPenaltyBreakdown.blue) || 0;
+	red -= Number(trapPenaltyBreakdown.red) || 0;
 	// Add any persistent score buffs granted by Bonus Echo cards.
 	const bonusScore = colorScoreBonuses || {};
 	yellow += Number(bonusScore.yellow || 0);
@@ -20565,8 +20546,7 @@ let shopLevel2Used = false;
 		other: trapPenaltyOther,
 		total: trapPenaltyTotal
 	};
-	const trapOffset = Number(trapScoreOffset || 0) || 0;
-	const displayScore = newScore;
+	const displayScore = newScore - trapPenaltyOther;
 
 	// huidige getoonde waarde (als number, fallback 0)
 	const currentScore = Number(totalScoreEl.textContent) || 0;
@@ -20622,7 +20602,7 @@ let shopLevel2Used = false;
 		blue: Number(trapPenaltyBreakdown.blue) || 0,
 		other: trapPenaltyOther
 	  },
-	  baseTotal: newScore - trapOffset
+	  baseTotal: newScore + trapPenaltyOther
 	};
 	latestScoreSnapshot = scoreSnapshot;
 	updateObjectives(scoreSnapshot);
@@ -33618,8 +33598,6 @@ function monitorScenarioProgress() {
 			activeTraps = [];
 			trapIdCounter = 0;
 			lastTrapHighlightId = null;
-			trapScoreOffset = 0;
-			trapColorOffsets = { yellow: 0, red: 0, green: 0, purple: 0, blue: 0, other: 0 };
 		} catch (e) {}
 		const triggered = Array.from(document.querySelectorAll('.cell[data-trap-triggered="true"], .cell.trap-triggered'));
 		// Deduplicate by coordinate to avoid counting placeholder clones
@@ -33640,12 +33618,6 @@ function monitorScenarioProgress() {
 			const penaltyValue = isBlackHole ? 0 : TRAP_PENALTY;
 			if (penaltyValue > 0 && cell.dataset.trapPenaltyApplied !== 'true') {
 				cell.dataset.trapPenaltyApplied = 'true';
-			}
-			if (penaltyValue > 0 && cell.dataset.trapPenaltyApplied === 'true') {
-				const colorKey = cell.dataset.trapColorKey || getTrapColorKey(zoneId);
-				cell.dataset.trapColorKey = colorKey;
-				trapColorOffsets[colorKey] = Number(trapColorOffsets[colorKey] || 0) - penaltyValue;
-				trapScoreOffset -= penaltyValue;
 			}
 			const trapId = nextTrapId();
 			cell.dataset.trapTriggered = 'true';
