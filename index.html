@@ -17661,19 +17661,7 @@ let shopLevel2Used = false;
 		zone.style.setProperty('--mobile-zoom-height', `${Math.round(height + 12)}px`);
 		zone.style.setProperty('--mobile-zoom-center', `${Math.round(center)}px`);
 
-		// Scale grid content inside the zoomed zone (container size stays the same).
-		try {
-			const baseCellSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')) || 26;
-			const zoomScale = viewportH <= 700 ? 0.8 : (viewportH <= 820 ? 0.9 : 1);
-			const zoomCellSize = Math.max(18, Math.round(baseCellSize * zoomScale));
-			if (zone._savedCellSize === undefined) {
-				zone._savedCellSize = zone.style.getPropertyValue('--cell-size') || '';
-			}
-			if (zone._savedGridGap === undefined) {
-				zone._savedGridGap = zone.style.getPropertyValue('--board-grid-gap') || '';
-			}
-			zone.style.setProperty('--cell-size', `${zoomCellSize}px`);
-		} catch (e) {}
+		// Keep grid sizing untouched in zoomed view (mobile matches default cell size).
 	}
 
 	function bindMobileZoomResizeHandler() {
@@ -18269,23 +18257,7 @@ let shopLevel2Used = false;
 				delete zone._savedInlineSizing;
 			}
 		} catch (e) {}
-		// Restore zoom-specific cell sizing.
-		try {
-			if (zone && zone.style) {
-				const restoreVar = (cssProp, val) => {
-					if (val != null && String(val).length) zone.style.setProperty(cssProp, val);
-					else zone.style.removeProperty(cssProp);
-				};
-				if (zone._savedCellSize !== undefined) {
-					restoreVar('--cell-size', zone._savedCellSize);
-					delete zone._savedCellSize;
-				}
-				if (zone._savedGridGap !== undefined) {
-					restoreVar('--board-grid-gap', zone._savedGridGap);
-					delete zone._savedGridGap;
-				}
-			}
-		} catch (e) {}
+		// No zoom-specific cell sizing to restore.
 		restoreFromBody(zone);
 		activeZoomZone = null;
 		document.body.classList.remove('zoomed-in');
