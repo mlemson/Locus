@@ -12082,14 +12082,14 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			right: 0;
 			width: 100vw;
 			max-width: 100vw;
-			min-height: var(--mobile-zoom-height, 54svh);
-			max-height: var(--mobile-zoom-height, 54svh);
+			min-height: var(--mobile-zoom-height, 57svh);
+			max-height: var(--mobile-zoom-height, 57svh);
 			min-width: 0;
 			margin: 0;
 
 			/* Center position matches existing yellow-ish placement; JS clamps to avoid objective/bottom-bar overlap. */
 			top: var(--mobile-zoom-center);
-			height: var(--mobile-zoom-height, 54svh);
+			height: var(--mobile-zoom-height, 57svh);
 			transform: translateY(-50%);
 			z-index: var(--z-zoom);
 			box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
@@ -17643,7 +17643,7 @@ let shopLevel2Used = false;
 		if (!['yellow-zone', 'green-zone', 'blue-zone', 'purple-zone', 'red-zone'].includes(zone.id)) return;
 
 		const viewportH = Math.round((window.visualViewport && window.visualViewport.height) ? window.visualViewport.height : window.innerHeight);
-		const isShortViewport = viewportH <= 700;
+		const isShortViewport = viewportH <= 650;
 		const objectiveBanner = document.getElementById('mobile-objective-banner');
 		const bottomBar = document.getElementById('bottom-bar');
 		const objectiveBottom = objectiveBanner ? objectiveBanner.getBoundingClientRect().bottom : 0;
@@ -17651,7 +17651,7 @@ let shopLevel2Used = false;
 		const margin = isShortViewport ? 4 : 10;
 		const available = Math.max(120, Math.floor(bottomTop - objectiveBottom - margin * 2));
 		// Short screens: slightly smaller zoom height so everything fits without overlapping controls.
-		const desired = Math.floor(viewportH * (isShortViewport ? 0.46 : 0.54));
+		const desired = Math.floor(viewportH * (isShortViewport ? 0.54 : 0.57));
 		const height = Math.max(120, Math.min(desired, available));
 
 		const minCenter = objectiveBottom + margin + height / 2;
@@ -17660,8 +17660,22 @@ let shopLevel2Used = false;
 		let center = Math.round(minCenter + (isShortViewport ? 0 : 2));
 		center = Math.max(minCenter, Math.min(maxCenter, center));
 
-		zone.style.setProperty('--mobile-zoom-height', `${Math.round(height + 4)}px`);
+		zone.style.setProperty('--mobile-zoom-height', `${Math.round(height + 12)}px`);
 		zone.style.setProperty('--mobile-zoom-center', `${Math.round(center)}px`);
+
+		// Scale grid content inside the zoomed zone (container size stays the same).
+		try {
+			const baseCellSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')) || 26;
+			const zoomScale = viewportH <= 700 ? 0.8 : (viewportH <= 820 ? 0.9 : 1);
+			const zoomCellSize = Math.max(18, Math.round(baseCellSize * zoomScale));
+			if (zone._savedCellSize === undefined) {
+				zone._savedCellSize = zone.style.getPropertyValue('--cell-size') || '';
+			}
+			if (zone._savedGridGap === undefined) {
+				zone._savedGridGap = zone.style.getPropertyValue('--board-grid-gap') || '';
+			}
+			zone.style.setProperty('--cell-size', `${zoomCellSize}px`);
+		} catch (e) {}
 	}
 
 	function bindMobileZoomResizeHandler() {
@@ -18255,6 +18269,23 @@ let shopLevel2Used = false;
 				restoreProp('min-height', saved.minHeight);
 				restoreProp('max-height', saved.maxHeight);
 				delete zone._savedInlineSizing;
+			}
+		} catch (e) {}
+		// Restore zoom-specific cell sizing.
+		try {
+			if (zone && zone.style) {
+				const restoreVar = (cssProp, val) => {
+					if (val != null && String(val).length) zone.style.setProperty(cssProp, val);
+					else zone.style.removeProperty(cssProp);
+				};
+				if (zone._savedCellSize !== undefined) {
+					restoreVar('--cell-size', zone._savedCellSize);
+					delete zone._savedCellSize;
+				}
+				if (zone._savedGridGap !== undefined) {
+					restoreVar('--board-grid-gap', zone._savedGridGap);
+					delete zone._savedGridGap;
+				}
 			}
 		} catch (e) {}
 		restoreFromBody(zone);
