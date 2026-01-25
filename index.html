@@ -13120,6 +13120,7 @@ let shopLevel2Used = false;
 			purchased: false,
 			onPurchase: () => {
 				showObjectiveToast('🧱 XL blokken ontgrendeld!');
+				try { openXLRewardPicker('xl'); } catch (e) {}
 			}
 		},
 		extraLargeBlocks: {
@@ -13131,6 +13132,7 @@ let shopLevel2Used = false;
 			purchased: false,
 			onPurchase: () => {
 				showObjectiveToast('🧱 XXL blokken ontgrendeld!');
+				try { openXLRewardPicker('xxl'); } catch (e) {}
 			}
 		}
 	};
@@ -24834,6 +24836,45 @@ function getCollectedCoinCount(scores) {
 		showRewardPickerModal({
 			titleText: '🌈 Kies je multikleur kaart',
 			subtextHtml: 'Je hebt <strong>Multikleur Kaarten</strong> ontgrendeld. Kies er 1 uit 3.',
+			choices,
+			onPick: ({ blueprint, card }) => {
+				grantPickedBlueprintReward({ blueprint, card });
+				closeGoldenUnlockModal();
+				restoreGoldenUnlockModalCopy();
+			}
+		});
+	}
+
+	function buildFixedShapeRewardChoices(shapes, count = 3) {
+		const list = Array.isArray(shapes) ? shapes.filter(s => s && s.matrix) : [];
+		if (!list.length) return buildRewardChoices({ count });
+		const palette = NON_WILDCARD_COLORS.length ? NON_WILDCARD_COLORS : colors;
+		const pool = shuffleArray(list.map(entry => ({
+			name: entry.name,
+			matrix: cloneShape(entry.matrix),
+			category: 'large'
+		})));
+		const picks = [];
+		while (pool.length && picks.length < count) picks.push(pool.shift());
+		while (picks.length < count) {
+			picks.push(list[Math.floor(Math.random() * list.length)]);
+		}
+		return picks.map(entry => {
+			const baseColor = palette[Math.floor(Math.random() * palette.length)] || { name: 'grijs', code: '#a0a0a0' };
+			const color = cloneColor(baseColor);
+			const blueprint = createCardBlueprint(entry, color);
+			return { blueprint, card: instantiateBlueprint(blueprint) };
+		});
+	}
+
+	function openXLRewardPicker(sizeKey = 'xl') {
+		const isXXL = String(sizeKey).toLowerCase() === 'xxl';
+		const label = isXXL ? 'XXL' : 'XL';
+		const shapes = isXXL ? EXTRA_LARGE_7_SHAPES : XL_6_SHAPES;
+		const choices = buildFixedShapeRewardChoices(shapes, 3);
+		showRewardPickerModal({
+			titleText: `🧱 Kies je ${label} kaart`,
+			subtextHtml: `Je hebt <strong>${label} blokken</strong> ontgrendeld. Kies 1 uit 3.`,
 			choices,
 			onPick: ({ blueprint, card }) => {
 				grantPickedBlueprintReward({ blueprint, card });
