@@ -5026,6 +5026,41 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		margin: 0 auto;
 	}
 
+	/* Reward picker (golden/XL/XXL) - larger, balanced layout */
+	#golden-unlock-modal {
+		width: min(92vw, 680px);
+		max-height: 80vh;
+		padding: 18px 18px 20px;
+	}
+
+	#golden-unlock-modal h2 {
+		font-size: 1.3rem;
+		margin-bottom: 6px;
+	}
+
+	#golden-unlock-modal .modal-subtext {
+		font-size: 0.9rem;
+		margin-bottom: 6px;
+	}
+
+	#golden-unlock-content.deck-modal-grid {
+		grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+		gap: 14px;
+		padding: 0 8px 6px;
+		max-height: 56vh;
+	}
+
+	#golden-unlock-content.deck-modal-grid .card-option {
+		max-width: none;
+		min-height: 190px;
+		height: 190px;
+		padding: 8px;
+		gap: 8px;
+		justify-content: center;
+		align-items: center;
+		text-align: center;
+	}
+
 	/* Deck overview: smaller preview cells than the selectable hand cards. */
 	.deck-modal-grid .card-option {
 		--preview-cell: 14px;
