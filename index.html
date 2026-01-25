@@ -25195,11 +25195,10 @@ function getCollectedCoinCount(scores) {
 		}
 
 		const palette = NON_WILDCARD_COLORS.length ? NON_WILDCARD_COLORS : colors;
-		const multicolorChance = hasWildcardBoost ? 0.50 : hasWildcardUnlock ? 0.20 : 0.05;
-		const goldenChance = hasGoldUnlock ? 0.15 : 0.03;
-		const roll = Math.random();
-		const isMulticolor = roll < multicolorChance;
-		const isGolden = !isMulticolor && (Math.random() < goldenChance);
+		const multicolorChance = hasWildcardBoost ? 0.50 : hasWildcardUnlock ? 0.20 : 0.07;
+		const goldenChance = hasGoldUnlock ? 0.20 : 0.07;
+		const isMulticolor = Math.random() < multicolorChance;
+		const isGolden = Math.random() < goldenChance;
 		const baseColor = isMulticolor
 			? { name: 'multikleur', code: 'rainbow' }
 			: palette[Math.floor(Math.random() * palette.length)];
