@@ -5486,6 +5486,20 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			--preview-cell: 9px;
 		}
 
+		/* Reward picker (golden unlock) on mobile: keep 3 columns, smaller cells, bigger cards */
+		#golden-unlock-content.deck-modal-grid {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			gap: 10px;
+			padding: 0 4px;
+		}
+		#golden-unlock-content.deck-modal-grid .card-option {
+			max-width: none;
+			min-height: 156px;
+			height: 156px;
+			padding: 6px;
+			--preview-cell: 8px;
+		}
+
 		.deck-modal-grid .card-option .card-label {
 			font-size: 0.52rem;
 			padding: 2px 6px;
@@ -5541,6 +5555,20 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 		.deck-modal-grid .card-option {
 			--preview-cell: 8px;
+		}
+
+		/* Reward picker (golden unlock) on small phones */
+		#golden-unlock-content.deck-modal-grid {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			gap: 8px;
+			padding: 0 2px;
+		}
+		#golden-unlock-content.deck-modal-grid .card-option {
+			max-width: none;
+			min-height: 146px;
+			height: 146px;
+			padding: 5px;
+			--preview-cell: 7px;
 		}
 
 		.deck-modal-grid .card-option .card-label {
