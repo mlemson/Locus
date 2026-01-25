@@ -20761,20 +20761,15 @@ let shopLevel2Used = false;
 	} catch (e) {}
 
 	// Trap penalties should apply to the affected color and remain stable across updates.
+	// Keep base color scores intact; apply penalties/bonuses to local display values.
 	const trapPenaltyBreakdown = getTrapPenaltyBreakdown();
-	yellow -= Number(trapPenaltyBreakdown.yellow) || 0;
-	green -= Number(trapPenaltyBreakdown.green) || 0;
-	purple -= Number(trapPenaltyBreakdown.purple) || 0;
-	blue -= Number(trapPenaltyBreakdown.blue) || 0;
-	red -= Number(trapPenaltyBreakdown.red) || 0;
-	// Add any persistent score buffs granted by Bonus Echo cards.
 	const bonusScore = colorScoreBonuses || {};
-	yellow += Number(bonusScore.yellow || 0);
-	green += Number(bonusScore.green || 0);
-	purple += Number(bonusScore.purple || 0);
-	blue += Number(bonusScore.blue || 0);
-	red += Number(bonusScore.red || 0);
-	const waarden = [yellow, green, purple, blue, red];
+	const yellowFinal = yellow - (Number(trapPenaltyBreakdown.yellow) || 0) + Number(bonusScore.yellow || 0);
+	const greenFinal = green - (Number(trapPenaltyBreakdown.green) || 0) + Number(bonusScore.green || 0);
+	const purpleFinal = purple - (Number(trapPenaltyBreakdown.purple) || 0) + Number(bonusScore.purple || 0);
+	const blueFinal = blue - (Number(trapPenaltyBreakdown.blue) || 0) + Number(bonusScore.blue || 0);
+	const redFinal = red - (Number(trapPenaltyBreakdown.red) || 0) + Number(bonusScore.red || 0);
+	const waarden = [yellowFinal, greenFinal, purpleFinal, blueFinal, redFinal];
 	// Bonus should never go negative.
 	const baseBonus = Math.max(0, Math.min(...waarden));
 	const totalBonusScore = baseBonus + Math.max(0, blackHoleBonus || 0);
@@ -20788,17 +20783,17 @@ let shopLevel2Used = false;
 	  bonusEl.textContent = totalBonusScore;
 	  bonusEl.setAttribute('data-blackhole-extra', String(Math.max(0, blackHoleBonus || 0)));
 	}
-	document.getElementById('yellow-score').textContent = yellow;
-	document.getElementById('green-score').textContent = green;
-	document.getElementById('purple-score').textContent = purple;
-	document.getElementById('blue-score').textContent = blue;
-	document.getElementById('red-score').textContent = red;
+	document.getElementById('yellow-score').textContent = yellowFinal;
+	document.getElementById('green-score').textContent = greenFinal;
+	document.getElementById('purple-score').textContent = purpleFinal;
+	document.getElementById('blue-score').textContent = blueFinal;
+	document.getElementById('red-score').textContent = redFinal;
 	
 	// element ophalen
 	const totalScoreEl = document.getElementById('total-score');
 
 	// bereken nieuwe total
-	const newScore = (yellow + green + purple + blue + red + totalBonusScore);
+	const newScore = (yellowFinal + greenFinal + purpleFinal + blueFinal + redFinal + totalBonusScore);
 	const trapPenaltyOther = Number(trapPenaltyBreakdown.other) || 0;
 	const trapPenaltyTotal = Number(trapPenaltyBreakdown.total) || 0;
 	lastTrapPenaltyBreakdown = {
@@ -20846,11 +20841,11 @@ let shopLevel2Used = false;
 	}
 
 	const scoreSnapshot = {
-	  yellow,
-	  red,
-	  green,
-	  purple,
-	  blue,
+	  yellow: yellowFinal,
+	  red: redFinal,
+	  green: greenFinal,
+	  purple: purpleFinal,
+	  blue: blueFinal,
 	  bonus: totalBonusScore,
 	  blackHoleBonus,
 	  baseBonus,
