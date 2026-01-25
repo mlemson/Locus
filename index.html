@@ -34401,6 +34401,10 @@ body { background: transparent; }
 	}
 	if (roundModalRestart) {
 	  const handleRestart = () => {
+		if (lastRoundWasSuccess) {
+			showNewGameConfirm();
+			return;
+		}
 		hideAllModals();
 		startNewRun();
 	  };
