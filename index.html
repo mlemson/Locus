@@ -23141,15 +23141,29 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	  const metrics = getZoneMetrics(zone);
 	  const floorY = Number.isFinite(metrics.maxY) ? metrics.maxY : null;
 	  const touchesFloor = floorY !== null && pendingCells.some(cell => Number(cell.dataset.y) === floorY);
+	  let bottomBoldY = null;
+	  try {
+		const boldCells = Array.from(zone.querySelectorAll('.cell.bold-cell:not(.void-cell)'));
+		const boldYs = boldCells.map(c => Number(c.dataset.y)).filter(v => Number.isFinite(v));
+		if (boldYs.length) bottomBoldY = Math.max(...boldYs);
+	  } catch (e) {}
+	  const isBlueStartBold = (cell) => {
+		if (!cell || !cell.classList) return false;
+		if (!cell.classList.contains('bold-cell')) return false;
+		if (!Number.isFinite(bottomBoldY)) return false;
+		return Number(cell.dataset.y) === bottomBoldY;
+	  };
 	  
-	  // Blue: portals (portal-anchor/bold) zijn ALTIJD geldig als startpunt (direct erop plaatsen)
+	  // Blue: portals zijn ALTIJD geldig als startpunt (direct erop plaatsen)
 	  const touchesPortal = pendingCells.some(cell => {
 		if (!cell || !cell.classList) return false;
-		return cell.classList.contains('portal-cell') || cell.classList.contains('portal-anchor') || cell.classList.contains('bold-cell');
+		return cell.classList.contains('portal-cell') || cell.classList.contains('portal-anchor');
 	  });
+	  // Blue: alleen bold-startcells (onderste bold rij) zijn startpunten
+	  const touchesStartBold = pendingCells.some(cell => isBlueStartBold(cell));
 	  
-	  // Check if adjacent to any bold cell (allows shapes that touch but don't overlap the portal)
-	  const adjacentToBold = pendingCells.some(cell => {
+	  // Check if adjacent to portal or bottom bold-start cells
+	  const adjacentToStart = pendingCells.some(cell => {
 		if (!cell || !cell.classList) return false;
 		const x = Number(cell.dataset.x);
 		const y = Number(cell.dataset.y);
@@ -23160,17 +23174,17 @@ function optionalCellsTouchActive(zone, pendingCells) {
 			getCell(zone, x, y - 1),
 			getCell(zone, x, y + 1)
 		];
-		return neighbors.some(n => n && (n.classList.contains('bold-cell') || n.classList.contains('portal-anchor') || n.classList.contains('portal-cell')));
+		return neighbors.some(n => n && (n.classList.contains('portal-anchor') || n.classList.contains('portal-cell') || isBlueStartBold(n)));
 	  });
 	  
 	  const hasActive = zoneHasActiveCells(zone);
 	  // Als er nog geen actieve cellen zijn (eerste plaatsing)
-	  // Toegestaan: bodem raken OF portal/bold-cell (direct of aangrenzend)
-	  if (!hasActive) return touchesFloor || touchesPortal || adjacentToBold;
+	  // Toegestaan: bodem raken OF start-bold/portal (direct of aangrenzend)
+	  if (!hasActive) return touchesFloor || touchesPortal || touchesStartBold || adjacentToStart;
 	  
 	  // Als er wel actieve cellen zijn (volgende plaatsingen)
-	  // Toegestaan: bodem, portal (direct of aangrenzend), OF aangrenzend aan actieve cel
-	  if (touchesFloor || touchesPortal || adjacentToBold) return true;
+	  // Toegestaan: bodem, portal/start-bold (direct of aangrenzend), OF aangrenzend aan actieve cel
+	  if (touchesFloor || touchesPortal || touchesStartBold || adjacentToStart) return true;
 	  
 	  // Check ook optionele cellen voor adjacency
 	  const allCells = pendingCells.optionalCells ? [...pendingCells, ...pendingCells.optionalCells] : pendingCells;
@@ -23360,7 +23374,7 @@ function optionalCellsTouchActive(zone, pendingCells) {
 						touchesActiveBlock = true;
 						break;
 					}
-					if (adjacentCell && (adjacentCell.classList.contains('portal-cell') || adjacentCell.classList.contains('portal-anchor') || adjacentCell.classList.contains('bold-cell'))) {
+					if (adjacentCell && (adjacentCell.classList.contains('portal-cell') || adjacentCell.classList.contains('portal-anchor'))) {
 						touchesPortalAnchor = true;
 						break;
 					}
