@@ -139,6 +139,7 @@
 			--preview-gap: 2px;
 			--gap: 10px;
 			--radius: 10px;
+			--cell-radius: clamp(2px, calc(var(--cell-size) / 6), 6px);
 			--bottom-height: 70px;
 			--side-panel-width: 120px;
 			--card-size: 150px;
@@ -1442,7 +1443,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	}
 
 	#bottom-bar #card-choice-zone .card-option .card-cell {
-		border-radius: 1px;
+		border-radius: clamp(2px, calc(var(--card-cell-size, 22px) / 6), 6px);
 	}
 
 	  #bottom-bar #new-cards-btn {
@@ -1540,7 +1541,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	  }
 
 	  #bottom-bar #card-choice-zone .card-option .card-cell {
-		border-radius: 1px;
+		border-radius: clamp(2px, calc(var(--card-cell-size, 22px) / 6), 6px);
 	  }
 
 	/* Mobile: scale hand cards up on wider phones (use extra space).
@@ -2457,7 +2458,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	  color: #222;
 	  border: 1px solid #d8dee9;
 	  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-	  border-radius: calc(var(--cell-size) / 4);
+	  border-radius: var(--cell-radius);
 	  position:relative;
 	  user-select:none;
 	  display: flex;
@@ -4265,8 +4266,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	.card-option .card-cell {
 		width: var(--card-cell-size, 22px);
 		height: var(--card-cell-size, 22px);
-		/* Border-radius: max 5px, minder rond voor kleine cells */
-		border-radius: min(5px, calc(var(--card-cell-size, 22px) / 5));
+		/* Keep the same rounding style as board cells */
+		border-radius: clamp(2px, calc(var(--card-cell-size, 22px) / 6), 6px);
 		border: 1px solid rgba(12,16,30,0.12);
 		box-shadow: inset 0 0 4px rgba(0,0,0,0.18);
 		background: rgba(255,255,255,0.95);
@@ -8158,8 +8159,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		#bottom-bar #card-choice-zone .card-option .card-cell {
 			width: 7px;
 			height: 7px;
-			/* Border-radius: max 5px, minder rond */
-			border-radius: min(5px, calc(7px / 5));
+			/* Keep the same rounding style as board cells */
+			border-radius: clamp(2px, calc(7px / 6), 6px);
 			border: 1px solid rgba(12,16,30,0.1);
 			box-shadow: inset 0 0 1px rgba(0,0,0,0.12);
 		}
@@ -9206,8 +9207,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	.card-cell {
 	  width: var(--card-cell-size, 20px);
 	  height: var(--card-cell-size, 20px);
-	  /* Border-radius: max 5px, minder rond voor kleine cells */
-	  border-radius: 1px;
+	  /* Keep the same rounding style as board cells */
+	  border-radius: clamp(2px, calc(var(--card-cell-size, 20px) / 6), 6px);
 	}
 
 	.card.selected {
@@ -22391,8 +22392,8 @@ document.addEventListener('pointermove', ev => {
 			div.classList.add('card-cell');
 			div.style.width = `${cellSize}px`;
 			div.style.height = `${cellSize}px`;
-			// Border-radius: max 5px, minder rond voor kleine cells
-			div.style.borderRadius = `${Math.min(5, cellSize / 5)}px`;
+			// Keep the same rounding style as board cells
+			div.style.borderRadius = `${Math.max(2, Math.min(6, cellSize / 6))}px`;
 			if (cell) {
 			  let background;
 			  let shadow;
@@ -22487,8 +22488,8 @@ document.addEventListener('pointermove', ev => {
 		cellSizeStr = 'var(--cell-size)';
 	}
 	  
-	  // Border-radius is altijd size / 4
-	  const borderRadius = `${cellSize / 4}px`;
+	  // Border-radius matches board cells (less round on small screens)
+	  const borderRadius = `${Math.max(2, Math.min(6, cellSize / 6))}px`;
 	  
 	  block.style.gridTemplateColumns = `repeat(${shape[0].length}, ${cellSizeStr})`;
 	  block.style.gridTemplateRows = `repeat(${shape.length}, ${cellSizeStr})`;
@@ -22503,7 +22504,7 @@ document.addEventListener('pointermove', ev => {
 			div.style.width = cellSizeStr;
 			div.style.height = cellSizeStr;
 			div.style.margin = '0px';
-			// Border-radius consistent met speelveld: size / 4
+			// Border-radius consistent met speelveld
 			div.style.borderRadius = borderRadius;
 			div.style.boxSizing = 'border-box';
 			const key = `${colIdx},${rowIdx}`;
@@ -24195,7 +24196,7 @@ function getCollectedCoinCount(scores) {
 				const cellEl = preview.querySelector('.purchased-block-cell');
 				if (cellEl && Number.isFinite(cellSize) && cellSize > 6) {
 					cellEl.style.width = cellEl.style.height = `${cellSize}px`;
-					cellEl.style.borderRadius = `${Math.min(8, Math.round(cellSize / 4))}px`;
+					cellEl.style.borderRadius = `${Math.max(2, Math.min(6, Math.round(cellSize / 6)))}px`;
 				}
 			} else {
 				// restore default CSS sizing
