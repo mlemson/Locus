@@ -5122,6 +5122,50 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  backdrop-filter: blur(6px);
 	}
 
+	.blackhole-modal h2 {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+	}
+
+	.blackhole-hero {
+		position: relative;
+		width: 64px;
+		height: 64px;
+		flex: 0 0 auto;
+		border-radius: 50%;
+		background: radial-gradient(circle at 40% 35%, rgba(130, 150, 255, 0.35), rgba(40, 50, 110, 0.65) 45%, rgba(8, 10, 22, 0.95) 70%);
+		box-shadow: 0 0 22px rgba(110, 140, 255, 0.45), inset 0 0 12px rgba(0,0,0,0.6);
+		overflow: hidden;
+	}
+	.blackhole-hero::before {
+		content: '';
+		position: absolute;
+		inset: -20%;
+		border-radius: 50%;
+		background: conic-gradient(from 0deg, rgba(120, 180, 255, 0.0), rgba(120, 180, 255, 0.35), rgba(120, 180, 255, 0.0));
+		animation: blackhole-spin 6s linear infinite;
+	}
+	.blackhole-hero::after {
+		content: '';
+		position: absolute;
+		inset: 18%;
+		border-radius: 50%;
+		background: radial-gradient(circle, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 55%, rgba(70, 90, 180, 0.2) 100%);
+		box-shadow: inset 0 0 12px rgba(0,0,0,0.8);
+	}
+
+	@keyframes blackhole-spin {
+		0% { transform: rotate(0deg); }
+		100% { transform: rotate(360deg); }
+	}
+
+	.blackhole-subtext {
+		color: rgba(210, 225, 255, 0.8);
+		font-weight: 500;
+	}
+
 	.blackhole-card-grid {
 	  margin-top: 16px;
 	  gap: 14px;
@@ -5130,21 +5174,125 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	.blackhole-card-grid .blackhole-card {
 	  pointer-events: auto;
 	  cursor: pointer;
-	  background: linear-gradient(160deg, rgba(255,255,255,0.06), rgba(120,130,255,0.08));
+	  background: transparent;
 	  border: 1px solid rgba(130, 160, 255, 0.25);
 	  box-shadow: 0 14px 32px rgba(0, 10, 40, 0.35);
-	  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.2s ease;
+	  border-radius: 14px;
+	  padding: 0;
+	  aspect-ratio: 1;
+	  position: relative;
+	  perspective: 900px;
+	  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 	}
 
 	.blackhole-card-grid .blackhole-card:hover {
 	  transform: translateY(-4px);
-	  background: linear-gradient(160deg, rgba(255,255,255,0.12), rgba(150,170,255,0.16));
 	  box-shadow: 0 22px 36px rgba(40, 32, 88, 0.32);
 	}
 
 	.blackhole-card-grid .blackhole-card.selected {
 	  border-color: rgba(140, 190, 255, 0.8);
 	  box-shadow: 0 26px 44px rgba(70, 120, 220, 0.35), 0 0 0 1px rgba(140, 190, 255, 0.45);
+	}
+
+	.blackhole-card-inner {
+		position: absolute;
+		inset: 0;
+		border-radius: 12px;
+		transform-style: preserve-3d;
+		transition: transform 0.6s cubic-bezier(0.2, 0.6, 0.2, 1);
+	}
+
+	.blackhole-card.is-revealed .blackhole-card-inner {
+		transform: rotateY(180deg);
+	}
+
+	.blackhole-card-face {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 12px;
+		backface-visibility: hidden;
+		font-weight: 700;
+		letter-spacing: 0.4px;
+	}
+
+	.blackhole-card-front {
+		background: linear-gradient(140deg, rgba(30, 38, 80, 0.75), rgba(12, 16, 32, 0.95));
+		color: rgba(220, 235, 255, 0.9);
+		border: 1px solid rgba(120, 150, 255, 0.2);
+		box-shadow: inset 0 0 12px rgba(0,0,0,0.45);
+		font-size: 26px;
+	}
+
+	.blackhole-card-front::after {
+		content: '';
+		position: absolute;
+		inset: 8px;
+		border-radius: 10px;
+		border: 1px dashed rgba(140, 170, 255, 0.2);
+	}
+
+	.blackhole-card-back {
+		transform: rotateY(180deg);
+		color: #0b0e1a;
+		font-size: 22px;
+		background: linear-gradient(150deg, rgba(220, 230, 255, 0.95), rgba(160, 180, 240, 0.92));
+	}
+
+	.blackhole-card--points .blackhole-card-back {
+		background: linear-gradient(150deg, #ecf2ff, #b9c8ff);
+		color: #1b2350;
+		box-shadow: inset 0 0 20px rgba(120, 140, 255, 0.45);
+	}
+
+	.blackhole-card--coins .blackhole-card-back {
+		background: linear-gradient(150deg, #ecfff1, #b9f2c6);
+		color: #1e4b2c;
+		box-shadow: inset 0 0 20px rgba(90, 190, 120, 0.35);
+	}
+
+	.blackhole-card--multiplier .blackhole-card-back {
+		background: linear-gradient(150deg, #fff5c2, #ffd36c);
+		color: #5a3d00;
+		box-shadow: inset 0 0 20px rgba(255, 200, 60, 0.45);
+	}
+
+	.blackhole-card--blackhole .blackhole-card-back {
+		background: radial-gradient(circle at 40% 35%, rgba(110, 130, 255, 0.35), rgba(12, 16, 32, 0.9) 55%, #020205 100%);
+		color: #ff9aa0;
+		box-shadow: inset 0 0 26px rgba(30, 20, 60, 0.85), 0 0 18px rgba(90, 40, 120, 0.5);
+	}
+
+	.blackhole-modal.effect-pulse {
+		animation: blackhole-pulse 0.6s ease;
+	}
+	.blackhole-modal.effect-spark {
+		animation: blackhole-spark 0.7s ease;
+	}
+	.blackhole-modal.effect-shake {
+		animation: blackhole-shake 0.6s ease;
+	}
+
+	@keyframes blackhole-pulse {
+		0% { transform: scale(1); box-shadow: 0 18px 48px rgba(0, 6, 28, 0.55); }
+		50% { transform: scale(1.02); box-shadow: 0 22px 60px rgba(80, 110, 220, 0.45); }
+		100% { transform: scale(1); box-shadow: 0 18px 48px rgba(0, 6, 28, 0.55); }
+	}
+	@keyframes blackhole-spark {
+		0% { transform: scale(1); }
+		40% { transform: scale(1.03); }
+		100% { transform: scale(1); }
+	}
+	@keyframes blackhole-shake {
+		0% { transform: translateX(0); }
+		20% { transform: translateX(-4px); }
+		40% { transform: translateX(4px); }
+		60% { transform: translateX(-3px); }
+		80% { transform: translateX(3px); }
+		100% { transform: translateX(0); }
 	}
 
 	.blackhole-stats {
@@ -12691,8 +12839,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		</div>
 		<div id="blackhole-modal-layer" class="modal-overlay" aria-hidden="true">
 			<div id="blackhole-modal" class="game-modal blackhole-modal" role="dialog" aria-modal="true" aria-labelledby="blackhole-modal-title" tabindex="-1">
-				<h2 id="blackhole-modal-title">Zwart Gat Challenge</h2>
-				<p id="blackhole-modal-subtext" class="modal-subtext"></p>
+				<h2 id="blackhole-modal-title">Zwart Gat Challenge <span class="blackhole-hero" aria-hidden="true"></span></h2>
+				<p id="blackhole-modal-subtext" class="modal-subtext blackhole-subtext"></p>
 				<div class="blackhole-stats">
 					<span>Kaarten gekozen: <strong id="blackhole-selection-count">0</strong>/<span id="blackhole-selection-limit">0</span></span>
 					<span>Potentiële bonus: <strong id="blackhole-reward">0</strong></span>
@@ -13077,6 +13225,23 @@ let shopLevel2Used = false;
 		if (upgradeId === 'miniPack34') return !!(UPGRADES.miniPack34?.purchased || UPGRADES.compactCards?.purchased);
 		if (upgradeId === 'compactCards') return !!(UPGRADES.compactCards?.purchased || UPGRADES.miniPack34?.purchased);
 		return UPGRADES[upgradeId]?.purchased || false;
+	}
+
+	function isUpgradeAvailable(upgradeId, levelOverride = null, worldOverride = null) {
+		const lvl = Number(levelOverride ?? (typeof currentLevel !== 'undefined' ? currentLevel : 1)) || 1;
+		let world = worldOverride;
+		if (!Number.isFinite(Number(world))) {
+			try {
+				if (typeof currentWorld !== 'undefined' && Number.isFinite(Number(currentWorld))) world = currentWorld;
+			} catch (e) {}
+		}
+		if (!Number.isFinite(Number(world))) {
+			try {
+				world = Number((typeof getWorldAndSubLevel === 'function' ? getWorldAndSubLevel(lvl)?.world : 1) || 1);
+			} catch (e) { world = 1; }
+		}
+		if (!UNLOCK_PROGRESSION || typeof UNLOCK_PROGRESSION.isUpgradeUnlocked !== 'function') return false;
+		return !!UNLOCK_PROGRESSION.isUpgradeUnlocked(upgradeId, lvl, Number(world) || 1);
 	}
 
 	function isWorld2Upgrade(upgradeId) {
@@ -15076,6 +15241,7 @@ let shopLevel2Used = false;
 	let bonusCoinMilestones = 0;
 	let activeTraps = [];
 	let trapIdCounter = 0;
+	let blackHoleTrapPlaced = false;
 	let lastTrapHighlightId = null;
 	let lastTrapPenaltyBreakdown = {
 		yellow: 0,
@@ -19472,15 +19638,19 @@ let shopLevel2Used = false;
 	function decorateTrapCell(cell, options = {}) {
 	  if (!cell) return 'pit';
 	  const { forceType = null, blackHoleChance = BLACK_HOLE_DEFAULT_CHANCE } = options;
+	  const hasExistingBlackHole = blackHoleTrapPlaced || !!document.querySelector('.cell.trap-cell[data-trap-type="blackHole"]');
 	  let trapType = forceType;
 	  if (!trapType) {
 		const chance = Math.max(0, Math.min(1, Number(blackHoleChance) || 0));
 		trapType = chance > 0 && Math.random() < chance ? 'blackHole' : 'pit';
+		if (trapType === 'blackHole' && hasExistingBlackHole) trapType = 'pit';
+	  } else if (trapType === 'blackHole' && hasExistingBlackHole) {
+		trapType = 'pit';
 	  }
 	  cell.classList.add('trap-cell');
 	  cell.dataset.trap = 'true';
 	  cell.dataset.trapType = trapType;
-	const shouldRevealTrap = trapType !== 'blackHole' || hasUpgrade('blackHoleAccess');
+	const shouldRevealTrap = trapType !== 'blackHole' || hasUpgrade('blackHoleAccess') || isUpgradeAvailable('blackHoleAccess');
 	if (shouldRevealTrap) {
 		const symbol = document.createElement('div');
 		symbol.classList.add('symbol', 'trap-symbol');
@@ -19488,6 +19658,7 @@ let shopLevel2Used = false;
 		else symbol.classList.add('trap-symbol--pit');
 		cell.appendChild(symbol);
 	}
+	if (trapType === 'blackHole') blackHoleTrapPlaced = true;
 	  return trapType;
 	}
 
@@ -19588,7 +19759,8 @@ let shopLevel2Used = false;
 	  if (!preview || !countEl) return;
 	  
 	const blackHoleUnlocked = hasUpgrade('blackHoleAccess');
-	const visibleTraps = activeTraps.filter(trap => trap.type !== 'blackHole' || blackHoleUnlocked);
+	const blackHoleVisible = blackHoleUnlocked || isUpgradeAvailable('blackHoleAccess');
+	const visibleTraps = activeTraps.filter(trap => trap.type !== 'blackHole' || blackHoleVisible);
 	const trapCount = visibleTraps.length;
 	
 	// Set data attribute op body voor CSS styling (voor toekomstig gebruik)
@@ -19602,7 +19774,7 @@ let shopLevel2Used = false;
 		const penalty = Number(trap.penalty) || 0;
 		return penalty > 0 ? sum + penalty : sum;
 	}, 0);
-	const specialCount = blackHoleUnlocked ? visibleTraps.filter(trap => trap.type === 'blackHole').length : 0;
+	const specialCount = blackHoleVisible ? visibleTraps.filter(trap => trap.type === 'blackHole').length : 0;
 	const penaltyCount = visibleTraps.filter(trap => trap.type !== 'blackHole').length;
 	const scoreboardEl = document.getElementById('scoreboard');
 	const isScoreboardInBottomBar = !!(scoreboardEl && scoreboardEl.closest('#bottom-bar'));
@@ -19702,6 +19874,7 @@ let shopLevel2Used = false;
 	const trapType = cell.dataset.trapType || 'pit';
 	const isBlackHole = trapType === 'blackHole';
 	const blackHoleUnlocked = isBlackHole && hasUpgrade('blackHoleAccess');
+	const blackHoleVisible = isBlackHole && (blackHoleUnlocked || isUpgradeAvailable('blackHoleAccess'));
 	const penaltyValue = isBlackHole ? 0 : TRAP_PENALTY;
 	  const prospective = {
 		id: trapId,
@@ -19735,7 +19908,7 @@ let shopLevel2Used = false;
 		// Also show the -points near the affected color score row (so it's clearly visible)
 		showTrapPenaltyAtScoreRow(normalizedZone, penaltyValue);
 	  }
-	const trapVisible = !isBlackHole || blackHoleUnlocked;
+	const trapVisible = !isBlackHole || blackHoleVisible;
 	if (silent) renderTrapSummary();
 	else if (trapVisible) renderTrapSummary({ highlightId: trapId });
 	else renderTrapSummary();
@@ -19794,6 +19967,7 @@ let shopLevel2Used = false;
 	function resetTrapState() {
 	  activeTraps = [];
 	  lastTrapHighlightId = null;
+	  blackHoleTrapPlaced = false;
 	  lastTrapPenaltyBreakdown = {
 		yellow: 0,
 		red: 0,
@@ -24853,18 +25027,17 @@ function getCollectedCoinCount(scores) {
 	  card.classList.add('card', 'blackhole-card');
 	  card.dataset.cardIndex = String(index);
 	  card.tabIndex = 0;
-	  
-	  // Initial state: Face down
-	  card.textContent = '?';
-	  card.style.aspectRatio = '1';
-	  card.style.display = 'flex';
-	  card.style.alignItems = 'center';
-	  card.style.justifyContent = 'center';
-	  card.style.fontSize = '24px';
-	  card.style.fontWeight = 'bold';
-	  card.style.background = 'linear-gradient(135deg, #444, #222)';
-	  card.style.color = '#fff';
-	  card.style.cursor = 'pointer';
+
+	  const inner = document.createElement('div');
+	  inner.classList.add('blackhole-card-inner');
+	  const front = document.createElement('div');
+	  front.classList.add('blackhole-card-face', 'blackhole-card-front');
+	  front.textContent = '?';
+	  const back = document.createElement('div');
+	  back.classList.add('blackhole-card-face', 'blackhole-card-back');
+	  inner.appendChild(front);
+	  inner.appendChild(back);
+	  card.appendChild(inner);
 	  
 	  card.addEventListener('click', () => handleBlackHoleCardClick(index));
 	  card.addEventListener('keydown', event => {
@@ -24877,23 +25050,13 @@ function getCollectedCoinCount(scores) {
 	}
 
 	function revealCardVisuals(card, cardData) {
-		card.innerHTML = cardData.label;
-		card.style.background = '#fff';
-		card.style.color = '#000';
+		if (!card || !cardData) return;
+		const back = card.querySelector('.blackhole-card-back');
+		if (back) back.innerHTML = cardData.label;
+		card.classList.add('is-revealed');
+		card.classList.remove('blackhole-card--points', 'blackhole-card--coins', 'blackhole-card--multiplier', 'blackhole-card--blackhole');
+		card.classList.add(`blackhole-card--${cardData.type}`);
 		card.style.cursor = 'default';
-		
-		if (cardData.type === 'blackhole') {
-			card.style.background = '#000';
-			card.style.color = 'red';
-			card.style.border = '2px solid red';
-		} else if (cardData.type === 'multiplier') {
-			card.style.background = '#ffd700'; // Gold
-		} else if (cardData.type === 'coins') {
-			card.style.background = '#e8fff0';
-			card.style.border = '1px solid rgba(60, 170, 90, 0.55)';
-		} else {
-			card.style.background = '#e0e0e0';
-		}
 	}
 
 	function renderBlackHoleCards() {
@@ -24974,6 +25137,15 @@ function getCollectedCoinCount(scores) {
 	  
 	  const cardEl = blackHoleCardGrid.children[index];
 	  if (cardEl) revealCardVisuals(cardEl, cardData);
+	  const triggerBlackHoleEffect = (effect) => {
+		if (!blackHoleModal || !effect) return;
+		blackHoleModal.classList.remove('effect-pulse', 'effect-spark', 'effect-shake');
+		void blackHoleModal.offsetWidth;
+		blackHoleModal.classList.add(effect);
+		setTimeout(() => {
+			try { blackHoleModal.classList.remove(effect); } catch (_) {}
+		}, 700);
+	  };
 
 	  if (cardData.type === 'blackhole') {
 		blackHoleState.reward = 0;
@@ -24982,6 +25154,7 @@ function getCollectedCoinCount(scores) {
 		const penalty = Math.min(getSpendableCoinCount(), TRAP_PENALTY || 5);
 		for (let i = 0; i < penalty; i++) removeCoin();
 		showBlackHoleFeedback(penalty > 0 ? `⚫ ZWART GAT! -${penalty}🪙` : '⚫ ZWART GAT!', 'warn');
+		triggerBlackHoleEffect('effect-shake');
 		
 		// Reveal all
 		blackHoleState.cards.forEach((c, i) => {
@@ -24997,12 +25170,15 @@ function getCollectedCoinCount(scores) {
 	  } else if (cardData.type === 'multiplier') {
 		blackHoleState.reward *= cardData.value;
 		showBlackHoleFeedback(`Bonus x${cardData.value}!`, 'info');
+		triggerBlackHoleEffect('effect-spark');
 	  } else if (cardData.type === 'coins') {
 		blackHoleState.coins = (blackHoleState.coins || 0) + (Number(cardData.value) || 0);
 		showBlackHoleFeedback(`+${cardData.value}🪙`, 'info');
+		triggerBlackHoleEffect('effect-pulse');
 	  } else {
 		blackHoleState.reward += cardData.value;
 		showBlackHoleFeedback(`+${cardData.value} punten`, 'info');
+		triggerBlackHoleEffect('effect-pulse');
 	  }
 
 	  updateBlackHoleSelectionUI();
@@ -27859,19 +28035,19 @@ function resetWorldLayoutStyles() {
 
 	  // Alleen traps genereren vanaf level 5, met scaling naar level 10
 	  const shouldGenerateTraps = currentLevel >= 5;
-	  const hasBlackHoleUpgrade = hasUpgrade('blackHoleAccess');
+	  const blackHoleAvailable = isUpgradeAvailable('blackHoleAccess');
 	  // Trap chance schaalt van 0.05 (level 5) naar 0.09 (level 10+)
 	  const baseTrapChance = shouldGenerateTraps ? (currentLevel >= 10 ? 0.09 : 0.05) : 0;
 	  const trapChance = baseTrapChance;
 	  const maxTraps = shouldGenerateTraps ? (currentLevel >= 10 ? 8 : 5) : 0;
-	  const blackHoleChance = hasBlackHoleUpgrade ? BLACK_HOLE_DEFAULT_CHANCE : 0;
+	  const blackHoleChance = blackHoleAvailable ? BLACK_HOLE_DEFAULT_CHANCE : 0;
 	  
 	  // Als black hole upgrade is gekocht: maximaal 1 black hole per level
-	  const blackHoleOnlyChance = hasBlackHoleUpgrade && !shouldGenerateTraps ? 0.10 : 0;
-	  const blackHoleOnlyMaxTraps = hasBlackHoleUpgrade && !shouldGenerateTraps ? 1 : 0;
+	  const blackHoleOnlyChance = blackHoleAvailable && !shouldGenerateTraps ? 0.10 : 0;
+	  const blackHoleOnlyMaxTraps = blackHoleAvailable && !shouldGenerateTraps ? 1 : 0;
 
 	  const boardConfigs = [
-		() => createGrid('yellow-grid', yellowRows, yellowCols, { goldCells: true, symbols: true, minSymbols: 8, maxSymbols: 8, coinChance: 0.22, maxCoins: 17, rowLengths: yellowRowPattern, rowOffsets: yellowRowOffsets, boldColumns: [0], pointsPerColumn: yellowColumnPoints, columnShading: true, trapChance: trapChance || blackHoleOnlyChance, maxTraps: maxTraps || blackHoleOnlyMaxTraps, blackHoleChance: hasBlackHoleUpgrade ? 1.0 : 0 }),
+		() => createGrid('yellow-grid', yellowRows, yellowCols, { goldCells: true, symbols: true, minSymbols: 8, maxSymbols: 8, coinChance: 0.22, maxCoins: 17, rowLengths: yellowRowPattern, rowOffsets: yellowRowOffsets, boldColumns: [0], pointsPerColumn: yellowColumnPoints, columnShading: true, trapChance: trapChance || blackHoleOnlyChance, maxTraps: maxTraps || blackHoleOnlyMaxTraps, blackHoleChance: blackHoleAvailable ? 1.0 : 0 }),
 		() => {
 			const isIntroLevel = Number(currentLevel || 0) === 0;
 			const purpleOptions = {
@@ -27884,7 +28060,7 @@ function resetWorldLayoutStyles() {
 				avoidAdjacentBold: true,
 				trapChance: (shouldGenerateTraps ? 0.08 : 0) || blackHoleOnlyChance,
 				maxTraps: shouldGenerateTraps ? 7 : 0,
-				blackHoleChance: hasBlackHoleUpgrade && shouldGenerateTraps ? 0.3 : 0
+				blackHoleChance: blackHoleAvailable && shouldGenerateTraps ? 0.3 : 0
 			};
 			if (isIntroLevel) {
 				purpleOptions.randomBoldCount = 0;
@@ -27958,10 +28134,10 @@ function resetWorldLayoutStyles() {
 	  
 	  // Trap/black hole configuratie
 	  const shouldGenerateTraps = currentLevel >= 15; // World 2 start met traps vanaf sublevel 5
-	  const hasBlackHoleUpgrade = hasUpgrade('blackHoleAccess');
+	  const blackHoleAvailable = isUpgradeAvailable('blackHoleAccess');
 	  const trapChance = shouldGenerateTraps ? 0.12 : 0.05;
 	  const maxTraps = shouldGenerateTraps ? 12 : 3;
-	  const blackHoleChance = hasBlackHoleUpgrade ? BLACK_HOLE_DEFAULT_CHANCE : 0;
+	  const blackHoleChance = blackHoleAvailable ? BLACK_HOLE_DEFAULT_CHANCE : 0;
 	  
 	  // GEEL: Verschillende vormen (diamant, ster, spiraal, etc) in plaats van lijnen
 	  // Grotere grids met speciale patronen die je moet voltooien
@@ -28348,10 +28524,10 @@ function resetWorldLayoutStyles() {
 	  const { subLevel } = getWorldAndSubLevel(currentLevel);
 	  
 	  // World 3: Meer traps en hogere moeilijkheid
-	  const hasBlackHoleUpgrade = hasUpgrade('blackHoleAccess');
+	  const blackHoleAvailable = isUpgradeAvailable('blackHoleAccess');
 	  const trapChance = 0.05 + (subLevel * 0.01); // 5-15% trap chance
 	  const maxTraps = 10 + subLevel; // 10-20 max traps
-	  const blackHoleChance = hasBlackHoleUpgrade ? BLACK_HOLE_DEFAULT_CHANCE : 0;
+	  const blackHoleChance = blackHoleAvailable ? BLACK_HOLE_DEFAULT_CHANCE : 0;
 	  
 	  // GEEL: Mega diamant patroon - combinatie van World 1 kolommen + World 2 vormen
 	  // Grotere vorm met diagonale scoring
@@ -33614,6 +33790,7 @@ function monitorScenarioProgress() {
 			activeTraps = [];
 			trapIdCounter = 0;
 			lastTrapHighlightId = null;
+			blackHoleTrapPlaced = !!document.querySelector('.cell.trap-cell[data-trap-type="blackHole"]');
 		} catch (e) {}
 		const triggered = Array.from(document.querySelectorAll('.cell[data-trap-triggered="true"], .cell.trap-triggered'));
 		// Deduplicate by coordinate to avoid counting placeholder clones
