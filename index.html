@@ -17900,14 +17900,11 @@ let shopLevel2Used = false;
 		if (mobileZoomResizeBound) return;
 		mobileZoomResizeBound = true;
 		window.addEventListener('resize', () => {
-			if (activeZoomZone) applyMobileZoomSizing(activeZoomZone);
-			// Keep zone heights aligned when the viewport changes.
-			try { syncZoneHeights(); } catch (e) {}
+			try { if (typeof scheduleLayoutReflow === 'function') scheduleLayoutReflow(60); } catch (_) {}
 		}, { passive: true });
 		if (window.visualViewport) {
 			window.visualViewport.addEventListener('resize', () => {
-				if (activeZoomZone) applyMobileZoomSizing(activeZoomZone);
-				try { syncZoneHeights(); } catch (e) {}
+				try { if (typeof scheduleLayoutReflow === 'function') scheduleLayoutReflow(60); } catch (_) {}
 			}, { passive: true });
 		}
 	}
@@ -24622,10 +24619,6 @@ function getCollectedCoinCount(scores) {
 	  container.addEventListener('scroll', () => {
 		updateHandScrollControls();
 	  }, { passive: true });
-
-	  window.addEventListener('resize', () => {
-		updateHandScrollControls();
-	  }, { passive: true });
 	}
 
 	function populateDeckModalContent() {
@@ -27807,19 +27800,27 @@ function openShopModal(callback) {
 
 function resetWorldLayoutStyles() {
 	const zoneIds = ['yellow-zone', 'purple-zone', 'green-zone', 'blue-zone', 'red-zone'];
-	const gridIds = ['yellow-grid', 'purple-grid', 'green-grid', 'blue-grid'];
+	const gridIds = ['yellow-grid', 'purple-grid', 'green-grid', 'blue-grid', 'red-grid'];
 	zoneIds.forEach(id => {
 		const el = document.getElementById(id);
 		if (!el || !el.style) return;
-		['width','height','min-width','max-width','min-height','max-height','overflow','overflow-x','overflow-y','transform'].forEach(prop => {
+		['width','height','min-width','max-width','min-height','max-height','overflow','overflow-x','overflow-y','transform','transform-origin','position','top','left','right','bottom'].forEach(prop => {
 			try { el.style.removeProperty(prop); } catch (_) {}
 		});
 	});
 	gridIds.forEach(id => {
 		const el = document.getElementById(id);
 		if (!el || !el.style) return;
-		['margin','margin-left','margin-right','margin-top','margin-bottom','justify-content','transform'].forEach(prop => {
+		['margin','margin-left','margin-right','margin-top','margin-bottom','justify-content','transform','transform-origin','width','height'].forEach(prop => {
 			try { el.style.removeProperty(prop); } catch (_) {}
+		});
+	});
+	// Also reset board columns
+	const columns = document.querySelectorAll('#board > .column');
+	columns.forEach(col => {
+		if (!col || !col.style) return;
+		['width','height','min-width','max-width','min-height','max-height','transform','transform-origin','position'].forEach(prop => {
+			try { col.style.removeProperty(prop); } catch (_) {}
 		});
 	});
 }
@@ -28684,7 +28685,7 @@ function resetWorldLayoutStyles() {
 	  const yellowShape = {
 		pattern: [4, 6, 8, 10, 12, 12, 12, 12, 10, 8, 6, 4],
 		offsets: [4, 3, 2, 1, 0, 0, 0, 0, 1, 2, 3, 4],
-		boldCells: [[0,0], [0,1], [5,3], [5,8], [6,3], [6,8], [11,0], [11,1], [3,5], [3,6], [8,5], [8,6]]
+		boldCells: [[5,5], [5,6], [6,5], [6,6]]
 	  };
 	  const yellowRows = yellowShape.pattern.length;
 	  // Use the true bounding width (max(offset + length)), not max(length)+max(offset).
@@ -28905,6 +28906,7 @@ function resetWorldLayoutStyles() {
 			maxCoins: 16,
 			rowLengths: yellowShape.pattern,
 			rowOffsets: yellowShape.offsets,
+			fixedBoldCells: yellowShape.boldCells,
 			boldColumns: [],
 			pointsPerColumn: yellowColumnPoints,
 			diagonalShading: false,
@@ -28917,12 +28919,26 @@ function resetWorldLayoutStyles() {
 		  });
 		  const yellowZone = document.getElementById('yellow-zone');
 		  if (yellowZone && yellowShape.boldCells) {
+			const cleanupYellowStartCell = (cell) => {
+				if (!cell) return;
+				cell.classList.remove('gold-cell');
+				cell.querySelectorAll('.symbol').forEach(s => s.remove());
+				if (cell.classList.contains('trap-cell')) {
+					cell.classList.remove('trap-cell');
+					delete cell.dataset.trap;
+					delete cell.dataset.trapType;
+					delete cell.dataset.trapTriggered;
+					delete cell.dataset.trapInstanceId;
+					cell.querySelectorAll('.trap-symbol').forEach(s => s.remove());
+				}
+			};
 			yellowShape.boldCells.forEach(([row, col]) => {
 			  const cell = getCell(yellowZone, col, row);
-			  if (cell && !cell.classList.contains('bold-cell')) {
-				cell.classList.add('bold-cell');
-			  }
+			  if (!cell) return;
+			  if (!cell.classList.contains('bold-cell')) cell.classList.add('bold-cell');
+			  cleanupYellowStartCell(cell);
 			});
+			yellowZone.querySelectorAll('.cell.bold-cell').forEach(cleanupYellowStartCell);
 		  }
 		},
 		
@@ -34710,9 +34726,6 @@ body { background: transparent; }
 			closeDeckModal();
 		}
 	});
-	window.addEventListener('resize', () => {
-		renderTrapSummary();
-	});
 	if (roundModalNext) {
 	  const handleRoundNext = () => {
 		console.log('🎯 Round modal Next clicked, lastRoundWasSuccess:', lastRoundWasSuccess);
@@ -35263,6 +35276,70 @@ body { background: transparent; }
 		document.body.classList.add('board-mobile-scaled');
 	}
 
+	// Remove desktop-wrapper when switching layouts to force rebuild
+	// Defined before moveGameElements so it can be called from there
+	function cleanupDesktopWrapper() {
+		const desktopWrapper = document.getElementById('desktop-wrapper');
+		if (!desktopWrapper) return;
+		
+		// Get references to elements that need to be restored
+		const board = document.getElementById('board');
+		const score = document.getElementById('scoreboard');
+		const coins = document.getElementById('gold-zone');
+		const objective = document.getElementById('objective-zone');
+		const bonus = document.getElementById('bonus-zone');
+		const cards = document.getElementById('card-choice-zone');
+		const controls = document.getElementById('controls');
+		
+		// Find original containers
+		const origCoins = document.getElementById('original-coins-zone');
+		const origScore = document.getElementById('original-score-zone');
+		const origCards = document.getElementById('original-card-zone');
+		const origBonus = document.getElementById('original-bonus-zone');
+		const origObjective = document.getElementById('original-objective-zone');
+		
+		// Restore elements to original containers
+		if (score && origScore && !origScore.contains(score)) {
+			origScore.appendChild(score);
+		}
+		if (coins && origCoins && !origCoins.contains(coins)) {
+			origCoins.appendChild(coins);
+		}
+		if (cards && origCards && !origCards.contains(cards)) {
+			origCards.appendChild(cards);
+		}
+		if (bonus && origBonus && !origBonus.contains(bonus)) {
+			origBonus.appendChild(bonus);
+		}
+		if (objective && origObjective && !origObjective.contains(objective)) {
+			origObjective.appendChild(objective);
+		}
+		
+		// Move board back to body (before mobile-landscape-wrapper if it exists)
+		const mlWrapper = document.getElementById('mobile-landscape-wrapper');
+		if (board && board.parentNode !== document.body) {
+			if (mlWrapper) {
+				document.body.insertBefore(board, mlWrapper.nextSibling);
+			} else {
+				// Find a suitable position - after any wrapper containers
+				const bottomBar = document.getElementById('bottom-bar');
+				if (bottomBar) {
+					document.body.insertBefore(board, bottomBar);
+				} else {
+					document.body.appendChild(board);
+				}
+			}
+		}
+		
+		// Move controls back to body
+		if (controls && controls.parentNode !== document.body) {
+			document.body.appendChild(controls);
+		}
+		
+		// Now remove the empty desktop wrapper
+		desktopWrapper.remove();
+	}
+
 	function moveGameElements() {
 	  const width = window.innerWidth;
 	  const height = window.innerHeight;
@@ -35357,14 +35434,9 @@ body { background: transparent; }
 				if (!mlWrapper || !mlLeft || !mlCenter || !mlRight) {
 					console.warn('Mobile landscape wrapper elements not found, cannot use sidebar layout');
 				} else {
-				// Remove desktop wrapper if exists
-				const desktopWrapper = document.getElementById('desktop-wrapper');
-				if (desktopWrapper) {
-					const parent = desktopWrapper.parentNode;
-					while (desktopWrapper.firstChild) {
-						parent.insertBefore(desktopWrapper.firstChild, desktopWrapper);
-					}
-					desktopWrapper.remove();
+				// Remove desktop wrapper if exists - use centralized cleanup
+				if (document.getElementById('desktop-wrapper')) {
+					cleanupDesktopWrapper();
 				}
 				
 				// Show wrapper
@@ -35416,14 +35488,9 @@ body { background: transparent; }
 
 				if (isMobile) {
 				const isClassicMode = document.body.classList.contains('classic-mode');
-				// Remove desktop wrapper if exists
-				const desktopWrapper = document.getElementById('desktop-wrapper');
-				if (desktopWrapper) {
-					const parent = desktopWrapper.parentNode;
-					while (desktopWrapper.firstChild) {
-						parent.insertBefore(desktopWrapper.firstChild, desktopWrapper);
-					}
-					desktopWrapper.remove();
+				// Remove desktop wrapper if exists - use centralized cleanup
+				if (document.getElementById('desktop-wrapper')) {
+					cleanupDesktopWrapper();
 				}
 				
 					// Move elements to bottom bar sections
@@ -35700,6 +35767,148 @@ body { background: transparent; }
 
 	// Initial run
 	moveGameElements();
+
+	// Centralized layout reflow (used on resize/orientation changes)
+	let layoutReflowTimer = null;
+	let layoutReflowInProgress = false;
+	let lastLayoutViewportKey = '';
+	let lastLayoutMode = ''; // track layout mode to detect switches
+	function resetLayoutTransforms() {
+		try {
+			const board = document.getElementById('board');
+			if (board) {
+				board.style.removeProperty('transform');
+				board.style.removeProperty('transform-origin');
+				board.style.removeProperty('width');
+				board.style.removeProperty('height');
+			}
+			const desktopWrapper = document.getElementById('desktop-wrapper');
+			if (desktopWrapper) {
+				desktopWrapper.style.removeProperty('transform');
+				desktopWrapper.style.removeProperty('transform-origin');
+				desktopWrapper.style.removeProperty('width');
+				desktopWrapper.style.removeProperty('height');
+			}
+			// Reset all desktop layout containers
+			['desktop-grids', 'desktop-left', 'desktop-right', 'desktop-bottom', 
+			 'desktop-bottom-left', 'desktop-bottom-center', 'desktop-bottom-buttons', 'desktop-bottom-right',
+			 'desktop-objective', 'desktop-menu'].forEach(id => {
+				const el = document.getElementById(id);
+				if (el) {
+					el.style.removeProperty('transform');
+					el.style.removeProperty('transform-origin');
+					el.style.removeProperty('width');
+					el.style.removeProperty('height');
+					el.style.removeProperty('display');
+				}
+			});
+			// Reset mobile sidebar containers
+			['mobile-landscape-wrapper', 'ml-sidebar-left', 'ml-board-center', 'ml-sidebar-right', 'ml-objective-top'].forEach(id => {
+				const el = document.getElementById(id);
+				if (el) {
+					el.style.removeProperty('transform');
+					el.style.removeProperty('width');
+					el.style.removeProperty('height');
+				}
+			});
+			document.documentElement.style.removeProperty('--board-scale');
+		} catch (_) {}
+	}
+	
+	// Determine current layout mode for comparison
+	function getCurrentLayoutMode() {
+		const width = window.innerWidth;
+		const height = window.innerHeight;
+		const isMobile = width <= MOBILE_BREAKPOINT;
+		const isTouchDevice = isCoarsePointer();
+		const isLargeTouchScreen = isTouchDevice && Math.min(width, height) >= 700;
+		const ORIENTATION_EPS = 24;
+		const effectiveLandscape = (width - height) > ORIENTATION_EPS;
+		const useMobileSidebarLayout = isTouchDevice && !isLargeTouchScreen && effectiveLandscape && width > 500 && height >= 350;
+		if (useMobileSidebarLayout) return 'mobile-sidebar';
+		if (isMobile) return 'mobile';
+		const effectivePortrait = (height - width) > ORIENTATION_EPS;
+		const isPortrait = effectivePortrait || (!effectiveLandscape && height >= width);
+		if (isPortrait || width <= 800) return 'desktop-portrait';
+		return 'desktop-landscape';
+	}
+	
+	function reflowLayout() {
+		if (layoutReflowInProgress) return;
+		layoutReflowInProgress = true;
+		
+		// Detect layout mode changes and clean up wrapper if needed
+		try {
+			const currentMode = getCurrentLayoutMode();
+			if (lastLayoutMode && lastLayoutMode !== currentMode) {
+				// Layout mode changed - clean up old wrapper to force rebuild
+				cleanupDesktopWrapper();
+				// Also reset all body layout classes
+				document.body.classList.remove('mobile-sidebar-layout', 'touch-portrait', 
+					'desktop-portrait', 'desktop-landscape', 'mobile-landscape');
+			}
+			lastLayoutMode = currentMode;
+		} catch (_) {}
+		
+		// Step 1: clear stale inline sizing/transforms
+		try { resetWorldLayoutStyles(); } catch (_) {}
+		try { resetLayoutTransforms(); } catch (_) {}
+		// Step 2: re-place DOM blocks for current breakpoint/orientation
+		try { moveGameElements(); } catch (_) {}
+		// Step 3: run sizing/spacing on next frames so layout has settled
+		try {
+			requestAnimationFrame(() => {
+				try { scaleBoardForDesktop(); } catch (_) {}
+				try { scaleBoardForMobile(); } catch (_) {}
+				try { placeActionButtons(); } catch (_) {}
+				try { applyCardSizing(); } catch (_) {}
+				try { if (typeof updateHandScrollControls === 'function') updateHandScrollControls(); } catch (_) {}
+				try { syncZoneHeights(); } catch (_) {}
+				try { if (activeZoomZone) applyMobileZoomSizing(activeZoomZone); } catch (_) {}
+				try { if (activeZoomZone) schedulePlaceholderSync(activeZoomZone); } catch (_) {}
+				// Recompute World 2/3 zone sizing (depends on viewport)
+				try {
+					const worldInfo = typeof getWorldAndSubLevel === 'function' ? getWorldAndSubLevel(currentLevel) : null;
+					if (worldInfo && (worldInfo.world === 2 || worldInfo.world === 3)) {
+						adjustZoneSizesForWorld2();
+					}
+				} catch (_) {}
+				// MOBILE FIX: Re-scale mobile board when window resizes
+				try {
+					if (window._scaleMobileBoard && document.body.classList.contains('mobile-sidebar-layout')) {
+						requestAnimationFrame(window._scaleMobileBoard);
+					}
+				} catch (_) {}
+				try { autoCenterScrollableZones(); } catch (_) {}
+				// Final pass to stabilize heights
+				try {
+					requestAnimationFrame(() => {
+						try { syncZoneHeights(); } catch (_) {}
+						layoutReflowInProgress = false;
+					});
+				} catch (_) { layoutReflowInProgress = false; }
+			});
+		} catch (_) {
+			// Fallback if rAF is blocked
+			try { scaleBoardForDesktop(); } catch (_) {}
+			try { scaleBoardForMobile(); } catch (_) {}
+			try { syncZoneHeights(); } catch (_) {}
+			layoutReflowInProgress = false;
+		}
+	}
+	function scheduleLayoutReflow(delay = 60) {
+		const w = Math.round(window.innerWidth || 0);
+		const h = Math.round(window.innerHeight || 0);
+		// Include layout mode in key so orientation changes trigger reflow even at same dimensions
+		const currentMode = getCurrentLayoutMode();
+		const key = `${w}x${h}:${currentMode}`;
+		if (key === lastLayoutViewportKey && !layoutReflowInProgress) return;
+		lastLayoutViewportKey = key;
+		if (layoutReflowTimer) clearTimeout(layoutReflowTimer);
+		layoutReflowTimer = setTimeout(() => {
+			try { requestAnimationFrame(reflowLayout); } catch (_) { reflowLayout(); }
+		}, delay);
+	}
 	
 	// Laad opgeslagen spel of start nieuw spel (na alle initialisaties)
 	// Check EERST of er een save is voordat we iets doen
@@ -35735,35 +35944,17 @@ body { background: transparent; }
 		requestAnimationFrame(() => requestAnimationFrame(autoCenterScrollableZones));
 	})();
 
-	// Run again on resize
-	window.addEventListener('resize', () => {
-		moveGameElements();
-		// Herbereken zone groottes voor World 2/3 bij resize
-		const worldInfo = typeof getWorldAndSubLevel === 'function' ? getWorldAndSubLevel(currentLevel) : null;
-		if (worldInfo && (worldInfo.world === 2 || worldInfo.world === 3)) {
-			adjustZoneSizesForWorld2();
-		}
-		// MOBILE FIX: Re-scale mobile board when window resizes
-		if (window._scaleMobileBoard && document.body.classList.contains('mobile-sidebar-layout')) {
-			requestAnimationFrame(window._scaleMobileBoard);
-		}
-	});
-	
-	// Extra listener voor orientation change op mobiel/tablet
+	// Run again on resize/orientation with a stable reflow
+	window.addEventListener('resize', () => scheduleLayoutReflow(60), { passive: true });
 	window.addEventListener('orientationchange', () => {
-		// Wacht kort tot de nieuwe dimensies beschikbaar zijn
-		setTimeout(() => {
-			moveGameElements();
-			const worldInfo = typeof getWorldAndSubLevel === 'function' ? getWorldAndSubLevel(currentLevel) : null;
-			if (worldInfo && (worldInfo.world === 2 || worldInfo.world === 3)) {
-				adjustZoneSizesForWorld2();
-			}
-			// MOBILE FIX: Re-scale mobile board after orientation change
-			if (window._scaleMobileBoard && document.body.classList.contains('mobile-sidebar-layout')) {
-				requestAnimationFrame(window._scaleMobileBoard);
-			}
-		}, 100);
-	});
+		// Force reflow on orientation change - reset the viewport key to ensure it triggers
+		lastLayoutViewportKey = '';
+		lastLayoutMode = '';
+		scheduleLayoutReflow(150);
+	}, { passive: true });
+	if (window.visualViewport) {
+		window.visualViewport.addEventListener('resize', () => scheduleLayoutReflow(60), { passive: true });
+	}
 
 	// Menu toggle handled earlier (removed duplicate handler)
 	
