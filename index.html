@@ -12844,8 +12844,8 @@ let shopLevel2Used = false;
 		},
 		bonusBoost: {
 			id: 'bonusBoost',
-			name: 'Bonus Boost',
-			description: 'Ontgrendel Bonus Boost kaarten (en krijg er direct 1). Een Bonus Boost kaart geeft 2× bonussen voor de kleur van die kaart (niet alle kleuren).',
+			name: 'Bonus Boost kaarten',
+			description: 'Ontgrendel Bonus Boost kaarten (en krijg er direct 1). Een Bonus Boost kaart geeft 2× bonussen voor de kleur van die kaart.',
 			cost: 15,
 			icon: '⚡',
 			purchased: false,
@@ -13201,7 +13201,7 @@ let shopLevel2Used = false;
 		// Verwijder oude portals
 		clearPortals();
 
-		const candidateZoneIds = ['yellow-grid', 'green-grid', 'purple-grid', 'blue-grid'];
+		const candidateZoneIds = ['yellow-grid', 'purple-grid', 'blue-grid', 'green-grid'];
 		const availableZones = candidateZoneIds
 			.map(id => ({ id, el: document.getElementById(id) }))
 			.filter(z => z.el);
@@ -13210,16 +13210,43 @@ let shopLevel2Used = false;
 			return;
 		}
 
-		// Kies willekeurig twee unieke zones
-		const shuffledZones = availableZones.sort(() => Math.random() - 0.5);
-		const chosenZones = shuffledZones.slice(0, Math.min(2, shuffledZones.length));
+		const zonesWithCells = availableZones
+			.map(({ id, el }) => ({
+				id,
+				el,
+				cells: Array.from(el.querySelectorAll('.cell:not(.void-cell):not(.active)'))
+			}))
+			.filter(z => z.cells.length > 0);
 
-		chosenZones.forEach(({ id, el }) => {
-			const cells = Array.from(el.querySelectorAll('.cell:not(.void-cell):not(.active)'));
-			if (!cells.length) return;
-			const picked = cells[Math.floor(Math.random() * cells.length)];
-			setupPortalCell(picked, id);
-			portalCells.push(picked);
+		if (!zonesWithCells.length) {
+			console.log('🌐 No free cells available for portals');
+			return;
+		}
+
+		const chosen = [];
+
+		// Eerst 1 per zone (als het kan) om spreiding te krijgen
+		const shuffledZones = zonesWithCells.sort(() => Math.random() - 0.5);
+		for (const z of shuffledZones) {
+			if (chosen.length >= 2) break;
+			const picked = z.cells[Math.floor(Math.random() * z.cells.length)];
+			if (picked) chosen.push({ cell: picked, id: z.id });
+		}
+
+		// Als we nog geen 2 portals hebben, vul aan uit overgebleven cellen
+		if (chosen.length < 2) {
+			const allCandidates = zonesWithCells.flatMap(z => z.cells.map(cell => ({ cell, id: z.id })));
+			const remaining = allCandidates.filter(c => !chosen.some(ch => ch.cell === c.cell));
+			const shuffledRemaining = remaining.sort(() => Math.random() - 0.5);
+			for (const item of shuffledRemaining) {
+				if (chosen.length >= 2) break;
+				chosen.push(item);
+			}
+		}
+
+		chosen.forEach(({ cell, id }) => {
+			setupPortalCell(cell, id);
+			portalCells.push(cell);
 		});
 
 		console.log('🌐 Portals placed for this level:', portalCells.map(c => c?.dataset?.zoneId || c?.closest?.('.zone')?.id || 'unknown'));
@@ -13229,6 +13256,7 @@ let shopLevel2Used = false;
 		portalCells.forEach(cell => {
 			if (!cell) return;
 			cell.classList.remove('portal-cell');
+			cell.classList.remove('portal-anchor');
 			cell.classList.remove('bold-cell');
 			const oldSymbol = cell.querySelector('.portal-symbol');
 			if (oldSymbol) oldSymbol.remove();
@@ -13238,6 +13266,7 @@ let shopLevel2Used = false;
 	
 	function setupPortalCell(cell, zoneId) {
 		cell.classList.add('portal-cell');
+		cell.classList.add('portal-anchor');
 		cell.classList.add('bold-cell'); // Maak het een bold-cell zodat je vanaf hier kunt plaatsen!
 		
 		// Voeg portal symbool toe
@@ -22909,10 +22938,10 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	  const floorY = Number.isFinite(metrics.maxY) ? metrics.maxY : null;
 	  const touchesFloor = floorY !== null && pendingCells.some(cell => Number(cell.dataset.y) === floorY);
 	  
-	  // Blue: portals (bold-cells) zijn ALTIJD geldig als startpunt (direct erop plaatsen)
+	  // Blue: portals (portal-anchor/bold) zijn ALTIJD geldig als startpunt (direct erop plaatsen)
 	  const touchesPortal = pendingCells.some(cell => {
 		if (!cell || !cell.classList) return false;
-		return cell.classList.contains('bold-cell');
+		return cell.classList.contains('portal-cell') || cell.classList.contains('portal-anchor') || cell.classList.contains('bold-cell');
 	  });
 	  
 	  // Check if adjacent to any bold cell (allows shapes that touch but don't overlap the portal)
@@ -22927,7 +22956,7 @@ function optionalCellsTouchActive(zone, pendingCells) {
 			getCell(zone, x, y - 1),
 			getCell(zone, x, y + 1)
 		];
-		return neighbors.some(n => n && n.classList.contains('bold-cell'));
+		return neighbors.some(n => n && (n.classList.contains('bold-cell') || n.classList.contains('portal-anchor') || n.classList.contains('portal-cell')));
 	  });
 	  
 	  const hasActive = zoneHasActiveCells(zone);
@@ -22984,7 +23013,7 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	  // Alleen portals zijn een uitzondering, bold-cells niet
 	  const touchesPortal = pendingCells.some(cell => {
 		if (!cell || !cell.classList) return false;
-		return cell.classList.contains('portal-cell');
+		return cell.classList.contains('portal-cell') || cell.classList.contains('portal-anchor');
 	  });
 	  
 	  // Als er nog geen actieve cellen zijn (eerste plaatsing)
@@ -23075,6 +23104,7 @@ function optionalCellsTouchActive(zone, pendingCells) {
 		
 		let touchesFloor = false;
 		let touchesActiveBlock = false;
+		let touchesPortalAnchor = false;
 		
 		for (let y = 0; y < shape.length; y++) {
 			for (let x = 0; x < shape[0].length; x++) {
@@ -23101,6 +23131,11 @@ function optionalCellsTouchActive(zone, pendingCells) {
 				if (bottomBoldY !== null && cell && cell.classList.contains('bold-cell') && Number(cell.dataset.y) === bottomBoldY) {
 					touchesFloor = true;
 				}
+
+				// Direct op een portal is altijd geldig
+				if (cell && (cell.classList.contains('portal-cell') || cell.classList.contains('portal-anchor'))) {
+					touchesPortalAnchor = true;
+				}
 				
 				// Check of cel onder deze actief is (staat erop)
 				const cellBelow = getCell(zone, cellX, cellY + 1);
@@ -23121,15 +23156,19 @@ function optionalCellsTouchActive(zone, pendingCells) {
 						touchesActiveBlock = true;
 						break;
 					}
+					if (adjacentCell && (adjacentCell.classList.contains('portal-cell') || adjacentCell.classList.contains('portal-anchor') || adjacentCell.classList.contains('bold-cell'))) {
+						touchesPortalAnchor = true;
+						break;
+					}
 				}
 				
-				if (touchesFloor || touchesActiveBlock) break;
+				if (touchesFloor || touchesActiveBlock || touchesPortalAnchor) break;
 			}
-			if (touchesFloor || touchesActiveBlock) break;
+			if (touchesFloor || touchesActiveBlock || touchesPortalAnchor) break;
 		}
 		
 		// Als het blok noch de bodem noch een actief blok raakt, is de positie ongeldig
-		if (!touchesFloor && !touchesActiveBlock) {
+		if (!touchesFloor && !touchesActiveBlock && !touchesPortalAnchor) {
 			return -9999; // Onmogelijke positie
 		}
 		
