@@ -7,9 +7,12 @@
     coins: 0,
     deckTemplateIds: [],
     upgradeIds: [],
-    world: null
+    world: null,
+    includeGameContent: false
   };
   let deckPickerState = null;
+
+  let isGeneratingBoard = false;
 
   const boardHost = document.getElementById('board-host');
   let refreshBtn = document.getElementById('refresh-board');
@@ -170,6 +173,45 @@
   function setStatus(msg) {
     if (!statusEl) return;
     statusEl.textContent = msg || '';
+  }
+
+  function setGenerationBusy(isBusy) {
+    isGeneratingBoard = !!isBusy;
+    const overlay = document.getElementById('generation-overlay');
+    if (overlay) {
+      overlay.classList.toggle('is-active', isGeneratingBoard);
+      overlay.setAttribute('aria-hidden', isGeneratingBoard ? 'false' : 'true');
+    }
+    const btns = [
+      document.getElementById('refresh-board'),
+      document.getElementById('regenerate-current-zones')
+    ].filter(Boolean);
+    btns.forEach((b) => {
+      b.disabled = isGeneratingBoard;
+      if (isGeneratingBoard) {
+        b.dataset.prevText = b.textContent;
+        b.textContent = 'Bezig…';
+      } else if (b.dataset.prevText) {
+        b.textContent = b.dataset.prevText;
+        delete b.dataset.prevText;
+      }
+    });
+  }
+
+  function runGenerationSteps(steps, onDone) {
+    const queue = Array.isArray(steps) ? steps.slice() : [];
+    const runNext = () => {
+      if (!queue.length) {
+        if (typeof onDone === 'function') onDone();
+        return;
+      }
+      try {
+        const fn = queue.shift();
+        if (typeof fn === 'function') fn();
+      } catch (e) {}
+      setTimeout(runNext, 0);
+    };
+    runNext();
   }
 
   function getCurrentBoardHtmlForScenario() {
@@ -383,9 +425,9 @@
   function getScenarioWorldGuess() {
     try {
       const w = scenarioSettings.world;
-      if (w === 1 || w === 2 || w === 3) return w;
+      if (w === 1 || w === 2 || w === 3 || w === 4) return w;
       const metaW = Number(editorCatalog && editorCatalog.meta ? editorCatalog.meta.currentWorld : 0);
-      if (metaW === 1 || metaW === 2 || metaW === 3) return metaW;
+      if (metaW === 1 || metaW === 2 || metaW === 3 || metaW === 4) return metaW;
     } catch (e) {}
     return 1;
   }
@@ -945,6 +987,53 @@
         });
         coinsRow.append(coinsLabel, coinsInput);
 
+        const worldRow = document.createElement('div');
+        worldRow.className = 'scenario-field';
+        worldRow.style.flexDirection = 'column';
+        worldRow.style.alignItems = 'flex-start';
+        worldRow.style.gap = '6px';
+        const worldLabel = document.createElement('div');
+        worldLabel.textContent = 'Kies wereld generatie:';
+        worldLabel.style.fontWeight = '700';
+        worldLabel.style.fontSize = '0.85rem';
+        const worldOptions = document.createElement('div');
+        worldOptions.style.display = 'grid';
+        worldOptions.style.gridTemplateColumns = 'repeat(2, minmax(0, 1fr))';
+        worldOptions.style.gap = '6px 10px';
+        const currentWorld = getScenarioWorldGuess();
+        [1, 2, 3, 4].forEach((w) => {
+          const label = document.createElement('label');
+          label.style.display = 'flex';
+          label.style.alignItems = 'center';
+          label.style.gap = '6px';
+          const input = document.createElement('input');
+          input.type = 'radio';
+          input.name = 'scenario-world-choice';
+          input.value = String(w);
+          input.checked = currentWorld === w;
+          input.addEventListener('change', () => {
+            if (!input.checked) return;
+            scenarioSettings.world = w;
+            setStatus(`Wereld generatie ingesteld op ${w}.`);
+          });
+          label.append(input, document.createTextNode(`Wereld ${w}`));
+          worldOptions.appendChild(label);
+        });
+        const contentRow = document.createElement('label');
+        contentRow.style.display = 'flex';
+        contentRow.style.alignItems = 'center';
+        contentRow.style.gap = '8px';
+        const contentInput = document.createElement('input');
+        contentInput.type = 'checkbox';
+        contentInput.id = 'scenario-include-game-content';
+        contentInput.checked = !!scenarioSettings.includeGameContent;
+        contentInput.addEventListener('change', () => {
+          scenarioSettings.includeGameContent = !!contentInput.checked;
+          setStatus(scenarioSettings.includeGameContent ? 'Met spelinhoud ingeschakeld.' : 'Met spelinhoud uitgeschakeld.');
+        });
+        contentRow.append(contentInput, document.createTextNode('Met spelinhoud'));
+        worldRow.append(worldLabel, worldOptions, contentRow);
+
         const deckBtn = document.createElement('button');
         deckBtn.id = 'scenario-deck-btn';
         deckBtn.textContent = 'Deck kiezen';
@@ -963,7 +1052,7 @@
           upgradesBtn.classList.add('btn');
         }
 
-        controlsStack.append(coinsRow, deckBtn, upgradesBtn);
+        controlsStack.append(coinsRow, worldRow, deckBtn, upgradesBtn);
       }
 
       if (refreshStack && !document.getElementById('refresh-board')) {
@@ -976,6 +1065,17 @@
         refBtn.addEventListener('click', () => generateNewBoard());
         refreshStack.appendChild(refBtn);
         refreshBtn = refBtn;
+      }
+
+      if (refreshStack && !document.getElementById('regenerate-current-zones')) {
+        const regenBtn = document.createElement('button');
+        regenBtn.id = 'regenerate-current-zones';
+        regenBtn.textContent = 'Huidige zones genereren';
+        if (styleSource && styleSource.className) regenBtn.className = styleSource.className;
+        else regenBtn.classList.add('btn');
+        regenBtn.dataset.wired = '1';
+        regenBtn.addEventListener('click', () => regenerateZonesFromCurrent());
+        refreshStack.appendChild(regenBtn);
       }
 
       if (exportStack) {
@@ -1065,7 +1165,8 @@
       upgradeIds: Array.isArray(scenarioSettings.upgradeIds) ? scenarioSettings.upgradeIds : [],
       deckTemplateIds: Array.isArray(scenarioSettings.deckTemplateIds) ? scenarioSettings.deckTemplateIds : [],
       boardData: boardData || null,
-      boardHtml: boardHtml || ''
+      boardHtml: boardHtml || '',
+      includeGameContent: !!scenarioSettings.includeGameContent
     };
 
     const json = JSON.stringify(scenario, null, 2);
@@ -1115,9 +1216,10 @@
             if (data.coins != null) scenarioSettings.coins = Math.max(0, Math.min(99, Math.floor(Number(data.coins) || 0)));
             if (Array.isArray(data.deckTemplateIds)) scenarioSettings.deckTemplateIds = data.deckTemplateIds.map(String);
             if (Array.isArray(data.upgradeIds)) scenarioSettings.upgradeIds = data.upgradeIds.map(String);
+            if (data.includeGameContent != null) scenarioSettings.includeGameContent = !!data.includeGameContent;
             if (data.world != null) {
               const w = Number(data.world);
-              if (w === 1 || w === 2 || w === 3) scenarioSettings.world = w;
+              if (w === 1 || w === 2 || w === 3 || w === 4) scenarioSettings.world = w;
             }
             syncScenarioControlsUI();
             setStatus(`Scenario "${data.name || file.name}" geïmporteerd.`);
@@ -1137,6 +1239,13 @@
     try {
       const coinsInput = document.getElementById('scenario-coins-input');
       if (coinsInput) coinsInput.value = String(Math.max(0, Math.min(99, Math.floor(Number(scenarioSettings.coins) || 0))));
+      const worldValue = getScenarioWorldGuess();
+      const radios = document.querySelectorAll('input[name="scenario-world-choice"]');
+      radios.forEach((r) => {
+        r.checked = String(worldValue) === String(r.value);
+      });
+      const contentToggle = document.getElementById('scenario-include-game-content');
+      if (contentToggle) contentToggle.checked = !!scenarioSettings.includeGameContent;
     } catch (e) {}
   }
 
@@ -1385,6 +1494,68 @@
     grid.dataset.cols = String(cols);
   }
 
+  function getGridSizeFromCells(grid) {
+    const cells = Array.from(grid.querySelectorAll(':scope > .cell'));
+    let maxX = -1;
+    let maxY = -1;
+    cells.forEach((cell, idx) => {
+      const x = Number(cell?.dataset?.x ?? cell?.dataset?.c);
+      const y = Number(cell?.dataset?.y ?? cell?.dataset?.r);
+      if (Number.isFinite(x)) maxX = Math.max(maxX, Math.floor(x));
+      if (Number.isFinite(y)) maxY = Math.max(maxY, Math.floor(y));
+      if (!Number.isFinite(x) && !Number.isFinite(y) && idx === cells.length - 1) {
+        // keep loop for fallthrough
+      }
+    });
+    if (maxX >= 0 && maxY >= 0) return { rows: maxY + 1, cols: maxX + 1 };
+    const count = cells.length || 1;
+    const cols = Math.max(1, Math.round(Math.sqrt(count)));
+    const rows = Math.max(1, Math.ceil(count / cols));
+    return { rows, cols };
+  }
+
+  function updateZoneSizingToGrid() {
+    const board = boardHost ? boardHost.querySelector('.board') : null;
+    if (!board) return;
+    const rootStyles = window.getComputedStyle(document.documentElement);
+    const cellSize = parseFloat(rootStyles.getPropertyValue('--cell-size')) || 26;
+    const gap = parseFloat(rootStyles.getPropertyValue('--board-grid-gap')) || 2;
+    const sizeFromRC = (rows, cols) => {
+      const w = (cols * cellSize) + Math.max(0, cols - 1) * gap;
+      const h = (rows * cellSize) + Math.max(0, rows - 1) * gap;
+      return { w, h };
+    };
+
+    Array.from(board.querySelectorAll('.zone')).forEach((zone) => {
+      if (zone.classList.contains('red-group')) return;
+      const grid = zone.querySelector(':scope > .grid') || zone.querySelector('.grid');
+      if (!grid) return;
+      let rows = parseInt(grid.dataset.rows || '0', 10) || 0;
+      let cols = parseInt(grid.dataset.cols || '0', 10) || 0;
+      if (!rows || !cols) {
+        const inferred = inferGridSize(grid);
+        rows = rows || inferred.rows;
+        cols = cols || inferred.cols;
+      }
+      if (!rows || !cols) {
+        const fromCells = getGridSizeFromCells(grid);
+        rows = rows || fromCells.rows;
+        cols = cols || fromCells.cols;
+      }
+      if (!rows || !cols) return;
+
+      const { w, h } = sizeFromRC(rows, cols);
+      grid.style.width = `${w}px`;
+      grid.style.height = `${h}px`;
+
+      const zoneStyle = window.getComputedStyle(zone);
+      const padX = (parseFloat(zoneStyle.paddingLeft) || 0) + (parseFloat(zoneStyle.paddingRight) || 0);
+      const padY = (parseFloat(zoneStyle.paddingTop) || 0) + (parseFloat(zoneStyle.paddingBottom) || 0);
+      zone.style.minWidth = `${w + padX}px`;
+      zone.style.minHeight = `${h + padY}px`;
+    });
+  }
+
   function createCell(isVoid) {
     const cell = document.createElement('div');
     cell.className = 'cell' + (isVoid ? ' void-cell' : '');
@@ -1430,6 +1601,7 @@
     grid.innerHTML = '';
     grid.appendChild(frag);
     applyGridTemplate(grid, rows, cols);
+    updateZoneSizingToGrid();
   }
 
   function addZoneChrome() {
@@ -1598,6 +1770,153 @@
     return g;
   }
 
+  function resetGrid(grid, rows, cols) {
+    if (!grid) return;
+    applyGridTemplate(grid, rows, cols);
+    grid.innerHTML = '';
+    const frag = document.createDocumentFragment();
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) frag.appendChild(createCell(false));
+    }
+    grid.appendChild(frag);
+  }
+
+  function pickRandomCells(cells, count) {
+    const pool = cells.slice();
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    return pool.slice(0, Math.max(0, Math.min(count, pool.length)));
+  }
+
+  function applyBonusesToGrid(grid, opts = {}) {
+    if (!grid) return;
+    const rows = parseInt(grid.dataset.rows || '0', 10) || 1;
+    const cols = parseInt(grid.dataset.cols || '0', 10) || 1;
+    const allCells = Array.from(grid.querySelectorAll(':scope > .cell'));
+    const activeCells = allCells.filter(c => !c.classList.contains('void-cell'));
+
+    const fixedBoldCells = Array.isArray(opts.fixedBoldCells) ? opts.fixedBoldCells : [];
+    fixedBoldCells.forEach(([r, c]) => {
+      const idx = (r * cols) + c;
+      const cell = allCells[idx];
+      if (cell && !cell.classList.contains('void-cell')) cell.classList.add('bold-cell');
+    });
+
+    if (opts.boldBottom) {
+      for (let c = 0; c < cols; c++) {
+        const idx = ((rows - 1) * cols) + c;
+        const cell = allCells[idx];
+        if (cell && !cell.classList.contains('void-cell')) cell.classList.add('bold-cell');
+      }
+    }
+
+    if (opts.randomBoldCount) {
+      const target = Math.max(0, opts.randomBoldCount | 0);
+      const tryCells = activeCells.slice();
+      for (let i = tryCells.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [tryCells[i], tryCells[j]] = [tryCells[j], tryCells[i]];
+      }
+      let placed = 0;
+      const isAdjacentBold = (cellIdx) => {
+        const r = Math.floor(cellIdx / cols);
+        const c = cellIdx % cols;
+        const neighbors = [
+          [r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]
+        ];
+        return neighbors.some(([nr, nc]) => {
+          if (nr < 0 || nc < 0 || nr >= rows || nc >= cols) return false;
+          const nIdx = (nr * cols) + nc;
+          const nCell = allCells[nIdx];
+          return nCell && nCell.classList.contains('bold-cell');
+        });
+      };
+      for (const cell of tryCells) {
+        if (placed >= target) break;
+        if (cell.classList.contains('bold-cell')) continue;
+        const idx = allCells.indexOf(cell);
+        if (opts.avoidAdjacentBold && isAdjacentBold(idx)) continue;
+        cell.classList.add('bold-cell');
+        placed++;
+      }
+    }
+
+    const symbolsEnabled = opts.symbols || opts.minSymbols || opts.maxSymbols;
+    if (symbolsEnabled) {
+      const minSym = Math.max(0, opts.minSymbols || 0);
+      const maxSym = Math.max(minSym, opts.maxSymbols || minSym);
+      const symCount = Math.min(activeCells.length, Math.floor(Math.random() * (maxSym - minSym + 1)) + minSym);
+      pickRandomCells(activeCells, symCount).forEach((cell) => {
+        const colors = ['green','blue','yellow','purple','red'];
+        setSymbol(cell, colors[Math.floor(Math.random() * colors.length)]);
+      });
+    }
+
+    const coinsEnabled = opts.goldCells || opts.coinChance || opts.maxCoins;
+    if (coinsEnabled) {
+      const maxCoins = Math.max(0, opts.maxCoins || 0);
+      let coins = 0;
+      const pool = activeCells.slice();
+      for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+      }
+      const coinChance = Number.isFinite(opts.coinChance) ? opts.coinChance : 0;
+      for (const cell of pool) {
+        if (coins >= maxCoins) break;
+        if (coinChance === 0 || Math.random() < coinChance) {
+          setCoin(cell);
+          coins++;
+        }
+      }
+    }
+
+    if (opts.trapChance || opts.blackHoleChance) {
+      const trapChance = Math.max(0, opts.trapChance || 0);
+      const maxTraps = Math.max(0, opts.maxTraps || 0);
+      const blackHoleChance = Math.max(0, opts.blackHoleChance || 0);
+      let traps = 0;
+      const pool = activeCells.slice();
+      for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+      }
+      for (const cell of pool) {
+        if (traps >= maxTraps) break;
+        if (Math.random() < trapChance) {
+          const kind = (blackHoleChance && Math.random() < blackHoleChance) ? 'blackhole' : 'pit';
+          setTrap(cell, kind);
+          traps++;
+        }
+      }
+    }
+  }
+
+  function createSeededRng(seed) {
+    let t = Number(seed) || 0;
+    return function () {
+      t += 0x6D2B79F5;
+      let x = t;
+      x = Math.imul(x ^ (x >>> 15), x | 1);
+      x ^= x + Math.imul(x ^ (x >>> 7), x | 61);
+      return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function withSeededRandom(seed, fn) {
+    const orig = Math.random;
+    Math.random = createSeededRng(seed);
+    try { return fn(); } finally { Math.random = orig; }
+  }
+
+  function withRng(rng, fn) {
+    const orig = Math.random;
+    if (typeof rng === 'function') Math.random = rng;
+    try { return fn(); } finally { Math.random = orig; }
+  }
+
   function applyRowPatternVoid(grid, rowLengths, rowOffsets) {
     const rows = rowLengths.length;
     const cols = parseInt(grid.dataset.cols || '0', 10) || 1;
@@ -1615,8 +1934,9 @@
     }
   }
 
-  function carveGreenContent(grid) {
+  function carveGreenContent(grid, opts = {}) {
     if (!grid) return;
+    const includeBonuses = !!opts.includeBonuses;
     const rows = parseInt(grid.dataset.rows || '0', 10) || 15;
     const cols = parseInt(grid.dataset.cols || '0', 10) || 15;
     const cells = Array.from(grid.querySelectorAll(':scope > .cell'));
@@ -1649,13 +1969,17 @@
     const endpoints = [{ r: centerR, c: centerC }];
 
     // Iteratively grow branches until budget exhausted or cluster large enough
-    while (growthBudget > 0) {
+    let safety = Math.max(200, rows * cols * 6);
+    let noGrowthStreak = 0;
+    while (growthBudget > 0 && safety > 0) {
+      safety--;
       const start = endpoints[Math.floor(Math.random() * endpoints.length)];
       let r = start.r;
       let c = start.c;
       const len = minBranchLen + Math.floor(Math.random() * (maxBranchLen - minBranchLen + 1));
       const dir = dirs[Math.floor(Math.random() * dirs.length)];
       const makeWide = Math.random() < 0.35;
+      let grewThisLoop = false;
       for (let i = 0; i < len; i++) {
         r += dir.r; c += dir.c;
         if (!isInside(r, c)) break;
@@ -1663,12 +1987,19 @@
         if (clusterSet.has(idx)) continue;
         clusterSet.add(idx);
         growthBudget -= 1;
+        grewThisLoop = true;
         if (makeWide || Math.random() < 0.15) addWidthCell(r, c, dir);
         if (i > 0 && Math.random() < 0.2 && endpoints.length < 24) endpoints.push({ r, c });
         if (growthBudget <= 0) break;
       }
       // safety: stop if we've filled a large fraction of the grid
       if (clusterSet.size > Math.floor(rows * cols * 0.6)) break;
+      if (!grewThisLoop) {
+        noGrowthStreak += 1;
+        if (noGrowthStreak > 40) break;
+      } else {
+        noGrowthStreak = 0;
+      }
     }
 
     // Apply cells: active vs void
@@ -1689,7 +2020,7 @@
       }
     }
 
-    // detect green zone: skip placing initial bonuses/coins for green
+    // detect green zone: skip placing initial bonuses/coins for green unless enabled
     const isGreenZone = (grid.dataset && grid.dataset.color === 'groen') || (grid.closest && grid.closest('.zone') && grid.closest('.zone').dataset && grid.closest('.zone').dataset.color === 'groen') || (grid.id && String(grid.id).toLowerCase().includes('green'));
 
     // shuffle helper
@@ -1705,17 +2036,17 @@
     shuffle(clusterIndices);
     const clusterSize = clusterIndices.length;
 
-    // Only assign symbols/coins when NOT a green zone in the editor
+    // Only assign symbols/coins for non-green OR when includeBonuses is true
     let symbolIndices = new Set();
     const coinSet = new Set();
-    if (!isGreenZone) {
+    if (!isGreenZone || includeBonuses) {
       const isSmall = clusterSize < 20;
       const minSymBase = isSmall ? 4 : 8;
       const maxSymBase = isSmall ? 6 : 12;
-      const finalMinSymbols = Math.max(minSymBase, Math.floor(clusterSize * 0.15));
-      const finalMaxSymbols = Math.max(maxSymBase, Math.floor(clusterSize * 0.25));
-      const finalMaxCoins = Math.max(2, Math.floor(clusterSize * 0.08));
-      const finalCoinChance = 0.12;
+      const finalMinSymbols = Math.max(opts.minSymbols || minSymBase, Math.floor(clusterSize * 0.15));
+      const finalMaxSymbols = Math.max(opts.maxSymbols || maxSymBase, Math.floor(clusterSize * 0.25));
+      const finalMaxCoins = Math.max(opts.maxCoins || 2, Math.floor(clusterSize * 0.08));
+      const finalCoinChance = Number.isFinite(opts.coinChance) ? opts.coinChance : 0.12;
 
       const symCount = Math.min(clusterIndices.length, Math.floor(Math.random() * (finalMaxSymbols - finalMinSymbols + 1)) + finalMinSymbols);
       symbolIndices = new Set(clusterIndices.slice(0, symCount));
@@ -1782,64 +2113,1011 @@
     }
   }
 
+  function generateWorld1Content({ includeBonuses = true } = {}) {
+    const board = boardHost ? boardHost.querySelector('.board') : null;
+    if (!board) return;
+    const seedBase = Date.now();
+    withSeededRandom(seedBase, () => {
+      // Yellow (World 1): irregular columns -> rowLengths/offsets
+      const yellowZone = board.querySelector('.zone[data-color="geel"]');
+      const yellowGrid = yellowZone ? (yellowZone.querySelector(':scope > .grid') || yellowZone.querySelector('.grid')) : null;
+      if (yellowGrid) {
+        const yellowColumnHeights = [6, 6, 8, 8, 10, 10, 12, 12, 14, 14];
+        const yellowCols = yellowColumnHeights.length;
+        const yellowRows = Math.max(...yellowColumnHeights);
+        applyGridTemplate(yellowGrid, yellowRows, yellowCols);
+        yellowGrid.innerHTML = '';
+        const frag = document.createDocumentFragment();
+        for (let r = 0; r < yellowRows; r++) {
+          for (let c = 0; c < yellowCols; c++) frag.appendChild(createCell(false));
+        }
+        yellowGrid.appendChild(frag);
+        const rowLengths = [];
+        const rowOffsets = [];
+        for (let r = 0; r < yellowRows; r++) {
+          let activeCount = 0;
+          for (let c = 0; c < yellowCols; c++) {
+            const topRow = yellowRows - yellowColumnHeights[c];
+            if (r >= topRow) activeCount++;
+          }
+          rowLengths.push(activeCount);
+          rowOffsets.push(Math.max(0, yellowCols - activeCount));
+        }
+        applyRowPatternVoid(yellowGrid, rowLengths, rowOffsets);
+        // Bold first column
+        for (let r = 0; r < yellowRows; r++) {
+          const idx = (r * yellowCols);
+          const cell = yellowGrid.children[idx];
+          if (cell && !cell.classList.contains('void-cell')) cell.classList.add('bold-cell');
+        }
+        if (includeBonuses) {
+          const cells = Array.from(yellowGrid.querySelectorAll(':scope > .cell')).filter(c => !c.classList.contains('void-cell'));
+          const maxCoins = 15;
+          const minSymbols = 8;
+          const maxSymbols = 12;
+          const symCount = Math.min(cells.length, Math.floor(Math.random() * (maxSymbols - minSymbols + 1)) + minSymbols);
+          const pool = cells.slice();
+          for (let i = pool.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [pool[i], pool[j]] = [pool[j], pool[i]];
+          }
+          pool.slice(0, symCount).forEach((cell) => {
+            const colors = ['green','blue','yellow','purple','red'];
+            setSymbol(cell, colors[Math.floor(Math.random() * colors.length)]);
+          });
+          let coins = 0;
+          pool.slice(symCount).forEach((cell) => {
+            if (coins >= maxCoins) return;
+            if (Math.random() < 0.2) { setCoin(cell); coins++; }
+          });
+        }
+      }
+
+      // Purple (World 1): 9x9 grid
+      const purpleZone = board.querySelector('.zone[data-color="paars"]');
+      const purpleGrid = purpleZone ? (purpleZone.querySelector(':scope > .grid') || purpleZone.querySelector('.grid')) : null;
+      if (purpleGrid) {
+        applyGridTemplate(purpleGrid, 9, 9);
+        purpleGrid.innerHTML = '';
+        const frag = document.createDocumentFragment();
+        for (let r = 0; r < 9; r++) {
+          for (let c = 0; c < 9; c++) frag.appendChild(createCell(false));
+        }
+        purpleGrid.appendChild(frag);
+        if (includeBonuses) {
+          const cells = Array.from(purpleGrid.querySelectorAll(':scope > .cell'));
+          const maxCoins = 4;
+          const minSymbols = 6;
+          const maxSymbols = 8;
+          const symCount = Math.min(cells.length, Math.floor(Math.random() * (maxSymbols - minSymbols + 1)) + minSymbols);
+          const pool = cells.slice();
+          for (let i = pool.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [pool[i], pool[j]] = [pool[j], pool[i]];
+          }
+          pool.slice(0, symCount).forEach((cell) => {
+            const colors = ['green','blue','yellow','purple','red'];
+            setSymbol(cell, colors[Math.floor(Math.random() * colors.length)]);
+          });
+          let coins = 0;
+          pool.slice(symCount).forEach((cell) => {
+            if (coins >= maxCoins) return;
+            if (Math.random() < 0.03) { setCoin(cell); coins++; }
+          });
+        }
+      }
+
+      // Blue (World 1): fixed row pattern
+      const blueZone = board.querySelector('.zone[data-color="blauw"]');
+      const blueGrid = blueZone ? (blueZone.querySelector(':scope > .grid') || blueZone.querySelector('.grid')) : null;
+      if (blueGrid) {
+        const blueRowPattern = [2, 2, 3, 3, 3, 2, 2, 3, 3, 2, 2, 3, 3, 3, 2, 2, 3, 3, 2, 2, 3, 3, 2, 3, 3];
+        const blueRowOffsets = [1, 1, 1, 0, 0, 1, 2, 2, 2, 3, 2, 2, 1, 1, 1, 0, 0, 0, 1, 2, 2, 2, 3, 2, 1];
+        const blueRows = blueRowPattern.length;
+        const blueCols = Math.max(...blueRowOffsets.map((o, idx) => o + (blueRowPattern[idx] || 0)), 3);
+        applyGridTemplate(blueGrid, blueRows, blueCols);
+        blueGrid.innerHTML = '';
+        const frag = document.createDocumentFragment();
+        for (let r = 0; r < blueRows; r++) {
+          for (let c = 0; c < blueCols; c++) frag.appendChild(createCell(false));
+        }
+        blueGrid.appendChild(frag);
+        applyRowPatternVoid(blueGrid, blueRowPattern, blueRowOffsets);
+        // Bold bottom row
+        for (let c = 0; c < blueCols; c++) {
+          const idx = ((blueRows - 1) * blueCols) + c;
+          const cell = blueGrid.children[idx];
+          if (cell && !cell.classList.contains('void-cell')) cell.classList.add('bold-cell');
+        }
+        if (includeBonuses) {
+          const cells = Array.from(blueGrid.querySelectorAll(':scope > .cell')).filter(c => !c.classList.contains('void-cell'));
+          const maxCoins = 6;
+          const minSymbols = 10;
+          const maxSymbols = 12;
+          const symCount = Math.min(cells.length, Math.floor(Math.random() * (maxSymbols - minSymbols + 1)) + minSymbols);
+          const pool = cells.slice();
+          for (let i = pool.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [pool[i], pool[j]] = [pool[j], pool[i]];
+          }
+          pool.slice(0, symCount).forEach((cell) => {
+            const colors = ['green','blue','yellow','purple','red'];
+            setSymbol(cell, colors[Math.floor(Math.random() * colors.length)]);
+          });
+          let coins = 0;
+          pool.slice(symCount).forEach((cell) => {
+            if (coins >= maxCoins) return;
+            if (Math.random() < 0.05) { setCoin(cell); coins++; }
+          });
+        }
+      }
+
+      // Green (World 1): roots + bonuses if enabled
+      const greenZone = board.querySelector('.zone[data-color="groen"]');
+      const greenGrid = greenZone ? (greenZone.querySelector(':scope > .grid') || greenZone.querySelector('.grid')) : null;
+      if (greenGrid) {
+        greenGrid.dataset.color = 'groen';
+        carveGreenContent(greenGrid, {
+          includeBonuses,
+          minSymbols: includeBonuses ? 12 : 0,
+          maxSymbols: includeBonuses ? 16 : 0,
+          coinChance: includeBonuses ? 0.06 : 0,
+          maxCoins: includeBonuses ? 4 : 0
+        });
+      }
+
+      // Red (World 1): 4 small grids
+      const redGroup = board.querySelector('.zone.red-group') || board.querySelector('.zone[data-color="rood"]');
+      if (redGroup) {
+        const subs = Array.from(redGroup.querySelectorAll(':scope > .zone'));
+        subs.forEach((sub) => {
+          const grid = sub.querySelector(':scope > .grid') || sub.querySelector('.grid');
+          if (!grid) return;
+          applyGridTemplate(grid, 5, 5);
+          grid.innerHTML = '';
+          const frag = document.createDocumentFragment();
+          for (let r = 0; r < 5; r++) {
+            for (let c = 0; c < 5; c++) frag.appendChild(createCell(false));
+          }
+          grid.appendChild(frag);
+          if (includeBonuses) {
+            const cells = Array.from(grid.querySelectorAll(':scope > .cell'));
+            const pool = cells.slice();
+            for (let i = pool.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1));
+              [pool[i], pool[j]] = [pool[j], pool[i]];
+            }
+            const symCount = Math.min(3, pool.length);
+            pool.slice(0, symCount).forEach((cell) => {
+              const colors = ['green','blue','yellow','purple','red'];
+              setSymbol(cell, colors[Math.floor(Math.random() * colors.length)]);
+            });
+            let coins = 0;
+            pool.slice(symCount).forEach((cell) => {
+              if (coins >= 2) return;
+              if (Math.random() < 0.04) { setCoin(cell); coins++; }
+            });
+          }
+        });
+      }
+    });
+  }
+
+  function generateWorld2Content({ includeBonuses = true } = {}) {
+    const board = boardHost ? boardHost.querySelector('.board') : null;
+    if (!board) return;
+    withSeededRandom(Date.now(), () => {
+      const yellowZone = board.querySelector('.zone[data-color="geel"]');
+      const yellowGrid = yellowZone ? (yellowZone.querySelector(':scope > .grid') || yellowZone.querySelector('.grid')) : null;
+      if (yellowGrid) {
+        resetGrid(yellowGrid, 11, 11);
+        applyBonusesToGrid(yellowGrid, {
+          symbols: includeBonuses,
+          goldCells: includeBonuses,
+          minSymbols: includeBonuses ? 5 : 0,
+          maxSymbols: includeBonuses ? 7 : 0,
+          coinChance: includeBonuses ? 0.07 : 0,
+          maxCoins: includeBonuses ? 8 : 0
+        });
+      }
+
+      const purpleZone = board.querySelector('.zone[data-color="paars"]');
+      const purpleGrid = purpleZone ? (purpleZone.querySelector(':scope > .grid') || purpleZone.querySelector('.grid')) : null;
+      if (purpleGrid) {
+        resetGrid(purpleGrid, 13, 13);
+        applyBonusesToGrid(purpleGrid, {
+          symbols: includeBonuses,
+          goldCells: includeBonuses,
+          minSymbols: includeBonuses ? 8 : 0,
+          maxSymbols: includeBonuses ? 11 : 0,
+          coinChance: includeBonuses ? 0.04 : 0,
+          maxCoins: includeBonuses ? 6 : 0,
+          fixedBoldCells: [[0,0],[0,12],[12,0],[12,12]],
+          randomBoldCount: 10,
+          avoidAdjacentBold: true
+        });
+      }
+
+      const blueZone = board.querySelector('.zone[data-color="blauw"]');
+      const blueGrid = blueZone ? (blueZone.querySelector(':scope > .grid') || blueZone.querySelector('.grid')) : null;
+      if (blueGrid) {
+        const blueRows = 60;
+        const blueCols = 18;
+        const blueRowPattern = [];
+        const blueRowOffsets = [];
+        for (let i = 0; i < blueRows; i++) {
+          const baseW = (i % 12 === 7) ? 5 : ((i % 5 === 0) ? 4 : 3);
+          const w = Math.max(2, Math.min(5, baseW));
+          const raw = 4 + Math.round(2 * Math.sin(i / 6));
+          const maxOffset = Math.max(0, blueCols - w);
+          const off = Math.max(0, Math.min(maxOffset, raw));
+          blueRowPattern.push(w);
+          blueRowOffsets.push(off);
+        }
+        resetGrid(blueGrid, blueRows, blueCols);
+        applyRowPatternVoid(blueGrid, blueRowPattern, blueRowOffsets);
+        applyBonusesToGrid(blueGrid, {
+          boldBottom: true,
+          symbols: includeBonuses,
+          goldCells: includeBonuses,
+          minSymbols: includeBonuses ? 15 : 0,
+          maxSymbols: includeBonuses ? 22 : 0,
+          coinChance: includeBonuses ? 0.09 : 0,
+          maxCoins: includeBonuses ? 16 : 0
+        });
+      }
+
+      const greenZone = board.querySelector('.zone[data-color="groen"]');
+      const greenGrid = greenZone ? (greenZone.querySelector(':scope > .grid') || greenZone.querySelector('.grid')) : null;
+      if (greenGrid) {
+        resetGrid(greenGrid, 34, 28);
+        greenGrid.dataset.color = 'groen';
+        carveGreenContent(greenGrid, {
+          includeBonuses,
+          minSymbols: includeBonuses ? 4 : 0,
+          maxSymbols: includeBonuses ? 6 : 0,
+          coinChance: includeBonuses ? 0.02 : 0,
+          maxCoins: includeBonuses ? 2 : 0
+        });
+      }
+
+      const redGroup = board.querySelector('.zone.red-group') || board.querySelector('.zone[data-color="rood"]');
+      if (redGroup) {
+        const sizes = [
+          { rows: 4, cols: 5 },
+          { rows: 4, cols: 6 },
+          { rows: 5, cols: 6 },
+          { rows: 5, cols: 6 }
+        ];
+        const subs = Array.from(redGroup.querySelectorAll(':scope > .zone'));
+        subs.forEach((sub, idx) => {
+          const grid = sub.querySelector(':scope > .grid') || sub.querySelector('.grid');
+          if (!grid) return;
+          const size = sizes[idx] || sizes[sizes.length - 1];
+          resetGrid(grid, size.rows, size.cols);
+          carveGreenContent(grid, {
+            includeBonuses,
+            minSymbols: includeBonuses ? 2 : 0,
+            maxSymbols: includeBonuses ? 3 : 0,
+            coinChance: includeBonuses ? 0.03 : 0,
+            maxCoins: includeBonuses ? 2 : 0
+          });
+        });
+      }
+    });
+  }
+
+  function buildWorld3BluePattern() {
+    const blueRows = 80;
+    const blueCols = 13;
+    const blueRowPattern = [];
+    const blueRowOffsets = [];
+    const blueGapCells = new Set();
+    let currentOffset = 6;
+    let currentWidth = 3;
+    let prevOffset = currentOffset;
+    let prevWidth = currentWidth;
+    let inSplit = false;
+    let splitRowsLeft = 0;
+    let splitOffset = 0;
+    let splitWidth = 2;
+    let prevSplitOffset = 0;
+    let prevSplitWidth = 2;
+    for (let i = 0; i < blueRows; i++) {
+      const isStartRow = (i === 20 || i === 50);
+      const mergeRows = 6;
+      const isEndingPhase = splitRowsLeft <= mergeRows;
+
+      if (isStartRow) {
+        inSplit = true;
+        splitRowsLeft = 16;
+        splitWidth = 2;
+        splitOffset = currentOffset + currentWidth - 1;
+        prevSplitOffset = splitOffset;
+        prevSplitWidth = splitWidth;
+      }
+
+      if (inSplit) {
+        const relax = isEndingPhase ? 2 : 0;
+        const minSplitOffset = prevSplitOffset - splitWidth + 1 - relax;
+        const maxSplitOffset = prevSplitOffset + prevSplitWidth - 1 + relax;
+        let newSplitOffset = splitOffset;
+        if (!isEndingPhase && Math.random() > 0.5) {
+          newSplitOffset += (Math.random() > 0.5 ? 1 : -1);
+        }
+        splitOffset = Math.max(minSplitOffset, Math.min(maxSplitOffset, newSplitOffset));
+        const splitMaxOffset = Math.max(0, blueCols - splitWidth);
+        splitOffset = Math.max(0, Math.min(splitMaxOffset, splitOffset));
+      }
+
+      if (!inSplit) {
+        const maxOffset = Math.max(0, blueCols - currentWidth);
+        const raw = 4 + Math.round(2 * Math.sin(i / 6));
+        currentOffset = Math.max(0, Math.min(maxOffset, raw));
+      }
+
+      const combinedStart = inSplit ? Math.min(currentOffset, splitOffset) : currentOffset;
+      const combinedEnd = inSplit ? Math.max(currentOffset + currentWidth, splitOffset + splitWidth) : (currentOffset + currentWidth);
+      const combinedWidth = combinedEnd - combinedStart;
+      blueRowPattern.push(combinedWidth);
+      blueRowOffsets.push(combinedStart);
+
+      if (inSplit) {
+        const actualMainEnd = currentOffset + currentWidth;
+        const actualSplitStart = splitOffset;
+        if (actualMainEnd < actualSplitStart) {
+          for (let gapCol = actualMainEnd; gapCol < actualSplitStart; gapCol++) {
+            blueGapCells.add(`${gapCol},${i}`);
+          }
+        }
+        prevSplitOffset = splitOffset;
+        prevSplitWidth = splitWidth;
+        splitRowsLeft--;
+        if (splitRowsLeft <= 0) inSplit = false;
+      }
+
+      prevOffset = currentOffset;
+      prevWidth = currentWidth;
+    }
+
+    return { blueRows, blueCols, blueRowPattern, blueRowOffsets, blueGapCells };
+  }
+
+  function generateWorld3Content({ includeBonuses = true } = {}) {
+    const board = boardHost ? boardHost.querySelector('.board') : null;
+    if (!board) return;
+    withSeededRandom(Date.now(), () => {
+      const yellowZone = board.querySelector('.zone[data-color="geel"]');
+      const yellowGrid = yellowZone ? (yellowZone.querySelector(':scope > .grid') || yellowZone.querySelector('.grid')) : null;
+      if (yellowGrid) {
+        const yellowShape = {
+          pattern: [4, 6, 8, 10, 12, 12, 12, 12, 10, 8, 6, 4],
+          offsets: [4, 3, 2, 1, 0, 0, 0, 0, 1, 2, 3, 4],
+          boldCells: [[0,0], [0,1], [5,3], [5,8], [6,3], [6,8], [11,0], [11,1], [3,5], [3,6], [8,5], [8,6]]
+        };
+        const yellowRows = yellowShape.pattern.length;
+        const yellowCols = Math.max(...yellowShape.pattern.map((len, i) => (Number(len) || 0) + (Number(yellowShape.offsets[i]) || 0)));
+        resetGrid(yellowGrid, yellowRows, yellowCols);
+        applyRowPatternVoid(yellowGrid, yellowShape.pattern, yellowShape.offsets);
+        applyBonusesToGrid(yellowGrid, {
+          symbols: includeBonuses,
+          goldCells: includeBonuses,
+          minSymbols: includeBonuses ? 12 : 0,
+          maxSymbols: includeBonuses ? 12 : 0,
+          coinChance: includeBonuses ? 0.10 : 0,
+          maxCoins: includeBonuses ? 16 : 0,
+          fixedBoldCells: yellowShape.boldCells
+        });
+      }
+
+      const purpleZone = board.querySelector('.zone[data-color="paars"]');
+      const purpleGrid = purpleZone ? (purpleZone.querySelector(':scope > .grid') || purpleZone.querySelector('.grid')) : null;
+      if (purpleGrid) {
+        const size = 14;
+        resetGrid(purpleGrid, size, size);
+        applyBonusesToGrid(purpleGrid, {
+          symbols: includeBonuses,
+          goldCells: includeBonuses,
+          minSymbols: includeBonuses ? 16 : 0,
+          maxSymbols: includeBonuses ? 16 : 0,
+          coinChance: includeBonuses ? 0.06 : 0,
+          maxCoins: includeBonuses ? 12 : 0,
+          randomBoldCount: 14,
+          avoidAdjacentBold: true,
+          fixedBoldCells: [[0,0], [0, size - 1], [size - 1, 0], [size - 1, size - 1],
+                           [0, Math.floor(size / 2)], [size - 1, Math.floor(size / 2)],
+                           [Math.floor(size / 2), 0], [Math.floor(size / 2), size - 1]]
+        });
+      }
+
+      const blueZone = board.querySelector('.zone[data-color="blauw"]');
+      const blueGrid = blueZone ? (blueZone.querySelector(':scope > .grid') || blueZone.querySelector('.grid')) : null;
+      if (blueGrid) {
+        const { blueRows, blueCols, blueRowPattern, blueRowOffsets, blueGapCells } = buildWorld3BluePattern();
+        resetGrid(blueGrid, blueRows, blueCols);
+        applyRowPatternVoid(blueGrid, blueRowPattern, blueRowOffsets);
+        blueGapCells.forEach((key) => {
+          const [c, r] = key.split(',').map(Number);
+          const idx = (r * blueCols) + c;
+          const cell = blueGrid.children[idx];
+          if (cell) cell.classList.add('void-cell');
+        });
+        applyBonusesToGrid(blueGrid, {
+          boldBottom: true,
+          symbols: includeBonuses,
+          goldCells: includeBonuses,
+          minSymbols: includeBonuses ? 30 : 0,
+          maxSymbols: includeBonuses ? 30 : 0,
+          coinChance: includeBonuses ? 0.20 : 0,
+          maxCoins: includeBonuses ? 25 : 0,
+          trapChance: includeBonuses ? 0.045 : 0,
+          maxTraps: includeBonuses ? 12 : 0,
+          blackHoleChance: includeBonuses ? 0.1 : 0
+        });
+      }
+
+      const greenZone = board.querySelector('.zone[data-color="groen"]');
+      const greenGrid = greenZone ? (greenZone.querySelector(':scope > .grid') || greenZone.querySelector('.grid')) : null;
+      if (greenGrid) {
+        resetGrid(greenGrid, 40, 36);
+        greenGrid.dataset.color = 'groen';
+        carveGreenContent(greenGrid, {
+          includeBonuses,
+          minSymbols: includeBonuses ? 12 : 0,
+          maxSymbols: includeBonuses ? 21 : 0,
+          coinChance: includeBonuses ? 0.06 : 0,
+          maxCoins: includeBonuses ? 6 : 0
+        });
+      }
+
+      const redGroup = board.querySelector('.zone.red-group') || board.querySelector('.zone[data-color="rood"]');
+      if (redGroup) {
+        const sizes = [
+          { rows: 5, cols: 6 },
+          { rows: 5, cols: 7 },
+          { rows: 6, cols: 7 },
+          { rows: 6, cols: 7 },
+          { rows: 10, cols: 8 },
+          { rows: 10, cols: 8 }
+        ];
+        const subs = Array.from(redGroup.querySelectorAll(':scope > .zone'));
+        subs.forEach((sub, idx) => {
+          const grid = sub.querySelector(':scope > .grid') || sub.querySelector('.grid');
+          if (!grid) return;
+          const size = sizes[idx] || sizes[sizes.length - 1];
+          resetGrid(grid, size.rows, size.cols);
+          carveGreenContent(grid, {
+            includeBonuses,
+            minSymbols: includeBonuses ? 4 : 0,
+            maxSymbols: includeBonuses ? 8 : 0,
+            coinChance: includeBonuses ? 0.08 : 0,
+            maxCoins: includeBonuses ? 4 : 0
+          });
+        });
+      }
+    });
+  }
+
+  function generateWorld4Content({ includeBonuses = true } = {}) {
+    // World 4 uses World 3 sizing/layout for the active zones (yellow/green/blue).
+    generateWorld3Content({ includeBonuses });
+  }
+
+  function generateWorld2ContentAsync({ includeBonuses = true } = {}, done) {
+    const board = boardHost ? boardHost.querySelector('.board') : null;
+    if (!board) { if (done) done(); return; }
+    const rng = createSeededRng(Date.now());
+    const steps = [];
+
+    steps.push(() => withRng(rng, () => {
+      const yellowZone = board.querySelector('.zone[data-color="geel"]');
+      const yellowGrid = yellowZone ? (yellowZone.querySelector(':scope > .grid') || yellowZone.querySelector('.grid')) : null;
+      if (yellowGrid) {
+        resetGrid(yellowGrid, 11, 11);
+        applyBonusesToGrid(yellowGrid, {
+          symbols: includeBonuses,
+          goldCells: includeBonuses,
+          minSymbols: includeBonuses ? 5 : 0,
+          maxSymbols: includeBonuses ? 7 : 0,
+          coinChance: includeBonuses ? 0.07 : 0,
+          maxCoins: includeBonuses ? 8 : 0
+        });
+      }
+    }));
+
+    steps.push(() => withRng(rng, () => {
+      const purpleZone = board.querySelector('.zone[data-color="paars"]');
+      const purpleGrid = purpleZone ? (purpleZone.querySelector(':scope > .grid') || purpleZone.querySelector('.grid')) : null;
+      if (purpleGrid) {
+        resetGrid(purpleGrid, 13, 13);
+        applyBonusesToGrid(purpleGrid, {
+          symbols: includeBonuses,
+          goldCells: includeBonuses,
+          minSymbols: includeBonuses ? 8 : 0,
+          maxSymbols: includeBonuses ? 11 : 0,
+          coinChance: includeBonuses ? 0.04 : 0,
+          maxCoins: includeBonuses ? 6 : 0,
+          fixedBoldCells: [[0,0],[0,12],[12,0],[12,12]],
+          randomBoldCount: 10,
+          avoidAdjacentBold: true
+        });
+      }
+    }));
+
+    steps.push(() => withRng(rng, () => {
+      const blueZone = board.querySelector('.zone[data-color="blauw"]');
+      const blueGrid = blueZone ? (blueZone.querySelector(':scope > .grid') || blueZone.querySelector('.grid')) : null;
+      if (blueGrid) {
+        const blueRows = 60;
+        const blueCols = 18;
+        const blueRowPattern = [];
+        const blueRowOffsets = [];
+        for (let i = 0; i < blueRows; i++) {
+          const baseW = (i % 12 === 7) ? 5 : ((i % 5 === 0) ? 4 : 3);
+          const w = Math.max(2, Math.min(5, baseW));
+          const raw = 4 + Math.round(2 * Math.sin(i / 6));
+          const maxOffset = Math.max(0, blueCols - w);
+          const off = Math.max(0, Math.min(maxOffset, raw));
+          blueRowPattern.push(w);
+          blueRowOffsets.push(off);
+        }
+        resetGrid(blueGrid, blueRows, blueCols);
+        applyRowPatternVoid(blueGrid, blueRowPattern, blueRowOffsets);
+        applyBonusesToGrid(blueGrid, {
+          boldBottom: true,
+          symbols: includeBonuses,
+          goldCells: includeBonuses,
+          minSymbols: includeBonuses ? 15 : 0,
+          maxSymbols: includeBonuses ? 22 : 0,
+          coinChance: includeBonuses ? 0.09 : 0,
+          maxCoins: includeBonuses ? 16 : 0
+        });
+      }
+    }));
+
+    steps.push(() => withRng(rng, () => {
+      const greenZone = board.querySelector('.zone[data-color="groen"]');
+      const greenGrid = greenZone ? (greenZone.querySelector(':scope > .grid') || greenZone.querySelector('.grid')) : null;
+      if (greenGrid) {
+        resetGrid(greenGrid, 34, 28);
+        greenGrid.dataset.color = 'groen';
+        carveGreenContent(greenGrid, {
+          includeBonuses,
+          minSymbols: includeBonuses ? 4 : 0,
+          maxSymbols: includeBonuses ? 6 : 0,
+          coinChance: includeBonuses ? 0.02 : 0,
+          maxCoins: includeBonuses ? 2 : 0
+        });
+      }
+    }));
+
+    steps.push(() => withRng(rng, () => {
+      const redGroup = board.querySelector('.zone.red-group') || board.querySelector('.zone[data-color="rood"]');
+      if (redGroup) {
+        const sizes = [
+          { rows: 4, cols: 5 },
+          { rows: 4, cols: 6 },
+          { rows: 5, cols: 6 },
+          { rows: 5, cols: 6 }
+        ];
+        const subs = Array.from(redGroup.querySelectorAll(':scope > .zone'));
+        subs.forEach((sub, idx) => {
+          const grid = sub.querySelector(':scope > .grid') || sub.querySelector('.grid');
+          if (!grid) return;
+          const size = sizes[idx] || sizes[sizes.length - 1];
+          resetGrid(grid, size.rows, size.cols);
+          carveGreenContent(grid, {
+            includeBonuses,
+            minSymbols: includeBonuses ? 2 : 0,
+            maxSymbols: includeBonuses ? 3 : 0,
+            coinChance: includeBonuses ? 0.03 : 0,
+            maxCoins: includeBonuses ? 2 : 0
+          });
+        });
+      }
+    }));
+    const labeled = [
+      { name: 'w2-yellow', fn: steps[0] },
+      { name: 'w2-purple', fn: steps[1] },
+      { name: 'w2-blue', fn: steps[2] },
+      { name: 'w2-green', fn: steps[3] },
+      { name: 'w2-red', fn: steps[4] }
+    ];
+    const wrapped = labeled.map(s => () => {
+      try { s.fn(); } catch (e) {
+        console.error('Generation step failed:', s.name, e);
+      }
+    });
+    runGenerationSteps(wrapped, done);
+  }
+
+  function generateWorld3ContentAsync({ includeBonuses = true } = {}, done) {
+    const board = boardHost ? boardHost.querySelector('.board') : null;
+    if (!board) { if (done) done(); return; }
+    const rng = createSeededRng(Date.now());
+    const steps = [];
+
+    steps.push(() => withRng(rng, () => {
+      const yellowZone = board.querySelector('.zone[data-color="geel"]');
+      const yellowGrid = yellowZone ? (yellowZone.querySelector(':scope > .grid') || yellowZone.querySelector('.grid')) : null;
+      if (yellowGrid) {
+        const yellowShape = {
+          pattern: [4, 6, 8, 10, 12, 12, 12, 12, 10, 8, 6, 4],
+          offsets: [4, 3, 2, 1, 0, 0, 0, 0, 1, 2, 3, 4],
+          boldCells: [[0,0], [0,1], [5,3], [5,8], [6,3], [6,8], [11,0], [11,1], [3,5], [3,6], [8,5], [8,6]]
+        };
+        const yellowRows = yellowShape.pattern.length;
+        const yellowCols = Math.max(...yellowShape.pattern.map((len, i) => (Number(len) || 0) + (Number(yellowShape.offsets[i]) || 0)));
+        resetGrid(yellowGrid, yellowRows, yellowCols);
+        applyRowPatternVoid(yellowGrid, yellowShape.pattern, yellowShape.offsets);
+        applyBonusesToGrid(yellowGrid, {
+          symbols: includeBonuses,
+          goldCells: includeBonuses,
+          minSymbols: includeBonuses ? 12 : 0,
+          maxSymbols: includeBonuses ? 12 : 0,
+          coinChance: includeBonuses ? 0.10 : 0,
+          maxCoins: includeBonuses ? 16 : 0,
+          fixedBoldCells: yellowShape.boldCells
+        });
+      }
+    }));
+
+    steps.push(() => withRng(rng, () => {
+      const purpleZone = board.querySelector('.zone[data-color="paars"]');
+      const purpleGrid = purpleZone ? (purpleZone.querySelector(':scope > .grid') || purpleZone.querySelector('.grid')) : null;
+      if (purpleGrid) {
+        const size = 14;
+        resetGrid(purpleGrid, size, size);
+        applyBonusesToGrid(purpleGrid, {
+          symbols: includeBonuses,
+          goldCells: includeBonuses,
+          minSymbols: includeBonuses ? 16 : 0,
+          maxSymbols: includeBonuses ? 16 : 0,
+          coinChance: includeBonuses ? 0.06 : 0,
+          maxCoins: includeBonuses ? 12 : 0,
+          randomBoldCount: 14,
+          avoidAdjacentBold: true,
+          fixedBoldCells: [[0,0], [0, size - 1], [size - 1, 0], [size - 1, size - 1],
+                           [0, Math.floor(size / 2)], [size - 1, Math.floor(size / 2)],
+                           [Math.floor(size / 2), 0], [Math.floor(size / 2), size - 1]]
+        });
+      }
+    }));
+
+    steps.push(() => withRng(rng, () => {
+      const blueZone = board.querySelector('.zone[data-color="blauw"]');
+      const blueGrid = blueZone ? (blueZone.querySelector(':scope > .grid') || blueZone.querySelector('.grid')) : null;
+      if (blueGrid) {
+        const { blueRows, blueCols, blueRowPattern, blueRowOffsets, blueGapCells } = buildWorld3BluePattern();
+        resetGrid(blueGrid, blueRows, blueCols);
+        applyRowPatternVoid(blueGrid, blueRowPattern, blueRowOffsets);
+        blueGapCells.forEach((key) => {
+          const [c, r] = key.split(',').map(Number);
+          const idx = (r * blueCols) + c;
+          const cell = blueGrid.children[idx];
+          if (cell) cell.classList.add('void-cell');
+        });
+        applyBonusesToGrid(blueGrid, {
+          boldBottom: true,
+          symbols: includeBonuses,
+          goldCells: includeBonuses,
+          minSymbols: includeBonuses ? 30 : 0,
+          maxSymbols: includeBonuses ? 30 : 0,
+          coinChance: includeBonuses ? 0.20 : 0,
+          maxCoins: includeBonuses ? 25 : 0,
+          trapChance: includeBonuses ? 0.045 : 0,
+          maxTraps: includeBonuses ? 12 : 0,
+          blackHoleChance: includeBonuses ? 0.1 : 0
+        });
+      }
+    }));
+
+    steps.push(() => withRng(rng, () => {
+      const greenZone = board.querySelector('.zone[data-color="groen"]');
+      const greenGrid = greenZone ? (greenZone.querySelector(':scope > .grid') || greenZone.querySelector('.grid')) : null;
+      if (greenGrid) {
+        resetGrid(greenGrid, 40, 36);
+        greenGrid.dataset.color = 'groen';
+        carveGreenContent(greenGrid, {
+          includeBonuses,
+          minSymbols: includeBonuses ? 12 : 0,
+          maxSymbols: includeBonuses ? 21 : 0,
+          coinChance: includeBonuses ? 0.06 : 0,
+          maxCoins: includeBonuses ? 6 : 0
+        });
+      }
+    }));
+
+    steps.push(() => withRng(rng, () => {
+      const redGroup = board.querySelector('.zone.red-group') || board.querySelector('.zone[data-color="rood"]');
+      if (redGroup) {
+        const sizes = [
+          { rows: 5, cols: 6 },
+          { rows: 5, cols: 7 },
+          { rows: 6, cols: 7 },
+          { rows: 6, cols: 7 },
+          { rows: 10, cols: 8 },
+          { rows: 10, cols: 8 }
+        ];
+        const subs = Array.from(redGroup.querySelectorAll(':scope > .zone'));
+        subs.forEach((sub, idx) => {
+          const grid = sub.querySelector(':scope > .grid') || sub.querySelector('.grid');
+          if (!grid) return;
+          const size = sizes[idx] || sizes[sizes.length - 1];
+          resetGrid(grid, size.rows, size.cols);
+          carveGreenContent(grid, {
+            includeBonuses,
+            minSymbols: includeBonuses ? 4 : 0,
+            maxSymbols: includeBonuses ? 8 : 0,
+            coinChance: includeBonuses ? 0.08 : 0,
+            maxCoins: includeBonuses ? 4 : 0
+          });
+        });
+      }
+    }));
+
+    const labeled = [
+      { name: 'w3-yellow', fn: steps[0] },
+      { name: 'w3-purple', fn: steps[1] },
+      { name: 'w3-blue', fn: steps[2] },
+      { name: 'w3-green', fn: steps[3] },
+      { name: 'w3-red', fn: steps[4] }
+    ];
+    const wrapped = labeled.map(s => () => {
+      try { s.fn(); } catch (e) {
+        console.error('Generation step failed:', s.name, e);
+      }
+    });
+    runGenerationSteps(wrapped, done);
+  }
+
+  function generateWorld4ContentAsync({ includeBonuses = true } = {}, done) {
+    generateWorld3ContentAsync({ includeBonuses }, done);
+  }
+
+  function getWorldGenerationConfig(world) {
+    const w = Number(world) || 1;
+    if (w === 1) {
+      return {
+        purple: { rows: 9, cols: 9 },
+        yellow: { rows: 14, cols: 10 },
+        green: { rows: 15, cols: 15 },
+        blue: { rows: 25, cols: 5 },
+        red: [
+          { rows: 4, cols: 4 },
+          { rows: 4, cols: 5 },
+          { rows: 5, cols: 5 },
+          { rows: 5, cols: 5 }
+        ]
+      };
+    }
+    if (w === 3) {
+      return {
+        purple: { rows: 14, cols: 14 },
+        yellow: { rows: 14, cols: 14 },
+        green: { rows: 40, cols: 36 },
+        blue: { rows: 80, cols: 8 },
+        red: [
+          { rows: 5, cols: 6 },
+          { rows: 5, cols: 7 },
+          { rows: 6, cols: 7 },
+          { rows: 6, cols: 7 },
+          { rows: 10, cols: 8 },
+          { rows: 10, cols: 8 }
+        ]
+      };
+    }
+    if (w === 4) {
+      return {
+        purple: null,
+        yellow: { rows: 12, cols: 12 },
+        green: { rows: 40, cols: 36 },
+        blue: { rows: 80, cols: 13 },
+        red: []
+      };
+    }
+    // Default: World 2 (current editor baseline)
+    return {
+      purple: { rows: 13, cols: 13 },
+      yellow: { rows: 11, cols: 11 },
+      green: { rows: 34, cols: 28 },
+      blue: { rows: 60, cols: 18 },
+      red: [
+        { rows: 4, cols: 5 },
+        { rows: 4, cols: 6 },
+        { rows: 5, cols: 6 },
+        { rows: 5, cols: 6 }
+      ]
+    };
+  }
+
   function generateNewBoard() {
+    if (isGeneratingBoard) return;
+    setGenerationBusy(true);
     // World2-like defaults. This generation is local to the editor (does not touch the game).
+    const world = getScenarioWorldGuess();
+    const cfg = getWorldGenerationConfig(world);
     const board = document.createElement('div');
     board.className = 'board';
     const col1 = document.createElement('div'); col1.className = 'column';
     const col2 = document.createElement('div'); col2.className = 'column';
     const col3 = document.createElement('div'); col3.className = 'column';
 
-    const purple = createZone('editor-purple-zone', 'paars', createGrid(13, 13));
-    const yellow = createZone('editor-yellow-zone', 'geel', createGrid(11, 11));
-    const greenGrid = createGrid(15, 15);
+    const purple = cfg.purple ? createZone('editor-purple-zone', 'paars', createGrid(cfg.purple.rows, cfg.purple.cols)) : null;
+    const yellow = cfg.yellow ? createZone('editor-yellow-zone', 'geel', createGrid(cfg.yellow.rows, cfg.yellow.cols)) : null;
+    const greenGrid = cfg.green ? createGrid(cfg.green.rows, cfg.green.cols) : null;
     // Mark grid as green so carveGreenContent skips bonuses/coins
-    greenGrid.dataset.color = 'groen';
-    carveGreenContent(greenGrid);
-    const green = createZone('editor-green-zone', 'groen', greenGrid);
+    if (greenGrid) {
+      greenGrid.dataset.color = 'groen';
+        if (!scenarioSettings.includeGameContent) carveGreenContent(greenGrid);
+    }
+    const green = greenGrid ? createZone('editor-green-zone', 'groen', greenGrid) : null;
 
     // Blue: tall, irregular strip.
-    const blueGrid = createGrid(28, 6);
-    const blue = createZone('editor-blue-zone', 'blauw', blueGrid);
+    const blueGrid = cfg.blue ? createGrid(cfg.blue.rows, cfg.blue.cols) : null;
+    const blue = blueGrid ? createZone('editor-blue-zone', 'blauw', blueGrid) : null;
     // simple random walk-ish pattern
-    const rowLengths = [];
-    const rowOffsets = [];
-    let off = 2;
-    for (let r = 0; r < 28; r++) {
-      off += (Math.random() < 0.5 ? -1 : 1);
-      off = Math.max(0, Math.min(4, off));
-      const len = Math.max(2, Math.min(6 - off, 3 + (Math.random() < 0.35 ? 1 : 0)));
-      rowLengths.push(len);
-      rowOffsets.push(off);
+    if (blueGrid) {
+        if (!scenarioSettings.includeGameContent) {
+          const rowLengths = [];
+          const rowOffsets = [];
+          const blueRows = cfg.blue.rows;
+          const blueCols = cfg.blue.cols;
+          const maxOffset = Math.max(0, blueCols - 1);
+          let off = Math.min(Math.max(0, Math.floor(blueCols / 3)), maxOffset);
+          for (let r = 0; r < blueRows; r++) {
+            off += (Math.random() < 0.5 ? -1 : 1);
+            off = Math.max(0, Math.min(maxOffset, off));
+            const maxLen = Math.max(1, blueCols - off);
+            const len = Math.max(1, Math.min(maxLen, 3 + (Math.random() < 0.35 ? 1 : 0)));
+            rowLengths.push(len);
+            rowOffsets.push(off);
+          }
+          applyRowPatternVoid(blueGrid, rowLengths, rowOffsets);
+        }
     }
-    applyRowPatternVoid(blueGrid, rowLengths, rowOffsets);
 
     // Red group: 4 small subgrids.
     // NOTE: Use 'red-grid1', 'red-grid2' etc IDs to match the game's structure.
     // The game expects these IDs for correct positioning detection.
-    const redGroup = document.createElement('div');
-    redGroup.className = 'zone red-group';
-    redGroup.dataset.color = 'rood';
-    redGroup.id = 'red-zone';
-    for (let i = 1; i <= 4; i++) {
-      const sub = document.createElement('div');
-      sub.className = 'zone';
-      sub.dataset.color = 'rood';
-      sub.id = 'red-grid' + i;
-      sub.dataset.subgrid = String(i);
-      sub.appendChild(createGrid(6, 6));
-      redGroup.appendChild(sub);
+    const redGroup = (cfg.red && cfg.red.length) ? document.createElement('div') : null;
+    if (redGroup) {
+      redGroup.className = 'zone red-group';
+      redGroup.dataset.color = 'rood';
+      redGroup.id = 'red-zone';
+      cfg.red.forEach((rc, idx) => {
+        const sub = document.createElement('div');
+        sub.className = 'zone';
+        sub.dataset.color = 'rood';
+        sub.id = 'red-grid' + (idx + 1);
+        sub.dataset.subgrid = String(idx + 1);
+        sub.appendChild(createGrid(rc.rows, rc.cols));
+        redGroup.appendChild(sub);
+      });
     }
 
-    col1.appendChild(purple);
-    col1.appendChild(yellow);
-    col2.appendChild(green);
-    col2.appendChild(redGroup);
-    col3.appendChild(blue);
+    if (purple) col1.appendChild(purple);
+    if (yellow) col1.appendChild(yellow);
+    if (green) col2.appendChild(green);
+    if (redGroup) col2.appendChild(redGroup);
+    if (blue) col3.appendChild(blue);
     board.append(col1, col2, col3);
 
     setBoardHtml(board.outerHTML);
+    if (scenarioSettings.includeGameContent) {
+      setStatus('Spelinhoud genereren…');
+      setTimeout(() => {
+        const done = () => {
+          try {
+            updateZoneSizingToGrid();
+            setStatus('Nieuw speelveld gegenereerd.');
+          } finally {
+            setGenerationBusy(false);
+          }
+        };
+        try {
+          if (world === 1) {
+            generateWorld1Content({ includeBonuses: true });
+            done();
+          } else if (world === 2) generateWorld2ContentAsync({ includeBonuses: true }, done);
+          else if (world === 3) generateWorld3ContentAsync({ includeBonuses: true }, done);
+          else if (world === 4) generateWorld4ContentAsync({ includeBonuses: true }, done);
+          else done();
+        } catch (e) {
+          done();
+        }
+      }, 0);
+      return;
+    }
     setStatus('Nieuw speelveld gegenereerd.');
+    setGenerationBusy(false);
+  }
+
+  function regenerateZonesFromCurrent() {
+    if (isGeneratingBoard) return;
+    setGenerationBusy(true);
+    const board = boardHost ? boardHost.querySelector('.board') : null;
+    try {
+      if (!board) {
+        setStatus('Geen speelveld geladen.');
+        return;
+      }
+
+      ensureZoneStructure();
+
+      const readGridSize = (grid) => {
+        if (!grid) return { rows: 0, cols: 0 };
+        let rows = parseInt(grid.dataset.rows || '0', 10) || 0;
+        let cols = parseInt(grid.dataset.cols || '0', 10) || 0;
+        if (!rows || !cols) {
+          const inferred = inferGridSize(grid);
+          rows = rows || inferred.rows;
+          cols = cols || inferred.cols;
+        }
+        rows = Math.max(1, rows || 1);
+        cols = Math.max(1, cols || 1);
+        return { rows, cols };
+      };
+
+      const regenerateZoneGrid = (zone, color) => {
+        if (!zone) return;
+        const grid = zone.querySelector(':scope > .grid') || zone.querySelector('.grid');
+        if (!grid) return;
+        const { rows, cols } = readGridSize(grid);
+        const newGrid = createGrid(rows, cols);
+
+        if (color === 'groen') {
+          newGrid.dataset.color = 'groen';
+          carveGreenContent(newGrid, { includeBonuses: !!scenarioSettings.includeGameContent });
+        }
+
+        if (color === 'blauw') {
+          const rowLengths = [];
+          const rowOffsets = [];
+          const maxOffset = Math.max(0, cols - 1);
+          let off = Math.min(Math.max(0, Math.floor(cols / 3)), maxOffset);
+          for (let r = 0; r < rows; r++) {
+            off += (Math.random() < 0.5 ? -1 : 1);
+            off = Math.max(0, Math.min(maxOffset, off));
+            const maxLen = Math.max(1, cols - off);
+            const len = Math.max(1, Math.min(maxLen, 3 + (Math.random() < 0.35 ? 1 : 0)));
+            rowLengths.push(len);
+            rowOffsets.push(off);
+          }
+          applyRowPatternVoid(newGrid, rowLengths, rowOffsets);
+        }
+
+        grid.replaceWith(newGrid);
+      };
+
+      // Regenerate standard color zones if they exist
+      ['paars', 'geel', 'groen', 'blauw'].forEach((color) => {
+        const zones = Array.from(board.querySelectorAll(`.zone[data-color="${color}"]`));
+        zones.forEach((zone) => {
+          if (zone.classList.contains('red-group')) return;
+          regenerateZoneGrid(zone, color);
+        });
+      });
+
+      // Red group: regenerate existing subgrids (if present)
+      const redGroup = board.querySelector('.zone.red-group') || board.querySelector('.zone[data-color="rood"]');
+      if (redGroup) {
+        const subs = Array.from(redGroup.querySelectorAll(':scope > .zone'));
+        if (subs.length) {
+          subs.forEach((sub) => regenerateZoneGrid(sub, 'rood'));
+        } else {
+          regenerateZoneGrid(redGroup, 'rood');
+        }
+      }
+
+      assignEditorIds();
+      addZoneChrome();
+      wireGridResize();
+      updateZoneSizingToGrid();
+      setStatus('Huidige zones opnieuw gegenereerd.');
+    } finally {
+      setTimeout(() => setGenerationBusy(false), 0);
+    }
   }
 
   function getCleanBoardHtmlForPrint() {
@@ -2291,6 +3569,7 @@ body { margin: 0; padding: 0; background: white; color: #111; font-family: Arial
 		wireZoneDragDrop();
 		wireGridResize();
     wireBoardInteractions();
+    updateZoneSizingToGrid();
     setStatus('Speelveld geladen.');
   }
 
@@ -2329,9 +3608,10 @@ body { margin: 0; padding: 0; background: white; color: #111; font-family: Arial
           if (s.coins != null) scenarioSettings.coins = Math.max(0, Math.min(99, Math.floor(Number(s.coins) || 0)));
           scenarioSettings.deckTemplateIds = Array.isArray(s.deckTemplateIds) ? s.deckTemplateIds.map(String) : [];
           scenarioSettings.upgradeIds = Array.isArray(s.upgradeIds) ? s.upgradeIds.map(String) : [];
+          if (s.includeGameContent != null) scenarioSettings.includeGameContent = !!s.includeGameContent;
           if (s.world != null) {
             const w = Number(s.world);
-            if (w === 1 || w === 2 || w === 3) scenarioSettings.world = w;
+            if (w === 1 || w === 2 || w === 3 || w === 4) scenarioSettings.world = w;
           }
           try { syncScenarioControlsUI(); } catch (e) {}
         } catch (e) {}
@@ -2344,8 +3624,10 @@ body { margin: 0; padding: 0; background: white; color: #111; font-family: Arial
       editorCatalog = { cards, upgrades, meta };
       try {
         const w = Number(meta.currentWorld);
-        if (w === 1 || w === 2 || w === 3) scenarioSettings.world = w;
+        if (w === 1 || w === 2 || w === 3 || w === 4) scenarioSettings.world = w;
+        if (meta.includeGameContent != null) scenarioSettings.includeGameContent = !!meta.includeGameContent;
       } catch (e) {}
+      try { syncScenarioControlsUI(); } catch (e) {}
       setStatus(`Catalogus geladen (${cards.length} kaarten, ${upgrades.length} upgrades).`);
     }
     if (data.type === 'LOCUS_EDITOR_STARTER_DECK') {
@@ -2489,6 +3771,7 @@ body { margin: 0; padding: 0; background: white; color: #111; font-family: Arial
           scenarioSettings.coins = Math.max(0, Math.min(99, Math.floor(Number(s.coins) || 0)));
           scenarioSettings.deckTemplateIds = Array.isArray(s.deckTemplateIds) ? s.deckTemplateIds.map(String) : [];
           scenarioSettings.upgradeIds = Array.isArray(s.upgradeIds) ? s.upgradeIds.map(String) : [];
+          if (s.includeGameContent != null) scenarioSettings.includeGameContent = !!s.includeGameContent;
           if (s.world != null) scenarioSettings.world = Number(s.world);
           syncScenarioControlsUI();
         }
@@ -2508,7 +3791,8 @@ body { margin: 0; padding: 0; background: white; color: #111; font-family: Arial
                   coins: ss ? Math.max(0, Math.min(99, Math.floor(Number(ss.coins) || 0))) : Math.max(0, Math.min(99, Math.floor(Number(scenarioSettings.coins) || 0))),
                   deckTemplateIds: ss && Array.isArray(ss.deckTemplateIds) ? ss.deckTemplateIds.map(String) : (Array.isArray(scenarioSettings.deckTemplateIds) ? scenarioSettings.deckTemplateIds : []),
                   upgradeIds: ss && Array.isArray(ss.upgradeIds) ? ss.upgradeIds.map(String) : (Array.isArray(scenarioSettings.upgradeIds) ? scenarioSettings.upgradeIds : []),
-                  world: ss && ss.world != null ? Number(ss.world) : getScenarioWorldGuess()
+                  world: ss && ss.world != null ? Number(ss.world) : getScenarioWorldGuess(),
+                  includeGameContent: ss && ss.includeGameContent != null ? !!ss.includeGameContent : !!scenarioSettings.includeGameContent
                 }
               }, '*');
               setStatus(`Speelveld "${n}" naar spel verzonden.`);

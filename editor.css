@@ -16,18 +16,19 @@ html, body {
 .app {
   display: grid;
   grid-template-columns: 280px 1fr;
-  height: 100vh;
-  /* Keep the UI centered on very wide (4K) screens: limit width and auto-center */
-  max-width: 1600px;
-  margin: 0 auto;
-  padding: 0 12px;
+  height: auto;
+  /* Use full width so the left panel hugs the left edge */
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  padding: 0 12px 0 0;
 }
 
 .panel {
   border-right: 1px solid rgba(0,0,0,0.08);
   background: #ffffff;
   padding: 12px;
-  overflow: auto;
+  overflow: visible;
 }
 
 .panel__header {
@@ -170,14 +171,57 @@ html, body {
   opacity: 0.8;
 }
 
+/* Loading overlay for generation */
+.generation-overlay {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 12, 20, 0.35);
+  z-index: 9999;
+}
+
+.generation-overlay.is-active {
+  display: flex;
+}
+
+.generation-overlay__card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 16px 18px;
+  box-shadow: 0 14px 36px rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.generation-overlay__text {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.generation-spinner {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 3px solid rgba(0,0,0,0.15);
+  border-top-color: #4a90e2;
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 .stage {
-  overflow: auto;
-  padding: 14px;
+  overflow: visible;
+  padding: 14px 14px 14px 0;
 }
 
 .boardHost {
   width: fit-content;
-  margin: 0 auto;
+  margin: 0;
 }
 
 .empty {
@@ -206,6 +250,36 @@ html, body {
   border: 1px solid rgba(0,0,0,0.12);
   box-shadow: 0 2px 6px rgba(0,0,0,0.12);
   padding: 10px;
+  width: fit-content;
+  height: fit-content;
+  align-self: flex-start;
+  overflow: visible !important;
+  max-height: none !important;
+  max-width: none !important;
+}
+
+/* Editor overrides: never show per-zone scrollbars; let the page scroll instead */
+#blue-zone,
+#green-zone,
+#purple-zone,
+#yellow-zone,
+#red-zone,
+.zone.zoom-focus {
+  overflow: visible !important;
+  max-height: none !important;
+  max-width: none !important;
+}
+
+.grid {
+  overflow: visible !important;
+}
+
+/* World 3: force extra red grids visible in the editor */
+.zone.red-group > #red-grid5,
+.zone.red-group > #red-grid6 {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .zone[data-color="geel"] { background: #f0dc7d; }
@@ -224,7 +298,7 @@ html, body {
 .grid {
   display: grid;
   gap: var(--board-grid-gap);
-  justify-content: center;
+  justify-content: start;
 }
 
 .cell {
