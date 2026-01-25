@@ -1030,6 +1030,12 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 			user-select: none;
 		}
 
+		/* Hide zone arrows while dragging to keep cells visible on mobile zoom */
+		body.dragging .zone-nav-arrow {
+			opacity: 0;
+			pointer-events: none;
+		}
+
 		.zone-nav-arrow:hover {
 			background: rgba(255, 255, 255, 1);
 			transform: translateY(-50%) scale(1.1);
