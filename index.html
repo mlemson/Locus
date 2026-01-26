@@ -27916,6 +27916,7 @@ function openShopModal(callback) {
 function resetWorldLayoutStyles() {
 	const zoneIds = ['yellow-zone', 'purple-zone', 'green-zone', 'blue-zone', 'red-zone'];
 	const gridIds = ['yellow-grid', 'purple-grid', 'green-grid', 'blue-grid', 'red-grid'];
+	const redSubGridIds = ['red-grid1', 'red-grid2', 'red-grid3', 'red-grid4', 'red-grid5', 'red-grid6'];
 	zoneIds.forEach(id => {
 		const el = document.getElementById(id);
 		if (!el || !el.style) return;
@@ -27930,6 +27931,18 @@ function resetWorldLayoutStyles() {
 			try { el.style.removeProperty(prop); } catch (_) {}
 		});
 	});
+	// Reset red subgrids visibility to default (1-4 visible, 5-6 hidden)
+	['red-grid1','red-grid2','red-grid3','red-grid4'].forEach(id => {
+		const el = document.getElementById(id);
+		if (el) el.style.display = '';
+	});
+	['red-grid5','red-grid6'].forEach(id => {
+		const el = document.getElementById(id);
+		if (el) el.style.display = 'none';
+	});
+	// Reset world3 red lock visibility
+	const lockEl = document.getElementById('world3-red-lock');
+	if (lockEl) lockEl.style.display = '';
 	// Also reset board columns
 	const columns = document.querySelectorAll('#board > .column');
 	columns.forEach(col => {
