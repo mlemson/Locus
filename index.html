@@ -4408,24 +4408,26 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 	.card-boost-badge {
 		position: absolute;
-		bottom: 6px;
-		left: 6px;
-		width: 30px;
-		height: 30px;
+		top: 4px;
+		left: 4px;
+		min-width: 22px;
+		height: 18px;
+		padding: 0 4px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		border-radius: 10px;
-		font-size: 0.72rem;
+		border-radius: 6px;
+		font-size: 0.65rem;
 		font-weight: 800;
 		color: #5a3a00;
 		background: linear-gradient(135deg, #fff4cc, #ffd27a);
-		box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-		border: 1px solid rgba(90,58,0,0.2);
+		box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+		border: 1px solid rgba(90,58,0,0.25);
 		letter-spacing: 0;
 		text-align: center;
 		line-height: 1;
 		pointer-events: none;
+		z-index: 2;
 	}
 
 	.card-option { position: relative; }
@@ -19808,10 +19810,9 @@ let shopLevel2Used = false;
 			if (!Array.isArray(activeTraps)) return;
 			activeTraps = activeTraps.filter(trap => {
 				const cell = trap && trap.cell;
-				if (trap && trap.type === 'blackHole') return false;
 				if (!cell || !cell.isConnected) return false;
 				if (!cell.classList || !cell.classList.contains('active')) return false;
-				if (trap.type !== 'blackHole' && cell.dataset.trapTriggered !== 'true') return false;
+				if (cell.dataset.trapTriggered !== 'true') return false;
 				return true;
 			});
 		} catch (e) {}
@@ -19875,10 +19876,12 @@ let shopLevel2Used = false;
 			cell.dataset.blackHoleTriggered = 'true';
 			const blackHoleUnlocked = hasUpgrade('blackHoleAccess');
 			const blackHoleVisible = blackHoleUnlocked || isUpgradeAvailable('blackHoleAccess');
-			if (blackHoleVisible && !silent) {
-				handleBlackHoleTrapTrigger(buildBlackHoleRecord(cell, zoneId), { upgradeUnlocked: blackHoleUnlocked, silent });
-			} else if (!silent && !blackHoleVisible) {
-				showObjectiveToast('🌀 Koop de Zwart Gat Pas in de shop om dit speciale level te spelen.');
+			if (!silent) {
+				if (blackHoleUnlocked) {
+					openBlackHoleChallenge(buildBlackHoleRecord(cell, zoneId));
+				} else if (blackHoleVisible) {
+					showObjectiveToast('🌀 Koop de Zwart Gat Pas in de shop om dit speciale level te spelen.');
+				}
 			}
 		} else if (!isActive && cell.dataset.blackHoleTriggered === 'true') {
 			delete cell.dataset.blackHoleTriggered;
@@ -19930,13 +19933,6 @@ let shopLevel2Used = false;
 		clearTimeout(blackHoleState.feedbackTimeout);
 		blackHoleState.feedbackTimeout = null;
 	  }
-	}
-
-	function getTotalTrapPenalty() {
-	  return activeTraps.reduce((sum, trap) => {
-		const penalty = Number(trap.penalty) || 0;
-		return penalty > 0 ? sum + penalty : sum;
-	  }, 0);
 	}
 
 	function getTrapPenaltyBreakdown() {
@@ -19999,10 +19995,7 @@ let shopLevel2Used = false;
 	  // Als trap-summary niet bestaat (verwijderd uit HTML), stop functie
 	  if (!preview || !countEl) return;
 	  
-	const blackHoleUnlocked = hasUpgrade('blackHoleAccess');
-	const blackHoleVisible = blackHoleUnlocked || isUpgradeAvailable('blackHoleAccess');
-	const visibleTraps = activeTraps.filter(trap => trap.type !== 'blackHole' || blackHoleVisible);
-	const trapCount = visibleTraps.length;
+	const trapCount = activeTraps.length;
 	
 	// Set data attribute op body voor CSS styling (voor toekomstig gebruik)
 	if (currentLevel >= 5) {
@@ -20011,12 +20004,10 @@ let shopLevel2Used = false;
 		document.body.removeAttribute('data-traps-active');
 	}
 	
-	const totalPenalty = visibleTraps.reduce((sum, trap) => {
+	const totalPenalty = activeTraps.reduce((sum, trap) => {
 		const penalty = Number(trap.penalty) || 0;
 		return penalty > 0 ? sum + penalty : sum;
 	}, 0);
-	const specialCount = blackHoleVisible ? visibleTraps.filter(trap => trap.type === 'blackHole').length : 0;
-	const penaltyCount = visibleTraps.filter(trap => trap.type !== 'blackHole').length;
 	const scoreboardEl = document.getElementById('scoreboard');
 	const isScoreboardInBottomBar = !!(scoreboardEl && scoreboardEl.closest('#bottom-bar'));
 	const isMobileView = isScoreboardInBottomBar || window.innerWidth <= MOBILE_BREAKPOINT;
@@ -20028,61 +20019,38 @@ let shopLevel2Used = false;
 	}
 	const summaryParts = [`${trapCount} actief`];
 	if (totalPenalty > 0) summaryParts.push(`−${totalPenalty}`);
-	if (specialCount > 0) summaryParts.push(`${specialCount} zwart gat`);
 	if (isMobileView) {
-		const segments = [];
-		if (penaltyCount > 0) segments.push(`⚠️ ${penaltyCount}`);
-		if (specialCount > 0) segments.push(`🌀 ${specialCount}`);
-		countEl.textContent = segments.length ? segments.join(' · ') : `${trapCount}`;
-		if (penaltyCount > 0) {
-		  const chip = document.createElement('span');
-		  chip.classList.add('trap-compact-chip');
-		  chip.dataset.symbol = '⚠️';
-		  chip.innerHTML = `<span>${penaltyCount}</span>`;
-		  const penaltyLabel = totalPenalty > 0 ? `, -${totalPenalty} punten` : '';
-		  const label = `${penaltyCount} valkuil${penaltyCount === 1 ? '' : 'en'} actief${penaltyLabel}`;
-		  chip.setAttribute('aria-label', label);
-		  chip.title = label;
-		  preview.appendChild(chip);
-		}
-		if (specialCount > 0) {
-		  const chip = document.createElement('span');
-		  chip.classList.add('trap-compact-chip', 'trap-compact-chip--black-hole');
-		  chip.dataset.symbol = '🌀';
-		  chip.innerHTML = `<span>${specialCount}</span>`;
-		  const label = `${specialCount} zwart gat${specialCount === 1 ? '' : 'en'} actief`;
-		  chip.setAttribute('aria-label', label);
-		  chip.title = label;
-		  preview.appendChild(chip);
-		}
+		countEl.textContent = `⚠️ ${trapCount}`;
+		const chip = document.createElement('span');
+		chip.classList.add('trap-compact-chip');
+		chip.dataset.symbol = '⚠️';
+		chip.innerHTML = `<span>${trapCount}</span>`;
+		const penaltyLabel = totalPenalty > 0 ? `, -${totalPenalty} punten` : '';
+		const label = `${trapCount} valkuil${trapCount === 1 ? '' : 'en'} actief${penaltyLabel}`;
+		chip.setAttribute('aria-label', label);
+		chip.title = label;
+		preview.appendChild(chip);
 		return;
 	}
 	countEl.textContent = summaryParts.join(' · ');
-	const sortedTraps = [...visibleTraps].sort((a, b) => a.triggeredAt - b.triggeredAt);
+	const sortedTraps = [...activeTraps].sort((a, b) => a.triggeredAt - b.triggeredAt);
 	  sortedTraps.forEach(trap => {
 		const icon = document.createElement('div');
-		icon.classList.add('trap-icon');
-		const isBlackHole = trap.type === 'blackHole';
-		icon.classList.toggle('trap-icon--black-hole', isBlackHole);
-		icon.classList.toggle('trap-icon--penalty', !isBlackHole || (trap.penalty ?? 0) > 0);
+		icon.classList.add('trap-icon', 'trap-icon--penalty');
 		icon.dataset.trapId = trap.id;
 		icon.setAttribute('role', 'listitem');
 		const penaltyValue = Number(trap.penalty) || 0;
-		const labelBits = [isBlackHole ? 'Zwart gat' : 'Valkuil', 'in', getTrapZoneLabel(trap.zoneId)];
+		const labelBits = ['Valkuil', 'in', getTrapZoneLabel(trap.zoneId)];
 		if (penaltyValue > 0) labelBits.push(`geeft -${penaltyValue} punten`);
-		else if (isBlackHole) labelBits.push('bonus beschikbaar');
 		icon.setAttribute('aria-label', labelBits.join(' '));
-		const symbol = isBlackHole ? '🌀' : '⚠️';
-		let markup = `<span>${symbol}</span>`;
+		let markup = `<span>⚠️</span>`;
 		if (penaltyValue > 0) {
 		  markup += `<span class="penalty-chip">-${penaltyValue}</span>`;
-		} else if (isBlackHole) {
-		  markup += `<span class="penalty-chip">bonus</span>`;
 		}
 		icon.innerHTML = markup;
 		preview.appendChild(icon);
 	  });
-	const highlightTarget = highlightId && visibleTraps.some(trap => trap.id === highlightId) ? highlightId : null;
+	const highlightTarget = highlightId && activeTraps.some(trap => trap.id === highlightId) ? highlightId : null;
 	if (highlightTarget) {
 		requestAnimationFrame(() => {
 			const highlightEl = preview.querySelector(`[data-trap-id="${highlightTarget}"]`);
@@ -20093,16 +20061,6 @@ let shopLevel2Used = false;
 			}, 1600);
 		  }
 		});
-	  }
-	}
-
-	function handleBlackHoleTrapTrigger(trapRecord, options = {}) {
-	  const { upgradeUnlocked = false, silent = false } = options;
-	  if (!trapRecord || silent) return;
-	  if (upgradeUnlocked) {
-		openBlackHoleChallenge(trapRecord);
-	  } else {
-		showObjectiveToast('🌀 Koop de Zwart Gat Pas in de shop om dit speciale level te spelen.');
 	  }
 	}
 
@@ -20118,18 +20076,7 @@ let shopLevel2Used = false;
 		ensureBlackHoleState(cell, normalizedZone, { silent });
 		return;
 	}
-	const isBlackHole = trapType === 'blackHole';
-	const blackHoleUnlocked = isBlackHole && hasUpgrade('blackHoleAccess');
-	const blackHoleVisible = isBlackHole && (blackHoleUnlocked || isUpgradeAvailable('blackHoleAccess'));
-	const penaltyValue = isBlackHole ? 0 : TRAP_PENALTY;
-	if (isBlackHole) {
-		if (cell.dataset.blackHoleTriggered === 'true') return;
-		cell.dataset.blackHoleTriggered = 'true';
-		if (blackHoleVisible) {
-			handleBlackHoleTrapTrigger({ id: trapId, cell, zoneId: normalizedZone, penalty: 0, triggeredAt: Date.now(), type: 'blackHole' }, { upgradeUnlocked: blackHoleUnlocked, silent });
-		}
-		return;
-	}
+	const penaltyValue = TRAP_PENALTY;
 	const penaltyKey = getTrapCellKey(cell, normalizedZone);
 	if (penaltyValue > 0 && penaltyKey && trapPenaltyByKey.has(penaltyKey)) {
 		cell.dataset.trapTriggered = 'true';
@@ -20172,13 +20119,8 @@ let shopLevel2Used = false;
 		// Also show the -points near the affected color score row (so it's clearly visible)
 		showTrapPenaltyAtScoreRow(normalizedZone, penaltyValue);
 	  }
-	const trapVisible = !isBlackHole || blackHoleVisible;
 	if (silent) renderTrapSummary();
-	else if (trapVisible) renderTrapSummary({ highlightId: trapId });
-	else renderTrapSummary();
-	if (trapType === 'blackHole') {
-		handleBlackHoleTrapTrigger(prospective, { upgradeUnlocked: blackHoleUnlocked, silent });
-	  }
+	else renderTrapSummary({ highlightId: trapId });
 	}
 
 	function releaseTrap(cell) {
@@ -20203,18 +20145,6 @@ let shopLevel2Used = false;
 	  renderTrapSummary();
 	}
 
-	function resolveTrapById(trapId) {
-	  if (!trapId) return;
-	  const trap = activeTraps.find(entry => entry.id === trapId);
-	  if (!trap) return;
-	  if (trap.cell) {
-		releaseTrap(trap.cell);
-	  } else {
-		activeTraps = activeTraps.filter(entry => entry.id !== trapId);
-		renderTrapSummary();
-	  }
-	}
-
 	function ensureTrapState(cell, zoneId = '', options = {}) {
 	  if (!cell || cell.dataset.trap !== 'true') return;
 	  // Skip cells inside placeholder zones (clones)
@@ -20223,11 +20153,6 @@ let shopLevel2Used = false;
 	  const isActive = cell.classList.contains('active');
 	  const triggered = cell.dataset.trapTriggered === 'true';
 	  const { silent = false } = options;
-	  const trapType = cell.dataset.trapType || 'pit';
-	  if (trapType === 'blackHole' || isBlackHoleCell(cell)) {
-		ensureBlackHoleState(cell, normalizedZone, { silent });
-		return;
-	  }
 	  if (isActive && !triggered) {
 		registerTrapTrigger(cell, normalizedZone, { silent });
 	  } else if (!isActive && triggered) {
@@ -25597,29 +25522,17 @@ function getCollectedCoinCount(scores) {
 	  }
 	  const stakeLabel = stake > 0 ? ` (inzet ${stake}🪙 ×${mult})` : '';
 	  showObjectiveToast(coinsReward > 0 ? `🌀 Bonus +${reward} en +${coinsReward}🪙!${stakeLabel}` : `🌀 Bonus +${reward}!${stakeLabel}`);
-	  try {
-		if (activeTraps && trapRecord && activeTraps.some(trap => trap.id === trapRecord.id)) {
-			resolveTrapById(trapRecord.id);
-		}
-	  } catch (e) {}
 	  closeBlackHoleModal();
 	  updateScore();
 	  try { if (lastBlackHoleAutosave) saveGameState(); } catch (_) {}
 	}
 
 	function forfeitBlackHoleChallenge() {
-	  const trapRecord = blackHoleState.trap;
 	  if (!blackHoleState.gameOver) {
 		const penalty = Math.min(getSpendableCoinCount(), TRAP_PENALTY || 5);
 		for (let i = 0; i < penalty; i++) removeCoin();
 		if (penalty > 0) showObjectiveToast(`🌀 Gestopt: -${penalty}🪙`);
 	  }
-	  try {
-		if (trapRecord && activeTraps && activeTraps.some(trap => trap.id === trapRecord.id)) {
-			showObjectiveToast('🌀 Geen bonus deze keer.');
-			resolveTrapById(trapRecord.id);
-		}
-	  } catch (e) {}
 	  closeBlackHoleModal();
 	  updateScore();
 	  try { if (lastBlackHoleAutosave) saveGameState(); } catch (_) {}
