@@ -12937,6 +12937,10 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	const MOBILE_BREAKPOINT = 650;
 	const DESKTOP_LOW_HEIGHT_BREAKPOINT = 1080;
 	const TRAP_PENALTY = 5;
+	// Optional: log world progress to a remote endpoint (required for GitHub Pages).
+	// Set WORLD_PROGRESS_LOG_ENDPOINT to your backend URL (e.g., Google Apps Script / Supabase).
+	const WORLD_PROGRESS_LOG_ENDPOINT = '';
+	const WORLD_PROGRESS_LOG_ENABLED = false;
 
 	function isCoarsePointer() {
 		try {
@@ -17690,6 +17694,18 @@ let shopLevel2Used = false;
 		}
 		trapIndices.forEach(idx => symbolIndices.delete(idx));
 
+		const blackHoleChance = Math.max(0, Math.min(1, Number(options.blackHoleChance) || 0));
+		const blackHoleLimit = Number(options.maxBlackHoles) > 0 ? Number(options.maxBlackHoles) : (blackHoleChance > 0 ? 1 : 0);
+		const blackHoleIndices = new Set();
+		if (blackHoleChance > 0 && blackHoleLimit !== 0) {
+			const blackHoleCandidates = shuffledIdx.filter(i => !symbolIndices.has(i) && !coinIndices.has(i) && !boldIndices.has(i) && !trapIndices.has(i));
+			for (const idx of blackHoleCandidates) {
+				if (blackHoleIndices.size >= blackHoleLimit) break;
+				if (Math.random() < blackHoleChance) blackHoleIndices.add(idx);
+			}
+		}
+		blackHoleIndices.forEach(idx => symbolIndices.delete(idx));
+
 		const ensuredPairSet = new Set((ensuredBoldPairCoords || []).map(coord => `${coord.col},${coord.row}`));
 		if (ensuredPairSet.size > 0 && containerId === 'purple-grid') {
 			container.dataset.purplePair = Array.from(ensuredPairSet).join('|');
@@ -17749,8 +17765,10 @@ let shopLevel2Used = false;
 				if (boldIndices.has(idx)) cell.classList.add('bold-cell');
 				if (ensuredPairSet.has(`${c},${r}`)) cell.classList.add('purple-pair-cell');
 
-				if (trapIndices.has(idx)) {
-					decorateTrapCell(cell, { blackHoleChance: options.blackHoleChance });
+				if (blackHoleIndices.has(idx)) {
+					decorateTrapCell(cell, { forceType: 'blackHole', blackHoleChance: options.blackHoleChance });
+				} else if (trapIndices.has(idx)) {
+					decorateTrapCell(cell, { forceType: 'pit', blackHoleChance: 0 });
 				} else if (coinIndices.has(idx)) {
 					cell.classList.add('gold-cell');
 				} else if (symbolIndices.has(idx) && !boldIndices.has(idx)) {
@@ -19244,13 +19262,33 @@ let shopLevel2Used = false;
 		coinSet.delete(idx);
 	  });
 
+	  const blackHoleSet = new Set();
+	  const blackHoleChanceClamped = Math.max(0, Math.min(1, blackHoleChance || 0));
+	  const blackHoleLimit = blackHoleChanceClamped > 0 ? 1 : 0;
+	  if (blackHoleChanceClamped > 0 && blackHoleLimit !== 0) {
+		const blackHoleCandidates = clusterIndices.filter(i => !symbolIndices.has(i) && !coinSet.has(i) && !trapSet.has(i));
+		shuffleArray(blackHoleCandidates);
+		for (const cand of blackHoleCandidates) {
+		  if (blackHoleSet.size >= blackHoleLimit) break;
+		  if (Math.random() < blackHoleChanceClamped) blackHoleSet.add(cand);
+		}
+	  }
+	  blackHoleSet.forEach(idx => {
+		symbolIndices.delete(idx);
+		coinSet.delete(idx);
+	  });
+
 	  // apply symbols & coins
 	  for(const idx of clusterSet){
 		const cell = clusterMap[idx];
 		if(!cell) continue;
 
-		if(trapSet.has(idx)){
-		  decorateTrapCell(cell, { blackHoleChance });
+		if(blackHoleSet.has(idx)){
+		  decorateTrapCell(cell, { forceType: 'blackHole', blackHoleChance });
+		}
+
+		else if(trapSet.has(idx)){
+		  decorateTrapCell(cell, { forceType: 'pit', blackHoleChance: 0 });
 		}
 
 		else if(symbolIndices.has(idx)){
@@ -19533,6 +19571,7 @@ let shopLevel2Used = false;
 	// For shape placements, handle traps once per placement (see placeShape).
 	if (!partOfShape) {
 		ensureTrapState(cell, zone?.id || zoneId || '');
+		ensureBlackHoleState(cell, zone?.id || zoneId || '');
 	}
 
 	updateScore(cell);
@@ -19670,6 +19709,24 @@ let shopLevel2Used = false;
 	  return normalized;
 	}
 
+	function isBlackHoleCell(cell) {
+		if (!cell) return false;
+		if (cell.dataset?.blackHole === 'true') return true;
+		if (cell.dataset?.trapType === 'blackHole') return true; // back-compat
+		return false;
+	}
+
+	function buildBlackHoleRecord(cell, zoneId = '') {
+		return {
+			id: `bh-${nextTrapId()}`,
+			cell,
+			zoneId: normalizeZoneId(zoneId || cell?.dataset?.zoneId || cell?.closest?.('.grid')?.id || ''),
+			penalty: 0,
+			triggeredAt: Date.now(),
+			type: 'blackHole'
+		};
+	}
+
 	function nextTrapId() {
 	  trapIdCounter += 1;
 	  return `trap-${trapIdCounter}`;
@@ -19717,6 +19774,86 @@ let shopLevel2Used = false;
 		return null;
 	}
 
+	function pruneTrapPenaltyByKey() {
+		try {
+			if (!(trapPenaltyByKey instanceof Map)) return;
+			const toDelete = [];
+			trapPenaltyByKey.forEach((_, key) => {
+				try {
+					const parts = String(key || '').split('|');
+					if (parts.length < 3) { toDelete.push(key); return; }
+					const zoneId = parts[0];
+					const x = parts[1];
+					const y = parts[2];
+					const grid = document.getElementById(zoneId);
+					if (!grid) { toDelete.push(key); return; }
+					const selector = `.cell[data-x="${String(x)}"][data-y="${String(y)}"]`;
+					const cell = grid.querySelector(selector);
+					if (!cell || !cell.classList.contains('active') || cell.dataset.trapTriggered !== 'true') {
+						if (cell) {
+							delete cell.dataset.trapPenaltyApplied;
+							delete cell.dataset.trapColorKey;
+							delete cell.dataset.trapPenaltyKey;
+						}
+						toDelete.push(key);
+					}
+				} catch (e) { toDelete.push(key); }
+			});
+			if (toDelete.length) toDelete.forEach(k => trapPenaltyByKey.delete(k));
+		} catch (e) {}
+	}
+
+	function pruneActiveTraps() {
+		try {
+			if (!Array.isArray(activeTraps)) return;
+			activeTraps = activeTraps.filter(trap => {
+				const cell = trap && trap.cell;
+				if (trap && trap.type === 'blackHole') return false;
+				if (!cell || !cell.isConnected) return false;
+				if (!cell.classList || !cell.classList.contains('active')) return false;
+				if (trap.type !== 'blackHole' && cell.dataset.trapTriggered !== 'true') return false;
+				return true;
+			});
+		} catch (e) {}
+	}
+
+	function getOrCreatePlayerLogId() {
+		try {
+			let id = localStorage.getItem('locusPlayerId');
+			if (!id) {
+				id = `p-${Math.random().toString(36).slice(2, 10)}`;
+				localStorage.setItem('locusPlayerId', id);
+			}
+			return id;
+		} catch (e) {
+			return 'anon';
+		}
+	}
+
+	function logWorldProgress(payload = {}) {
+		try {
+			if (!WORLD_PROGRESS_LOG_ENABLED || !WORLD_PROGRESS_LOG_ENDPOINT) return;
+			if (window._locusScenarioMode) return;
+			const base = {
+				event: payload.event || 'world_reached',
+				playerId: getOrCreatePlayerLogId(),
+				time: new Date().toISOString()
+			};
+			const body = JSON.stringify({ ...base, ...payload });
+			if (navigator && typeof navigator.sendBeacon === 'function') {
+				const blob = new Blob([body], { type: 'application/json' });
+				navigator.sendBeacon(WORLD_PROGRESS_LOG_ENDPOINT, blob);
+				return;
+			}
+			fetch(WORLD_PROGRESS_LOG_ENDPOINT, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body,
+				keepalive: true
+			}).catch(() => {});
+		} catch (e) {}
+	}
+
 	function applyTrapPenaltyOnce(cell, normalizedZone, penaltyValue) {
 		const penalty = Number(penaltyValue) || 0;
 		if (!cell || penalty <= 0) return;
@@ -19727,6 +19864,25 @@ let shopLevel2Used = false;
 		cell.dataset.trapPenaltyApplied = 'true';
 		cell.dataset.trapColorKey = colorKey;
 		cell.dataset.trapPenaltyKey = key;
+	}
+
+	function ensureBlackHoleState(cell, zoneId = '', options = {}) {
+		if (!cell || !isBlackHoleCell(cell)) return;
+		if (cell.closest && cell.closest('.zone-placeholder')) return;
+		const isActive = cell.classList.contains('active');
+		const { silent = false } = options;
+		if (isActive && cell.dataset.blackHoleTriggered !== 'true') {
+			cell.dataset.blackHoleTriggered = 'true';
+			const blackHoleUnlocked = hasUpgrade('blackHoleAccess');
+			const blackHoleVisible = blackHoleUnlocked || isUpgradeAvailable('blackHoleAccess');
+			if (blackHoleVisible && !silent) {
+				handleBlackHoleTrapTrigger(buildBlackHoleRecord(cell, zoneId), { upgradeUnlocked: blackHoleUnlocked, silent });
+			} else if (!silent && !blackHoleVisible) {
+				showObjectiveToast('🌀 Koop de Zwart Gat Pas in de shop om dit speciale level te spelen.');
+			}
+		} else if (!isActive && cell.dataset.blackHoleTriggered === 'true') {
+			delete cell.dataset.blackHoleTriggered;
+		}
 	}
 
 	function decorateTrapCell(cell, options = {}) {
@@ -19742,8 +19898,13 @@ let shopLevel2Used = false;
 		trapType = 'pit';
 	  }
 	  cell.classList.add('trap-cell');
-	  cell.dataset.trap = 'true';
 	  cell.dataset.trapType = trapType;
+	  if (trapType === 'blackHole') {
+		cell.dataset.blackHole = 'true';
+		delete cell.dataset.trap;
+	  } else {
+		cell.dataset.trap = 'true';
+	  }
 	const shouldRevealTrap = trapType !== 'blackHole' || hasUpgrade('blackHoleAccess') || isUpgradeAvailable('blackHoleAccess');
 	if (shouldRevealTrap) {
 		const symbol = document.createElement('div');
@@ -19789,6 +19950,8 @@ let shopLevel2Used = false;
 		total: 0
 	  };
 	  try {
+		pruneActiveTraps();
+		pruneTrapPenaltyByKey();
 		trapPenaltyByKey.forEach(({ colorKey, penalty }) => {
 			const p = Number(penalty) || 0;
 			if (p <= 0) return;
@@ -19951,6 +20114,10 @@ let shopLevel2Used = false;
 	  // CRITICAL: Use dataset.zoneId first (set at cell creation), then fall back to DOM traversal
 	  const normalizedZone = normalizeZoneId(zoneId || cell.dataset?.zoneId || cell.closest('.grid')?.id || '');
 	const trapType = cell.dataset.trapType || 'pit';
+	if (trapType === 'blackHole' || isBlackHoleCell(cell)) {
+		ensureBlackHoleState(cell, normalizedZone, { silent });
+		return;
+	}
 	const isBlackHole = trapType === 'blackHole';
 	const blackHoleUnlocked = isBlackHole && hasUpgrade('blackHoleAccess');
 	const blackHoleVisible = isBlackHole && (blackHoleUnlocked || isUpgradeAvailable('blackHoleAccess'));
@@ -20057,17 +20224,8 @@ let shopLevel2Used = false;
 	  const triggered = cell.dataset.trapTriggered === 'true';
 	  const { silent = false } = options;
 	  const trapType = cell.dataset.trapType || 'pit';
-	  if (trapType === 'blackHole') {
-		if (isActive && cell.dataset.blackHoleTriggered !== 'true') {
-			cell.dataset.blackHoleTriggered = 'true';
-			const blackHoleUnlocked = hasUpgrade('blackHoleAccess');
-			const blackHoleVisible = blackHoleUnlocked || isUpgradeAvailable('blackHoleAccess');
-			if (blackHoleVisible) {
-				handleBlackHoleTrapTrigger({ id: nextTrapId(), cell, zoneId: normalizedZone, penalty: 0, triggeredAt: Date.now(), type: 'blackHole' }, { upgradeUnlocked: blackHoleUnlocked, silent });
-			}
-		} else if (!isActive && cell.dataset.blackHoleTriggered === 'true') {
-			delete cell.dataset.blackHoleTriggered;
-		}
+	  if (trapType === 'blackHole' || isBlackHoleCell(cell)) {
+		ensureBlackHoleState(cell, normalizedZone, { silent });
 		return;
 	  }
 	  if (isActive && !triggered) {
@@ -23626,6 +23784,15 @@ function optionalCellsTouchActive(zone, pendingCells) {
 			updateScore(trapCell);
 		}
 	} catch (e) {}
+
+	// Black hole: trigger independently of traps (only once per placement)
+	try {
+		const blackHoleCell = placements.find(c => c && isBlackHoleCell(c) && c.dataset.blackHoleTriggered !== 'true');
+		if (blackHoleCell) {
+			const bhZoneId = blackHoleCell.dataset?.zoneId || blackHoleCell.closest('.grid')?.id || zone?.id || '';
+			ensureBlackHoleState(blackHoleCell, bhZoneId, { silent: false });
+		}
+	} catch (e) {}
 	
 	currentPlacementId = previousPlacementId;
 	const scoreAfter = Number(totalScoreEl?.textContent || 0) || 0;
@@ -25430,7 +25597,11 @@ function getCollectedCoinCount(scores) {
 	  }
 	  const stakeLabel = stake > 0 ? ` (inzet ${stake}🪙 ×${mult})` : '';
 	  showObjectiveToast(coinsReward > 0 ? `🌀 Bonus +${reward} en +${coinsReward}🪙!${stakeLabel}` : `🌀 Bonus +${reward}!${stakeLabel}`);
-	  resolveTrapById(trapRecord.id);
+	  try {
+		if (activeTraps && trapRecord && activeTraps.some(trap => trap.id === trapRecord.id)) {
+			resolveTrapById(trapRecord.id);
+		}
+	  } catch (e) {}
 	  closeBlackHoleModal();
 	  updateScore();
 	  try { if (lastBlackHoleAutosave) saveGameState(); } catch (_) {}
@@ -25443,12 +25614,12 @@ function getCollectedCoinCount(scores) {
 		for (let i = 0; i < penalty; i++) removeCoin();
 		if (penalty > 0) showObjectiveToast(`🌀 Gestopt: -${penalty}🪙`);
 	  }
-	  if (trapRecord) {
-		if (activeTraps.some(trap => trap.id === trapRecord.id)) {
+	  try {
+		if (trapRecord && activeTraps && activeTraps.some(trap => trap.id === trapRecord.id)) {
 			showObjectiveToast('🌀 Geen bonus deze keer.');
 			resolveTrapById(trapRecord.id);
 		}
-	  }
+	  } catch (e) {}
 	  closeBlackHoleModal();
 	  updateScore();
 	  try { if (lastBlackHoleAutosave) saveGameState(); } catch (_) {}
@@ -28241,7 +28412,7 @@ function resetWorldLayoutStyles() {
 				avoidAdjacentBold: true,
 				trapChance: (shouldGenerateTraps ? 0.08 : 0) || blackHoleOnlyChance,
 				maxTraps: shouldGenerateTraps ? 7 : 0,
-				blackHoleChance: blackHoleAvailable && shouldGenerateTraps ? 0.3 : 0
+				blackHoleChance: blackHoleAvailable ? 0.3 : 0
 			};
 			if (isIntroLevel) {
 				purpleOptions.randomBoldCount = 0;
@@ -32843,7 +33014,6 @@ function showFloatingPreview(shape, color, options = {}) {
 					try {
 						// Ensure the dataset.trap flag exists
 						if (!cell.dataset) cell.dataset = {};
-						if (!cell.dataset.trap || String(cell.dataset.trap) !== 'true') cell.dataset.trap = 'true';
 						// Prefer explicit trapType if present, else infer from symbol/class
 						if (!cell.dataset.trapType) {
 							const hasBH = !!cell.querySelector('.trap-symbol.trap-symbol--black-hole');
@@ -32851,9 +33021,17 @@ function showFloatingPreview(shape, color, options = {}) {
 							if (hasBH) cell.dataset.trapType = 'blackHole';
 							else if (hasPit) cell.dataset.trapType = 'pit';
 						}
+						const inferredIsBH = cell.dataset.trapType === 'blackHole' || !!cell.querySelector('.trap-symbol.trap-symbol--black-hole');
+						if (inferredIsBH) {
+							cell.dataset.blackHole = 'true';
+							delete cell.dataset.trap;
+						} else if (!cell.dataset.trap || String(cell.dataset.trap) !== 'true') {
+							cell.dataset.trap = 'true';
+						}
 						const zoneId = cell.dataset.zoneId || cell.closest('.grid')?.id || '';
 						// Register or release trap depending on active state
-						ensureTrapState(cell, zoneId, { silent: true });
+						if (inferredIsBH) ensureBlackHoleState(cell, zoneId, { silent: true });
+						else ensureTrapState(cell, zoneId, { silent: true });
 					} catch (e) { /* ignore per-cell errors */ }
 				});
 				// Refresh trap UI summary
@@ -33986,7 +34164,7 @@ function monitorScenarioProgress() {
 			activeTraps = [];
 			trapIdCounter = 0;
 			lastTrapHighlightId = null;
-			blackHoleTrapPlaced = !!document.querySelector('.cell.trap-cell[data-trap-type="blackHole"]');
+			blackHoleTrapPlaced = !!document.querySelector('.cell[data-black-hole="true"], .cell.trap-cell[data-trap-type="blackHole"]');
 			trapPenaltyByKey = new Map();
 		} catch (e) {}
 		
@@ -34020,8 +34198,9 @@ function monitorScenarioProgress() {
 			if (key && seen.has(key)) return;
 			if (key) seen.add(key);
 			const trapType = cell.dataset.trapType || 'pit';
-			const isBlackHole = trapType === 'blackHole';
-			const penaltyValue = isBlackHole ? 0 : TRAP_PENALTY;
+			const isBlackHole = trapType === 'blackHole' || isBlackHoleCell(cell);
+			if (isBlackHole) return;
+			const penaltyValue = TRAP_PENALTY;
 			if (penaltyValue > 0) {
 				applyTrapPenaltyOnce(cell, zoneId, penaltyValue);
 			}
@@ -34764,6 +34943,21 @@ body { background: transparent; }
 		if (lastRoundWasSuccess) {
 		  const upcomingLevel = currentLevel + 1;
 		  console.log('🎯 Going to level:', upcomingLevel);
+		  try {
+			const prevWorldInfo = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(currentLevel) : { world: 1 };
+			const nextWorldInfo = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(upcomingLevel) : { world: 1 };
+			const prevWorld = Number(prevWorldInfo?.world || 1);
+			const nextWorld = Number(nextWorldInfo?.world || 1);
+			if (Number.isFinite(prevWorld) && Number.isFinite(nextWorld) && nextWorld > prevWorld) {
+				logWorldProgress({
+					event: 'world_reached',
+					world: nextWorld,
+					level: upcomingLevel,
+					prevWorld,
+					prevLevel: currentLevel
+				});
+			}
+		  } catch (e) {}
 		  
 		  // BELANGRIJK: Reset ALLE scores EN objectives VOORDAT we currentLevel updaten
 		  // Dit voorkomt dat de nieuwe level objective wordt gecontroleerd met oude scores
