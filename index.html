@@ -4212,6 +4212,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		top: auto;
 		right: auto;
 	}
+
+	/* Small mobile + zoomed-in: push rotate/mirror/cancel lower so they don't overlap the zoomed zone */
+	@media (max-width: 420px), (max-height: 720px) {
+		body.zoomed-in .card-control-btn {
+			bottom: max(4px, calc(var(--bottom-bar-height) - 6px));
+		}
+	}
 	
 	/* Mobile sidebar landscape: buttons aan de rechterkant */
 	body.mobile-sidebar-layout .card-control-btn {
@@ -14864,8 +14871,8 @@ let shopLevel2Used = false;
 					zones.forEach(id => {
 						const zone = document.getElementById(id);
 						if (!zone) return;
-						const cells = zone.querySelectorAll('.cell');
-						const active = zone.querySelectorAll('.cell.active');
+						const cells = zone.querySelectorAll('.cell:not(.void-cell)');
+						const active = zone.querySelectorAll('.cell.active:not(.void-cell)');
 						if (cells.length > 0 && cells.length === active.length) complete++;
 					});
 					return complete >= 2;
@@ -31212,7 +31219,19 @@ document.addEventListener('pointerdown', ev => {
 			};
 
 			const centerX = Math.round(window.innerWidth / 2);
-			const bottomVal = 'calc(var(--bottom-bar-height) + 10px)';
+			const rootStyle = getComputedStyle(document.documentElement);
+			const bottomBarHeight = parseFloat(rootStyle.getPropertyValue('--bottom-bar-height'));
+			const fallbackBottomBarHeight = parseFloat(rootStyle.getPropertyValue('--bottom-height'));
+			const effectiveBottomBarHeight = Number.isFinite(bottomBarHeight)
+				? bottomBarHeight
+				: (Number.isFinite(fallbackBottomBarHeight) ? fallbackBottomBarHeight : 70);
+			const viewportH = Math.round((window.visualViewport && window.visualViewport.height) ? window.visualViewport.height : window.innerHeight);
+			const isSmallViewport = viewportH <= 720 || window.innerWidth <= 380;
+			const isZoomedIn = document.body.classList.contains('zoomed-in');
+			const bottomPx = (isZoomedIn && isSmallViewport)
+				? Math.max(2, Math.round(effectiveBottomBarHeight - 24))
+				: Math.round(effectiveBottomBarHeight + 10);
+			const bottomVal = `${bottomPx}px`;
 			// Fixed order so buttons never “swap”: cancel, rotate, mirror
 			const visibleBtns = [];
 			if (cancelBtn) visibleBtns.push(cancelBtn);
@@ -31510,8 +31529,11 @@ function showFloatingPreview(shape, color, options = {}) {
 			preview.style.left = '50%';
 			preview.style.right = 'auto';
 			const viewportH = Math.round((window.visualViewport && window.visualViewport.height) ? window.visualViewport.height : window.innerHeight);
-			const extraDrop = (viewportH <= 650) ? 26 : 6;
-			preview.style.bottom = `${Math.round(effectiveBottomBarHeight - extraDrop)}px`;
+			const isVerySmall = viewportH <= 700 || window.innerWidth <= 380;
+			const isSmall = viewportH <= 780 || window.innerWidth <= 420;
+			const extraDrop = isVerySmall ? 60 : (isSmall ? 36 : 6);
+			const bottomOffset = Math.max(6, Math.round(effectiveBottomBarHeight - extraDrop));
+			preview.style.bottom = `${bottomOffset}px`;
 		} else if (isBonusPreview) {
 			// Bonus: klein en onderin, gecentreerd
 			preview.style.top = 'auto';
