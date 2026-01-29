@@ -35429,9 +35429,21 @@ body { background: transparent; }
 		const bottomBar = document.getElementById('bottom-bar');
 		const bottomBarMeasured = (!isClassicMode && bottomBar) ? bottomBar.getBoundingClientRect().height : 0;
 		const bottomBarCss = isClassicMode ? 0 : (parseFloat(rootStyles.getPropertyValue('--bottom-bar-height')) || 0);
-		const bottomBarHeight = Math.max(bottomBarMeasured || 0, bottomBarCss || 0);
+		// Prefer the CSS target height to avoid late reflows shrinking the board when bottom bar content loads.
+		const bottomBarHeight = bottomBarCss > 0 ? bottomBarCss : (bottomBarMeasured || 0);
 		const mobileObjective = document.getElementById('mobile-objective-banner');
-		const objectiveHeight = mobileObjective ? mobileObjective.getBoundingClientRect().height : 0;
+		let objectiveHeight = 0;
+		if (mobileObjective) {
+			try {
+				const pos = getComputedStyle(mobileObjective).position;
+				// Fixed/absolute banners don't consume layout height; avoid double-counting.
+				if (pos !== 'fixed' && pos !== 'absolute') {
+					objectiveHeight = mobileObjective.getBoundingClientRect().height || 0;
+				}
+			} catch (_) {
+				objectiveHeight = mobileObjective.getBoundingClientRect().height || 0;
+			}
+		}
 
 		// Provide some breathing room so we never render past the edges.
 		const horizontalPadding = 16;
