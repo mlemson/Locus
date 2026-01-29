@@ -14875,7 +14875,7 @@ let shopLevel2Used = false;
 						const active = zone.querySelectorAll('.cell.active:not(.void-cell)');
 						if (cells.length > 0 && cells.length === active.length) complete++;
 					});
-					return complete >= 2;
+					return complete >= 1;
 				}
 			},
 			{
@@ -17993,27 +17993,32 @@ let shopLevel2Used = false;
 			startCell = greenZone.querySelector('#green-grid .cell.bold-cell:not(.void-cell)') || null;
 		}
 		if (!startCell) return;
-		const maxLeft = Math.max(0, greenZone.scrollWidth - greenZone.clientWidth);
-		const maxTop = Math.max(0, greenZone.scrollHeight - greenZone.clientHeight);
-		// Use viewport geometry to avoid offset/transform drift on zoomed containers.
-		const zoneRect = greenZone.getBoundingClientRect();
-		const cellRect = startCell.getBoundingClientRect();
-		if (zoneRect.width && zoneRect.height && cellRect.width && cellRect.height) {
-			const zoneCenterX = zoneRect.left + zoneRect.width / 2;
-			const zoneCenterY = zoneRect.top + zoneRect.height / 2;
-			const cellCenterX = cellRect.left + cellRect.width / 2;
-			const cellCenterY = cellRect.top + cellRect.height / 2;
-			const desiredLeft = greenZone.scrollLeft + (cellCenterX - zoneCenterX);
-			const desiredTop = greenZone.scrollTop + (cellCenterY - zoneCenterY);
-			greenZone.scrollLeft = Math.max(0, Math.min(maxLeft, desiredLeft));
-			greenZone.scrollTop = Math.max(0, Math.min(maxTop, desiredTop));
+		
+		// Force layout reflow to ensure dimensions are accurate
+		greenZone.offsetHeight;
+		grid.offsetHeight;
+		startCell.offsetHeight;
+		
+		// Wait for zone to have valid dimensions
+		const zoneWidth = greenZone.clientWidth;
+		const zoneHeight = greenZone.clientHeight;
+		if (!zoneWidth || !zoneHeight) {
+			// Zone not ready yet, retry after a frame
+			requestAnimationFrame(() => resetGreenZoomScroll(greenZone, options));
 			return;
 		}
-		// Fallback: offset-based centering.
+		
+		const maxLeft = Math.max(0, greenZone.scrollWidth - zoneWidth);
+		const maxTop = Math.max(0, greenZone.scrollHeight - zoneHeight);
+		
+		// Use offset-based centering for reliability.
+		// For grids inside the zone, we need to calculate the cell position relative to the zone's scroll content.
 		const gridOffsetLeft = Number(grid.offsetLeft || 0);
 		const gridOffsetTop = Number(grid.offsetTop || 0);
-		const desiredLeft = (gridOffsetLeft + startCell.offsetLeft + startCell.offsetWidth / 2) - (greenZone.clientWidth / 2);
-		const desiredTop = (gridOffsetTop + startCell.offsetTop + startCell.offsetHeight / 2) - (greenZone.clientHeight / 2);
+		const cellCenterX = gridOffsetLeft + startCell.offsetLeft + startCell.offsetWidth / 2;
+		const cellCenterY = gridOffsetTop + startCell.offsetTop + startCell.offsetHeight / 2;
+		const desiredLeft = cellCenterX - (zoneWidth / 2);
+		const desiredTop = cellCenterY - (zoneHeight / 2);
 		greenZone.scrollLeft = Math.max(0, Math.min(maxLeft, desiredLeft));
 		greenZone.scrollTop = Math.max(0, Math.min(maxTop, desiredTop));
 	}
@@ -18471,16 +18476,25 @@ let shopLevel2Used = false;
 					zone.scrollLeft = 0;
 				} else {
 					// Zoom: always center on the start cell.
-					resetGreenZoomScroll(zone, { force: true });
-					try {
-						const mem = getZoneScrollMemory('green-zone');
-						if (mem && mem.zoom) {
-							mem.zoom.left = zone.scrollLeft;
-							mem.zoom.top = zone.scrollTop;
-							mem.zoom.initialized = true;
-							mem.zoom.userSet = false;
-						}
-					} catch (_) {}
+					// Use double RAF + multiple timeouts to ensure layout is stable after zoom transition
+					const doCentering = () => {
+						resetGreenZoomScroll(zone, { force: true });
+						try {
+							const mem = getZoneScrollMemory('green-zone');
+							if (mem && mem.zoom) {
+								mem.zoom.left = zone.scrollLeft;
+								mem.zoom.top = zone.scrollTop;
+								mem.zoom.initialized = true;
+								mem.zoom.userSet = false;
+							}
+						} catch (_) {}
+					};
+					// Immediate attempt
+					doCentering();
+					// Delayed attempts to catch any layout shifts
+					requestAnimationFrame(() => requestAnimationFrame(doCentering));
+					setTimeout(doCentering, 100);
+					setTimeout(doCentering, 200);
 				}
 			} catch (_) {
 				resetGreenZoomScroll(zone, { force: true });
@@ -18648,8 +18662,8 @@ let shopLevel2Used = false;
 		const nextZone = document.getElementById(nextId);
 		if (nextZone) {
 			// close current and open next
-			// slight delay to avoid immediate click propagation issues
-			setTimeout(() => openZoom(nextZone), 50);
+			// Use longer delay to ensure previous zoom is fully closed and layout is stable
+			setTimeout(() => openZoom(nextZone), 100);
 		}
 	}
 	
@@ -29455,35 +29469,36 @@ function resetWorldLayoutStyles() {
 			}
 		} catch (_) {}
 
-		// Green (World 2/3): center on start cell initially, then preserve user scroll.
-		// Simple approach: if user hasn't scrolled yet, center on start. Otherwise restore their position.
-		if (greenZone && !document.body.classList.contains('zoomed-in')) {
-			const mem = getZoneScrollMemory('green-zone');
-			// If this is a new level, reset the memory so we re-center on start
-			if (mem && mem.normal && mem.normal.level !== currentLevel) {
-				mem.normal.initialized = false;
-				mem.normal.level = currentLevel;
-			}
-			// Always ensure scroll tracking is bound
-			ensureZoneScrollTracking(greenZone);
-			// If not initialized yet, center on start cell
-			if (!mem || !mem.normal || !mem.normal.initialized) {
-				resetGreenZoomScroll(greenZone);
-				// Mark as initialized so future calls preserve user scroll
-				if (mem && mem.normal) {
-					mem.normal.left = greenZone.scrollLeft;
-					mem.normal.top = greenZone.scrollTop;
-					mem.normal.initialized = true;
-					mem.normal.level = currentLevel;
-				}
-			}
-		}
-		
 		// Finally sync zone heights so green/blue match column 1 height
 		// Use double requestAnimationFrame to ensure DOM is fully laid out
 		try { syncZoneHeights(); } catch (e) {}
+		
+		// Green (World 2/3): center on start cell AFTER zone heights are synced.
+		// Simple approach: if user hasn't scrolled yet, center on start. Otherwise restore their position.
 		requestAnimationFrame(() => {
 			try { syncZoneHeights(); } catch (e) {}
+			// Now center on start cell after zone has correct dimensions
+			if (greenZone && !document.body.classList.contains('zoomed-in')) {
+				const mem = getZoneScrollMemory('green-zone');
+				// If this is a new level, reset the memory so we re-center on start
+				if (mem && mem.normal && mem.normal.level !== currentLevel) {
+					mem.normal.initialized = false;
+					mem.normal.level = currentLevel;
+				}
+				// Always ensure scroll tracking is bound
+				ensureZoneScrollTracking(greenZone);
+				// If not initialized yet, center on start cell
+				if (!mem || !mem.normal || !mem.normal.initialized) {
+					resetGreenZoomScroll(greenZone);
+					// Mark as initialized so future calls preserve user scroll
+					if (mem && mem.normal) {
+						mem.normal.left = greenZone.scrollLeft;
+						mem.normal.top = greenZone.scrollTop;
+						mem.normal.initialized = true;
+						mem.normal.level = currentLevel;
+					}
+				}
+			}
 		});
 	  });
 	}
@@ -30562,6 +30577,26 @@ function isWorld4CardAllowed(cardData) {
 		savedDeckState = null; // Clear na gebruik
 		// Ensure the stage visibility is applied after load (in case DOM was rebuilt).
 		try { applyWorld3RedStage(Number(getWorldAndSubLevel(currentLevel)?.world || 1) === 3 ? world3RedStage : 0); } catch (e) {}
+		
+		// IMPORTANT: Reset green zone scroll memory and center on start cell after loading.
+		// This ensures the green zone always starts centered on the start cell after a page refresh.
+		try {
+			resetZoneScrollMemory('green-zone');
+			resetZoneScrollMemory('blue-zone');
+			const greenZone = document.getElementById('green-zone');
+			const blueZone = document.getElementById('blue-zone');
+			// Use delayed centering to ensure layout is stable
+			requestAnimationFrame(() => {
+				requestAnimationFrame(() => {
+					if (greenZone) resetGreenZoomScroll(greenZone);
+					if (blueZone) resetBlueZoomScroll(blueZone);
+					setTimeout(() => {
+						if (greenZone) resetGreenZoomScroll(greenZone);
+						if (blueZone) resetBlueZoomScroll(blueZone);
+					}, 150);
+				});
+			});
+		} catch (_) {}
 		
 		updateBonusInventoryUI();
 		
@@ -35429,21 +35464,9 @@ body { background: transparent; }
 		const bottomBar = document.getElementById('bottom-bar');
 		const bottomBarMeasured = (!isClassicMode && bottomBar) ? bottomBar.getBoundingClientRect().height : 0;
 		const bottomBarCss = isClassicMode ? 0 : (parseFloat(rootStyles.getPropertyValue('--bottom-bar-height')) || 0);
-		// Prefer the CSS target height to avoid late reflows shrinking the board when bottom bar content loads.
-		const bottomBarHeight = bottomBarCss > 0 ? bottomBarCss : (bottomBarMeasured || 0);
+		const bottomBarHeight = Math.max(bottomBarMeasured || 0, bottomBarCss || 0);
 		const mobileObjective = document.getElementById('mobile-objective-banner');
-		let objectiveHeight = 0;
-		if (mobileObjective) {
-			try {
-				const pos = getComputedStyle(mobileObjective).position;
-				// Fixed/absolute banners don't consume layout height; avoid double-counting.
-				if (pos !== 'fixed' && pos !== 'absolute') {
-					objectiveHeight = mobileObjective.getBoundingClientRect().height || 0;
-				}
-			} catch (_) {
-				objectiveHeight = mobileObjective.getBoundingClientRect().height || 0;
-			}
-		}
+		const objectiveHeight = mobileObjective ? mobileObjective.getBoundingClientRect().height : 0;
 
 		// Provide some breathing room so we never render past the edges.
 		const horizontalPadding = 16;
@@ -35860,6 +35883,17 @@ body { background: transparent; }
 	  
 	  // Verberg lege zones
 	  hideEmptyZones();
+	  
+	  // IMPORTANT: Adjust zone sizes for World 2/3 BEFORE scaling the board.
+	  // This ensures the board scale calculation uses the correct zone dimensions.
+	  try {
+		  const worldInfo = typeof getWorldAndSubLevel === 'function' ? getWorldAndSubLevel(currentLevel) : null;
+		  if (worldInfo && (worldInfo.world === 2 || worldInfo.world === 3)) {
+			  adjustZoneSizesForWorld2();
+		  }
+	  } catch (_) {}
+	  
+	  // Now scale the board after zones are properly sized
 			  scaleBoardForDesktop();
 			  scaleBoardForMobile();
 		  renderTrapSummary();
@@ -36048,21 +36082,24 @@ body { background: transparent; }
 		// Step 3: run sizing/spacing on next frames so layout has settled
 		try {
 			requestAnimationFrame(() => {
-				try { scaleBoardForDesktop(); } catch (_) {}
-				try { scaleBoardForMobile(); } catch (_) {}
-				try { placeActionButtons(); } catch (_) {}
-				try { applyCardSizing(); } catch (_) {}
-				try { if (typeof updateHandScrollControls === 'function') updateHandScrollControls(); } catch (_) {}
-				try { syncZoneHeights(); } catch (_) {}
-				try { if (activeZoomZone) applyMobileZoomSizing(activeZoomZone); } catch (_) {}
-				try { if (activeZoomZone) schedulePlaceholderSync(activeZoomZone); } catch (_) {}
-				// Recompute World 2/3 zone sizing (depends on viewport)
+				// First: adjust zone sizes for World 2/3 BEFORE scaling
+				// This ensures board scaling uses the correct zone dimensions
 				try {
 					const worldInfo = typeof getWorldAndSubLevel === 'function' ? getWorldAndSubLevel(currentLevel) : null;
 					if (worldInfo && (worldInfo.world === 2 || worldInfo.world === 3)) {
 						adjustZoneSizesForWorld2();
 					}
 				} catch (_) {}
+				try { syncZoneHeights(); } catch (_) {}
+				
+				// Now scale the board AFTER zones are properly sized
+				try { scaleBoardForDesktop(); } catch (_) {}
+				try { scaleBoardForMobile(); } catch (_) {}
+				try { placeActionButtons(); } catch (_) {}
+				try { applyCardSizing(); } catch (_) {}
+				try { if (typeof updateHandScrollControls === 'function') updateHandScrollControls(); } catch (_) {}
+				try { if (activeZoomZone) applyMobileZoomSizing(activeZoomZone); } catch (_) {}
+				try { if (activeZoomZone) schedulePlaceholderSync(activeZoomZone); } catch (_) {}
 				// MOBILE FIX: Re-scale mobile board when window resizes
 				try {
 					if (window._scaleMobileBoard && document.body.classList.contains('mobile-sidebar-layout')) {
