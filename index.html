@@ -18060,6 +18060,42 @@ let shopLevel2Used = false;
 		}
 	}
 
+	// --- Centralized green centering + one-time sizing flags ---
+	let zoneSizingNeedsRun = true;
+	function markZoneSizingNeeded() {
+		zoneSizingNeedsRun = true;
+	}
+	let greenCenterToken = 0;
+	function scheduleGreenCenter(options = {}) {
+		const opts = (options && typeof options === 'object') ? options : {};
+		const greenZone = document.getElementById('green-zone');
+		if (!greenZone) return;
+		const allowZoom = !!opts.allowZoom;
+		const force = !!opts.force;
+		const fallback = !!opts.fallback;
+		const fallbackDelay = Number.isFinite(opts.fallbackDelay) ? opts.fallbackDelay : 140;
+		const mode = getZoneScrollMode(greenZone);
+		if (!allowZoom && mode === 'zoom') return;
+		const mem = getZoneScrollMemory('green-zone');
+		if (!force && mem && mem[mode] && mem[mode].userSet) return;
+		const token = ++greenCenterToken;
+		const run = () => {
+			if (token !== greenCenterToken) return;
+			resetGreenZoomScroll(greenZone, { force: force || mode === 'zoom' });
+			try {
+				if (mem && mem[mode]) {
+					mem[mode].left = greenZone.scrollLeft;
+					mem[mode].top = greenZone.scrollTop;
+					mem[mode].initialized = true;
+					mem[mode].level = currentLevel;
+					if (mode === 'zoom' && force) mem[mode].userSet = false;
+				}
+			} catch (_) {}
+		};
+		requestAnimationFrame(() => requestAnimationFrame(run));
+		if (fallback) setTimeout(run, fallbackDelay);
+	}
+
 	// --- Per-zone scroll memory (normal vs zoom) ---
 	const ZONE_SCROLL_MEMORY = window.__locusZoneScrollMemory || (window.__locusZoneScrollMemory = {});
 	function getZoneScrollMemory(zoneId) {
@@ -18475,29 +18511,11 @@ let shopLevel2Used = false;
 					zone.scrollTop = 0;
 					zone.scrollLeft = 0;
 				} else {
-					// Zoom: always center on the start cell.
-					// Use double RAF + multiple timeouts to ensure layout is stable after zoom transition
-					const doCentering = () => {
-						resetGreenZoomScroll(zone, { force: true });
-						try {
-							const mem = getZoneScrollMemory('green-zone');
-							if (mem && mem.zoom) {
-								mem.zoom.left = zone.scrollLeft;
-								mem.zoom.top = zone.scrollTop;
-								mem.zoom.initialized = true;
-								mem.zoom.userSet = false;
-							}
-						} catch (_) {}
-					};
-					// Immediate attempt
-					doCentering();
-					// Delayed attempts to catch any layout shifts
-					requestAnimationFrame(() => requestAnimationFrame(doCentering));
-					setTimeout(doCentering, 100);
-					setTimeout(doCentering, 200);
+					// Zoom: always center on the start cell via centralized scheduler.
+					try { scheduleGreenCenter({ force: true, allowZoom: true, fallback: true, fallbackDelay: 180 }); } catch (_) {}
 				}
 			} catch (_) {
-				resetGreenZoomScroll(zone, { force: true });
+				try { scheduleGreenCenter({ force: true, allowZoom: true, fallback: true, fallbackDelay: 180 }); } catch (_) {}
 			}
 		}
 		if (zone.id === 'blue-zone') {
@@ -24012,12 +24030,7 @@ function optionalCellsTouchActive(zone, pendingCells) {
 			if (lockEl) lockEl.style.display = 'none';
 		}
 		// Recenter green after stage flips to prevent layout drift on World 3.
-		setTimeout(() => {
-			try {
-				const greenZone = document.getElementById('green-zone');
-				if (greenZone) resetGreenZoomScroll(greenZone);
-			} catch (_) {}
-		}, 40);
+		try { scheduleGreenCenter({ force: false, allowZoom: false, fallback: true, fallbackDelay: 80 }); } catch (_) {}
 		// NOTE: Do NOT set position here - zoom mode needs position:fixed to work.
 		// The lock overlay uses position:absolute which works fine with the parent's natural position.
 	}
@@ -28805,14 +28818,15 @@ function resetWorldLayoutStyles() {
 	  boardConfigs.forEach(fn => fn());
 	  updateScore();
 	  
-	  // World 2: reset scroll memory so green centers on start cell
+	  // World 2: reset scroll memory so green centers on start cell (centralized)
 	  try {
-		resetZoneScrollState('green-zone', resetGreenZoomScroll);
+		resetZoneScrollMemory('green-zone');
+		scheduleGreenCenter({ force: true, allowZoom: false, fallback: true, fallbackDelay: 140 });
 		resetZoneScrollState('blue-zone', resetBlueZoomScroll);
 	  } catch (_) {}
 	  
-	  // Pas zone groottes aan op basis van gegenereerde grids
-	  adjustZoneSizesForWorld2();
+	  // Defer zone sizing to the centralized one-time layout pass
+	  markZoneSizingNeeded();
 	  
 	  // Log voor debugging
 	  console.log('🌍 World 2 grids generated for level', currentLevel, 'sublevel', subLevel);
@@ -29148,20 +29162,15 @@ function resetWorldLayoutStyles() {
 	  // World 3: after regenerating the board, re-anchor the initial unzoomed view.
 	  // Without this, existing scroll memory can keep green at (0,0) instead of centered.
 	  try {
-		resetZoneScrollState('green-zone', resetGreenZoomScroll);
+		resetZoneScrollMemory('green-zone');
+		scheduleGreenCenter({ force: true, allowZoom: false, fallback: true, fallbackDelay: 140 });
 		resetZoneScrollState('blue-zone', resetBlueZoomScroll);
 	  } catch (_) {}
 	  
-	  // Gebruik World 2 zone sizing (werkt ook voor World 3)
-	  adjustZoneSizesForWorld2();
+	  // Defer zone sizing to the centralized one-time layout pass (works for World 3)
+	  markZoneSizingNeeded();
 	  // Extra safeguard: recentre green after sizing settles so it does not jump left on World 3.
-	  try {
-		const greenZone = document.getElementById('green-zone');
-		if (greenZone) {
-			requestAnimationFrame(() => resetGreenZoomScroll(greenZone));
-			setTimeout(() => resetGreenZoomScroll(greenZone), 120);
-		}
-	  } catch (_) {}
+	  try { scheduleGreenCenter({ force: true, allowZoom: false, fallback: true, fallbackDelay: 160 }); } catch (_) {}
 	  
 	  console.log('🔥 World 3 grids generated for level', currentLevel, 'sublevel', subLevel);
 	}
@@ -29469,37 +29478,7 @@ function resetWorldLayoutStyles() {
 			}
 		} catch (_) {}
 
-		// Finally sync zone heights so green/blue match column 1 height
-		// Use double requestAnimationFrame to ensure DOM is fully laid out
-		try { syncZoneHeights(); } catch (e) {}
-		
-		// Green (World 2/3): center on start cell AFTER zone heights are synced.
-		// Simple approach: if user hasn't scrolled yet, center on start. Otherwise restore their position.
-		requestAnimationFrame(() => {
-			try { syncZoneHeights(); } catch (e) {}
-			// Now center on start cell after zone has correct dimensions
-			if (greenZone && !document.body.classList.contains('zoomed-in')) {
-				const mem = getZoneScrollMemory('green-zone');
-				// If this is a new level, reset the memory so we re-center on start
-				if (mem && mem.normal && mem.normal.level !== currentLevel) {
-					mem.normal.initialized = false;
-					mem.normal.level = currentLevel;
-				}
-				// Always ensure scroll tracking is bound
-				ensureZoneScrollTracking(greenZone);
-				// If not initialized yet, center on start cell
-				if (!mem || !mem.normal || !mem.normal.initialized) {
-					resetGreenZoomScroll(greenZone);
-					// Mark as initialized so future calls preserve user scroll
-					if (mem && mem.normal) {
-						mem.normal.left = greenZone.scrollLeft;
-						mem.normal.top = greenZone.scrollTop;
-						mem.normal.initialized = true;
-						mem.normal.level = currentLevel;
-					}
-				}
-			}
-		});
+		// Zone sizing only; centering/height sync is handled centrally.
 	  });
 	}
 
@@ -29708,6 +29687,7 @@ function resetWorldLayoutStyles() {
 	  clearWorld4Locks();
 
 	  currentLevel = level;
+	  markZoneSizingNeeded();
 	// Stop any lingering tutorial state when leaving the intro level so hints do not bleed into later levels.
 	if (level !== 0 && tutorialState.active) {
 		tutorialState.active = false;
@@ -30578,24 +30558,13 @@ function isWorld4CardAllowed(cardData) {
 		// Ensure the stage visibility is applied after load (in case DOM was rebuilt).
 		try { applyWorld3RedStage(Number(getWorldAndSubLevel(currentLevel)?.world || 1) === 3 ? world3RedStage : 0); } catch (e) {}
 		
-		// IMPORTANT: Reset green zone scroll memory and center on start cell after loading.
-		// This ensures the green zone always starts centered on the start cell after a page refresh.
+		// IMPORTANT: Reset green/blue scroll memory and center after loading.
 		try {
 			resetZoneScrollMemory('green-zone');
 			resetZoneScrollMemory('blue-zone');
-			const greenZone = document.getElementById('green-zone');
+			scheduleGreenCenter({ force: true, allowZoom: false, fallback: true, fallbackDelay: 160 });
 			const blueZone = document.getElementById('blue-zone');
-			// Use delayed centering to ensure layout is stable
-			requestAnimationFrame(() => {
-				requestAnimationFrame(() => {
-					if (greenZone) resetGreenZoomScroll(greenZone);
-					if (blueZone) resetBlueZoomScroll(blueZone);
-					setTimeout(() => {
-						if (greenZone) resetGreenZoomScroll(greenZone);
-						if (blueZone) resetBlueZoomScroll(blueZone);
-					}, 150);
-				});
-			});
+			if (blueZone) requestAnimationFrame(() => resetBlueZoomScroll(blueZone));
 		} catch (_) {}
 		
 		updateBonusInventoryUI();
@@ -35553,6 +35522,21 @@ body { background: transparent; }
 		desktopWrapper.remove();
 	}
 
+	function runZoneSizingOnce() {
+		if (!zoneSizingNeedsRun) return;
+		zoneSizingNeedsRun = false;
+		try {
+			const worldInfo = typeof getWorldAndSubLevel === 'function' ? getWorldAndSubLevel(currentLevel) : null;
+			if (worldInfo && (worldInfo.world === 2 || worldInfo.world === 3)) {
+				adjustZoneSizesForWorld2();
+			}
+		} catch (_) {}
+		try { syncZoneHeights(); } catch (_) {}
+		// One-time deferred sync to catch sizing set in rAF inside adjustZoneSizesForWorld2.
+		try { requestAnimationFrame(() => { try { syncZoneHeights(); } catch (_) {} }); } catch (_) {}
+		try { scheduleGreenCenter({ force: false, allowZoom: false, fallback: true, fallbackDelay: 140 }); } catch (_) {}
+	}
+
 	function moveGameElements() {
 	  const width = window.innerWidth;
 	  const height = window.innerHeight;
@@ -35691,6 +35675,8 @@ body { background: transparent; }
 				placeActionButtons();
 				applyCardSizing();
 				hideEmptyZones();
+				// Ensure one-time zone sizing runs even in mobile sidebar layout
+				runZoneSizingOnce();
 				return;
 				}
 			}
@@ -35884,24 +35870,13 @@ body { background: transparent; }
 	  // Verberg lege zones
 	  hideEmptyZones();
 	  
-	  // IMPORTANT: Adjust zone sizes for World 2/3 BEFORE scaling the board.
-	  // This ensures the board scale calculation uses the correct zone dimensions.
-	  try {
-		  const worldInfo = typeof getWorldAndSubLevel === 'function' ? getWorldAndSubLevel(currentLevel) : null;
-		  if (worldInfo && (worldInfo.world === 2 || worldInfo.world === 3)) {
-			  adjustZoneSizesForWorld2();
-		  }
-	  } catch (_) {}
+	  // IMPORTANT: Run zone sizing/height sync only once per level load/refresh.
+	  runZoneSizingOnce();
 	  
 	  // Now scale the board after zones are properly sized
 			  scaleBoardForDesktop();
 			  scaleBoardForMobile();
 		  renderTrapSummary();
-		  // Keep column heights aligned in ALL worlds (World 1 previously missed this sync).
-		  try {
-			  syncZoneHeights();
-			  requestAnimationFrame(() => { try { syncZoneHeights(); } catch (_) {} });
-		  } catch (_) {}
 		  autoCenterScrollableZones();
 		  
 	}
@@ -35955,14 +35930,7 @@ body { background: transparent; }
 	  })();
 	  const greenShouldAutoCenter = !(greenMem && greenMem.normal && greenMem.normal.initialized);
 	  if (greenZone && !greenScrollDisabled && greenShouldAutoCenter) {
-		// Center on start cell using resetGreenZoomScroll which is more reliable
-		resetGreenZoomScroll(greenZone);
-		// Mark as initialized
-		if (greenMem && greenMem.normal) {
-			greenMem.normal.left = greenZone.scrollLeft;
-			greenMem.normal.top = greenZone.scrollTop;
-			greenMem.normal.initialized = true;
-		}
+		try { scheduleGreenCenter({ force: false, allowZoom: false, fallback: true, fallbackDelay: 140 }); } catch (_) {}
 	  }
 
 	  const blueZone = document.getElementById('blue-zone');
@@ -36070,6 +36038,8 @@ body { background: transparent; }
 				// Also reset all body layout classes
 				document.body.classList.remove('mobile-sidebar-layout', 'touch-portrait', 
 					'desktop-portrait', 'desktop-landscape', 'mobile-landscape');
+				// Ensure zone sizing runs once for the new layout
+				markZoneSizingNeeded();
 			}
 			lastLayoutMode = currentMode;
 		} catch (_) {}
@@ -36082,17 +36052,7 @@ body { background: transparent; }
 		// Step 3: run sizing/spacing on next frames so layout has settled
 		try {
 			requestAnimationFrame(() => {
-				// First: adjust zone sizes for World 2/3 BEFORE scaling
-				// This ensures board scaling uses the correct zone dimensions
-				try {
-					const worldInfo = typeof getWorldAndSubLevel === 'function' ? getWorldAndSubLevel(currentLevel) : null;
-					if (worldInfo && (worldInfo.world === 2 || worldInfo.world === 3)) {
-						adjustZoneSizesForWorld2();
-					}
-				} catch (_) {}
-				try { syncZoneHeights(); } catch (_) {}
-				
-				// Now scale the board AFTER zones are properly sized
+				// Now scale the board AFTER layout has settled
 				try { scaleBoardForDesktop(); } catch (_) {}
 				try { scaleBoardForMobile(); } catch (_) {}
 				try { placeActionButtons(); } catch (_) {}
@@ -36106,20 +36066,12 @@ body { background: transparent; }
 						requestAnimationFrame(window._scaleMobileBoard);
 					}
 				} catch (_) {}
-				try { autoCenterScrollableZones(); } catch (_) {}
-				// Final pass to stabilize heights
-				try {
-					requestAnimationFrame(() => {
-						try { syncZoneHeights(); } catch (_) {}
-						layoutReflowInProgress = false;
-					});
-				} catch (_) { layoutReflowInProgress = false; }
+				layoutReflowInProgress = false;
 			});
 		} catch (_) {
 			// Fallback if rAF is blocked
 			try { scaleBoardForDesktop(); } catch (_) {}
 			try { scaleBoardForMobile(); } catch (_) {}
-			try { syncZoneHeights(); } catch (_) {}
 			layoutReflowInProgress = false;
 		}
 	}
