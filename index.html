@@ -15363,8 +15363,8 @@ let shopLevel2Used = false;
 			// when zoomed-in measure the actual cell size from the active zoom
 			// zone so offsets align with the rendered draggable.
 			const measuredRoot = (document.body.classList.contains('zoomed-in') && typeof activeZoomZone !== 'undefined' && activeZoomZone) ? activeZoomZone : null;
-			const resolvedCellSize = Number.isFinite(cellSize) ? Number(cellSize) : getActualCellSize(measuredRoot) || metrics.cellSize;
-			const resolvedGap = Number.isFinite(cellSize) ? 0 : metrics.gap;
+				const resolvedCellSize = Number.isFinite(cellSize) ? Number(cellSize) : getActualCellSize(measuredRoot) || metrics.cellSize;
+				const resolvedGap = Number.isFinite(cellSize) ? 0 : metrics.gap;
 			const resolvedStep = resolvedCellSize + resolvedGap;
 
 			const shapeHeight = shape.length;
@@ -22650,6 +22650,17 @@ document.addEventListener('pointermove', ev => {
 			if (overlay && !overlay.contains(block)) overlay.appendChild(block);
 		}
 	} catch (e) {}
+
+	const isPreviewBlock = (block.id === 'floating-preview' || block.id === 'purchased-block-preview' || (block.classList && (block.classList.contains('draggable') || block.classList.contains('bonus-draggable'))));
+	let previewGapPx = 0;
+	if (isPreviewBlock) {
+		try {
+			previewGapPx = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--board-grid-gap')) || 0;
+		} catch (e) {
+			previewGapPx = 0;
+		}
+	}
+
 	  
 	  // Bepaal de cel-grootte: gebruik de werkelijke speelveld cel-grootte als niet ingezoomd
 	  const isZoomed = document.body.classList.contains('zoomed-in');
@@ -22675,7 +22686,11 @@ document.addEventListener('pointermove', ev => {
 	  block.style.gridTemplateColumns = `repeat(${shape[0].length}, ${cellSizeStr})`;
 	  block.style.gridTemplateRows = `repeat(${shape.length}, ${cellSizeStr})`;
 	  // Keep spacing consistent with the board grid.
-	  block.style.gap = 'var(--board-grid-gap)';
+	  if (isPreviewBlock && dragGapMode === 'gapless') {
+		block.style.gap = '0px';
+	  } else {
+		block.style.gap = 'var(--board-grid-gap)';
+	  }
 	  block.style.opacity = '0.8';
 	  const optionalSet = new Set(getOptionalCells(shape).map(({ x, y }) => `${x},${y}`));
 	  
@@ -22688,6 +22703,11 @@ document.addEventListener('pointermove', ev => {
 			// Border-radius consistent met speelveld
 			div.style.borderRadius = borderRadius;
 			div.style.boxSizing = 'border-box';
+			if (isPreviewBlock) {
+				div.classList.add('preview-cell-wrap');
+				const pad = (dragGapMode === 'gapless') ? (previewGapPx / 2) : 0;
+				div.style.padding = `${pad}px`;
+			}
 			const key = `${colIdx},${rowIdx}`;
 			const isOptional = optionalSet.has(key);
 			if (cell && !isOptional) {
@@ -22702,8 +22722,18 @@ document.addEventListener('pointermove', ev => {
 				const isGradient = typeof background === 'string' && background.includes('gradient');
 				shadow = isGradient ? '0 0 4px rgba(90,80,160,0.4)' : `0 0 4px ${background}`;
 			  }
-			  div.style.background = background;
-			  div.style.boxShadow = shadow;
+			  if (isPreviewBlock) {
+				const inner = document.createElement('div');
+				inner.style.width = '100%';
+				inner.style.height = '100%';
+				inner.style.borderRadius = borderRadius;
+				inner.style.background = background;
+				inner.style.boxShadow = shadow;
+				div.appendChild(inner);
+			  } else {
+				div.style.background = background;
+				div.style.boxShadow = shadow;
+			  }
 			} else if (isOptional) {
 			  let background;
 			  if (color.code === 'rainbow') {
@@ -22711,16 +22741,31 @@ document.addEventListener('pointermove', ev => {
 			  } else {
 				background = color.code || '#a0a0a0';
 			  }
-			  div.style.background = background;
-			  div.style.opacity = '0.6';
-			  div.style.border = '2px dashed rgba(255,255,255,0.85)';
-			  div.style.boxShadow = 'none';
+			  if (isPreviewBlock) {
+				const inner = document.createElement('div');
+				inner.style.width = '100%';
+				inner.style.height = '100%';
+				inner.style.borderRadius = borderRadius;
+				inner.style.background = background;
+				inner.style.opacity = '0.6';
+				inner.style.border = '2px dashed rgba(255,255,255,0.85)';
+				inner.style.boxShadow = 'none';
+				div.appendChild(inner);
+			  } else {
+				div.style.background = background;
+				div.style.opacity = '0.6';
+				div.style.border = '2px dashed rgba(255,255,255,0.85)';
+				div.style.boxShadow = 'none';
+			  }
 			} else {
 			  div.style.visibility = 'hidden';
 			}
 			block.appendChild(div);
 		});
 	  });
+	  if (isPreviewBlock) {
+		updatePreviewGapStyles(block);
+	  }
 	}
 
 	function hexToRGBA(hex, alpha = 1) {
@@ -22839,9 +22884,9 @@ document.addEventListener('pointermove', ev => {
 
 			const isGreenGrid = (grid && grid.id === 'green-grid') || (zone && zone.dataset && String(zone.dataset.color || '').toLowerCase() === 'groen');
 			const isRedGrid = (zone && zone.id && zone.id.startsWith('red-grid')) ||
-												(zone && zone.dataset && String(zone.dataset.color || '').toLowerCase() === 'rood') ||
-												(zone && zone.classList && zone.classList.contains('red-group')) ||
-												(grid && grid.id && String(grid.id || '').startsWith('red-grid'));
+															(zone && zone.dataset && String(zone.dataset.color || '').toLowerCase() === 'rood') ||
+															(zone && zone.classList && zone.classList.contains('red-group')) ||
+															(grid && grid.id && String(grid.id || '').startsWith('red-grid'));
 
 			// If any element has an explicit inline position absolute/fixed/sticky, treat as absolute-positioned grid
 			if (el.style && el.style.position) {
@@ -22865,6 +22910,8 @@ document.addEventListener('pointermove', ev => {
 				if (pos === 'absolute' || pos === 'fixed' || pos === 'sticky') return true;
 			}
 
+
+
 			return isGreenGrid || isRedGrid;
 		} catch (e) {
 			return false;
@@ -22878,6 +22925,28 @@ document.addEventListener('pointermove', ev => {
 		}
 	}
 
+	function updatePreviewGapStyles(block) {
+		if (!block) return;
+		const isPreviewBlock = (block.id === 'floating-preview' || block.id === 'purchased-block-preview' || (block.classList && (block.classList.contains('draggable') || block.classList.contains('bonus-draggable'))));
+		if (!isPreviewBlock) return;
+		let gapPx = 0;
+		try {
+			gapPx = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--board-grid-gap')) || 0;
+		} catch (e) {
+			gapPx = 0;
+		}
+		if (dragGapMode === 'gapless') {
+			block.style.gap = '0px';
+		} else {
+			block.style.gap = 'var(--board-grid-gap)';
+		}
+		const pad = (dragGapMode === 'gapless') ? (gapPx / 2) : 0;
+		const padStr = `${pad}px`;
+		block.querySelectorAll('.preview-cell-wrap').forEach(cell => {
+			cell.style.padding = padStr;
+		});
+	}
+
 	function applyDragBlockGap(zoneCandidate) {
 		if (!draggedBlock) return false;
 		const zoneEl = zoneCandidate && zoneCandidate.classList && zoneCandidate.classList.contains('zone')
@@ -22888,10 +22957,12 @@ document.addEventListener('pointermove', ev => {
 		if (shouldBeGapless && dragGapMode !== 'gapless') {
 			draggedBlock.style.gap = '0px';
 			dragGapMode = 'gapless';
+			updatePreviewGapStyles(draggedBlock);
 			return true;
 		} else if (!shouldBeGapless && dragGapMode !== 'default') {
 			draggedBlock.style.gap = 'var(--board-grid-gap)';
 			dragGapMode = 'default';
+			updatePreviewGapStyles(draggedBlock);
 			return true;
 		}
 		return false;
