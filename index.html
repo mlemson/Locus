@@ -35,8 +35,19 @@
 				const blockPageScroll = (e) => {
 					if (!canScroll(e.target)) e.preventDefault();
 				};
+				let touchMoveQueued = false;
+				let lastTouchEvent = null;
+				const throttledBlockPageScroll = (e) => {
+					lastTouchEvent = e;
+					if (touchMoveQueued) return;
+					touchMoveQueued = true;
+					requestAnimationFrame(() => {
+						touchMoveQueued = false;
+						if (lastTouchEvent) blockPageScroll(lastTouchEvent);
+					});
+				};
 				window.addEventListener('touchmove', blockPinch, { passive: false });
-				window.addEventListener('touchmove', blockPageScroll, { passive: false });
+				window.addEventListener('touchmove', throttledBlockPageScroll, { passive: false });
 				window.addEventListener('gesturestart', e => e.preventDefault());
 				window.addEventListener('gesturechange', e => e.preventDefault());
 				window.addEventListener('gestureend', e => e.preventDefault());
@@ -18062,6 +18073,19 @@ let shopLevel2Used = false;
 
 	// --- Centralized green centering + one-time sizing flags ---
 	let zoneSizingNeedsRun = true;
+	function rafThrottle(fn) {
+		let ticking = false;
+		let lastArgs = null;
+		return function(...args) {
+			lastArgs = args;
+			if (ticking) return;
+			ticking = true;
+			requestAnimationFrame(() => {
+				ticking = false;
+				if (lastArgs) fn.apply(this, lastArgs);
+			});
+		};
+	}
 	function markZoneSizingNeeded() {
 		zoneSizingNeedsRun = true;
 	}
@@ -18151,7 +18175,7 @@ let shopLevel2Used = false;
 			zoneEl.addEventListener('keydown', markUserScrollIntent);
 			zoneEl.__userScrollIntentBound = true;
 		}
-		zoneEl.addEventListener('scroll', () => {
+		const onZoneScroll = rafThrottle(() => {
 			if (zoneEl.dataset.suppressScrollSave === 'true') return;
 			const zoneId = zoneEl.id;
 			const mode = getZoneScrollMode(zoneEl);
@@ -18162,7 +18186,8 @@ let shopLevel2Used = false;
 			mem[mode].top = zoneEl.scrollTop;
 			mem[mode].initialized = true;
 			if (zoneId === 'green-zone' && hasUserIntent) mem[mode].userSet = true;
-		}, { passive: true });
+		});
+		zoneEl.addEventListener('scroll', onZoneScroll, { passive: true });
 	}
 	function restoreOrAnchorZoneScroll(zoneEl, anchorFn) {
 		if (!zoneEl) return;
@@ -24778,9 +24803,10 @@ function getCollectedCoinCount(scores) {
 		container.scrollBy({ left: getScrollDelta(), behavior: 'smooth' });
 	  });
 
-	  container.addEventListener('scroll', () => {
+	  const onHandScroll = rafThrottle(() => {
 		updateHandScrollControls();
-	  }, { passive: true });
+	  });
+	  container.addEventListener('scroll', onHandScroll, { passive: true });
 	}
 
 	function populateDeckModalContent() {
@@ -29225,19 +29251,14 @@ function resetWorldLayoutStyles() {
 			}
 			if (!moved) return;
 			e.preventDefault();
-			if (BATTERY_SAVER_ENABLED && BATTERY_THROTTLE_DRAG) {
-				pendingDx = dx;
-				pendingDy = dy;
-				if (!dragRaf) {
-					dragRaf = requestAnimationFrame(() => {
-						zoneEl.scrollLeft = startScrollLeft - pendingDx;
-						zoneEl.scrollTop = startScrollTop - pendingDy;
-						dragRaf = null;
-					});
-				}
-			} else {
-				zoneEl.scrollLeft = startScrollLeft - dx;
-				zoneEl.scrollTop = startScrollTop - dy;
+			pendingDx = dx;
+			pendingDy = dy;
+			if (!dragRaf) {
+				dragRaf = requestAnimationFrame(() => {
+					zoneEl.scrollLeft = startScrollLeft - pendingDx;
+					zoneEl.scrollTop = startScrollTop - pendingDy;
+					dragRaf = null;
+				});
 			}
 		}, { passive: false });
 
@@ -35427,6 +35448,12 @@ body { background: transparent; }
 			document.body.classList.remove('board-mobile-scaled');
 			return;
 		}
+		const isClassicMode = document.body.classList.contains('classic-mode');
+		if (isClassicMode) {
+			document.documentElement.style.setProperty('--board-scale', '1');
+			document.body.classList.remove('board-mobile-scaled');
+			return;
+		}
 
 		// Reset any inline desktop transform if we just crossed breakpoints.
 		board.style.removeProperty('transform');
@@ -35434,7 +35461,6 @@ body { background: transparent; }
 		document.body.classList.remove('board-scaled');
 
 		const rootStyles = getComputedStyle(document.documentElement);
-		const isClassicMode = document.body.classList.contains('classic-mode');
 		const bottomBar = document.getElementById('bottom-bar');
 		const bottomBarMeasured = (!isClassicMode && bottomBar) ? bottomBar.getBoundingClientRect().height : 0;
 		const bottomBarCss = isClassicMode ? 0 : (parseFloat(rootStyles.getPropertyValue('--bottom-bar-height')) || 0);
@@ -35978,6 +36004,7 @@ body { background: transparent; }
 	let lastLayoutMode = ''; // track layout mode to detect switches
 	let layoutStabilizeTimer = null;
 	let layoutObserverSetup = false;
+	let layoutResizeObserver = null;
 	function scheduleScaleStabilization(delay = 100) {
 		if (layoutStabilizeTimer) clearTimeout(layoutStabilizeTimer);
 		layoutStabilizeTimer = setTimeout(() => {
@@ -35992,10 +36019,14 @@ body { background: transparent; }
 			} catch (_) {}
 		}, delay);
 	}
-	function setupLayoutObservers() {
-		if (layoutObserverSetup || typeof ResizeObserver === 'undefined') return;
+	function setupLayoutObservers(force = false) {
+		if (!force && layoutObserverSetup) return;
+		if (typeof ResizeObserver === 'undefined') return;
 		layoutObserverSetup = true;
 		try {
+			if (layoutResizeObserver) {
+				try { layoutResizeObserver.disconnect(); } catch (_) {}
+			}
 			const ro = new ResizeObserver(() => {
 				scheduleScaleStabilization(80);
 			});
@@ -36003,6 +36034,7 @@ body { background: transparent; }
 				.map(id => document.getElementById(id))
 				.filter(Boolean)
 				.forEach(el => ro.observe(el));
+			layoutResizeObserver = ro;
 		} catch (_) {}
 	}
 	function resetLayoutTransforms() {
@@ -36080,6 +36112,8 @@ body { background: transparent; }
 					'desktop-portrait', 'desktop-landscape', 'mobile-landscape');
 				// Ensure zone sizing runs once for the new layout
 				markZoneSizingNeeded();
+				// Rebind observers to new containers
+				setupLayoutObservers(true);
 			}
 			lastLayoutMode = currentMode;
 		} catch (_) {}
