@@ -18203,11 +18203,12 @@ let shopLevel2Used = false;
 	}
 
 	// Sync zone heights: make green and blue zones at least as tall as purple+yellow combined.
+	// Returns true if sync ran, false if skipped (e.g., hidden layout).
 	function syncZoneHeights() {
 		// World 4 uses a fixed 3-zone layout (yellow/green/blue); don't force World 2/3 height syncing.
 		try {
 			const info = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(currentLevel) : null;
-			if (info && Number(info.world) === 4) return;
+			if (info && Number(info.world) === 4) return false;
 		} catch (_) {}
 		try {
 			const purpleZone = document.getElementById('purple-zone');
@@ -18218,8 +18219,8 @@ let shopLevel2Used = false;
 			const column1 = document.querySelector('.column:nth-child(1)');
 			const column2 = document.querySelector('.column:nth-child(2)');
 
-			if (!column1 || !purpleZone || !yellowZone) return;
-			if (column1.offsetParent === null) return; // board hidden (e.g., mobile sidebar)
+			if (!column1 || !purpleZone || !yellowZone) return false;
+			if (column1.offsetParent === null) return false; // board hidden (e.g., mobile sidebar)
 
 			const getNumber = (val, fallback = 0) => {
 				const n = parseFloat(val);
@@ -18265,7 +18266,9 @@ let shopLevel2Used = false;
 				const targetBlueHeight = Math.max(0, column1ContentHeight - blueMargin);
 				blueZone.style.minHeight = `${Math.round(targetBlueHeight)}px`;
 			}
+			return true;
 		} catch (e) { console.warn('syncZoneHeights error:', e); }
+		return false;
 	}
 
 	// Auto-zoom naar de juiste zone op basis van card kleur
@@ -24031,6 +24034,8 @@ function optionalCellsTouchActive(zone, pendingCells) {
 		}
 		// Recenter green after stage flips to prevent layout drift on World 3.
 		try { scheduleGreenCenter({ force: false, allowZoom: false, fallback: true, fallbackDelay: 80 }); } catch (_) {}
+		// Re-sync column heights after red-stage visibility changes.
+		try { requestAnimationFrame(() => { try { syncZoneHeights(); } catch (_) {} }); } catch (_) {}
 		// NOTE: Do NOT set position here - zoom mode needs position:fixed to work.
 		// The lock overlay uses position:absolute which works fine with the parent's natural position.
 	}
@@ -35531,7 +35536,13 @@ body { background: transparent; }
 				adjustZoneSizesForWorld2();
 			}
 		} catch (_) {}
-		try { syncZoneHeights(); } catch (_) {}
+		let didSync = false;
+		try { didSync = !!syncZoneHeights(); } catch (_) { didSync = false; }
+		if (!didSync) {
+			zoneSizingNeedsRun = true;
+			try { requestAnimationFrame(() => requestAnimationFrame(runZoneSizingOnce)); } catch (_) {}
+			return;
+		}
 		// One-time deferred sync to catch sizing set in rAF inside adjustZoneSizesForWorld2.
 		try { requestAnimationFrame(() => { try { syncZoneHeights(); } catch (_) {} }); } catch (_) {}
 		try { scheduleGreenCenter({ force: false, allowZoom: false, fallback: true, fallbackDelay: 140 }); } catch (_) {}
@@ -35965,6 +35976,35 @@ body { background: transparent; }
 	let layoutReflowInProgress = false;
 	let lastLayoutViewportKey = '';
 	let lastLayoutMode = ''; // track layout mode to detect switches
+	let layoutStabilizeTimer = null;
+	let layoutObserverSetup = false;
+	function scheduleScaleStabilization(delay = 100) {
+		if (layoutStabilizeTimer) clearTimeout(layoutStabilizeTimer);
+		layoutStabilizeTimer = setTimeout(() => {
+			try { scaleBoardForDesktop(); } catch (_) {}
+			try { scaleBoardForMobile(); } catch (_) {}
+			try { placeActionButtons(); } catch (_) {}
+			try { applyCardSizing(); } catch (_) {}
+			try {
+				if (window._scaleMobileBoard && document.body.classList.contains('mobile-sidebar-layout')) {
+					requestAnimationFrame(window._scaleMobileBoard);
+				}
+			} catch (_) {}
+		}, delay);
+	}
+	function setupLayoutObservers() {
+		if (layoutObserverSetup || typeof ResizeObserver === 'undefined') return;
+		layoutObserverSetup = true;
+		try {
+			const ro = new ResizeObserver(() => {
+				scheduleScaleStabilization(80);
+			});
+			['board', 'desktop-wrapper', 'bottom-bar', 'mobile-objective-banner', 'ml-board-center', 'ml-objective-top']
+				.map(id => document.getElementById(id))
+				.filter(Boolean)
+				.forEach(el => ro.observe(el));
+		} catch (_) {}
+	}
 	function resetLayoutTransforms() {
 		try {
 			const board = document.getElementById('board');
@@ -36074,7 +36114,18 @@ body { background: transparent; }
 			try { scaleBoardForMobile(); } catch (_) {}
 			layoutReflowInProgress = false;
 		}
+		scheduleScaleStabilization(120);
 	}
+	// Start observers and stabilization once helpers are initialized.
+	setupLayoutObservers();
+	// Fonts/layout can settle slightly after first paint; do a stabilization pass.
+	try {
+		if (document.fonts && typeof document.fonts.ready === 'object') {
+			document.fonts.ready.then(() => scheduleScaleStabilization(80));
+		} else {
+			scheduleScaleStabilization(80);
+		}
+	} catch (_) { scheduleScaleStabilization(80); }
 	function scheduleLayoutReflow(delay = 60) {
 		const w = Math.round(window.innerWidth || 0);
 		const h = Math.round(window.innerHeight || 0);
