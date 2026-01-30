@@ -154,6 +154,8 @@
 			--bottom-height: 70px;
 			--side-panel-width: 120px;
 			--card-size: 150px;
+			--zoom-scale: 1.25;
+			--zoom-top: 22%;
 
 			/* Bottom bar sizing */
 			--bottom-bar-gap: 0px;
@@ -500,9 +502,9 @@
 
 		.zone.zoom-focus {
 			position: fixed;
-			top: 22%;
+			top: var(--zoom-top, 22%);
 			left: 50%;
-			transform: translate(-50%, -50%) scale(1.25);
+			transform: translate(-50%, -50%) scale(var(--zoom-scale, 1.25));
 			z-index: var(--z-zoom);
 			box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
 			margin: 2px;
@@ -512,16 +514,9 @@
 
 		/* Mobile (incl. larger phones): use the same zoom sizing as the compact (<550px) layout. */
 		@media (max-width: 900px) {
-			.zone.zoom-focus {
-				position: fixed;
-				top: 25%;
-				left: 50%;
-				transform: translate(-50%, -50%) scale(0.95);
-				z-index: var(--z-zoom);
-				box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
-				margin: 2px;
-				padding: 3px;
-				border-radius: 6px;
+			:root {
+				--zoom-scale: 0.95;
+				--zoom-top: 25%;
 			}
 
 			/* Red zone: keep proportions in zoom, like compact mobile. */
@@ -539,8 +534,8 @@
 		   (≤650px uses the uniform fixed-height zoom rules later.) */
 		@media (min-width: 651px) and (max-width: 900px) {
 			body.zoomed-in #red-zone.zoom-focus {
-				top: 50%;
-				transform: translate(-50%, -50%) scale(0.95);
+				--zoom-top: 50%;
+				--zoom-scale: 0.95;
 				max-height: 85vh;
 				max-height: 85svh;
 				overflow: auto;
@@ -630,9 +625,9 @@
 		/* Mobile landscape sidebar zoom mode */
 		body.mobile-sidebar-layout.zoomed-in .zone.zoom-focus {
 			position: fixed;
-			top: 50%;
+			--zoom-top: 50%;
+			--zoom-scale: 0.85;
 			left: 50%;
-			transform: translate(-50%, -50%) scale(0.85);
 			z-index: var(--z-zoom);
 			box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
 			margin: 0;
@@ -1767,14 +1762,13 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	}
 
 	@media (max-width: 600px) {
-			:root { --bottom-bar-height: 211px; }
+			:root {
+				--bottom-bar-height: 211px;
+				--zoom-top: 32%;
+				--zoom-scale: 0.95;
+			}
 		.board {
 			gap: 3px;
-			transform-origin: top left;
-			transition: transform 0.4s ease;	
-			left: 50%;
-			transform: translateX(-50%) scale(var(--board-scale, 0.5));
-			max-height: none;
 		}
 
 		/* Green grid (lichtgroene binnenste area) beperken (niet tijdens zoom) */
@@ -1792,26 +1786,6 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 			max-height: 66vh;
 		}
 
-		/* Actieve zone komt BOVEN de blur - behoud aspect ratio */
-		.zone.zoom-focus {
-		  position: fixed;
-		  top: 32%;
-		  left: 50%;
-		  transform: translate(-50%, -50%) scale(0.95);
-		  z-index: var(--z-zoom);
-		  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
-		  margin: 2px;
-		  padding: 3px;
-		  border-radius: 6px;
-		}
-
-		/* Green zone zoom-focus specifiek */
-		#green-zone.zoom-focus {
-		  margin: 2px;
-		  padding: 3px;
-		  border-radius: 6px;
-		}
-
 		/* Red zone: behoud originele verhoudingen bij zoom */
 		#red-zone.zoom-focus {
 		  flex-wrap: wrap;
@@ -1825,28 +1799,17 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	}
 	
 	@media (max-width: 550px) {
-			:root { --bottom-bar-height: 196px; }
+			:root {
+				--bottom-bar-height: 196px;
+				--zoom-top: 35%;
+				--zoom-scale: 0.95;
+			}
 		.board {
 			gap: 3px;
-			transform-origin: top left;
-			transition: transform 0.4s ease;	
-			left: 50%;
-			transform: translateX(-50%) scale(var(--board-scale, 0.5));
-			max-height: none;
 		}
 
 		#blue-zone.zoom-focus {
 			max-height: 66vh;
-		}
-
-		/* Actieve zone komt BOVEN de blur */
-		.zone.zoom-focus {
-		  position: fixed;
-		  top: 35%;
-		  left: 50%;
-		  transform: translate(-50%, -50%) scale(0.95);
-		  z-index: var(--z-zoom);
-		  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
 		}
 
 		/* Red zone: behoud originele verhoudingen bij zoom */
@@ -1865,11 +1828,6 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	
 		.board {
 			gap: 3px;
-			transform-origin: top left;
-			transition: transform 0.4s ease;	
-			left: 50%;
-			transform: translateX(-50%) scale(var(--board-scale, 0.5));
-			max-height: none;
 			padding: 0;
 		}
 
@@ -1887,11 +1845,6 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	
 		.board {
 			gap: 2px;
-			transform-origin: top left;
-			transition: transform 0.4s ease;	
-			left: 50%;
-			transform: translateX(-50%) scale(var(--board-scale, 0.5));
-			max-height: none;
 			padding: 0;
 		}
 
@@ -1901,7 +1854,6 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 		}
 		
 		.zone.zoom-focus {
-			transform: translate(-50%, -50%) scale(0.95);
 			max-height: 80vh;
 			overflow: hidden;
 		}
@@ -1926,11 +1878,6 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	
 		.board {
 			gap: 2px;
-			transform-origin: top left;
-			transition: transform 0.4s ease;	
-			left: 50%;
-			transform: translateX(-50%) scale(var(--board-scale, 0.5));
-			max-height: none;
 			padding: 0;
 		}
 
@@ -1939,7 +1886,6 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 		}
 		
 		.zone.zoom-focus {
-			transform: translate(-50%, -50%) scale(0.95);
 			max-height: 80vh;
 			overflow: hidden;
 		}
@@ -1964,11 +1910,6 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	
 		.board {
 			gap: 2px;
-			transform-origin: top left;
-			transition: transform 0.4s ease;	
-			left: 50%;
-			transform: translateX(-50%) scale(var(--board-scale, 0.5));
-			max-height: none;
 			padding: 0;
 		}
 
@@ -1977,7 +1918,6 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 		}
 		
 		.zone.zoom-focus {
-			transform: translate(-50%, -50%) scale(0.95);
 			max-height: 80vh;
 			overflow: hidden;
 		}
@@ -1997,19 +1937,11 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	
 		:root {
 			--bottom-bar-height: 175px;
+			--zoom-scale: 0.93;
 		}
 	
 		.board {
 			gap: 2px;
-			transform-origin: top left;
-			transition: transform 0.4s ease;	
-			left: 50%;
-			transform: translateX(-50%) scale(var(--board-scale, 0.5));
-			max-height: none;
-		}
-
-		.zone.zoom-focus {
-			transform: translate(-50%, -50%) scale(0.93);
 		}
 
 
@@ -2019,19 +1951,11 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	
 		:root {
 			--bottom-bar-height: 175px;
+			--zoom-scale: 0.60;
 		}
 	
 		.board {
 			gap: 2px;
-			transform-origin: top left;
-			transition: transform 0.4s ease;	
-			left: 50%;
-			transform: translateX(-50%) scale(var(--board-scale, 0.5));
-			max-height: none;
-		}
-
-		.zone.zoom-focus {
-			transform: translate(-50%, -50%) scale(0.60);
 		}
 
 	
@@ -5958,6 +5882,26 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		gap: 24px;
 		margin-top: 12px;
 		align-items: stretch;
+	}
+	.shop-content-grid--single {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: 10px;
+	}
+	.shop-section--tight {
+		min-width: 0;
+	}
+	.inline-option {
+		display: flex;
+		gap: 8px;
+		align-items: center;
+		margin: 6px 0;
+	}
+	.modal-actions--end {
+		justify-content: flex-end;
+	}
+	.print-settings-hint {
+		margin-top: 6px;
 	}
 	
 	.shop-lower-grid {
@@ -12758,33 +12702,33 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 					<h2 id="print-settings-title">Print instellingen</h2>
 					<button class="modal-close-btn" id="print-settings-close" aria-label="Sluit print instellingen">&times;</button>
 				</div>
-				<p id="print-settings-hint" style="margin-top: 6px;">Printvriendelijk (geen screenshot): alleen het speelveld, met zo min mogelijk inkt.</p>
-				<div class="shop-content-grid" style="grid-template-columns: 1fr; gap: 10px;">
-					<div class="shop-section" style="min-width: 0;">
+				<p id="print-settings-hint" class="print-settings-hint">Printvriendelijk (geen screenshot): alleen het speelveld, met zo min mogelijk inkt.</p>
+				<div class="shop-content-grid shop-content-grid--single">
+					<div class="shop-section shop-section--tight">
 						<h3 class="shop-section-title">Speelveld</h3>
-						<label style="display:flex; gap:8px; align-items:center; margin: 6px 0;">
+						<label class="inline-option">
 							<input type="radio" name="print-board-source" value="current" checked>
 							<span>Huidig speelveld</span>
 						</label>
-						<label style="display:flex; gap:8px; align-items:center; margin: 6px 0;">
+						<label class="inline-option">
 							<input type="radio" name="print-board-source" value="world1">
 							<span>Genereer Wereld 1</span>
 						</label>
-						<label style="display:flex; gap:8px; align-items:center; margin: 6px 0;">
+						<label class="inline-option">
 							<input type="radio" name="print-board-source" value="world2">
 							<span>Genereer Wereld 2</span>
 						</label>
 					</div>
-					<div class="shop-section" style="min-width: 0;">
+					<div class="shop-section shop-section--tight">
 						<h3 class="shop-section-title">Opties</h3>
 
-						<label style="display:flex; gap:8px; align-items:center; margin: 6px 0;">
+						<label class="inline-option">
 							<input id="print-opt-no-bonuses" type="checkbox" checked>
 							<span>Zonder bonussen/symbolen (minder inkt)</span>
 						</label>
 					</div>
 				</div>
-				<div class="modal-actions" style="justify-content: flex-end;">
+				<div class="modal-actions modal-actions--end">
 					<button id="print-settings-cancel" type="button">Annuleer</button>
 					<button id="print-settings-preview" type="button">Preview</button>
 					<button id="print-settings-print" type="button">Print</button>
@@ -21746,6 +21690,26 @@ document.addEventListener('keydown', ev => {
 	- FIX NOTE: `showZoomLens(...)` uses `cursorX`/`cursorY` from the pointer event for correct positioning.
 */
 
+const ZONE_CELL_LOOKUP_CACHE = new WeakMap();
+function getZoneCellLookup(zoneEl) {
+	if (!zoneEl) return null;
+	const grid = zoneEl.querySelector('.grid');
+	if (!grid) return null;
+	const version = getGridVersion();
+	const cached = ZONE_CELL_LOOKUP_CACHE.get(grid);
+	if (cached && cached.version === version) return cached;
+	const map = new Map();
+	Array.from(grid.querySelectorAll('.cell')).forEach(cell => {
+		const x = Number(cell.dataset.x ?? cell.dataset.c);
+		const y = Number(cell.dataset.y ?? cell.dataset.r);
+		if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+		map.set(`${x},${y}`, cell);
+	});
+	const entry = { version, grid, map };
+	ZONE_CELL_LOOKUP_CACHE.set(grid, entry);
+	return entry;
+}
+
 function processDragPointerMove(ev) {
 	if (!draggedBlock || !isPointerDragging) return;
 	if (dragPointerId !== null && ev.pointerId !== dragPointerId) return;
@@ -21840,26 +21804,65 @@ function processDragPointerMove(ev) {
 	const stepX = shapeWidth > 0 ? (blockRect.width / shapeWidth) : 0;
 	const stepY = shapeHeight > 0 ? (blockRect.height / shapeHeight) : 0;
 
-	// Verzamel alle hits van gevulde cellen via elementFromPoint
+	// Verzamel alle hits van gevulde cellen
 	const cellHits = [];
-	for (let row = 0; row < shapeHeight; row++) {
-		for (let col = 0; col < shapeWidth; col++) {
-			if (isSolidShapeCell(draggedShape[row][col])) {
-				const cellX = blockRect.left + (col * stepX) + (stepX / 2);
-				const cellY = blockRect.top + (row * stepY) + (stepY / 2);
-				const elem = document.elementFromPoint(cellX, cellY);
-				const gridCell = elem ? elem.closest('.cell') : null;
-				if (gridCell && gridCell.dataset.x !== undefined && gridCell.dataset.y !== undefined) {
-					const cellZone = gridCell.closest('.zone');
-					if (cellZone && !cellZone.classList.contains('zone-placeholder')) {
-						cellHits.push({
-							gridCell: gridCell,
-							zone: cellZone,
-							shapeRow: row,
-							shapeCol: col,
-							gridX: parseInt(gridCell.dataset.x, 10),
-							gridY: parseInt(gridCell.dataset.y, 10)
-						});
+	let usedMathHitTest = false;
+	try {
+		const zoneForMath = detectedZone || (centerElem ? centerElem.closest('.zone') : null);
+		if (!zoneForMath || zoneForMath.classList.contains('zone-placeholder')) throw new Error('skip-math');
+		const lookup = getZoneCellLookup(zoneForMath);
+		if (lookup && lookup.grid && !isAbsolutePositionedGrid(lookup.grid)) {
+			const gridRect = lookup.grid.getBoundingClientRect();
+			const cellSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')) || 0;
+			const gapRaw = getComputedStyle(lookup.grid).gap || '0px';
+			const gap = parseFloat(gapRaw) || 0;
+			const stepGX = cellSize + gap;
+			const stepGY = cellSize + gap;
+			if (cellSize > 0 && stepGX > 0 && stepGY > 0) {
+				for (let row = 0; row < shapeHeight; row++) {
+					for (let col = 0; col < shapeWidth; col++) {
+						if (!isSolidShapeCell(draggedShape[row][col])) continue;
+						const cellX = blockRect.left + (col * stepX) + (stepX / 2);
+						const cellY = blockRect.top + (row * stepY) + (stepY / 2);
+						const gridX = Math.round((cellX - gridRect.left - (cellSize / 2)) / stepGX);
+						const gridY = Math.round((cellY - gridRect.top - (cellSize / 2)) / stepGY);
+						const gridCell = lookup.map.get(`${gridX},${gridY}`) || null;
+						if (gridCell && gridCell.dataset.x !== undefined && gridCell.dataset.y !== undefined) {
+							cellHits.push({
+								gridCell,
+								zone: zoneForMath,
+								shapeRow: row,
+								shapeCol: col,
+								gridX: parseInt(gridCell.dataset.x, 10),
+								gridY: parseInt(gridCell.dataset.y, 10)
+							});
+						}
+					}
+				}
+				usedMathHitTest = cellHits.length > 0;
+			}
+		}
+	} catch (_) {}
+	if (!usedMathHitTest) {
+		for (let row = 0; row < shapeHeight; row++) {
+			for (let col = 0; col < shapeWidth; col++) {
+				if (isSolidShapeCell(draggedShape[row][col])) {
+					const cellX = blockRect.left + (col * stepX) + (stepX / 2);
+					const cellY = blockRect.top + (row * stepY) + (stepY / 2);
+					const elem = document.elementFromPoint(cellX, cellY);
+					const gridCell = elem ? elem.closest('.cell') : null;
+					if (gridCell && gridCell.dataset.x !== undefined && gridCell.dataset.y !== undefined) {
+						const cellZone = gridCell.closest('.zone');
+						if (cellZone && !cellZone.classList.contains('zone-placeholder')) {
+							cellHits.push({
+								gridCell: gridCell,
+								zone: cellZone,
+								shapeRow: row,
+								shapeCol: col,
+								gridX: parseInt(gridCell.dataset.x, 10),
+								gridY: parseInt(gridCell.dataset.y, 10)
+							});
+						}
 					}
 				}
 			}
