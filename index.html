@@ -28074,8 +28074,8 @@ function resetWorldLayoutStyles() {
 	  try { applyWorld3RedStage(world === 3 ? world3RedStage : 0); } catch (e) {}
 	  // Ensure layout is rebuilt after world switches (prevents stale sizing/layout state).
 	  try {
-		if (typeof moveGameElements === 'function') {
-			requestAnimationFrame(() => { try { moveGameElements(); } catch (_) {} });
+		if (typeof scheduleLayoutReflow === 'function') {
+			scheduleLayoutReflow(0);
 		}
 	  } catch (e) {}
 	}
@@ -35352,7 +35352,7 @@ body { background: transparent; }
 			const viewportH = document.documentElement ? document.documentElement.clientHeight : window.innerHeight;
 			// Margin to avoid edge clipping from shadows/rounding.
 			// Keep this modest so the left/right panels don't get unnecessarily cramped.
-			const safeMargin = 24;
+			const safeMargin = 12;
 			const availableWidth = Math.max(viewportW - safeMargin, 280);
 			const availableHeight = Math.max(viewportH - safeMargin, 240);
 			const contentWidth = desktopWrapper.scrollWidth;
@@ -35391,8 +35391,8 @@ body { background: transparent; }
 		// Landscape mode: account for right sidebar
 		// Short height (<=925px): need extra room for compact bottom bar
 		const isShortHeight = window.innerHeight <= 925;
-		const bottomReserve = isPortrait ? (isShortHeight ? 150 : 160) : 80;
-		const horizontalPadding = isPortrait ? 40 : 60;
+		const bottomReserve = isPortrait ? (isShortHeight ? 150 : 160) : 70;
+		const horizontalPadding = isPortrait ? 40 : 40;
 		const sidebarReserve = isLandscape ? (rightSidebarWidth + 40) : 0; // sidebar + gap
 		
 		const availableWidth = Math.max(window.innerWidth - horizontalPadding - sidebarReserve, 280);
@@ -35403,7 +35403,7 @@ body { background: transparent; }
 
 		// For constrained viewports (925-1650px), be more aggressive with scaling
 		const isConstrainedLandscape = isLandscape && window.innerWidth < 1650;
-		const maxScale = isConstrainedLandscape ? 0.95 : 1;
+		const maxScale = 1;
 		
 		const scale = Math.min(availableWidth / boardWidth, availableHeight / boardHeight, maxScale);
 		const containerWidth = (boardContainer && boardContainer.clientWidth) ? boardContainer.clientWidth : (window.innerWidth - sidebarReserve);
@@ -36116,8 +36116,8 @@ body { background: transparent; }
 	// Initial run
 	reflowLayout();
 	function scheduleLayoutReflow(delay = 60) {
-		const w = Math.round(window.innerWidth || 0);
-		const h = Math.round(window.innerHeight || 0);
+		const w = Math.round((window.innerWidth || 0) / 10) * 10;
+		const h = Math.round((window.innerHeight || 0) / 20) * 20;
 		// Include layout mode in key so orientation changes trigger reflow even at same dimensions
 		const currentMode = getCurrentLayoutMode();
 		const key = `${w}x${h}:${currentMode}`;
@@ -36173,7 +36173,7 @@ body { background: transparent; }
 		scheduleLayoutReflow(150);
 	}, { passive: true });
 	if (window.visualViewport) {
-		window.visualViewport.addEventListener('resize', handleViewportChange, { passive: true });
+		// visualViewport resize triggers frequent mid-frame reflows on mobile; rely on window resize only.
 	}
 
 	// Menu toggle handled earlier (removed duplicate handler)
