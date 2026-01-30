@@ -12394,10 +12394,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			if (typeof initialiseCoins === 'function') {
 				try { initialiseCoins(enabled ? 20 : 50); } catch {}
 			}
-			if (typeof moveGameElements === 'function') {
-				setTimeout(() => {
-					try { moveGameElements(); } catch {}
-				}, 0);
+			if (typeof scheduleLayoutReflow === 'function') {
+				scheduleLayoutReflow(0);
 			}
 		};
 
@@ -28034,7 +28032,6 @@ function resetWorldLayoutStyles() {
 	  resetScoreState();
 	  historyStack.length = 0;
 	  bumpGridVersion();
-	  try { resetWorldLayoutStyles(); } catch (e) {}
 	  
 	  // Bepaal in welke world we zitten
 	  const { world, subLevel } = getWorldAndSubLevel(currentLevel);
@@ -35605,7 +35602,7 @@ body { background: transparent; }
 	  // Mobile sidebar layout is ALLEEN voor kleine touch screens (phones/small tablets) in landscape.
 	  // Grote tablets (iPad) gebruiken de normale desktop layout.
 	  const useMobileSidebarLayout = isTouchDevice && !isLargeTouchScreen && effectiveLandscape && 
-	                                  width > 500 && height >= 350 && isMobileViewport();
+	                                  width <= MOBILE_BREAKPOINT && height >= 350;
 	  
 	  const useDesktopLayout = !isMobile && !useMobileSidebarLayout;
 	  // Desktop sidebar layout: landscape met voldoende breedte
@@ -35692,31 +35689,6 @@ body { background: transparent; }
 				if (board && !mlCenter.contains(board)) mlCenter.appendChild(board);
 				if (cards && !mlRight.contains(cards)) mlRight.appendChild(cards);
 				if (bonus && !mlRight.contains(bonus)) mlRight.appendChild(bonus);
-				
-				// Scale board to fit center
-				// MOBILE FIX: Use a named function so it can be re-called on resize
-				const scaleMobileBoard = () => {
-					if (!board || !mlCenter) return;
-					const objectiveH = mlObjectiveTop ? mlObjectiveTop.offsetHeight : 0;
-					const availW = mlCenter.clientWidth - 6;
-					const availH = mlCenter.clientHeight - objectiveH - 10;
-					const boardW = board.scrollWidth;
-					const boardH = board.scrollHeight;
-					if (boardW > 0 && boardH > 0) {
-						const scale = Math.min(availW / boardW, availH / boardH, 1);
-						board.style.transform = `scale(${Math.max(0.25, scale).toFixed(3)})`;
-						board.style.transformOrigin = 'top center';
-					}
-				};
-				requestAnimationFrame(scaleMobileBoard);
-				// Store for later re-scaling
-				window._scaleMobileBoard = scaleMobileBoard;
-				
-				placeActionButtons();
-				applyCardSizing();
-				hideEmptyZones();
-				// Ensure one-time zone sizing runs even in mobile sidebar layout
-				runZoneSizingOnce();
 				return;
 				}
 			}
@@ -35748,8 +35720,7 @@ body { background: transparent; }
 					}
 
 				if (controls && controls.parentNode !== document.body) document.body.appendChild(controls);
-				placeActionButtons();
-				applyCardSizing();
+				
 			} else {
 			closeZoom();
 
@@ -35903,20 +35874,10 @@ body { background: transparent; }
 						desktopRight.appendChild(bonus);
 					}
 				}
-							placeActionButtons();
-				applyCardSizing();
+						
 			}
 	  
-	  // Verberg lege zones
-	  hideEmptyZones();
 	  
-	  // IMPORTANT: Run zone sizing/height sync only once per level load/refresh.
-	  runZoneSizingOnce();
-	  
-	  // Now scale the board after zones are properly sized
-	  renderTrapSummary();
-		  autoCenterScrollableZones();
-		  
 	}
 
 	function scrollChildIntoView(container, child, opts = {}) {
@@ -36051,7 +36012,7 @@ body { background: transparent; }
 		const isLargeTouchScreen = isTouchDevice && Math.min(width, height) >= 700;
 		const ORIENTATION_EPS = 24;
 		const effectiveLandscape = (width - height) > ORIENTATION_EPS;
-		const useMobileSidebarLayout = isTouchDevice && !isLargeTouchScreen && effectiveLandscape && width > 500 && height >= 350 && isMobileViewport();
+		const useMobileSidebarLayout = isTouchDevice && !isLargeTouchScreen && effectiveLandscape && width <= MOBILE_BREAKPOINT && height >= 350;
 		if (useMobileSidebarLayout) return 'mobile-sidebar';
 		if (isMobile) return 'mobile';
 		const effectivePortrait = (height - width) > ORIENTATION_EPS;
@@ -36087,8 +36048,13 @@ body { background: transparent; }
 		// Step 3: run sizing/spacing on next frames so layout has settled
 		try {
 			requestAnimationFrame(() => {
+				try { hideEmptyZones(); } catch (_) {}
+				try { runZoneSizingOnce(); } catch (_) {}
+				try { renderTrapSummary(); } catch (_) {}
+				try { autoCenterScrollableZones(); } catch (_) {}
 				try { placeActionButtons(); } catch (_) {}
 				try { applyCardSizing(); } catch (_) {}
+				try { applyMobileHandFitForFiveCards(); } catch (_) {}
 				try { if (typeof updateHandScrollControls === 'function') updateHandScrollControls(); } catch (_) {}
 				try { if (activeZoomZone) applyMobileZoomSizing(activeZoomZone); } catch (_) {}
 				try { if (activeZoomZone) schedulePlaceholderSync(activeZoomZone); } catch (_) {}
@@ -36096,12 +36062,6 @@ body { background: transparent; }
 					// Now scale the board AFTER layout has settled
 					try { scaleBoardForDesktop(); } catch (_) {}
 					try { scaleBoardForMobile(); } catch (_) {}
-					// MOBILE FIX: Re-scale mobile board when window resizes
-					try {
-						if (window._scaleMobileBoard && document.body.classList.contains('mobile-sidebar-layout')) {
-							requestAnimationFrame(window._scaleMobileBoard);
-						}
-					} catch (_) {}
 					layoutReflowInProgress = false;
 				});
 			});
@@ -36114,7 +36074,6 @@ body { background: transparent; }
 	}
 
 	// Initial run
-	reflowLayout();
 	function scheduleLayoutReflow(delay = 60) {
 		const w = Math.round((window.innerWidth || 0) / 10) * 10;
 		const h = Math.round((window.innerHeight || 0) / 20) * 20;
@@ -36137,7 +36096,7 @@ body { background: transparent; }
 		try {
 			if (typeof tryLoadScenarioFromUrl === 'function' && tryLoadScenarioFromUrl()) {
 				console.log('🔗 Scenario loaded from URL. Skipping save/new-run init.');
-				requestAnimationFrame(() => requestAnimationFrame(autoCenterScrollableZones));
+				if (typeof scheduleLayoutReflow === 'function') scheduleLayoutReflow(0);
 				return;
 			}
 		} catch (e) {}
@@ -36149,7 +36108,7 @@ body { background: transparent; }
 		if (hasSave && AUTO_LOAD_SAVED_GAME) {
 			if (loadGameState()) {
 				console.log('✅ Successfully loaded saved game');
-				requestAnimationFrame(() => requestAnimationFrame(autoCenterScrollableZones));
+				if (typeof scheduleLayoutReflow === 'function') scheduleLayoutReflow(0);
 				return;
 			} else {
 				console.warn('⚠️ Failed to load save, starting new game');
@@ -36160,17 +36119,17 @@ body { background: transparent; }
 		
 		// Als we hier komen: geen save of laden mislukt
 		startNewRun();
-		requestAnimationFrame(() => requestAnimationFrame(autoCenterScrollableZones));
+		if (typeof scheduleLayoutReflow === 'function') scheduleLayoutReflow(0);
 	})();
 
 	// Run again on resize/orientation with a stable reflow
-	const handleViewportChange = () => scheduleLayoutReflow(60);
+	const handleViewportChange = () => scheduleLayoutReflow(120);
 	window.addEventListener('resize', handleViewportChange, { passive: true });
 	window.addEventListener('orientationchange', () => {
 		// Force reflow on orientation change - reset the viewport key to ensure it triggers
 		lastLayoutViewportKey = '';
 		lastLayoutMode = '';
-		scheduleLayoutReflow(150);
+		scheduleLayoutReflow(180);
 	}, { passive: true });
 	if (window.visualViewport) {
 		// visualViewport resize triggers frequent mid-frame reflows on mobile; rely on window resize only.
