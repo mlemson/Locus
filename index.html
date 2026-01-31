@@ -18,13 +18,85 @@
 				const canScroll = (el) => {
 					if (!el || !el.closest) return false;
 					if (el.closest('#green-zone, #blue-zone, #card-options, #preworld-pick-grid, #deck-modal-content, #blackhole-card-grid')) return true;
-					let node = el;
-					while (node && node !== document.body && node !== document.documentElement) {
-						try {
-							const style = window.getComputedStyle(node);
-							const overflowY = style.overflowY;
-							const overflowX = style.overflowX;
-							const canScrollY = (overflowY === 'auto' || overflowY === 'scroll') && node.scrollHeight > node.clientHeight + 1;
+							const gridRect = lookup.grid.getBoundingClientRect();
+							let sampleCell = null;
+							try { sampleCell = lookup.map.values().next().value || null; } catch (_) { sampleCell = null; }
+							if (!sampleCell) sampleCell = lookup.grid.querySelector('.cell:not(.void-cell)');
+							if (sampleCell) {
+								const sampleRect = sampleCell.getBoundingClientRect();
+								const sampleCenterX = sampleRect.left + (sampleRect.width / 2);
+								const sampleCenterY = sampleRect.top + (sampleRect.height / 2);
+								const sampleX = Number(sampleCell.dataset.x);
+								const sampleY = Number(sampleCell.dataset.y);
+								const gapRaw = getComputedStyle(lookup.grid).gap || '0px';
+								const gap = parseFloat(gapRaw) || 0;
+								let stepGX = 0;
+								let stepGY = 0;
+								try {
+									const neighborX = lookup.map.get(`${sampleX + 1},${sampleY}`) || null;
+									if (neighborX) {
+										const nr = neighborX.getBoundingClientRect();
+										stepGX = Math.abs((nr.left + nr.width / 2) - sampleCenterX);
+									}
+									const neighborY = lookup.map.get(`${sampleX},${sampleY + 1}`) || null;
+									if (neighborY) {
+										const nr = neighborY.getBoundingClientRect();
+										stepGY = Math.abs((nr.top + nr.height / 2) - sampleCenterY);
+									}
+								} catch (_) {}
+								if (!(stepGX > 0)) stepGX = sampleRect.width + gap;
+								if (!(stepGY > 0)) stepGY = sampleRect.height + gap;
+								const canUseSample = stepGX > 0 && stepGY > 0 && Number.isFinite(sampleX) && Number.isFinite(sampleY);
+								if (canUseSample) {
+									for (let row = 0; row < shapeHeight; row++) {
+										for (let col = 0; col < shapeWidth; col++) {
+											if (!isSolidShapeCell(draggedShape[row][col])) continue;
+											const cellX = blockRect.left + (col * stepX) + (stepX / 2);
+											const cellY = blockRect.top + (row * stepY) + (stepY / 2);
+											const gridX = Math.round((cellX - sampleCenterX) / stepGX) + sampleX;
+											const gridY = Math.round((cellY - sampleCenterY) / stepGY) + sampleY;
+											const gridCell = lookup.map.get(`${gridX},${gridY}`) || null;
+											if (gridCell && gridCell.dataset.x !== undefined && gridCell.dataset.y !== undefined) {
+												cellHits.push({
+													gridCell,
+													zone: zoneForMath,
+													shapeRow: row,
+													shapeCol: col,
+													gridX: parseInt(gridCell.dataset.x, 10),
+													gridY: parseInt(gridCell.dataset.y, 10)
+												});
+											}
+										}
+									}
+									usedMathHitTest = cellHits.length > 0;
+								} else {
+									const cellSize = Math.min(sampleRect.width, sampleRect.height) || 0;
+									const stepGX = cellSize + gap;
+									const stepGY = cellSize + gap;
+									if (cellSize > 0 && stepGX > 0 && stepGY > 0) {
+										for (let row = 0; row < shapeHeight; row++) {
+											for (let col = 0; col < shapeWidth; col++) {
+												if (!isSolidShapeCell(draggedShape[row][col])) continue;
+												const cellX = blockRect.left + (col * stepX) + (stepX / 2);
+												const cellY = blockRect.top + (row * stepY) + (stepY / 2);
+												const gridX = Math.round((cellX - gridRect.left - (cellSize / 2)) / stepGX);
+												const gridY = Math.round((cellY - gridRect.top - (cellSize / 2)) / stepGY);
+												const gridCell = lookup.map.get(`${gridX},${gridY}`) || null;
+												if (gridCell && gridCell.dataset.x !== undefined && gridCell.dataset.y !== undefined) {
+													cellHits.push({
+														gridCell,
+														zone: zoneForMath,
+														shapeRow: row,
+														shapeCol: col,
+														gridX: parseInt(gridCell.dataset.x, 10),
+														gridY: parseInt(gridCell.dataset.y, 10)
+													});
+												}
+											}
+										}
+										usedMathHitTest = cellHits.length > 0;
+									}
+								}
 							const canScrollX = (overflowX === 'auto' || overflowX === 'scroll') && node.scrollWidth > node.clientWidth + 1;
 							if (canScrollY || canScrollX) return true;
 						} catch (_) {}
@@ -15353,18 +15425,47 @@ let shopLevel2Used = false;
 		};
 	}
 
-	function computeShapeCenterOffsets(shape, cellSize = null) {
+	// Helper: meet cel-grootte en gap van een draggable blok element
+	function getDragBlockCellMetrics(block) {
+		let cellSize = 26;
+		let gap = 0;
+		try {
+			if (!block) return { cellSize, gap };
+			const sampleCell = block.querySelector('.preview-cell-wrap') || block.querySelector('div');
+			if (sampleCell) {
+				const r = sampleCell.getBoundingClientRect();
+				cellSize = Math.min(r.width, r.height) || cellSize;
+			}
+			const blockStyle = getComputedStyle(block);
+			const gapRaw = blockStyle.gap || blockStyle.columnGap || '0px';
+			gap = parseFloat(gapRaw) || 0;
+		} catch (_) {}
+		return { cellSize, gap };
+	}
+
+	function computeShapeCenterOffsets(shape, cellSize = null, gapOverride = null) {
 		try {
 			if (!shape || !shape.length || !shape[0] || !shape[0].length) {
 				return { offsetX: 0, offsetY: 0 };
 			}
 			const metrics = getBoardCellMetrics();
+			let overrideCellSize = null;
+			let overrideGap = null;
+			if (cellSize && typeof cellSize === 'object') {
+				overrideCellSize = Number(cellSize.cellSize);
+				overrideGap = Number(cellSize.gap);
+			} else if (Number.isFinite(cellSize)) {
+				overrideCellSize = Number(cellSize);
+			}
+			if (Number.isFinite(gapOverride)) {
+				overrideGap = Number(gapOverride);
+			}
 			// If a specific cellSize was passed, use it (gap assumed 0). Otherwise
 			// when zoomed-in measure the actual cell size from the active zoom
 			// zone so offsets align with the rendered draggable.
 			const measuredRoot = (document.body.classList.contains('zoomed-in') && typeof activeZoomZone !== 'undefined' && activeZoomZone) ? activeZoomZone : null;
-				const resolvedCellSize = Number.isFinite(cellSize) ? Number(cellSize) : getActualCellSize(measuredRoot) || metrics.cellSize;
-				const resolvedGap = Number.isFinite(cellSize) ? 0 : metrics.gap;
+				const resolvedCellSize = Number.isFinite(overrideCellSize) ? overrideCellSize : (getActualCellSize(measuredRoot) || metrics.cellSize);
+				const resolvedGap = Number.isFinite(overrideGap) ? overrideGap : metrics.gap;
 			const resolvedStep = resolvedCellSize + resolvedGap;
 
 			const shapeHeight = shape.length;
@@ -15401,9 +15502,19 @@ let shopLevel2Used = false;
 			}
 			const width = boundMaxX - boundMinX + 1;
 			const height = boundMaxY - boundMinY + 1;
+			// Calculate offset to the visual center of the solid shape cells.
+			// Cell i starts at: i * step, ends at: i * step + cellSize
+			// For cells from boundMinX to boundMaxX:
+			//   Left edge = boundMinX * step
+			//   Right edge = boundMaxX * step + cellSize
+			//   Center X = (boundMinX * step + boundMaxX * step + cellSize) / 2
+			//            = ((boundMinX + boundMaxX) * step + cellSize) / 2
+			// Similarly for Y
+			const centerX = ((boundMinX + boundMaxX) * resolvedStep + resolvedCellSize) / 2;
+			const centerY = ((boundMinY + boundMaxY) * resolvedStep + resolvedCellSize) / 2;
 			return {
-				offsetX: (boundMinX * resolvedStep) + (width * resolvedStep) / 2,
-				offsetY: (boundMinY * resolvedStep) + (height * resolvedStep) / 2
+				offsetX: centerX,
+				offsetY: centerY
 			};
 		} catch {
 			return { offsetX: 0, offsetY: 0 };
@@ -17065,12 +17176,9 @@ let shopLevel2Used = false;
 				draggedColor = colorObj;
 				beginPointerDrag({ clientX: event.clientX, clientY: event.clientY, pointerId: event.pointerId || null });
 				startGlobalDragVisuals();
-				// MOBILE FIX: Use actual rendered size
-				const blockRect = freeBlock.getBoundingClientRect();
-				const actualCellWidth = blockRect.width / shape[0].length;
-				const actualCellHeight = blockRect.height / shape.length;
-				const actualCellSize = Math.min(actualCellWidth, actualCellHeight);
-				({ offsetX, offsetY } = computeShapeCenterOffsets(shape, actualCellSize));
+				// MOBILE FIX: Use actual rendered cell size with gap
+				const m = getDragBlockCellMetrics(freeBlock);
+				({ offsetX, offsetY } = computeShapeCenterOffsets(shape, m));
 				const touchOffsetY = getFingerLiftOffsetY(event);
 				setElPos(draggedBlock, event.clientX - offsetX, event.clientY - offsetY - touchOffsetY);
 				addCardControlButtons();
@@ -17141,14 +17249,9 @@ let shopLevel2Used = false;
 		// zodat het niet direct "op de badge" lijkt te staan en overlap/annuleer-gevoel voorkomt.
 		const block = makeDraggable(shape, colorObj);
 		block.classList.add('bonus-draggable');
-		const shapeWidth = shape[0].length;
-		const shapeHeight = shape.length;
-		// MOBILE FIX: Use actual rendered size
-		const blockRect = block.getBoundingClientRect();
-		const actualCellWidth = blockRect.width / shapeWidth;
-		const actualCellHeight = blockRect.height / shapeHeight;
-		const actualCellSize = Math.min(actualCellWidth, actualCellHeight);
-		({ offsetX, offsetY } = computeShapeCenterOffsets(shape, actualCellSize));
+		// MOBILE FIX: Use getDragBlockCellMetrics for consistent offset
+		const m = getDragBlockCellMetrics(block);
+		({ offsetX, offsetY } = computeShapeCenterOffsets(shape, m));
 		const touchOffsetY = getFingerLiftOffsetY(event);
 		setElPos(block, event.clientX - offsetX, event.clientY - offsetY - touchOffsetY);
 
@@ -17156,11 +17259,8 @@ let shopLevel2Used = false;
 		requestAnimationFrame(() => {
 			try {
 				renderBlock(block, block._shape || shape, colorObj);
-				const afterRect = block.getBoundingClientRect();
-				const cellWidth = afterRect.width / (block._shape || shape)[0].length;
-				const cellHeight = afterRect.height / (block._shape || shape).length;
-				const cellSize = Math.min(cellWidth, cellHeight);
-				({ offsetX, offsetY } = computeShapeCenterOffsets(block._shape || shape, cellSize));
+				const mAfter = getDragBlockCellMetrics(block);
+				({ offsetX, offsetY } = computeShapeCenterOffsets(block._shape || shape, mAfter));
 				setElPos(block, event.clientX - offsetX, event.clientY - offsetY - touchOffsetY);
 			} catch (e) {}
 		});
@@ -17182,7 +17282,8 @@ let shopLevel2Used = false;
 			requestAnimationFrame(() => {
 				try {
 					renderBlock(block, block._shape || shape, colorObj);
-					({ offsetX, offsetY } = computeShapeCenterOffsets(block._shape || shape));
+					const mAfter = getDragBlockCellMetrics(block);
+					({ offsetX, offsetY } = computeShapeCenterOffsets(block._shape || shape, mAfter));
 					setElPos(block, event.clientX - offsetX, event.clientY - offsetY - touchOffsetY);
 				} catch (e) {}
 			});
@@ -17213,9 +17314,8 @@ let shopLevel2Used = false;
 		draggedColor = colorObj;
 		beginPointerDrag({ clientX: event.clientX, clientY: event.clientY, pointerId: event.pointerId || null });
 		startGlobalDragVisuals();
-		const shapeWidth = shape[0].length;
-		const shapeHeight = shape.length;
-		({ offsetX, offsetY } = computeShapeCenterOffsets(shape));
+		const m = getDragBlockCellMetrics(block);
+		({ offsetX, offsetY } = computeShapeCenterOffsets(shape, m));
 		setElPos(block, event.clientX - offsetX, event.clientY - offsetY);
 		// visuals handled by startGlobalDragVisuals()
 		if (overlay) overlay.style.display = 'block';
@@ -17223,7 +17323,8 @@ let shopLevel2Used = false;
 			requestAnimationFrame(() => {
 				try {
 					renderBlock(block, block._shape || shape, colorObj);
-					({ offsetX, offsetY } = computeShapeCenterOffsets(block._shape || shape));
+					const mAfter = getDragBlockCellMetrics(block);
+					({ offsetX, offsetY } = computeShapeCenterOffsets(block._shape || shape, mAfter));
 					setElPos(block, event.clientX - offsetX, event.clientY - offsetY);
 				} catch (e) {}
 			});
@@ -17269,8 +17370,9 @@ let shopLevel2Used = false;
 		beginPointerDrag({ clientX: event.clientX, clientY: event.clientY, pointerId: event.pointerId || null });
 		startGlobalDragVisuals();
 
-		// Compute offsets based on the *actual rendered* board cell size + gap.
-		({ offsetX, offsetY } = computeShapeCenterOffsets(draggedShape));
+		// Compute offsets based on the *actual rendered* block cell size + gap.
+		const m = getDragBlockCellMetrics(block);
+		({ offsetX, offsetY } = computeShapeCenterOffsets(draggedShape, m));
 		const touchOffsetY = getFingerLiftOffsetY(event);
 		setElPos(block, event.clientX - offsetX, event.clientY - offsetY - touchOffsetY);
 		activeBonusPlacement = {
@@ -21585,12 +21687,20 @@ let shopLevel2Used = false;
 		draggedShape = currentShape;
 		
 		// Offsets based on the current shape and actual rendered block size.
-		// MOBILE FIX: Calculate using actual rendered cell size for accurate positioning
-		const blockRect = block.getBoundingClientRect();
-		const actualCellWidth = blockRect.width / currentShape[0].length;
-		const actualCellHeight = blockRect.height / currentShape.length;
-		const actualCellSize = Math.min(actualCellWidth, actualCellHeight);
-		({ offsetX, offsetY } = computeShapeCenterOffsets(currentShape, actualCellSize));
+		// MOBILE FIX: Measure a real cell + gap so offsets align on all layouts
+		let actualCellSize = null;
+		let actualGap = null;
+		try {
+			const sampleCell = block.querySelector('.preview-cell-wrap') || block.querySelector('div');
+			if (sampleCell) {
+				const r = sampleCell.getBoundingClientRect();
+				actualCellSize = Math.min(r.width, r.height);
+			}
+			const blockStyle = getComputedStyle(block);
+			const gapRaw = blockStyle.gap || blockStyle.columnGap || '0px';
+			actualGap = parseFloat(gapRaw) || 0;
+		} catch (_) {}
+		({ offsetX, offsetY } = computeShapeCenterOffsets(currentShape, { cellSize: actualCellSize, gap: actualGap }));
 
 
 		// For touch pointers only: add a small upward offset so the block is not under the finger.
@@ -21620,7 +21730,8 @@ let shopLevel2Used = false;
 		block._shape = currentShape;
 		draggedShape = currentShape;
 		renderBlock(draggedBlock, currentShape, draggedColor);
-		({ offsetX, offsetY } = computeShapeCenterOffsets(currentShape));
+		const m = getDragBlockCellMetrics(draggedBlock);
+		({ offsetX, offsetY } = computeShapeCenterOffsets(currentShape, m));
 	  });
 	  
   return block;
@@ -21657,7 +21768,8 @@ document.addEventListener('keydown', ev => {
 			draggedShape = rotateShape(draggedShape);
 			draggedBlock._shape = draggedShape;
 			renderBlock(draggedBlock, draggedShape, draggedColor);
-			({ offsetX, offsetY } = computeShapeCenterOffsets(draggedShape));
+			const m = getDragBlockCellMetrics(draggedBlock);
+			({ offsetX, offsetY } = computeShapeCenterOffsets(draggedShape, m));
 		} else if (selectedShape) {
 			rotateSelectedCard();
 		}
@@ -21668,7 +21780,8 @@ document.addEventListener('keydown', ev => {
 		draggedShape = mirrorShape(draggedShape);
 		draggedBlock._shape = draggedShape;
 		renderBlock(draggedBlock, draggedShape, draggedColor);
-			({ offsetX, offsetY } = computeShapeCenterOffsets(draggedShape));
+		const m = getDragBlockCellMetrics(draggedBlock);
+		({ offsetX, offsetY } = computeShapeCenterOffsets(draggedShape, m));
 	} else if (selectedShape) {
 		mirrorSelectedCard();
 	}
@@ -21784,12 +21897,19 @@ function processDragPointerMove(ev) {
 		void draggedBlock.offsetHeight;
 		// Recompute offsets so the draggable stays aligned with the grid
 		try {
-			const rectNow = draggedBlock.getBoundingClientRect();
-			const cellSize = Math.min(rectNow.width / shapeWidth, rectNow.height / shapeHeight);
+			const sampleCell = draggedBlock.querySelector('.preview-cell-wrap') || draggedBlock.querySelector('div');
+			let cellSize = 0;
+			if (sampleCell) {
+				const r = sampleCell.getBoundingClientRect();
+				cellSize = Math.min(r.width, r.height);
+			}
+			const blockStyle = getComputedStyle(draggedBlock);
+			const gapRaw = blockStyle.gap || blockStyle.columnGap || '0px';
+			const gap = parseFloat(gapRaw) || 0;
 			if (dragGapMode === 'gapless') {
-				({ offsetX, offsetY } = computeShapeCenterOffsets(draggedShape, cellSize));
+				({ offsetX, offsetY } = computeShapeCenterOffsets(draggedShape, { cellSize, gap: 0 }));
 			} else {
-				({ offsetX, offsetY } = computeShapeCenterOffsets(draggedShape));
+				({ offsetX, offsetY } = computeShapeCenterOffsets(draggedShape, { cellSize, gap }));
 			}
 			setElPos(draggedBlock, cursorX - offsetX, cursorY - offsetY - touchOffsetY);
 		} catch (e) {}
@@ -21799,8 +21919,24 @@ function processDragPointerMove(ev) {
 	const blockRect = draggedBlock.getBoundingClientRect();
 
 	// Derive per-cell spacing from the rendered draggable block
-	const stepX = shapeWidth > 0 ? (blockRect.width / shapeWidth) : 0;
-	const stepY = shapeHeight > 0 ? (blockRect.height / shapeHeight) : 0;
+	let stepX = 0;
+	let stepY = 0;
+	let dragCellSize = 0; // The actual cell size (without gap) for center calculations
+	try {
+		const sampleCell = draggedBlock.querySelector('.preview-cell-wrap') || draggedBlock.querySelector('div');
+		const cellRect = sampleCell ? sampleCell.getBoundingClientRect() : null;
+		const cellSize = cellRect ? Math.min(cellRect.width, cellRect.height) : 0;
+		dragCellSize = cellSize;
+		const blockStyle = getComputedStyle(draggedBlock);
+		const gapRaw = blockStyle.gap || blockStyle.columnGap || '0px';
+		const gap = parseFloat(gapRaw) || 0;
+		stepX = cellSize + gap;
+		stepY = cellSize + gap;
+	} catch (_) {
+		stepX = shapeWidth > 0 ? (blockRect.width / shapeWidth) : 0;
+		stepY = shapeHeight > 0 ? (blockRect.height / shapeHeight) : 0;
+		dragCellSize = stepX; // fallback: assume no gap
+	}
 
 	// Verzamel alle hits van gevulde cellen
 	const cellHits = [];
@@ -21811,7 +21947,16 @@ function processDragPointerMove(ev) {
 		const lookup = getZoneCellLookup(zoneForMath);
 		if (lookup && lookup.grid && !isAbsolutePositionedGrid(lookup.grid)) {
 			const gridRect = lookup.grid.getBoundingClientRect();
-			const cellSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')) || 0;
+			// CRITICAL FIX: Measure actual cell size from the grid, not CSS variable
+			let cellSize = 0;
+			const sampleGridCell = lookup.grid.querySelector('.cell:not(.void-cell)');
+			if (sampleGridCell) {
+				const r = sampleGridCell.getBoundingClientRect();
+				cellSize = Math.min(r.width, r.height) || 0;
+			}
+			if (cellSize <= 0) {
+				cellSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')) || 0;
+			}
 			const gapRaw = getComputedStyle(lookup.grid).gap || '0px';
 			const gap = parseFloat(gapRaw) || 0;
 			const stepGX = cellSize + gap;
@@ -21820,10 +21965,11 @@ function processDragPointerMove(ev) {
 				for (let row = 0; row < shapeHeight; row++) {
 					for (let col = 0; col < shapeWidth; col++) {
 						if (!isSolidShapeCell(draggedShape[row][col])) continue;
-						const cellX = blockRect.left + (col * stepX) + (stepX / 2);
-						const cellY = blockRect.top + (row * stepY) + (stepY / 2);
-						const gridX = Math.round((cellX - gridRect.left - (cellSize / 2)) / stepGX);
-						const gridY = Math.round((cellY - gridRect.top - (cellSize / 2)) / stepGY);
+						// Center of draggable cell = blockRect.left + (col * step) + (cellSize / 2)
+						const cellX = blockRect.left + (col * stepX) + (dragCellSize / 2);
+						const cellY = blockRect.top + (row * stepY) + (dragCellSize / 2);
+						const gridX = Math.floor((cellX - gridRect.left) / stepGX);
+						const gridY = Math.floor((cellY - gridRect.top) / stepGY);
 						const gridCell = lookup.map.get(`${gridX},${gridY}`) || null;
 						if (gridCell && gridCell.dataset.x !== undefined && gridCell.dataset.y !== undefined) {
 							cellHits.push({
@@ -21845,8 +21991,9 @@ function processDragPointerMove(ev) {
 		for (let row = 0; row < shapeHeight; row++) {
 			for (let col = 0; col < shapeWidth; col++) {
 				if (isSolidShapeCell(draggedShape[row][col])) {
-					const cellX = blockRect.left + (col * stepX) + (stepX / 2);
-					const cellY = blockRect.top + (row * stepY) + (stepY / 2);
+					// Center of draggable cell = blockRect.left + (col * step) + (cellSize / 2)
+					const cellX = blockRect.left + (col * stepX) + (dragCellSize / 2);
+					const cellY = blockRect.top + (row * stepY) + (dragCellSize / 2);
 					const elem = document.elementFromPoint(cellX, cellY);
 					const gridCell = elem ? elem.closest('.cell') : null;
 					if (gridCell && gridCell.dataset.x !== undefined && gridCell.dataset.y !== undefined) {
@@ -24564,7 +24711,8 @@ function getCollectedCoinCount(scores) {
 	  // Positioneer het blok bij de pointer positie (met touch offset)
 	  const startX = event.clientX || window.innerWidth / 2;
 	  const startY = event.clientY || window.innerHeight / 2;
-	  ({ offsetX, offsetY } = computeShapeCenterOffsets(draggedShape));
+	  const m = getDragBlockCellMetrics(draggedBlock);
+	  ({ offsetX, offsetY } = computeShapeCenterOffsets(draggedShape, m));
 	  const touchOffsetY = getFingerLiftOffsetY(event);
 	setElPos(draggedBlock, startX - offsetX, startY - offsetY - touchOffsetY);
 
@@ -24573,7 +24721,8 @@ function getCollectedCoinCount(scores) {
 	requestAnimationFrame(() => {
 		try {
 			renderBlock(block, block._shape || shape, colorObj);
-			({ offsetX, offsetY } = computeShapeCenterOffsets(block._shape || shape));
+			const mAfter = getDragBlockCellMetrics(block);
+			({ offsetX, offsetY } = computeShapeCenterOffsets(block._shape || shape, mAfter));
 			setElPos(block, startX - offsetX, startY - offsetY - touchOffsetY);
 		} catch (e) {}
 	});
@@ -26427,7 +26576,8 @@ function getCollectedCoinCount(scores) {
 			requestAnimationFrame(() => {
 				try {
 					renderBlock(freeBlock, freeBlock._shape || shape, colorObj);
-					({ offsetX, offsetY } = computeShapeCenterOffsets(freeBlock._shape || shape));
+					const mAfter = getDragBlockCellMetrics(freeBlock);
+					({ offsetX, offsetY } = computeShapeCenterOffsets(freeBlock._shape || shape, mAfter));
 					setElPos(freeBlock, event.clientX - offsetX, event.clientY - offsetY - getFingerLiftOffsetY(event));
 				} catch (e) {}
 			});
@@ -29869,6 +30019,7 @@ function resetWorldLayoutStyles() {
 	  selectedCardElement = null;
 	  selectedShape = null;
 	  selectedColor = null;
+	  cardSelectionLocked = false;
 	  if (rotateButton) rotateButton.disabled = true;
 	  rebuildGameBoards();
 	  // World 2: place a single bonus-upgrade shop event on the board.
@@ -30579,26 +30730,31 @@ function isWorld4CardAllowed(cardData) {
 		  };
 		}
 		
-		// Prepareer saved deck state voor gebruik in startLevel
-		savedDeckState = {
-		  drawPile: gameState.drawPile ? gameState.drawPile.map(restoreCardInstance) : [],
-		  discardPile: gameState.discardPile ? gameState.discardPile.map(restoreCardInstance) : [],
-		  currentHand: gameState.currentHand ? gameState.currentHand.map(restoreCardInstance) : [],
-		  turnCount: gameState.turnCount || 0
-		};
-		
-		// Als alle kaarten in discard zitten (einde van een ronde), herstel ze naar draw pile
-		if (savedDeckState.drawPile.length === 0 && savedDeckState.currentHand.length === 0 && savedDeckState.discardPile.length > 0) {
-		  console.log('📦 All cards in discard, moving to draw pile for fresh start');
-		  savedDeckState.drawPile = shuffleArray(savedDeckState.discardPile);
-		  savedDeckState.discardPile = [];
+		const resumeDeckState = !!isCustomBoardSave;
+		if (resumeDeckState) {
+			// Prepareer saved deck state voor gebruik in startLevel
+			savedDeckState = {
+			  drawPile: gameState.drawPile ? gameState.drawPile.map(restoreCardInstance) : [],
+			  discardPile: gameState.discardPile ? gameState.discardPile.map(restoreCardInstance) : [],
+			  currentHand: gameState.currentHand ? gameState.currentHand.map(restoreCardInstance) : [],
+			  turnCount: gameState.turnCount || 0
+			};
+			
+			// Als alle kaarten in discard zitten (einde van een ronde), herstel ze naar draw pile
+			if (savedDeckState.drawPile.length === 0 && savedDeckState.currentHand.length === 0 && savedDeckState.discardPile.length > 0) {
+			  console.log('📦 All cards in discard, moving to draw pile for fresh start');
+			  savedDeckState.drawPile = shuffleArray(savedDeckState.discardPile);
+			  savedDeckState.discardPile = [];
+			}
+			
+			console.log('📦 Prepared saved deck state:', savedDeckState.drawPile.length, 'draw,', savedDeckState.currentHand.length, 'hand,', savedDeckState.discardPile.length, 'discard');
+		} else {
+			savedDeckState = null;
 		}
 		
-		console.log('📦 Prepared saved deck state:', savedDeckState.drawPile.length, 'draw,', savedDeckState.currentHand.length, 'hand,', savedDeckState.discardPile.length, 'discard');
-		
-		// Start the loaded level (zal savedDeckState gebruiken)
-		isLoadingGame = true;
-		startLevel(currentLevel, { preserveLoadedCustomMeta: isCustomBoardSave, preserveLoadedObjectives: true });
+		// Start the loaded level (resume deck only for custom/scenario boards)
+		isLoadingGame = resumeDeckState;
+		startLevel(currentLevel, { preserveLoadedCustomMeta: isCustomBoardSave, preserveLoadedObjectives: resumeDeckState });
 		// Only restore the board snapshot for editor/scenario saves.
 		// Normal runs should rebuild the board from the level/world mapping.
 		if (isCustomBoardSave) {
@@ -30891,9 +31047,10 @@ function isWorld4CardAllowed(cardData) {
 		const rect = cardEl.getBoundingClientRect();
 		const startX = rect.left + (rect.width / 2);
 		const startY = rect.top + (rect.height / 2);
-		const centerOffsets = computeShapeCenterOffsets(shape);
 
 		const block = makeDraggable(shape, color);
+		const m = getDragBlockCellMetrics(block);
+		const centerOffsets = computeShapeCenterOffsets(shape, m);
 		offsetX = centerOffsets.offsetX;
 		offsetY = centerOffsets.offsetY;
 		setElPos(block, startX - offsetX, startY - offsetY);
@@ -31020,10 +31177,9 @@ function isWorld4CardAllowed(cardData) {
 	// Maak het blok direct draggable vanaf de kaart positie
 	const block = makeDraggable(currentShape, currentColor);
 	const rect = card.getBoundingClientRect();
-	const shapeWidth = currentShape?.[0]?.length || 1;
-	const shapeHeight = currentShape?.length || 1;
 	const hasPointerPos = Number.isFinite(options.clientX) && Number.isFinite(options.clientY);
-	const centerOffsets = computeShapeCenterOffsets(currentShape);
+	const m = getDragBlockCellMetrics(block);
+	const centerOffsets = computeShapeCenterOffsets(currentShape, m);
 
 	if (forceDrag && hasPointerPos) {
 		// Force-drag: start at pointer position (mouse or touch long-press).
@@ -31445,11 +31601,9 @@ document.addEventListener('pointerdown', ev => {
 				overlay.style.display = 'block';
 			}
 			// CRITICAL: Recompute center offsets so drag positioning matches the rotated shape
-			// Use the actual rendered size for accurate positioning on mobile
-			const actualCellWidth = afterRect.width / nextShape[0].length;
-			const actualCellHeight = afterRect.height / nextShape.length;
-			const actualCellSize = Math.min(actualCellWidth, actualCellHeight);
-			({ offsetX, offsetY } = computeShapeCenterOffsets(nextShape, actualCellSize));
+			// Use the actual rendered size for accurate positioning
+			const m = getDragBlockCellMetrics(draggedBlock);
+			({ offsetX, offsetY } = computeShapeCenterOffsets(nextShape, m));
 		} catch (e) {
 			const nextShape = cloneShape(newShape);
 			draggedShape = nextShape;
@@ -31457,7 +31611,8 @@ document.addEventListener('pointerdown', ev => {
 			renderBlock(draggedBlock, nextShape, color);
 			// Also recompute in fallback path
 			try {
-				({ offsetX, offsetY } = computeShapeCenterOffsets(nextShape));
+				const mFallback = getDragBlockCellMetrics(draggedBlock);
+				({ offsetX, offsetY } = computeShapeCenterOffsets(nextShape, mFallback));
 			} catch (e2) {}
 		}
 	}
