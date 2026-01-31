@@ -15443,6 +15443,8 @@ let shopLevel2Used = false;
 		return { cellSize, gap };
 	}
 
+
+
 	function computeShapeCenterOffsets(shape, cellSize = null, gapOverride = null) {
 		try {
 			if (!shape || !shape.length || !shape[0] || !shape[0].length) {
@@ -17278,16 +17280,7 @@ let shopLevel2Used = false;
 		startGlobalDragVisuals();
 		addCardControlButtons();
 
-			// Ensure correct sizing after any zoom/lift finishes
-			requestAnimationFrame(() => {
-				try {
-					renderBlock(block, block._shape || shape, colorObj);
-					const mAfter = getDragBlockCellMetrics(block);
-					({ offsetX, offsetY } = computeShapeCenterOffsets(block._shape || shape, mAfter));
-					setElPos(block, event.clientX - offsetX, event.clientY - offsetY - touchOffsetY);
-				} catch (e) {}
-			});
-		return;
+			return;
 	} else if (window.innerWidth <= MOBILE_BREAKPOINT) {
 		// Niet-touch mobiel: maak blok direct draggable
 		// Buttons worden getoond zodra het blok wordt opgepakt
@@ -21980,8 +21973,8 @@ function processDragPointerMove(ev) {
 						// Center of draggable cell = dragOrigin + (col * step) + (cellSize / 2)
 						const cellX = dragOriginX + (col * stepX) + (dragCellSize / 2);
 						const cellY = dragOriginY + (row * stepY) + (dragCellSize / 2);
-						const gridX = Math.floor((cellX - originX) / stepGX);
-						const gridY = Math.floor((cellY - originY) / stepGY);
+						const gridX = Math.round((cellX - originX) / stepGX);
+						const gridY = Math.round((cellY - originY) / stepGY);
 						const gridCell = lookup.map.get(`${gridX},${gridY}`) || null;
 						if (gridCell && gridCell.dataset.x !== undefined && gridCell.dataset.y !== undefined) {
 							cellHits.push({
@@ -24745,10 +24738,12 @@ function getCollectedCoinCount(scores) {
 	  // Positioneer het blok bij de pointer positie (met touch offset)
 	  const startX = event.clientX || window.innerWidth / 2;
 	  const startY = event.clientY || window.innerHeight / 2;
-	  const m = getDragBlockCellMetrics(draggedBlock);
-	  ({ offsetX, offsetY } = computeShapeCenterOffsets(draggedShape, m));
 	  const touchOffsetY = getFingerLiftOffsetY(event);
-	setElPos(draggedBlock, startX - offsetX, startY - offsetY - touchOffsetY);
+	{
+		const m = getDragBlockCellMetrics(draggedBlock);
+		({ offsetX, offsetY } = computeShapeCenterOffsets(draggedShape, m));
+		setElPos(draggedBlock, startX - offsetX, startY - offsetY - touchOffsetY);
+	}
 
 	// Ensure the purchased draggable immediately measures zoomed cell size
 	// (in case zoom/lift just occurred). Re-render on next frame.
