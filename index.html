@@ -21922,11 +21922,17 @@ function processDragPointerMove(ev) {
 	let stepX = 0;
 	let stepY = 0;
 	let dragCellSize = 0; // The actual cell size (without gap) for center calculations
+	let dragOriginX = blockRect.left;
+	let dragOriginY = blockRect.top;
 	try {
 		const sampleCell = draggedBlock.querySelector('.preview-cell-wrap') || draggedBlock.querySelector('div');
 		const cellRect = sampleCell ? sampleCell.getBoundingClientRect() : null;
 		const cellSize = cellRect ? Math.min(cellRect.width, cellRect.height) : 0;
 		dragCellSize = cellSize;
+		if (cellRect) {
+			dragOriginX = cellRect.left;
+			dragOriginY = cellRect.top;
+		}
 		const blockStyle = getComputedStyle(draggedBlock);
 		const gapRaw = blockStyle.gap || blockStyle.columnGap || '0px';
 		const gap = parseFloat(gapRaw) || 0;
@@ -21946,16 +21952,22 @@ function processDragPointerMove(ev) {
 		if (!zoneForMath || zoneForMath.classList.contains('zone-placeholder')) throw new Error('skip-math');
 		const lookup = getZoneCellLookup(zoneForMath);
 		if (lookup && lookup.grid && !isAbsolutePositionedGrid(lookup.grid)) {
-			const gridRect = lookup.grid.getBoundingClientRect();
-			// CRITICAL FIX: Measure actual cell size from the grid, not CSS variable
-			let cellSize = 0;
+			// Use the first real cell as the grid origin (gridRect is centered and offset)
 			const sampleGridCell = lookup.grid.querySelector('.cell:not(.void-cell)');
+			let cellSize = 0;
+			let originX = 0;
+			let originY = 0;
 			if (sampleGridCell) {
 				const r = sampleGridCell.getBoundingClientRect();
 				cellSize = Math.min(r.width, r.height) || 0;
+				originX = r.left;
+				originY = r.top;
 			}
 			if (cellSize <= 0) {
 				cellSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')) || 0;
+				const gridRect = lookup.grid.getBoundingClientRect();
+				originX = gridRect.left;
+				originY = gridRect.top;
 			}
 			const gapRaw = getComputedStyle(lookup.grid).gap || '0px';
 			const gap = parseFloat(gapRaw) || 0;
@@ -21965,11 +21977,11 @@ function processDragPointerMove(ev) {
 				for (let row = 0; row < shapeHeight; row++) {
 					for (let col = 0; col < shapeWidth; col++) {
 						if (!isSolidShapeCell(draggedShape[row][col])) continue;
-						// Center of draggable cell = blockRect.left + (col * step) + (cellSize / 2)
-						const cellX = blockRect.left + (col * stepX) + (dragCellSize / 2);
-						const cellY = blockRect.top + (row * stepY) + (dragCellSize / 2);
-						const gridX = Math.floor((cellX - gridRect.left) / stepGX);
-						const gridY = Math.floor((cellY - gridRect.top) / stepGY);
+						// Center of draggable cell = dragOrigin + (col * step) + (cellSize / 2)
+						const cellX = dragOriginX + (col * stepX) + (dragCellSize / 2);
+						const cellY = dragOriginY + (row * stepY) + (dragCellSize / 2);
+						const gridX = Math.floor((cellX - originX) / stepGX);
+						const gridY = Math.floor((cellY - originY) / stepGY);
 						const gridCell = lookup.map.get(`${gridX},${gridY}`) || null;
 						if (gridCell && gridCell.dataset.x !== undefined && gridCell.dataset.y !== undefined) {
 							cellHits.push({
@@ -21991,9 +22003,9 @@ function processDragPointerMove(ev) {
 		for (let row = 0; row < shapeHeight; row++) {
 			for (let col = 0; col < shapeWidth; col++) {
 				if (isSolidShapeCell(draggedShape[row][col])) {
-					// Center of draggable cell = blockRect.left + (col * step) + (cellSize / 2)
-					const cellX = blockRect.left + (col * stepX) + (dragCellSize / 2);
-					const cellY = blockRect.top + (row * stepY) + (dragCellSize / 2);
+					// Center of draggable cell = dragOrigin + (col * step) + (cellSize / 2)
+					const cellX = dragOriginX + (col * stepX) + (dragCellSize / 2);
+					const cellY = dragOriginY + (row * stepY) + (dragCellSize / 2);
 					const elem = document.elementFromPoint(cellX, cellY);
 					const gridCell = elem ? elem.closest('.cell') : null;
 					if (gridCell && gridCell.dataset.x !== undefined && gridCell.dataset.y !== undefined) {
@@ -22074,6 +22086,28 @@ function processDragPointerMove(ev) {
 	let baseY = pickBest(countOccurrences(baseYCandidates), lastBaseY);
 	if (!Number.isFinite(baseX)) baseX = baseXCandidates[0];
 	if (!Number.isFinite(baseY)) baseY = baseYCandidates[0];
+
+	// Align to the grid cell under the cursor when the cursor sits on a solid shape cell.
+	// This prevents a consistent one-cell up/left bias when hit-tests are slightly off.
+	try {
+		const cursorElem = centerElem ? centerElem.closest('.cell') : null;
+		if (cursorElem && cursorElem.dataset.x !== undefined && cursorElem.dataset.y !== undefined) {
+			const cursorGridX = parseInt(cursorElem.dataset.x, 10);
+			const cursorGridY = parseInt(cursorElem.dataset.y, 10);
+			const localX = cursorX - dragOriginX;
+			const localY = cursorY - dragOriginY;
+			if (Number.isFinite(localX) && Number.isFinite(localY) && stepX > 0 && stepY > 0) {
+				let cursorCol = Math.round((localX - (dragCellSize / 2)) / stepX);
+				let cursorRow = Math.round((localY - (dragCellSize / 2)) / stepY);
+				cursorCol = Math.max(0, Math.min(shapeWidth - 1, cursorCol));
+				cursorRow = Math.max(0, Math.min(shapeHeight - 1, cursorRow));
+				if (isSolidShapeCell(draggedShape[cursorRow]?.[cursorCol])) {
+					baseX = cursorGridX - cursorCol;
+					baseY = cursorGridY - cursorRow;
+				}
+			}
+		}
+	} catch (_) {}
 
 	const firstHit = zoneHits[0];
 	let hoveredCell = firstHit.gridCell;
