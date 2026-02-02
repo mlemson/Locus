@@ -505,7 +505,17 @@
 			touch-action: manipulation;
 			position: relative;
 			z-index: 1;
-			transition: transform 0.25s ease;
+			transition: transform 0.25s ease, opacity 0.12s ease;
+		}
+
+		body.layout-reflow .board {
+			opacity: 0;
+			pointer-events: none;
+		}
+
+		body.board-loading .board {
+			opacity: 0;
+			pointer-events: none;
 		}
 
 		body.board-scaled {
@@ -19479,6 +19489,9 @@ let shopLevel2Used = false;
 		}
 	  }
 
+	  if (!isRed && gridId === 'green-grid') {
+		try { requestAnimationFrame(() => { try { syncZoneHeights(); } catch (_) {} }); } catch (_) {}
+	  }
 	  updateScore();
 	  return clusterSet;
 	}
@@ -29996,6 +30009,7 @@ function resetWorldLayoutStyles() {
 	  selectedColor = null;
 	  cardSelectionLocked = false;
 	  if (rotateButton) rotateButton.disabled = true;
+	  try { document.body.classList.add('board-loading'); } catch (_) {}
 	  rebuildGameBoards();
 	  // World 2: place a single bonus-upgrade shop event on the board.
 	  placeBonusUpgradeFieldEvent_World2();
@@ -36226,6 +36240,7 @@ body { background: transparent; }
 	function reflowLayout() {
 		if (layoutReflowInProgress) return;
 		layoutReflowInProgress = true;
+		try { document.body.classList.add('layout-reflow'); } catch (_) {}
 		
 		// Detect layout mode changes and clean up wrapper if needed
 		try {
@@ -36264,6 +36279,8 @@ body { background: transparent; }
 					// Now scale the board AFTER layout has settled
 					try { scaleBoardForDesktop(); } catch (_) {}
 					try { scaleBoardForMobile(); } catch (_) {}
+					try { document.body.classList.remove('layout-reflow'); } catch (_) {}
+					try { document.body.classList.remove('board-loading'); } catch (_) {}
 					layoutReflowInProgress = false;
 				});
 			});
@@ -36271,6 +36288,8 @@ body { background: transparent; }
 			// Fallback if rAF is blocked
 			try { scaleBoardForDesktop(); } catch (_) {}
 			try { scaleBoardForMobile(); } catch (_) {}
+			try { document.body.classList.remove('layout-reflow'); } catch (_) {}
+			try { document.body.classList.remove('board-loading'); } catch (_) {}
 			layoutReflowInProgress = false;
 		}
 	}
