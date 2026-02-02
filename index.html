@@ -576,170 +576,6 @@
 			position: fixed;
 			top: var(--zoom-top, 22%);
 			left: 50%;
-			transform: translate(-50%, -50%) scale(var(--zoom-scale, 1.25));
-			z-index: var(--z-zoom);
-			box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
-			margin: 2px;
-			padding: 3px;
-			border-radius: 6px;
-		}
-
-		/* Mobile (incl. larger phones): use the same zoom sizing as the compact (<550px) layout. */
-		@media (max-width: 900px) {
-			:root {
-				--zoom-scale: 0.95;
-				--zoom-top: 25%;
-			}
-
-			/* Red zone: keep proportions in zoom, like compact mobile. */
-			#red-zone.zoom-focus {
-				flex-wrap: wrap;
-				flex-direction: row;
-				width: auto;
-				min-width: 380px;
-				height: auto;
-				max-width: 90vw;
-			}
-		}
-
-		/* World 3 red can be much taller; keep it centered + scrollable on mid-size viewports.
-		   (≤650px uses the uniform fixed-height zoom rules later.) */
-		@media (min-width: 651px) and (max-width: 900px) {
-			body.zoomed-in #red-zone.zoom-focus {
-				--zoom-top: 50%;
-				--zoom-scale: 0.95;
-				max-height: 85vh;
-				max-height: 85svh;
-				overflow: auto;
-				-webkit-overflow-scrolling: touch;
-				/* Ensure it stays above the blur overlay */
-				z-index: var(--z-zoom);
-			}
-		}
-
-		@media (max-width: 650px) {
-			body.zoomed-in #yellow-zone.zoom-focus,
-			body.zoomed-in #blue-zone.zoom-focus {
-				top: calc(22% + 50px);
-			}
-		}
-
-		/* Phone landscape (short height): scale board down so everything fits.
-		   Keep this limited to coarse pointers to avoid shrinking desktop windows. */
-		@media (max-height: 600px) and (orientation: landscape) and (pointer: coarse) {
-			:root {
-				--cell-size: 26px;
-			}
-		}
-
-		/* ===== MOBILE SIDEBAR LAYOUT =====
-		   Used for both mobile landscape AND mobile portrait on phones.
-		   Board center, options in slim sidebars. */
-		body.mobile-sidebar-layout {
-			overflow: hidden;
-			max-height: 100vh;
-			max-height: 100svh;
-		}
-
-		body.mobile-sidebar-layout,
-		body.mobile-sidebar-layout html {
-			overflow: hidden;
-		}
-
-		/* Hamburger menu in mobile sidebar layout */
-	body.mobile-sidebar-layout.mobile-sidebar-layout #menu-toggle {
-		position: fixed;
-		top: 4px;
-		left: 4px;
-		z-index: 1100;
-		width: 36px;
-		height: 36px;
-		display: flex;
-	}
-
-	body.mobile-sidebar-layout.mobile-sidebar-layout #controls {
-		position: fixed;
-		top: 44px;
-		left: 4px;
-		z-index: 1099;
-		max-height: calc(100vh - 50px);
-		max-height: calc(100svh - 50px);
-		overflow-y: auto;
-	}
-
-	body.mobile-sidebar-layout.mobile-sidebar-layout #bottom-bar {
-		display: none !important;
-	}
-
-	body.mobile-sidebar-layout.mobile-sidebar-layout #mobile-objective-banner {
-		}
-
-		/* Safety net: if the sidebar class ever lingers, never apply it in portrait. */
-		@media (max-width: 650px) and (orientation: portrait) {
-			body.mobile-sidebar-layout {
-				overflow: auto;
-				max-height: none;
-			}
-			body.mobile-sidebar-layout html {
-				overflow: auto;
-			}
-			body.mobile-sidebar-layout.mobile-sidebar-layout #mobile-landscape-wrapper {
-				display: none !important;
-			}
-			body.mobile-sidebar-layout.mobile-sidebar-layout #bottom-bar {
-				display: flex !important;
-			}
-			body.mobile-sidebar-layout.mobile-sidebar-layout #mobile-objective-banner {
-				display: flex !important;
-			}
-		}
-
-		/* Mobile landscape sidebar zoom mode */
-		body.mobile-sidebar-layout.zoomed-in .zone.zoom-focus {
-			position: fixed;
-			--zoom-top: 50%;
-			--zoom-scale: 0.85;
-			left: 50%;
-			z-index: var(--z-zoom);
-			box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
-			margin: 0;
-			padding: 6px;
-			border-radius: 8px;
-			max-width: 100vw;
-			max-height: 85vh;
-			max-height: 85svh;
-			overflow: auto;
-		}
-
-		body.mobile-sidebar-layout.mobile-sidebar-layout.zoomed-in #red-zone.zoom-focus {
-			display: grid;
-			grid-template-columns: repeat(2, max-content);
-			width: auto;
-			max-width: 100vw;
-		}
-
-		body.mobile-sidebar-layout.mobile-sidebar-layout.zoomed-in .zone-nav-arrow {
-			display: flex !important;
-		}
-
-		body.mobile-sidebar-layout.mobile-sidebar-layout #mobile-landscape-wrapper {
-			display: flex !important;
-			flex-direction: row;
-			align-items: stretch;
-			justify-content: center;
-			width: 100vw;
-			height: 100vh;
-			height: 100svh;
-			gap: 2px;
-			padding: 2px;
-			padding-left: 44px; /* Room for hamburger */
-			box-sizing: border-box;
-			overflow: hidden;
-		}
-
-		body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left,
-		body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-right {
-			display: flex !important;
 			flex-direction: column;
 			gap: 2px;
 			flex: 0 0 auto;
@@ -21938,26 +21774,6 @@ document.addEventListener('keydown', ev => {
 	- FIX NOTE: `showZoomLens(...)` uses `cursorX`/`cursorY` from the pointer event for correct positioning.
 */
 
-const ZONE_CELL_LOOKUP_CACHE = new WeakMap();
-function getZoneCellLookup(zoneEl) {
-	if (!zoneEl) return null;
-	const grid = zoneEl.querySelector('.grid');
-	if (!grid) return null;
-	const version = getGridVersion();
-	const cached = ZONE_CELL_LOOKUP_CACHE.get(grid);
-	if (cached && cached.version === version) return cached;
-	const map = new Map();
-	Array.from(grid.querySelectorAll('.cell')).forEach(cell => {
-		const x = Number(cell.dataset.x ?? cell.dataset.c);
-		const y = Number(cell.dataset.y ?? cell.dataset.r);
-		if (!Number.isFinite(x) || !Number.isFinite(y)) return;
-		map.set(`${x},${y}`, cell);
-	});
-	const entry = { version, grid, map };
-	ZONE_CELL_LOOKUP_CACHE.set(grid, entry);
-	return entry;
-}
-
 function processDragPointerMove(ev) {
 	if (!draggedBlock || !isPointerDragging) return;
 	if (dragPointerId !== null && ev.pointerId !== dragPointerId) return;
@@ -21987,28 +21803,21 @@ function processDragPointerMove(ev) {
 	if (overlay) {
 		if (!document.body.classList.contains('dragging')) document.body.classList.add('dragging');
 		if (overlay.style.display !== 'block') overlay.style.display = 'block';
-		// Only re-parent if needed (avoids pointless DOM operations each move).
 		if (draggedBlock.parentNode !== overlay) overlay.appendChild(draggedBlock);
 	}
 
-	// Hide real cursor (set once; keep it cheap in the hot path)
 	if (document.body.style.cursor !== 'none') document.body.style.cursor = 'none';
 	if (document.documentElement.style.cursor !== 'none') document.documentElement.style.cursor = 'none';
 
-	// Show control buttons on mobile mouse-drag, but don't recompute positions every move.
 	const isTouchPointer = (ev.pointerType === 'touch' || ev.pointerType === 'pen');
 	if (window.innerWidth <= MOBILE_BREAKPOINT && !isTouchPointer) {
 		const anyVisible = !!document.querySelector('.card-control-btn.visible');
 		if (!anyVisible) addCardControlButtons();
 	}
 
-	// For touch pointers only: add a small upward offset
 	const touchOffsetY = getFingerLiftOffsetY(ev);
-
-	// ===== Verplaats visueel het draggable blok =====
 	setElPos(draggedBlock, cursorX - offsetX, cursorY - offsetY - touchOffsetY);
 
-	// DEBUG: Log hover positioning values
 	if (window.debugHoverPosition) {
 		console.log('Hover Debug:', {
 			cursorX, cursorY,
@@ -22019,20 +21828,16 @@ function processDragPointerMove(ev) {
 		});
 	}
 
-	// ===== Vind zones en cellen onder ALLE gevulde cellen van het blok =====
 	const prevPointerEvents = draggedBlock.style.pointerEvents;
 	draggedBlock.style.pointerEvents = 'none';
 
-	// Detecteer zone onder cursor en pas gap aan VOOR het meten
 	const centerElem = document.elementFromPoint(cursorX, cursorY);
 	const detectedZone = centerElem ? centerElem.closest('.zone') : null;
 	const shapeHeight = draggedShape.length;
 	const shapeWidth = draggedShape[0].length;
 	const gapChanged = applyDragBlockGap(detectedZone);
 	if (gapChanged) {
-		// Force een synchrone reflow door offsetHeight te lezen
 		void draggedBlock.offsetHeight;
-		// Recompute offsets so the draggable stays aligned with the grid
 		try {
 			const sampleCell = draggedBlock.querySelector('.preview-cell-wrap') || draggedBlock.querySelector('div');
 			let cellSize = 0;
@@ -22043,22 +21848,16 @@ function processDragPointerMove(ev) {
 			const blockStyle = getComputedStyle(draggedBlock);
 			const gapRaw = blockStyle.gap || blockStyle.columnGap || '0px';
 			const gap = parseFloat(gapRaw) || 0;
-			if (dragGapMode === 'gapless') {
-				({ offsetX, offsetY } = computeShapeCenterOffsets(draggedShape, { cellSize, gap: 0 }));
-			} else {
-				({ offsetX, offsetY } = computeShapeCenterOffsets(draggedShape, { cellSize, gap }));
-			}
+			const effectiveGap = (dragGapMode === 'gapless') ? 0 : gap;
+			({ offsetX, offsetY } = computeShapeCenterOffsets(draggedShape, { cellSize, gap: effectiveGap }));
 			setElPos(draggedBlock, cursorX - offsetX, cursorY - offsetY - touchOffsetY);
 		} catch (e) {}
 	}
 
-	// Meet blok NA eventuele gap-aanpassing
 	const blockRect = draggedBlock.getBoundingClientRect();
-
-	// Derive per-cell spacing from the rendered draggable block
 	let stepX = 0;
 	let stepY = 0;
-	let dragCellSize = 0; // The actual cell size (without gap) for center calculations
+	let dragCellSize = 0;
 	let dragOriginX = blockRect.left;
 	let dragOriginY = blockRect.top;
 	try {
@@ -22078,112 +21877,50 @@ function processDragPointerMove(ev) {
 	} catch (_) {
 		stepX = shapeWidth > 0 ? (blockRect.width / shapeWidth) : 0;
 		stepY = shapeHeight > 0 ? (blockRect.height / shapeHeight) : 0;
-		dragCellSize = stepX; // fallback: assume no gap
+		dragCellSize = stepX;
 	}
 
-	// Verzamel alle hits van gevulde cellen
 	const cellHits = [];
-	let usedMathHitTest = false;
-	try {
-		const zoneForMath = detectedZone || (centerElem ? centerElem.closest('.zone') : null);
-		if (!zoneForMath || zoneForMath.classList.contains('zone-placeholder')) throw new Error('skip-math');
-		const lookup = getZoneCellLookup(zoneForMath);
-		if (lookup && lookup.grid && !isAbsolutePositionedGrid(lookup.grid)) {
-			// Use the first real cell as the grid origin (gridRect is centered and offset)
-			const sampleGridCell = lookup.grid.querySelector('.cell:not(.void-cell)');
-			let cellSize = 0;
-			let originX = 0;
-			let originY = 0;
-			if (sampleGridCell) {
-				const r = sampleGridCell.getBoundingClientRect();
-				cellSize = Math.min(r.width, r.height) || 0;
-				originX = r.left;
-				originY = r.top;
-			}
-			if (cellSize <= 0) {
-				cellSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')) || 0;
-				const gridRect = lookup.grid.getBoundingClientRect();
-				originX = gridRect.left;
-				originY = gridRect.top;
-			}
-			const gapRaw = getComputedStyle(lookup.grid).gap || '0px';
-			const gap = parseFloat(gapRaw) || 0;
-			const stepGX = cellSize + gap;
-			const stepGY = cellSize + gap;
-			if (cellSize > 0 && stepGX > 0 && stepGY > 0) {
-				for (let row = 0; row < shapeHeight; row++) {
-					for (let col = 0; col < shapeWidth; col++) {
-						if (!isSolidShapeCell(draggedShape[row][col])) continue;
-						// Center of draggable cell = dragOrigin + (col * step) + (cellSize / 2)
-						const cellX = dragOriginX + (col * stepX) + (dragCellSize / 2);
-						const cellY = dragOriginY + (row * stepY) + (dragCellSize / 2);
-						const gridX = Math.round((cellX - originX) / stepGX);
-						const gridY = Math.round((cellY - originY) / stepGY);
-						const gridCell = lookup.map.get(`${gridX},${gridY}`) || null;
-						if (gridCell && gridCell.dataset.x !== undefined && gridCell.dataset.y !== undefined) {
-							cellHits.push({
-								gridCell,
-								zone: zoneForMath,
-								shapeRow: row,
-								shapeCol: col,
-								gridX: parseInt(gridCell.dataset.x, 10),
-								gridY: parseInt(gridCell.dataset.y, 10)
-							});
-						}
-					}
-				}
-				usedMathHitTest = cellHits.length > 0;
-			}
-		}
-	} catch (_) {}
-	if (!usedMathHitTest) {
-		for (let row = 0; row < shapeHeight; row++) {
-			for (let col = 0; col < shapeWidth; col++) {
-				if (isSolidShapeCell(draggedShape[row][col])) {
-					// Center of draggable cell = dragOrigin + (col * step) + (cellSize / 2)
-					const cellX = dragOriginX + (col * stepX) + (dragCellSize / 2);
-					const cellY = dragOriginY + (row * stepY) + (dragCellSize / 2);
-					const elem = document.elementFromPoint(cellX, cellY);
-					const gridCell = elem ? elem.closest('.cell') : null;
-					if (gridCell && gridCell.dataset.x !== undefined && gridCell.dataset.y !== undefined) {
-						const cellZone = gridCell.closest('.zone');
-						if (cellZone && !cellZone.classList.contains('zone-placeholder')) {
-							cellHits.push({
-								gridCell: gridCell,
-								zone: cellZone,
-								shapeRow: row,
-								shapeCol: col,
-								gridX: parseInt(gridCell.dataset.x, 10),
-								gridY: parseInt(gridCell.dataset.y, 10)
-							});
-						}
-					}
-				}
-			}
+	for (let row = 0; row < shapeHeight; row++) {
+		for (let col = 0; col < shapeWidth; col++) {
+			if (!isSolidShapeCell(draggedShape[row][col])) continue;
+			const cellX = dragOriginX + (col * stepX) + (dragCellSize / 2);
+			const cellY = dragOriginY + (row * stepY) + (dragCellSize / 2);
+			const elem = document.elementFromPoint(cellX, cellY);
+			const gridCell = elem ? elem.closest('.cell') : null;
+			if (!gridCell || gridCell.dataset.x === undefined || gridCell.dataset.y === undefined) continue;
+			const cellZone = gridCell.closest('.zone');
+			if (!cellZone || cellZone.classList.contains('zone-placeholder')) continue;
+			cellHits.push({
+				gridCell,
+				zone: cellZone,
+				shapeRow: row,
+				shapeCol: col,
+				gridX: parseInt(gridCell.dataset.x, 10),
+				gridY: parseInt(gridCell.dataset.y, 10)
+			});
 		}
 	}
 
-	// Herstel pointer events
 	draggedBlock.style.pointerEvents = prevPointerEvents || '';
 
-	// Als we geen hits hebben, bail
 	if (cellHits.length === 0) {
 		lastZone = null;
 		lastBaseX = lastBaseY = null;
 		return;
 	}
 
-	// Kies de meest voorkomende zone (of eerste hit)
 	const zoneCounts = {};
 	cellHits.forEach(hit => {
-		const zoneId = hit.zone.id;
+		const zoneId = hit.zone.id || '';
+		if (!zoneId) return;
 		zoneCounts[zoneId] = (zoneCounts[zoneId] || 0) + 1;
 	});
 	const bestZoneId = Object.keys(zoneCounts).reduce((a, b) => zoneCounts[a] > zoneCounts[b] ? a : b);
 	let zone = document.getElementById(bestZoneId);
+	if (!zone) zone = cellHits[0].zone;
 
-	// Filter hits naar alleen deze zone
-	const zoneHits = cellHits.filter(hit => hit.zone.id === bestZoneId);
+	const zoneHits = cellHits.filter(hit => hit.zone === zone);
 	if (zoneHits.length === 0) {
 		lastZone = null;
 		lastBaseX = lastBaseY = null;
@@ -22224,111 +21961,24 @@ function processDragPointerMove(ev) {
 	if (!Number.isFinite(baseX)) baseX = baseXCandidates[0];
 	if (!Number.isFinite(baseY)) baseY = baseYCandidates[0];
 
-	// Align to the grid cell under the cursor when the cursor sits on a solid shape cell.
-	// This prevents a consistent one-cell up/left bias when hit-tests are slightly off.
-	try {
-		const cursorElem = centerElem ? centerElem.closest('.cell') : null;
-		if (cursorElem && cursorElem.dataset.x !== undefined && cursorElem.dataset.y !== undefined) {
-			const cursorGridX = parseInt(cursorElem.dataset.x, 10);
-			const cursorGridY = parseInt(cursorElem.dataset.y, 10);
-			const localX = cursorX - dragOriginX;
-			const localY = cursorY - dragOriginY;
-			if (Number.isFinite(localX) && Number.isFinite(localY) && stepX > 0 && stepY > 0) {
-				let cursorCol = Math.round((localX - (dragCellSize / 2)) / stepX);
-				let cursorRow = Math.round((localY - (dragCellSize / 2)) / stepY);
-				cursorCol = Math.max(0, Math.min(shapeWidth - 1, cursorCol));
-				cursorRow = Math.max(0, Math.min(shapeHeight - 1, cursorRow));
-				if (isSolidShapeCell(draggedShape[cursorRow]?.[cursorCol])) {
-					baseX = cursorGridX - cursorCol;
-					baseY = cursorGridY - cursorRow;
-				}
-			}
-		}
-	} catch (_) {}
+	lastZone = zone;
+	lastBaseX = baseX;
+	lastBaseY = baseY;
 
-	const firstHit = zoneHits[0];
-	let hoveredCell = firstHit.gridCell;
+	const zoneColor =
+		zone.dataset.color ||
+		zone.closest('.zone')?.dataset.color ||
+		(zone.id && zone.id.startsWith('red-grid') ? 'rood' : null);
 
-	if (window.debugHoverPosition) {
-		console.log('Base Position:', {
-			firstHitGridX: firstHit.gridX,
-			firstHitGridY: firstHit.gridY,
-			shapeCol: firstHit.shapeCol,
-			shapeRow: firstHit.shapeRow,
-			calculatedBaseX: baseX,
-			calculatedBaseY: baseY
-		});
-	}
+	const colorOk =
+		zoneColor === draggedColor.name ||
+		draggedColor.name === 'multikleur' ||
+		(draggedColor.name === 'rood' && zoneColor === 'rood');
 
-	const cellZone = hoveredCell.closest('.zone');
-	if (cellZone && !cellZone.classList.contains('zone-placeholder')) {
-		zone = cellZone;
-	}
-
-	if (!zone) {
-		lastZone = null;
-		lastBaseX = lastBaseY = null;
-		return;
-	}
-
-	if (zone !== lastZone) {
-		lastZone = zone;
-		lastBaseX = lastBaseY = null;
-	}
-
-	const metrics = getZoneMetrics(zone);
-	if (!metrics || metrics.maxX < metrics.minX || metrics.maxY < metrics.minY) {
-		lastBaseX = lastBaseY = null;
-		return;
-	}
-
-	const solidBounds = getSolidShapeBounds(draggedShape);
-	const minStartX = metrics.minX - solidBounds.minX;
-	const minStartY = metrics.minY - solidBounds.minY;
-	let maxStartX = metrics.maxX - solidBounds.maxX;
-	let maxStartY = metrics.maxY - solidBounds.maxY;
-	if (!Number.isFinite(maxStartX)) maxStartX = metrics.maxX;
-	if (!Number.isFinite(maxStartY)) maxStartY = metrics.maxY;
-	if (maxStartX < minStartX) maxStartX = minStartX;
-	if (maxStartY < minStartY) maxStartY = minStartY;
-
-	if (zone.id === 'yellow-zone') {
-		const yellowPlacement = getYellowPlacement(zone, baseX, baseY, draggedShape, metrics);
-		baseX = yellowPlacement.baseX;
-		baseY = yellowPlacement.baseY;
-	} else if (zone.id === 'blue-zone') {
-		baseY = getStickyBaseY(zone, baseX, baseY, draggedShape);
-	}
-
-	const wouldFitX = baseX >= minStartX && baseX <= maxStartX;
-	const wouldFitY = baseY >= minStartY && baseY <= maxStartY;
-	if (!wouldFitX || !wouldFitY) {
-		if (draggedBlock) draggedBlock.style.opacity = '0.3';
-		lastBaseX = baseX;
-		lastBaseY = baseY;
-		return;
-	}
-
-	if (baseX !== lastBaseX || baseY !== lastBaseY) {
-		lastBaseX = baseX;
-		lastBaseY = baseY;
-
-		const zoneColor =
-			zone.dataset.color ||
-			zone.closest('.zone')?.dataset.color ||
-			(zone.id.startsWith('red-grid') ? 'rood' : null);
-
-		const colorOk =
-			zoneColor === draggedColor.name ||
-			draggedColor.name === 'multikleur' ||
-			(draggedColor.name === 'rood' && zoneColor === 'rood');
-
-		const allowed = colorOk && canPlace(zone, baseX, baseY, draggedShape);
-		if (draggedBlock) draggedBlock.style.opacity = allowed ? '1' : '0.3';
-
-		// Zoom-lens disabled (remove the extra in-zoom placement preview panel).
-		hideZoomLens();
-	}
+	const allowed = colorOk && canPlace(zone, baseX, baseY, draggedShape);
+	if (draggedBlock) draggedBlock.style.opacity = allowed ? '1' : '0.3';
+	
+	hideZoomLens();
 }
 
 document.addEventListener('pointermove', ev => {
@@ -23924,172 +23574,6 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	  });
 	}
 	
-	// kan het blijven plakken aan een ander blok
-	function getStickyBaseY(zone, baseX, baseY, shape) {
-		if (!zone || zone.id !== 'blue-zone') return baseY;
-		
-		const metrics = getZoneMetrics(zone);
-		if (!metrics || metrics.maxY < metrics.minY) return baseY;
-		const floorY = Number.isFinite(metrics.maxY) ? metrics.maxY : null;
-		let bottomBoldY = null;
-		try {
-			const boldCells = Array.from(zone.querySelectorAll('.cell.bold-cell:not(.void-cell)'));
-			const boldYs = boldCells.map(c => Number(c.dataset.y)).filter(v => Number.isFinite(v));
-			if (boldYs.length) bottomBoldY = Math.max(...boldYs);
-		} catch (e) {}
-		
-		// GEEN magnetisch effect meer - alleen checken of positie geldig is
-		// Een positie is geldig als:
-		// 1. Het blok raakt de bodem (laatste niet-void rij), OF
-		// 2. Het blok grenst aan een al geplaatst blok (boven/onder/links/rechts)
-		
-		let touchesFloor = false;
-		let touchesActiveBlock = false;
-		let touchesPortalAnchor = false;
-		
-		for (let y = 0; y < shape.length; y++) {
-			for (let x = 0; x < shape[0].length; x++) {
-				const cellVal = shape[y][x];
-				if (!cellVal) continue;
-				const isOptional = isOptionalShapeCell(cellVal);
-				if (!isSolidShapeCell(cellVal) && !isOptional) continue;
-				
-				const cellX = baseX + x;
-				const cellY = baseY + y;
-				const cell = getCell(zone, cellX, cellY);
-				// Optional cell outside grid shouldn't block nor help validity.
-				if (!cell && isOptional) continue;
-				// If an optional cell overlaps an active cell, it counts as touching.
-				if (cell && cell.classList.contains('active')) {
-					touchesActiveBlock = true;
-				}
-				
-				// Check of deze cel de bodem raakt (echte floor row)
-				if (floorY !== null && cell && Number(cell.dataset.y) === floorY) {
-					touchesFloor = true;
-				}
-				// Check bold start/anker: ONLY bottom-most bold row
-				if (bottomBoldY !== null && cell && cell.classList.contains('bold-cell') && Number(cell.dataset.y) === bottomBoldY) {
-					touchesFloor = true;
-				}
-
-				// Direct op een portal is altijd geldig
-				if (cell && (cell.classList.contains('portal-cell') || cell.classList.contains('portal-anchor'))) {
-					touchesPortalAnchor = true;
-				}
-				
-				// Check of cel onder deze actief is (staat erop)
-				const cellBelow = getCell(zone, cellX, cellY + 1);
-				if (cellBelow && cellBelow.classList.contains('active')) {
-					touchesActiveBlock = true;
-				}
-				
-				// Check aangrenzende cellen (boven, links, rechts - niet onder want dat is hierboven)
-				const adjacentPositions = [
-					{ x: cellX - 1, y: cellY },     // links
-					{ x: cellX + 1, y: cellY },     // rechts
-					{ x: cellX, y: cellY - 1 }      // boven
-				];
-				
-				for (const pos of adjacentPositions) {
-					const adjacentCell = getCell(zone, pos.x, pos.y);
-					if (adjacentCell && adjacentCell.classList.contains('active')) {
-						touchesActiveBlock = true;
-						break;
-					}
-					if (adjacentCell && (adjacentCell.classList.contains('portal-cell') || adjacentCell.classList.contains('portal-anchor'))) {
-						touchesPortalAnchor = true;
-						break;
-					}
-				}
-				
-				if (touchesFloor || touchesActiveBlock || touchesPortalAnchor) break;
-			}
-			if (touchesFloor || touchesActiveBlock || touchesPortalAnchor) break;
-		}
-		
-		// Als het blok noch de bodem noch een actief blok raakt, is de positie ongeldig
-		if (!touchesFloor && !touchesActiveBlock && !touchesPortalAnchor) {
-			return -9999; // Onmogelijke positie
-		}
-		
-		// Positie is geldig, return origineel
-		return baseY;
-	}
-
-	function getYellowPlacement(zone, baseX, baseY, shape, metrics) {
-	  if (!zone || zone.id !== 'yellow-zone') return { baseX, baseY };
-	  
-	  // Check of deze gele zone bold-cells heeft (World 2 mechaniek)
-	  const hasBoldCells = zone.querySelectorAll('.cell.bold-cell').length > 0;
-	  
-	  // Als er geen bold-cells zijn (World 1), gebruik oude gedrag: geen restricties
-	  if (!hasBoldCells) {
-		return { baseX, baseY };
-	  }
-	  
-	  // WORLD 2: Voor gele zone met bold-cells: GEEN magnetisch effect
-	  // Het blok moet exact op de juiste positie staan
-	  // EN één van de cellen moet een bold-cell aanraken OF aangrenzen aan een actieve cel
-	  
-	  // Check of er een bold-cell wordt aangeraakt OF aangrenzen aan actieve cel
-	  let touchesBoldCell = false;
-	  let adjacentToActive = false;
-	  
-	  for (let row = 0; row < shape.length; row++) {
-		for (let col = 0; col < shape[0].length; col++) {
-		  const cellVal = shape[row][col];
-		  if (!cellVal) continue;
-		  const isOptional = isOptionalShapeCell(cellVal);
-		  if (!isSolidShapeCell(cellVal) && !isOptional) continue;
-			const cellX = baseX + col;
-			const cellY = baseY + row;
-			const cell = getCell(zone, cellX, cellY);
-			// Optional cell outside the grid should not count (positive-only).
-			if (!cell && isOptional) continue;
-			
-			// Check bold-cell
-			if (cell && cell.classList.contains('bold-cell')) {
-			  touchesBoldCell = true;
-			  break;
-			}
-			// Optional cell overlapping an active cell should count as touching.
-			if (cell && cell.classList.contains('active')) {
-				adjacentToActive = true;
-				break;
-			}
-			
-			// Check aangrenzende cellen (boven, onder, links, rechts)
-			const adjacentPositions = [
-			  { x: cellX - 1, y: cellY },     // links
-			  { x: cellX + 1, y: cellY },     // rechts
-			  { x: cellX, y: cellY - 1 },     // boven
-			  { x: cellX, y: cellY + 1 }      // onder
-			];
-			
-			for (const pos of adjacentPositions) {
-			  const adjacentCell = getCell(zone, pos.x, pos.y);
-			  if (adjacentCell && adjacentCell.classList.contains('active')) {
-				adjacentToActive = true;
-				break;
-			  }
-			}
-			
-			if (adjacentToActive) break;
-		}
-		if (touchesBoldCell || adjacentToActive) break;
-	  }
-	  
-	  // Als geen bold-cell wordt aangeraakt EN niet aangrenzend aan actieve cel
-	  // dan is dit geen geldige positie (alleen voor World 2)
-	  if (!touchesBoldCell && !adjacentToActive) {
-		return { baseX: -9999, baseY: -9999 };
-	  }
-	  
-	  // Anders: retourneer de originele positie (geen aanpassing)
-	  return { baseX, baseY };
-	}
-		
 	// ========================
 	// PLACE SHAPE
 	// ========================
@@ -27466,16 +26950,7 @@ function getCollectedCoinCount(scores) {
 				if (maxStartX < metrics.minX || maxStartY < metrics.minY) continue;
 				for (let baseX = metrics.minX; baseX <= maxStartX; baseX += 1) {
 					for (let baseY = metrics.minY; baseY <= maxStartY; baseY += 1) {
-						let adjustedX = baseX;
-						let adjustedY = baseY;
-						if (zone.id === 'yellow-zone') {
-							const placement = getYellowPlacement(zone, baseX, baseY, shape, metrics);
-							adjustedX = placement.baseX;
-							adjustedY = placement.baseY;
-						} else if (zone.id === 'blue-zone') {
-							adjustedY = getStickyBaseY(zone, baseX, baseY, shape);
-						}
-						if (canPlace(zone, adjustedX, adjustedY, shape)) {
+						if (canPlace(zone, baseX, baseY, shape)) {
 							return true;
 						}
 					}
