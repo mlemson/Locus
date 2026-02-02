@@ -272,6 +272,10 @@
 			box-sizing: border-box;
 		}
 
+		html, body {
+			touch-action: manipulation;
+		}
+
 		#drag-overlay {
 			position: fixed;
 			top: 0;
@@ -17366,6 +17370,13 @@ let shopLevel2Used = false;
 		} catch (e) {}
 	});
 
+	// Prevent pinch-zoom gestures on mobile Safari/iOS
+	['gesturestart', 'gesturechange', 'gestureend'].forEach(type => {
+		document.addEventListener(type, (e) => {
+			try { e.preventDefault(); } catch (_) {}
+		}, { passive: false });
+	});
+
 
 
 	 // ---------- CREATE GRID (general) ----------
@@ -19721,6 +19732,7 @@ let shopLevel2Used = false;
 	  latestScoreSnapshot = null;
 	resetBonusEchoState();
 	coinsAwardedFromScore = 0;
+	coinsCollectedThisLevel = 0;
 	cellActivationSequence = 0;
 	placementSequence = 0;
 	currentPlacementId = null;
@@ -19767,6 +19779,7 @@ let shopLevel2Used = false;
 		}
 		next.classList.add('active');
 		next.classList.remove('used');
+		coinsCollectedThisLevel += 1;
 		updateCoinCounter();
 	}
 
@@ -24100,6 +24113,7 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	let placementSequence = 0;
 	let currentPlacementId = null;
 	let coinsAwardedFromScore = 0;
+	var coinsCollectedThisLevel = 0;
 	let cardSelectionLocked = false;
 	  // NOTE: Turn counter UI is handled via turnCount/updateTurnCounterDisplay().
 	let debugMode = false;
@@ -24309,6 +24323,7 @@ function optionalCellsTouchActive(zone, pendingCells) {
 // then DOM `getSpendableCoinCount()`, then fallback to deriving from
 // bonus points (1 coin per 3 bonus points) if available.
 function getCollectedCoinCount(scores) {
+	if (typeof coinsCollectedThisLevel === 'number') return coinsCollectedThisLevel;
 	if (scores && typeof scores.coins === 'number') return scores.coins;
 	if (scores && typeof scores.coinsCollected === 'number') return scores.coinsCollected;
 	if (typeof getSpendableCoinCount === 'function') return getSpendableCoinCount();
