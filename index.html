@@ -28124,6 +28124,7 @@ function resetWorldLayoutStyles() {
 			maxTraps: 0,
 			blackHoleChance: 0
 		});
+		try { bumpGridVersion(); } catch (e) {}
 		const yellowZone = document.getElementById('yellow-zone');
 		if (yellowZone && yellowShape.boldCells) {
 			const cleanupYellowStartCell = (cell) => {
