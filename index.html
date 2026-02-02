@@ -32292,30 +32292,22 @@ function showFloatingPreview(shape, color, options = {}) {
 		const baseY = parseInt(cell.dataset.y, 10) || 0;
 
 		// Check of plaatsing valid is
-		if (canPlace(zone, selectedShape, baseX, baseY)) {
-			// Plaats het blok
-			placeShapeOnGrid(zone, selectedShape, baseX, baseY, selectedColor);
-			
-			// Clean up - bonus placement heeft speciale cleanup
-			if (activeBonusPlacement) {
-				cancelActiveBonusPlacement({ updateInventory: true });
-			} else {
-				if (selectedCardElement) {
-					selectedCardElement.classList.remove('selected');
+		if (canPlace(zone, baseX, baseY, selectedShape)) {
+			const coinSnapshotBefore = getCoinStateSnapshot();
+			const placementResult = placeShape(zone, baseX, baseY, selectedShape, selectedColor);
+			if (placementResult) {
+				if (activeBonusPlacement) {
+					finalizeBonusPlacement(placementResult, coinSnapshotBefore, activeBonusPlacement);
+					cleanupDragState({ clearBonus: true, updateInventory: false, hidePreview: true });
+				} else {
+					finalizeCardPlacement(placementResult, coinSnapshotBefore);
+					cleanupDragState({ clearBonus: false, hidePreview: true });
 				}
+				// Voer na-plaatsing logica uit
+				if (rotateButton) rotateButton.disabled = true;
+				if (mirrorButton) mirrorButton.disabled = true;
+				updateTurnState();
 			}
-			
-			selectedCardId = null;
-			selectedCardElement = null;
-			selectedShape = null;
-			selectedColor = null;
-			hideFloatingPreview();
-			removeCardControlButtons();
-			
-			// Voer na-plaatsing logica uit
-			if (rotateButton) rotateButton.disabled = true;
-			if (mirrorButton) mirrorButton.disabled = true;
-			updateTurnState();
 		} else {
 			// Visual feedback dat plaatsing invalid is
 			// Preview uitgeschakeld
