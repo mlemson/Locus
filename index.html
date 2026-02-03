@@ -901,13 +901,8 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 		}
 		
 		.zone.portal-active {
-			box-shadow: 0 0 12px 4px rgba(100, 200, 255, 0.6);
-			animation: portalPulse 2s ease-in-out infinite;
-		}
-		
-		@keyframes portalPulse {
-			0%, 100% { box-shadow: 0 0 12px 4px rgba(100, 200, 255, 0.6); }
-			50% { box-shadow: 0 0 20px 6px rgba(150, 220, 255, 0.8); }
+			box-shadow: 0 0 16px 5px rgba(100, 200, 255, 0.7);
+			/* Animation removed for performance - static glow */
 		}
 
 		/* Blue zone scroll - lang uitgezoomd, kort ingezoomd */
@@ -1003,51 +998,75 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	.card-option.card-golden {
 		position: relative;
 		overflow: hidden;
-		/* Golden card = golden frame + glow (keep normal card background/contents). */
-		border: 2px solid rgba(220,180,60,0.92);
+		/* Golden card = golden frame + subtle glow */
+		border: 2px solid rgba(210,170,50,0.85);
 		box-shadow:
-			0 18px 26px rgba(10,12,20,0.2),
-			0 0 0 2px rgba(220,180,60,0.50) inset,
-			0 0 18px rgba(184,120,18,0.28);
+			0 4px 8px rgba(0,0,0,0.12),
+			0 12px 24px rgba(30,50,100,0.15),
+			0 0 20px rgba(200,160,40,0.2);
+		/* Force same layout as regular cards */
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
 	}
 
-	@keyframes goldenCardShine {
-		0% { transform: translateX(-70%) rotate(20deg); }
-		100% { transform: translateX(70%) rotate(20deg); }
-	}
-
-	/* Subtle shine over the golden frame (does not affect the block colors). */
+	/* Static golden shine effect - no animation for better performance */
 	.card-option.card-golden::before {
 		content: '';
 		position: absolute;
-		top: -40%;
-		left: -40%;
-		width: 180%;
-		height: 180%;
-		background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.55) 45%, rgba(255,255,255,0) 70%);
-		opacity: 0.22;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: linear-gradient(135deg, 
+			rgba(255,220,100,0.15) 0%, 
+			rgba(255,255,255,0.25) 25%, 
+			rgba(255,220,100,0.1) 50%,
+			rgba(255,255,255,0.2) 75%,
+			rgba(255,220,100,0.15) 100%);
 		pointer-events: none;
-		transform: translateX(-70%) rotate(20deg);
-		animation: goldenCardShine 3.2s linear infinite;
-		z-index: 1;
+		border-radius: inherit;
+		z-index: 3;
 	}
 
-	.card-option.card-golden .card-pattern,
+	.card-option.card-golden .card-pattern {
+		position: relative;
+		z-index: 4;
+		margin: auto;
+		flex: 1 1 auto;
+		display: grid;
+		place-items: center;
+		align-self: center;
+		justify-self: center;
+	}
+	
 	.card-option.card-golden .card-label,
 	.card-option.card-golden .card-meta {
 		position: relative;
-		z-index: 2;
+		z-index: 4;
 	}
-
-	.card-option.card-golden::after {
-		background: linear-gradient(120deg, rgba(255,255,255,0.95), rgba(255,255,255,0) 60%);
-		opacity: 0.72;
-		mix-blend-mode: overlay;
+	
+	/* Ensure all badges show above the golden shine - use absolute positioning */
+	.card-option.card-golden .card-boost-badge {
+		position: absolute;
+		top: 6px;
+		left: 6px;
+		z-index: 6;
 	}
-
-	.card-option.card-golden .card-label {
-		background: rgba(120,80,0,0.1);
-		color: #7c4d00;
+	
+	.card-option.card-golden .card-meta--echo {
+		position: absolute;
+		left: 8px;
+		bottom: 8px;
+		z-index: 6;
+	}
+	
+	.card-option.card-golden .card-label--echo {
+		position: absolute;
+		right: 8px;
+		bottom: 8px;
+		z-index: 6;
 	}
 
 	#card-choice-zone .card-option.selection-disabled {
@@ -1057,20 +1076,20 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	}
 
 	body.dark-mode .card-option.card-golden {
-		border: 2px solid rgba(200,160,30,0.78);
+		border: 2px solid rgba(200,160,40,0.75);
 		box-shadow:
-			0 26px 44px rgba(0,0,0,0.55),
-			0 0 0 2px rgba(200,160,30,0.32) inset,
-			0 0 18px rgba(227,196,94,0.22);
+			0 2px 4px rgba(0,0,0,0.2),
+			0 8px 24px rgba(0,0,0,0.3),
+			0 0 24px rgba(200,160,40,0.18);
 	}
 
 	body.dark-mode .card-option.card-golden::before {
-		opacity: 0.18;
-	}
-
-	body.dark-mode .card-option.card-golden .card-label {
-		background: rgba(255,220,120,0.12);
-		color: #ffe79a;
+		background: linear-gradient(135deg, 
+			rgba(255,200,80,0.12) 0%, 
+			rgba(255,220,120,0.2) 25%, 
+			rgba(255,200,80,0.08) 50%,
+			rgba(255,220,120,0.15) 75%,
+			rgba(255,200,80,0.12) 100%);
 	}
 
 	/*
@@ -1078,19 +1097,19 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 		These overrides ensure golden styling remains visible inside the card-choice UI.
 	*/
 	#card-choice-zone .card-option.card-golden {
-		border: 2px solid rgba(220,180,60,0.92);
+		border: 2px solid rgba(210,170,50,0.85);
 		box-shadow:
-			0 18px 26px rgba(10,12,20,0.2),
-			0 0 0 2px rgba(220,180,60,0.50) inset,
-			0 0 18px rgba(184,120,18,0.28);
+			0 2px 4px rgba(0,0,0,0.06),
+			0 8px 20px rgba(30,50,100,0.1),
+			0 0 20px rgba(200,160,40,0.2);
 	}
 
 	body.dark-mode #card-choice-zone .card-option.card-golden {
-		border: 2px solid rgba(200,160,30,0.78);
+		border: 2px solid rgba(200,160,40,0.75);
 		box-shadow:
-			0 26px 44px rgba(0,0,0,0.55),
-			0 0 0 2px rgba(200,160,30,0.32) inset,
-			0 0 18px rgba(227,196,94,0.22);
+			0 2px 4px rgba(0,0,0,0.2),
+			0 8px 24px rgba(0,0,0,0.3),
+			0 0 24px rgba(200,160,40,0.18);
 	}
 
 	body.dark-mode #card-choice-zone .card-option.selection-disabled {
@@ -1101,49 +1120,33 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	/* Deck kopie kaart (extraHandSize upgrade) */
 	#card-choice-zone .card-option.card-deck-copy {
 		position: relative;
-		border: 2px dashed rgba(100, 140, 255, 0.6);
+		border: none;
 	}
 	#card-choice-zone .card-option.card-deck-copy::before {
-		content: '📋';
-		position: absolute;
-		top: -8px;
-		right: -8px;
-		font-size: 16px;
-		background: #fff;
-		border-radius: 50%;
-		padding: 2px;
-		box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-		z-index: 10;
+		display: none;
+		content: '';
 	}
 	body.dark-mode #card-choice-zone .card-option.card-deck-copy {
-		border-color: rgba(140, 180, 255, 0.5);
+		border-color: transparent;
 	}
 	body.dark-mode #card-choice-zone .card-option.card-deck-copy::before {
-		background: #2a2a3a;
+		display: none;
 	}
 
 	/* Lucky draw kopie kaart */
 	#card-choice-zone .card-option.card-lucky-copy {
 		position: relative;
-		border: 2px dashed rgba(80, 200, 80, 0.6);
+		border: none;
 	}
 	#card-choice-zone .card-option.card-lucky-copy::before {
-		content: '🍀';
-		position: absolute;
-		top: -8px;
-		right: -8px;
-		font-size: 16px;
-		background: #fff;
-		border-radius: 50%;
-		padding: 2px;
-		box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-		z-index: 10;
+		display: none;
+		content: '';
 	}
 	body.dark-mode #card-choice-zone .card-option.card-lucky-copy {
-		border-color: rgba(120, 220, 120, 0.5);
+		border-color: transparent;
 	}
 	body.dark-mode #card-choice-zone .card-option.card-lucky-copy::before {
-		background: #2a2a3a;
+		display: none;
 	}
 
 	/*
@@ -2482,10 +2485,10 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	}
 
 	.symbol.trap-symbol.trap-symbol--black-hole::after {
-	  background: radial-gradient(circle, rgba(138, 43, 226, 0.2) 0%, transparent 70%);
+	  background: radial-gradient(circle, rgba(138, 43, 226, 0.25) 0%, transparent 70%);
 	  opacity: 1;
 	  border-radius: 50%;
-	  animation: black-hole-pulse 2s ease-in-out infinite;
+	  /* Animation removed for performance - static effect */
 	}
 
 	/* Mega Bonus Symbol - grotere bonus met shimmer effect */
@@ -2505,16 +2508,14 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 			transform: translate(-50%, -50%);
 			transition: transform 0.2s ease;
 			z-index: 15;
-	  /* Gradient glim effect over bonus color */
+	  /* Static glim effect - animation removed for performance */
 	  background: linear-gradient(135deg, 
-		rgba(255, 255, 255, 0.4) 0%, 
-		transparent 40%, 
-		transparent 60%, 
-		rgba(255, 255, 255, 0.4) 100%);
-	  background-size: 200% 200%;
-	  animation: mega-bonus-glim 2.5s ease-in-out infinite;
-	  box-shadow: 0 0 15px rgba(255, 255, 255, 0.5), 
-				  inset 0 0 20px rgba(255, 255, 255, 0.3);
+		rgba(255, 255, 255, 0.35) 0%, 
+		transparent 35%, 
+		transparent 65%, 
+		rgba(255, 255, 255, 0.35) 100%);
+	  box-shadow: 0 0 18px rgba(255, 255, 255, 0.55), 
+				  inset 0 0 22px rgba(255, 255, 255, 0.35);
 	}
 
 	.symbol.mega-bonus-symbol:hover {
@@ -2581,9 +2582,9 @@ body.dark-mode .diamond-glyph { color: #bfefff; }
 		}
 	}
 	
-	/* Portal cel styling */
+	/* Portal cel styling - animations removed for performance */
 	.portal-cell {
-		animation: portal-pulse 2s ease-in-out infinite;
+		box-shadow: 0 0 20px rgba(100, 150, 255, 0.9), inset 0 0 18px rgba(100, 150, 255, 0.6);
 		z-index: 10;
 	}
 
@@ -2595,23 +2596,9 @@ body.dark-mode .diamond-glyph { color: #bfefff; }
 		font-size: calc(var(--cell-size) * 0.9);
 		z-index: 100;
 		pointer-events: none;
-		filter: drop-shadow(0 0 10px rgba(100, 150, 255, 1));
-		animation: portal-rotate 3s linear infinite;
-		text-shadow: 0 0 15px rgba(100, 150, 255, 0.8);
-	}
-
-	@keyframes portal-pulse {
-		0%, 100% {
-			box-shadow: 0 0 15px rgba(100, 150, 255, 0.8), inset 0 0 15px rgba(100, 150, 255, 0.5);
-		}
-		50% {
-			box-shadow: 0 0 30px rgba(100, 150, 255, 1), inset 0 0 20px rgba(100, 150, 255, 0.7);
-		}
-	}
-
-	@keyframes portal-rotate {
-		0% { transform: translate(-50%, -50%) rotate(0deg); }
-		100% { transform: translate(-50%, -50%) rotate(360deg); }
+		filter: drop-shadow(0 0 12px rgba(100, 150, 255, 1));
+		text-shadow: 0 0 18px rgba(100, 150, 255, 0.9);
+		/* No rotation animation - static for performance */
 	}
 	
 	/* Gouden muntje binnen een cel (gebruikt ::after pseudo-element) */
@@ -2790,7 +2777,8 @@ body.dark-mode .diamond-glyph { color: #bfefff; }
 		border-radius: 10px;
 		cursor: grab;
 		transition: transform 0.15s ease, box-shadow 0.15s ease;
-		animation: pulse-glow 1.5s ease-in-out infinite;
+		box-shadow: 0 0 12px rgba(150,100,200,0.3);
+		/* Animation removed for performance - static glow */
 	}
 	.purchased-block-preview:hover {
 		transform: scale(1.05);
@@ -2985,25 +2973,15 @@ body.dark-mode .diamond-glyph { color: #bfefff; }
 
 	.score-row:hover { transform: scale(1.03); background: #383838; }
 	
-	/* Score highlighting voor behaalde doelstellingen */
+	/* Score highlighting voor behaalde doelstellingen - static glow for performance */
 	.score-row.objective-achieved {
-	  box-shadow: 0 0 10px 2px rgba(255, 215, 0, 0.6);
-	  animation: objective-pulse 2s ease-in-out infinite;
+	  box-shadow: 0 0 12px 3px rgba(255, 215, 0, 0.7);
+	  /* Animation removed for performance */
 	}
 	
 	body.dark-mode .score-row.objective-achieved {
-	  box-shadow: 0 0 12px 2px rgba(255, 215, 0, 0.7);
-	  animation: objective-pulse-dark 2s ease-in-out infinite;
-	}
-	
-	@keyframes objective-pulse {
-	  0%, 100% { box-shadow: 0 0 10px 2px rgba(255, 215, 0, 0.6); }
-	  50% { box-shadow: 0 0 15px 3px rgba(255, 215, 0, 0.8); }
-	}
-	
-	@keyframes objective-pulse-dark {
-	  0%, 100% { box-shadow: 0 0 12px 2px rgba(255, 215, 0, 0.7); }
-	  50% { box-shadow: 0 0 18px 4px rgba(255, 215, 0, 0.9); }
+	  box-shadow: 0 0 14px 3px rgba(255, 215, 0, 0.8);
+	  /* Animation removed for performance */
 	}
 
 	/* Tutorial overlay + highlights */
@@ -3042,25 +3020,15 @@ body.dark-mode .diamond-glyph { color: #bfefff; }
 	}
 	.tutorial-glow {
 	  position: relative;
-	  animation: tutorial-pulse 1.6s ease-in-out infinite;
-	  box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.7), 0 0 16px rgba(249, 115, 22, 0.9);
+	  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.8), 0 0 20px rgba(249, 115, 22, 0.95);
 	  z-index: 9998;
+	  /* Animation removed for performance - static highlight */
 	}
 	.tutorial-glow-soft {
 	  position: relative;
-	  animation: tutorial-pulse-soft 1.8s ease-in-out infinite;
-	  box-shadow: 0 0 0 2px rgba(125, 211, 252, 0.55), 0 0 14px rgba(59, 130, 246, 0.7);
+	  box-shadow: 0 0 0 3px rgba(125, 211, 252, 0.65), 0 0 18px rgba(59, 130, 246, 0.8);
 	  z-index: 9998;
-	}
-	@keyframes tutorial-pulse {
-	  0% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7), 0 0 16px rgba(249, 115, 22, 0.9); }
-	  50% { box-shadow: 0 0 0 10px rgba(251, 191, 36, 0.0), 0 0 22px rgba(249, 115, 22, 0.4); }
-	  100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7), 0 0 16px rgba(249, 115, 22, 0.9); }
-	}
-	@keyframes tutorial-pulse-soft {
-	  0% { box-shadow: 0 0 0 0 rgba(125, 211, 252, 0.6), 0 0 14px rgba(59, 130, 246, 0.8); }
-	  50% { box-shadow: 0 0 0 10px rgba(125, 211, 252, 0.0), 0 0 18px rgba(59, 130, 246, 0.4); }
-	  100% { box-shadow: 0 0 0 0 rgba(125, 211, 252, 0.6), 0 0 14px rgba(59, 130, 246, 0.8); }
+	  /* Animation removed for performance - static highlight */
 	}
 	#tutorial-ghost {
 	  position: fixed;
@@ -3079,8 +3047,8 @@ body.dark-mode .diamond-glyph { color: #bfefff; }
 	  justify-content: center;
 	  background: transparent;
 	  border-radius: 10px;
-	  animation: ghost-float 1.4s ease-in-out infinite;
 	  opacity: 0.95;
+	  /* Animation removed for performance */
 	}
 	#tutorial-ghost .ghost-shape-grid {
 	  display: grid;
@@ -3139,20 +3107,9 @@ body.dark-mode .diamond-glyph { color: #bfefff; }
 		right: -4px;
 		bottom: -4px;
 		border-radius: 6px;
-		box-shadow: 0 0 0 3px rgba(152, 103, 232, 0.95), 0 0 22px rgba(152, 103, 232, 0.6);
-		animation: purple-pair-pulse 1.2s ease-in-out infinite;
+		box-shadow: 0 0 0 4px rgba(152, 103, 232, 0.9), 0 0 26px rgba(152, 103, 232, 0.65);
 		pointer-events: none;
-	}
-
-	@keyframes purple-pair-pulse {
-		0% { box-shadow: 0 0 0 3px rgba(152, 103, 232, 0.95), 0 0 22px rgba(152, 103, 232, 0.6); }
-		50% { box-shadow: 0 0 0 5px rgba(152, 103, 232, 0.35), 0 0 30px rgba(152, 103, 232, 0.45); }
-		100% { box-shadow: 0 0 0 3px rgba(152, 103, 232, 0.95), 0 0 22px rgba(152, 103, 232, 0.6); }
-	}
-	@keyframes ghost-float {
-	  0% { transform: translateY(0); }
-	  50% { transform: translateY(-6px); }
-	  100% { transform: translateY(0); }
+		/* Animation removed for performance - static glow */
 	}
 
 	body.dark-mode .score-row:hover {
@@ -3195,15 +3152,15 @@ body.dark-mode .diamond-glyph { color: #bfefff; }
 	  transition: box-shadow 0.3s;
 	}
 	
-	/* Total score highlighting voor behaalde doelstellingen */
+	/* Total score highlighting voor behaalde doelstellingen - static glow */
 	#scoreboard .score-total.objective-achieved {
-	  box-shadow: 0 0 10px 2px rgba(255, 215, 0, 0.6);
-	  animation: objective-pulse 2s ease-in-out infinite;
+	  box-shadow: 0 0 12px 3px rgba(255, 215, 0, 0.7);
+	  /* Animation removed for performance */
 	}
 	
 	body.dark-mode #scoreboard .score-total.objective-achieved {
-	  box-shadow: 0 0 12px 2px rgba(255, 215, 0, 0.7);
-	  animation: objective-pulse-dark 2s ease-in-out infinite;
+	  box-shadow: 0 0 14px 3px rgba(255, 215, 0, 0.8);
+	  /* Animation removed for performance */
 	}
 
 	body.dark-mode #scoreboard .score-total {
@@ -3382,12 +3339,6 @@ body.dark-mode .diamond-glyph { color: #bfefff; }
 	  color: #2b1a00;
 	}
 
-	#bonus-score[data-blackhole-extra]:not([data-blackhole-extra="0"])::after {
-	  content: ' +' attr(data-blackhole-extra);
-	  font-size: 0.7em;
-	  margin-left: 6px;
-	  color: #6b63c9;
-	}
 
 	body.dark-mode #scoreboard .score-total {
 	  background: linear-gradient(140deg, #3a331f, #2b2619);
@@ -3399,9 +3350,6 @@ body.dark-mode .diamond-glyph { color: #bfefff; }
 	body.dark-mode #scoreboard .trap-summary {
 	  background: rgba(255,255,255,0.03);
 	  border-color: rgba(255,255,255,0.07);
-	}
-	body.dark-mode #bonus-score[data-blackhole-extra]:not([data-blackhole-extra="0"])::after {
-	  color: #d5d0ff;
 	}
 
 	body.dark-mode .trap-icon {
@@ -3963,20 +3911,25 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		flex: 0 0 auto;
 		width: 138px;
 		min-height: 180px;
-		padding: 0;
+		padding: 12px 10px;
 		display: flex;
 		flex-direction: column;
 		--preview-cell: 20px;
 		align-items: center;
 		justify-content: center;
-		gap: 12px;
-		border-radius: 16px;
-		background: linear-gradient(165deg, #ffffff 0%, #eef2ff 45%, #dfe4ff 100%);
-		border: 1px solid rgba(40,55,120,0.18);
+		gap: 10px;
+		border-radius: 14px;
+		background: 
+			radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.8) 0%, transparent 60%),
+			linear-gradient(175deg, #f8faff 0%, #e8ecf6 100%);
+		border: 1.5px solid rgba(100,120,180,0.2);
 		box-sizing: border-box;
-		box-shadow: 0 18px 26px rgba(10,12,20,0.2);
+		box-shadow: 
+			0 4px 8px rgba(0,0,0,0.08),
+			0 12px 24px rgba(30,50,100,0.12),
+			inset 0 1px 0 rgba(255,255,255,0.9);
 		position: relative;
-		overflow: visible;
+		overflow: hidden;
 		transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 	}
 
@@ -3993,10 +3946,12 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	.card-option::after {
 		content: "";
 		position: absolute;
-		inset: 0;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 50%;
 		border-radius: inherit;
-		background: linear-gradient(120deg, rgba(255,255,255,0.65), rgba(255,255,255,0) 58%);
-		opacity: 0.45;
+		background: linear-gradient(180deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 100%);
 		pointer-events: none;
 	}
 
@@ -4006,8 +3961,10 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	}
 
 	.card-option:hover {
-		transform: translateY(-6px);
-		box-shadow: 0 30px 48px rgba(20,30,60,0.32);
+		transform: translateY(-4px);
+		box-shadow: 
+			0 4px 8px rgba(0,0,0,0.06),
+			0 16px 32px rgba(30,50,100,0.14);
 	}
 
 	.card-option.selected {
@@ -4139,15 +4096,18 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		justify-items: center;
 		justify-content: center;
 		align-content: center;
+		filter: drop-shadow(0 3px 4px rgba(0,0,0,0.2));
 	}
 
 	.card-option .card-cell {
 		width: var(--card-cell-size, 22px);
 		height: var(--card-cell-size, 22px);
 		/* Keep the same rounding style as board cells */
-		border-radius: clamp(2px, calc(var(--card-cell-size, 22px) / 6), 6px);
-		border: 1px solid rgba(12,16,30,0.12);
-		box-shadow: inset 0 0 4px rgba(0,0,0,0.18);
+		border-radius: clamp(3px, calc(var(--card-cell-size, 22px) / 5), 6px);
+		border: 1.5px solid rgba(0,0,0,0.12);
+		box-shadow: 
+			inset 0 1px 2px rgba(0,0,0,0.08),
+			0 1px 0 rgba(255,255,255,0.8);
 		background: rgba(255,255,255,0.95);
 	}
 
@@ -4155,24 +4115,89 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		gap: 6px;
-		padding: 5px 10px;
-		border-radius: 999px;
-		background: rgba(20,24,36,0.06);
-		font-size: 0.72rem;
-		font-weight: 600;
-		letter-spacing: 0.065em;
+		gap: 5px;
+		padding: 4px 10px;
+		border-radius: 8px;
+		background: rgba(40,55,90,0.08);
+		font-size: 0.68rem;
+		font-weight: 700;
+		letter-spacing: 0.04em;
 		text-transform: uppercase;
-		color: rgba(20,24,36,0.62);
+		color: rgba(30,45,80,0.75);
 		text-align: center;
+	}
+
+	.card-label.card-label--empty {
+		display: none;
 	}
 
 	.card-meta {
 		font-size: 0.72rem;
 		letter-spacing: 0.05em;
-		color: rgba(20,24,36,0.55);
+		color: rgba(24,32,54,0.55);
 		text-align: center;
 		align-self: center;
+	}
+
+	.card-meta.card-meta--empty {
+		display: none;
+	}
+
+	.card-meta.card-meta--echo {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		align-items: center;
+		font-size: 0.68rem;
+		letter-spacing: 0.06em;
+		color: rgba(15,20,32,0.68);
+		position: absolute;
+		left: 8px;
+		bottom: 8px;
+		z-index: 5;
+		margin: 0;
+		pointer-events: none;
+	}
+
+	.card-meta--echo .card-meta-line {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 4px;
+		text-align: center;
+		font-size: 0.9rem;
+	}
+
+	.card-meta--echo .bonus-mini-icon {
+		width: 12px;
+		height: 12px;
+		border-radius: 4px;
+		background: linear-gradient(135deg, #ff5757 0%, #ffbf3a 22%, #8cff6a 45%, #47b1ff 70%, #b16cff 100%);
+		box-shadow: inset 0 0 4px rgba(0,0,0,0.25), 0 2px 4px rgba(0,0,0,0.2);
+		border: 1px solid rgba(120,120,180,0.35);
+	}
+
+	.card-meta--echo .coin-icon {
+		display: inline-block;
+		width: 12px;
+		height: 12px;
+		border-radius: 50%;
+		background: radial-gradient(circle at 30% 30%, #fff6b5, #f7bb36 60%, #d49f20);
+		box-shadow: inset 0 -1px 2px rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.2);
+		border: 1px solid #c9960a;
+	}
+
+	.card-meta--echo .card-meta-note {
+		font-size: 0.88rem;
+		letter-spacing: 0.04em;
+		text-transform: none;
+		color: rgba(15,20,32,0.6);
+	}
+
+	.card-meta--echo .meta-target-icon {
+		font-size: 1.5em;
+		line-height: 1;
+		display: inline-block;
 	}
 
 	.card-meta.card-meta--level2 {
@@ -4180,6 +4205,38 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		color: #0f243a;
+	}
+
+	.card-label.card-label--echo {
+		background: linear-gradient(135deg, rgba(79,195,255,0.22), rgba(106,139,255,0.22));
+		color: #0f243a;
+		font-size: 0.78rem;
+		letter-spacing: 0.08em;
+		font-weight: 800;
+		position: absolute;
+		right: 8px;
+		bottom: 8px;
+		z-index: 5;
+		margin: 0;
+		pointer-events: none;
+	}
+
+	.card-label.card-label--echo .echo-icon {
+		font-size: 0.92rem;
+		line-height: 1;
+	}
+
+	body.dark-mode .card-label.card-label--echo {
+		background: linear-gradient(135deg, rgba(79,195,255,0.2), rgba(106,139,255,0.2));
+		color: #e7f2ff;
+	}
+
+	body.dark-mode .card-meta.card-meta--echo {
+		color: rgba(230,235,255,0.78);
+	}
+
+	body.dark-mode .card-meta--echo .card-meta-note {
+		color: rgba(230,235,255,0.6);
 	}
 
 	.card-effect {
@@ -4286,8 +4343,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 	.card-boost-badge {
 		position: absolute;
-		top: 4px;
-		left: 4px;
+		top: 6px;
+		left: 6px;
 		min-width: 22px;
 		height: 18px;
 		padding: 0 4px;
@@ -4305,17 +4362,29 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		text-align: center;
 		line-height: 1;
 		pointer-events: none;
-		z-index: 2;
+		z-index: 5;
 	}
 
 	.card-option { position: relative; }
+	.card-option {
+		justify-content: center;
+	}
+	.card-option .card-pattern {
+		margin: auto;
+		flex: 1 1 auto;
+		display: grid;
+		place-items: center;
+		align-self: center;
+		justify-self: center;
+	}
 
 	.card-echo-badge {
 		position: absolute;
 		bottom: 6px;
 		right: 6px;
-		width: 30px;
+		min-width: 30px;
 		height: 30px;
+		padding: 0 6px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -4331,6 +4400,11 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		letter-spacing: 0;
 		text-align: center;
 		line-height: 1;
+	}
+
+	/* Bonus echo badge is now hidden (icon is redundant). */
+	.card-echo-badge {
+		display: none;
 	}
 
 	.card-echo-badge:focus-visible {
@@ -4395,24 +4469,43 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	}
 
 	body.dark-mode .card-option {
-		background: linear-gradient(160deg, #2d3142 0%, #232635 45%, #1b1e2c 100%);
-		border-color: rgba(120,140,220,0.2);
-		box-shadow: 0 26px 44px rgba(0,0,0,0.5);
+		background: 
+			radial-gradient(ellipse 80% 50% at 50% 0%, rgba(80,100,160,0.15) 0%, transparent 60%),
+			linear-gradient(175deg, #2a3248 0%, #1c2030 100%);
+		border-color: rgba(130,150,210,0.25);
+		box-shadow: 
+			0 4px 8px rgba(0,0,0,0.2),
+			0 12px 28px rgba(0,0,0,0.3),
+			inset 0 1px 0 rgba(255,255,255,0.06);
+	}
+
+	.card-bonus-echo {
+		background: linear-gradient(160deg, #2a334a 0%, #21283a 45%, #191f30 100%);
+		border-color: rgba(120,160,255,0.45);
+		box-shadow: 0 28px 46px rgba(0,0,0,0.42);
+	}
+
+	.card-bonus-boost {
+		background: linear-gradient(160deg, #3a2f1a 0%, #2a2012 55%, #1f170c 100%);
+		border-color: rgba(255,196,92,0.35);
+		box-shadow: 0 26px 44px rgba(0,0,0,0.4);
 	}
 
 	body.dark-mode .card-option::after {
-		opacity: 0.25;
+		background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 100%);
 	}
 
 	body.dark-mode .card-option .card-cell {
-		border-color: rgba(255,255,255,0.08);
-		box-shadow: inset 0 0 6px rgba(0,0,0,0.35);
-		background: rgba(18,22,32,0.6);
+		border-color: rgba(255,255,255,0.15);
+		box-shadow: 
+			inset 0 1px 3px rgba(0,0,0,0.3),
+			0 1px 0 rgba(255,255,255,0.05);
+		background: rgba(20,26,40,0.85);
 	}
 
 	body.dark-mode .card-label {
 		background: rgba(255,255,255,0.08);
-		color: rgba(255,255,255,0.82);
+		color: rgba(220,230,255,0.85);
 	}
 
 	body.dark-mode .card-meta {
@@ -4453,6 +4546,34 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		background: linear-gradient(135deg, #5ac8ff, #809cff);
 		color: #0b1626;
 		box-shadow: 0 6px 14px rgba(0,0,0,0.35);
+	}
+
+	.card-replay-copy {
+		position: relative;
+		overflow: hidden;
+		animation: replay-card-pop 0.65s ease-out 1;
+	}
+
+	.card-replay-copy::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.45), rgba(255,255,255,0) 55%);
+		opacity: 0;
+		animation: replay-card-shine 0.8s ease-out 1;
+		pointer-events: none;
+	}
+
+	@keyframes replay-card-pop {
+		0% { transform: scale(0.92); box-shadow: 0 0 0 rgba(0,0,0,0); }
+		60% { transform: scale(1.05); box-shadow: 0 20px 34px rgba(64,130,255,0.35); }
+		100% { transform: scale(1); box-shadow: 0 18px 30px rgba(0,0,0,0.35); }
+	}
+
+	@keyframes replay-card-shine {
+		0% { opacity: 0; }
+		40% { opacity: 0.6; }
+		100% { opacity: 0; }
 	}
 
 	#card-options {
@@ -4879,10 +5000,11 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		transform: none;
 		width: 100%;
 		max-width: 120px;
-		min-height: 160px;
-		height: 160px;
+		min-height: var(--card-min-height, 190px);
+		height: auto;
 		margin: 0 auto;
 		padding: 8px;
+		--preview-cell: 20px;
 		gap: 8px;
 		justify-content: center;
 		align-items: center;
@@ -4895,6 +5017,42 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		cursor: default;
 	}
 
+	/* Deck overview cards: clean, simple styling without heavy effects */
+	#deck-modal-content.deck-modal-grid .card-option {
+		background: 
+			radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.05) 0%, transparent 60%),
+			linear-gradient(175deg, rgba(50,60,85,0.7) 0%, rgba(35,42,60,0.8) 100%);
+		border: 1px solid rgba(130,150,200,0.2);
+		box-shadow: 
+			0 4px 8px rgba(0,0,0,0.15),
+			0 8px 16px rgba(0,0,0,0.1);
+	}
+
+	#deck-modal-content.deck-modal-grid .card-option::after {
+		display: none;
+	}
+
+	/* Remove golden card shine animation in deck overview */
+	#deck-modal-content.deck-modal-grid .card-option.card-golden::before {
+		animation: none;
+		display: none;
+	}
+	
+	/* Ensure golden cards in deck modal have same layout as regular cards */
+	#deck-modal-content.deck-modal-grid .card-option.card-golden {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+	}
+	
+	#deck-modal-content.deck-modal-grid .card-option.card-golden .card-pattern {
+		margin: auto;
+		flex: 1 1 auto;
+		display: grid;
+		place-items: center;
+	}
+
 	/* The golden unlock modal MUST be clickable (pick 1 of 3). */
 	#golden-unlock-content.deck-modal-grid .card-option {
 		pointer-events: auto;
@@ -4904,6 +5062,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	.deck-modal-grid .card-pattern {
 		gap: 3px;
 		margin: 0 auto;
+		/* Reduce shadow in deck overview for cleaner look */
+		filter: drop-shadow(0 2px 3px rgba(0,0,0,0.15));
 	}
 
 	/* Reward picker (golden/XL/XXL) - larger, balanced layout */
@@ -5009,12 +5169,41 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	.deck-modal-grid .card-option:hover,
 	.deck-modal-grid .card-option:focus {
 		transform: none;
-		box-shadow: 0 18px 26px rgba(10,12,20,0.2);
+		box-shadow: 0 2px 8px rgba(0,0,0,0.12);
 	}
 
 	body.dark-mode .deck-modal-grid .card-option:hover,
 	body.dark-mode .deck-modal-grid .card-option:focus {
-		box-shadow: 0 26px 44px rgba(0,0,0,0.5);
+		box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+	}
+	
+	/* Keep golden border on deck overview cards but no animation */
+	#deck-modal-content.deck-modal-grid .card-option.card-golden {
+		border: 2px solid rgba(200,160,50,0.5);
+		box-shadow: 0 0 12px rgba(200,160,40,0.15);
+	}
+	
+	body.dark-mode #deck-modal-content.deck-modal-grid .card-option.card-golden {
+		border: 2px solid rgba(200,160,50,0.4);
+		box-shadow: 0 0 12px rgba(200,160,40,0.12);
+	}
+
+	body.dark-mode #deck-modal-content.deck-modal-grid .card-option {
+		background: 
+			radial-gradient(ellipse 80% 50% at 50% 0%, rgba(80,100,160,0.1) 0%, transparent 60%),
+			linear-gradient(175deg, rgba(42,50,72,0.85) 0%, rgba(28,32,48,0.9) 100%);
+		border: 1px solid rgba(130,150,210,0.2);
+		box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+	}
+
+	body.dark-mode #deck-modal-content.deck-modal-grid .card-option::after {
+		display: none;
+	}
+
+	/* Remove golden card shine animation in deck overview (dark mode) */
+	body.dark-mode #deck-modal-content.deck-modal-grid .card-option.card-golden::before {
+		animation: none;
+		display: none;
 	}
 
 	.deck-modal-grid .card-option .card-label,
@@ -5060,21 +5249,16 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		position: absolute;
 		inset: -20%;
 		border-radius: 50%;
-		background: conic-gradient(from 0deg, rgba(120, 180, 255, 0.0), rgba(120, 180, 255, 0.35), rgba(120, 180, 255, 0.0));
-		animation: blackhole-spin 6s linear infinite;
+		background: conic-gradient(from 45deg, rgba(120, 180, 255, 0.0), rgba(120, 180, 255, 0.4), rgba(120, 180, 255, 0.0));
+		/* Animation removed for performance - static glow */
 	}
 	.blackhole-hero::after {
 		content: '';
 		position: absolute;
 		inset: 18%;
 		border-radius: 50%;
-		background: radial-gradient(circle, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 55%, rgba(70, 90, 180, 0.2) 100%);
-		box-shadow: inset 0 0 12px rgba(0,0,0,0.8);
-	}
-
-	@keyframes blackhole-spin {
-		0% { transform: rotate(0deg); }
-		100% { transform: rotate(360deg); }
+		background: radial-gradient(circle, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 55%, rgba(70, 90, 180, 0.25) 100%);
+		box-shadow: inset 0 0 14px rgba(0,0,0,0.85);
 	}
 
 	.blackhole-subtext {
@@ -6420,19 +6604,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		font-size: 96px;
 		font-weight: bold;
 		color: #ffd700;
-		text-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
-		animation: pulse 2s ease-in-out infinite;
-	}
-
-	@keyframes pulse {
-		0%, 100% {
-			opacity: 1;
-			transform: scale(1);
-		}
-		50% {
-			opacity: 0.7;
-			transform: scale(1.1);
-		}
+		text-shadow: 0 0 24px rgba(255, 215, 0, 0.7);
+		/* Animation removed for performance - static glow */
 	}
 
 	.mystery-card-back {
@@ -9638,19 +9811,19 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			flex-wrap: nowrap;
 			justify-content: center;
 			gap: 6px;
-			width: fit-content;
+			width: 100%;
 		}
 		body.desktop-portrait.desktop-portrait #desktop-bottom-center .card-option {
-			width: 60px;
-			max-width: 60px;
-			min-height: 85px;
-			padding: 4px;
-			gap: 4px;
-			--preview-cell: 12px;
+			width: 120px;
+			max-width: 140px;
+			min-height: var(--card-min-height, 200px);
+			padding: 8px;
+			gap: 6px;
+			--preview-cell: 16px;
 		}
 		body.desktop-portrait.desktop-portrait #desktop-bottom-center .card-option .card-cell {
-			width: 10px;
-			height: 10px;
+			width: var(--preview-cell, 16px);
+			height: var(--preview-cell, 16px);
 		}
 		body.desktop-portrait.desktop-portrait #desktop-bottom-center .card-label {
 			font-size: 0.5rem;
@@ -9875,19 +10048,19 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			flex-wrap: nowrap;
 			justify-content: center;
 			gap: 6px;
-			width: fit-content;
+			width: 100%;
 		}
 		body.desktop-portrait.desktop-portrait #desktop-bottom-center .card-option {
-			width: 60px;
-			max-width: 60px;
-			min-height: 85px;
-			padding: 4px;
-			gap: 4px;
-			--preview-cell: 12px;
+			width: 120px;
+			max-width: 140px;
+			min-height: var(--card-min-height, 200px);
+			padding: 8px;
+			gap: 6px;
+			--preview-cell: 16px;
 		}
 		body.desktop-portrait.desktop-portrait #desktop-bottom-center .card-option .card-cell {
-			width: 10px;
-			height: 10px;
+			width: var(--preview-cell, 16px);
+			height: var(--preview-cell, 16px);
 		}
 		body.desktop-portrait.desktop-portrait #desktop-bottom-center .card-label {
 			font-size: 0.5rem;
@@ -10764,6 +10937,9 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		margin-left: auto;
 		margin-right: auto;
 		min-width: 0;
+		min-height: var(--card-min-height, 200px);
+		height: auto;
+		--preview-cell: 24px;
 		box-sizing: border-box;
 	  }
 	  
@@ -11218,7 +11394,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		flex-wrap: nowrap;
 		gap: 8px;
 		justify-content: center;
-		align-items: flex-start;
+		align-items: stretch;
 		margin: 14px auto 18px;
 	  }
 
@@ -11230,9 +11406,11 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		gap: 4px;
 		width: auto;
 		min-width: 120px;
-		min-height: 180px;
+		min-height: var(--card-min-height, 200px);
+		height: auto;
 		flex: 1 1 0;
 		padding: 12px 8px;
+		--preview-cell: 24px;
 		border-radius: 12px;
 		background: linear-gradient(165deg, #ffffff 0%, #eef2ff 45%, #dfe4ff 100%);
 		border: 1px solid rgba(40,55,120,0.18);
@@ -12512,11 +12690,6 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			<span class="color-box"></span>
 			<span class="label">Blauw</span>
 			<span class="score" id="blue-score">0</span>
-		  </div>
-		  <div class="score-row bonus">
-			<span class="color-box"></span>
-			<span class="label">Bonus</span>
-			<span class="score" id="bonus-score">0</span>
 		  </div>
 		</div>
 		</div>
@@ -19766,7 +19939,7 @@ let shopLevel2Used = false;
 		  grid.dataset.score = '0';
 		}
 	  });
-	  const scoreIds = ['yellow-score','red-score','green-score','purple-score','blue-score','bonus-score'];
+	  const scoreIds = ['yellow-score','red-score','green-score','purple-score','blue-score'];
 	  scoreIds.forEach(id => {
 		const el = document.getElementById(id);
 		if (el) el.textContent = '0';
@@ -21000,17 +21173,12 @@ let shopLevel2Used = false;
 	const waarden = [yellowFinal, greenFinal, purpleFinal, blueFinal, redFinal];
 	// Bonus should never go negative.
 	const baseBonus = Math.max(0, Math.min(...waarden));
-	const totalBonusScore = baseBonus + Math.max(0, blackHoleBonus || 0);
+	const totalBonusScore = baseBonus;
 	bonus = totalBonusScore;
 	trackBonusCoinRewards(totalBonusScore);
 
 	
     // update DOM
-	const bonusEl = document.getElementById('bonus-score');
-	if (bonusEl) {
-	  bonusEl.textContent = totalBonusScore;
-	  bonusEl.setAttribute('data-blackhole-extra', String(Math.max(0, blackHoleBonus || 0)));
-	}
 	document.getElementById('yellow-score').textContent = yellowFinal;
 	document.getElementById('green-score').textContent = greenFinal;
 	document.getElementById('purple-score').textContent = purpleFinal;
@@ -22574,26 +22742,31 @@ document.addEventListener('pointermove', ev => {
 			  let shadow;
 			  if (color.code === 'rainbow') {
 				background = 'linear-gradient(45deg, #f06272, #fff25a, #4ed346, #5d90f0, #a35eff)';
-				shadow = '0 0 6px rgba(0,0,0,0.3)';
+				shadow = '0 2px 4px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.3)';
 			  } else {
 				// Golden is a card modifier; do not paint blocks gold.
 				background = (color.code || '#a0a0a0');
 				const isGradient = typeof background === 'string' && background.includes('gradient');
-				shadow = isGradient ? '0 0 4px rgba(90,80,160,0.4)' : `0 0 4px ${background}`;
+				shadow = '0 2px 4px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.25)';
 			  }
 			  div.style.background = background;
 			  div.style.boxShadow = shadow;
+			  div.style.border = '1px solid rgba(0,0,0,0.15)';
 			} else {
+			  // Empty cell - make completely invisible
 			  div.style.background = 'transparent';
 			  div.style.boxShadow = 'none';
+			  div.style.border = 'none';
+			  div.style.visibility = 'hidden';
 			}
 			pattern.appendChild(div);
 		  });
 		});
 	  }
 	const meta = card.querySelector('.card-meta');
-	if (meta && !meta.classList.contains('card-meta--level2')) {
-		meta.textContent = 'LVL 1';
+	if (meta && !meta.classList.contains('card-meta--echo')) {
+		meta.textContent = '';
+		meta.classList.add('card-meta--empty');
 	}
 	  card.cardShape = paddedShape;
 	}
@@ -22602,12 +22775,22 @@ document.addEventListener('pointermove', ev => {
 		// Bereken de werkelijke cel-grootte op basis van een cel in het opgegeven root
 		// (of het globale speelveld als geen root gegeven). Dit houdt rekening met
 		// board/zone scaling and any DOM lifts performed during mobile zoom.
+		
+		// Performance: use cached value if available and window size hasn't changed
+		if (_layoutCache.cellSize !== null && 
+			_layoutCache.windowWidth === window.innerWidth && 
+			_layoutCache.windowHeight === window.innerHeight &&
+			root === null) {
+			return _layoutCache.cellSize;
+		}
+		
 		try {
 			// Mobile behaviour: always prefer the unscaled CSS cell size (the
 			// "zoomed-in" visual size) for mobile layouts so previews match the
 			// zoomed experience even before the zone is opened.
 			if (window && typeof window.innerWidth === 'number' && window.innerWidth <= (typeof MOBILE_BREAKPOINT !== 'undefined' ? MOBILE_BREAKPOINT : 650)) {
 				const cssSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')) || 26;
+				if (root === null) _layoutCache.cellSize = cssSize;
 				return cssSize;
 			}
 
@@ -22622,12 +22805,19 @@ document.addEventListener('pointermove', ev => {
 
 			if (sampleCell) {
 				const rect = sampleCell.getBoundingClientRect();
-				return Math.min(rect.width, rect.height);
+				const size = Math.min(rect.width, rect.height);
+				if (root === null) {
+					_layoutCache.cellSize = size;
+					_layoutCache.windowWidth = window.innerWidth;
+					_layoutCache.windowHeight = window.innerHeight;
+				}
+				return size;
 			}
 		} catch (e) {
 			// ignore and fallback
 		}
 		const cssSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')) || 26;
+		if (root === null) _layoutCache.cellSize = cssSize;
 		return cssSize;
 	}
 
@@ -23876,7 +24066,7 @@ function optionalCellsTouchActive(zone, pendingCells) {
 		{ key: 'bonus', tag: 'L2', sub: 'BONUS', desc: 'Scoor punten met deze kaart voor +2 willekeurige bonussen.' },
 		{ key: 'replay', tag: 'L2', sub: 'REPLAY', desc: 'Plaats op 2 bonussen om deze kaart dubbel te mogen spelen.' }
 	];
-	const BONUS_ECHO_BADGE_TEXT = { points: 'P', bonus: 'B', replay: 'R' };
+	const BONUS_ECHO_BADGE_TEXT = { points: `+${BONUS_ECHO_SCORE_BONUS}`, bonus: `+${BONUS_ECHO_BONUS_REWARD}`, replay: '↻' };
 
 	function pickBonusEchoVariant() {
 		if (!Array.isArray(BONUS_ECHO_VARIANTS) || !BONUS_ECHO_VARIANTS.length) return 'replay';
@@ -23891,6 +24081,83 @@ function optionalCellsTouchActive(zone, pendingCells) {
 			sub: meta.sub || '',
 			desc: meta.desc
 		};
+	}
+
+	function createMetaIcon(type = 'bonus') {
+		const span = document.createElement('span');
+		span.className = type === 'coin' ? 'coin-icon' : 'bonus-mini-icon';
+		return span;
+	}
+
+	function buildBonusEchoLabelMeta(labelEl, metaEl, variantKey = 'replay') {
+		if (!labelEl || !metaEl) return;
+		const variant = variantKey || 'replay';
+		labelEl.classList.add('card-label--echo');
+		metaEl.classList.add('card-meta--echo');
+		labelEl.innerHTML = '';
+		metaEl.innerHTML = '';
+		const labelText = document.createElement('span');
+		labelText.className = 'echo-icon';
+		switch (variant) {
+			case 'points': {
+				labelText.textContent = `+${BONUS_ECHO_SCORE_BONUS}`;
+				labelEl.append(labelText);
+				const metaLine = document.createElement('span');
+				metaLine.className = 'card-meta-line';
+				metaLine.append(createMetaIcon('coin'), createMetaIcon('coin'));
+				metaEl.append(metaLine);
+				break;
+			}
+			case 'bonus': {
+				const labelWrap = document.createElement('span');
+				labelWrap.className = 'card-meta-line';
+				const bonusText = document.createElement('span');
+				bonusText.textContent = `+${BONUS_ECHO_BONUS_REWARD}`;
+				labelWrap.append(bonusText, createMetaIcon('bonus'));
+				labelEl.append(labelWrap);
+				const metaLine = document.createElement('span');
+				metaLine.className = 'card-meta-line card-meta-note';
+				const targetIcon = document.createElement('span');
+				targetIcon.className = 'meta-target-icon';
+				targetIcon.textContent = '🎯';
+				const targetText = document.createElement('span');
+				metaLine.append(targetIcon, targetText);
+				metaEl.append(metaLine);
+				break;
+			}
+			case 'replay':
+			default: {
+				labelText.textContent = '↻';
+				labelEl.append(labelText);
+				const metaLine = document.createElement('span');
+				metaLine.className = 'card-meta-line';
+				metaLine.append(createMetaIcon('bonus'), createMetaIcon('bonus'));
+				metaEl.append(metaLine);
+				break;
+			}
+		}
+	}
+
+	function buildBonusBoostLabelMeta(labelEl, metaEl, colorKey) {
+		if (!labelEl || !metaEl) return;
+		labelEl.classList.add('card-label--echo');
+		metaEl.classList.add('card-meta--echo');
+		labelEl.innerHTML = '';
+		metaEl.innerHTML = '';
+		const labelText = document.createElement('span');
+		labelText.className = 'echo-icon';
+		labelText.textContent = '2×';
+		labelEl.append(labelText);
+		const metaLine = document.createElement('span');
+		metaLine.className = 'card-meta-line';
+		metaLine.textContent = 'BONUS BOOST';
+		const subLine = document.createElement('span');
+		subLine.className = 'card-meta-line card-meta-note';
+		const labelColor = (colorKey && BONUS_COLOR_CONFIG[colorKey])
+			? BONUS_COLOR_CONFIG[colorKey].label
+			: '';
+		subLine.textContent = labelColor ? `2× ${labelColor}` : '2× bonussen';
+		metaEl.append(metaLine, subLine);
 	}
 
 	let colorScoreBonuses = { yellow: 0, red: 0, green: 0, purple: 0, blue: 0 };
@@ -24139,6 +24406,26 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	var BATTERY_SUPPRESS_LOGS = true;
 	var BATTERY_THROTTLE_DRAG = true;
 	var BATTERY_REDUCE_ANIM = false;
+
+	// Layout cache for expensive getBoundingClientRect calls - invalidated on resize
+	var _layoutCache = {
+		cellSize: null,
+		boardGridGap: null,
+		windowWidth: null,
+		windowHeight: null,
+		lastUpdate: 0
+	};
+	
+	function invalidateLayoutCache() {
+		_layoutCache.cellSize = null;
+		_layoutCache.boardGridGap = null;
+		_layoutCache.windowWidth = window.innerWidth;
+		_layoutCache.windowHeight = window.innerHeight;
+		_layoutCache.lastUpdate = Date.now();
+	}
+	
+	// Invalidate cache on resize
+	window.addEventListener('resize', invalidateLayoutCache, { passive: true });
 
 	// Apply battery-saver tweaks early (logs + reduced motion)
 	(function applyBatterySaver() {
@@ -24690,6 +24977,7 @@ function getCollectedCoinCount(scores) {
 		card.dataset.cardLabel = baseLabel;
 		card.setAttribute('aria-label', baseLabel);
 	  if (isGolden) card.classList.add('card-golden');
+	if (isBonusBoost) card.classList.add('card-bonus-boost');
 	  const pattern = document.createElement('div');
 	  pattern.classList.add('card-pattern');
 	  card.appendChild(pattern);
@@ -24697,32 +24985,24 @@ function getCollectedCoinCount(scores) {
 	  const label = document.createElement('div');
 	  label.classList.add('card-label');
 	  const labelText = document.createElement('span');
-	if (isBonusEcho) {
-		const variantCopy = (typeof getBonusEchoUiCopy === 'function') ? getBonusEchoUiCopy(blueprint.bonusEchoVariant || 'replay') : { sub: 'LVL 2' };
-		labelText.textContent = String(variantCopy?.sub || 'LVL 2').toUpperCase();
-	} else {
-		labelText.textContent = isGolden
-			? 'GOUD'
-			: (displayName ? displayName.toUpperCase() : 'KAART');
-	}
-	  label.append(labelText);
+	  if (isBonusEcho || isBonusBoost) {
+			labelText.textContent = '';
+			label.append(labelText);
+	  } else {
+			label.classList.add('card-label--empty');
+	  }
 	const meta = document.createElement('div');
 	meta.classList.add('card-meta');
 	if (isBonusEcho) {
-		meta.classList.add('card-meta--level2');
-		meta.textContent = 'LVL 2';
-		if (colorObj && colorObj.code) meta.style.color = colorObj.code;
+		const variant = blueprint.bonusEchoVariant || 'replay';
+		buildBonusEchoLabelMeta(label, meta, variant);
+	} else if (isBonusBoost) {
+		const colorKey = getBonusKeyFromColorName(colorObj?.name);
+		buildBonusBoostLabelMeta(label, meta, colorKey);
 	} else {
-		meta.textContent = 'LVL 1';
+		meta.classList.add('card-meta--empty');
 	}
 	card.append(label, meta);
-
-	if (isBonusBoost) {
-		const boostBadge = document.createElement('div');
-		boostBadge.classList.add('card-boost-badge');
-		boostBadge.textContent = '2×';
-		card.appendChild(boostBadge);
-	}
 
 	if (isBonusEcho) {
 		const variant = blueprint.bonusEchoVariant || 'replay';
@@ -25588,7 +25868,16 @@ function getCollectedCoinCount(scores) {
 			return;
 		}
 	  }
-	  if (reward > 0) blackHoleBonus += reward;
+	  if (reward > 0) {
+			const zoneId = trapRecord?.zoneId || trapRecord?.cell?.dataset?.zoneId || '';
+			const colorKey = getTrapColorKey(zoneId);
+			if (colorKey && colorKey !== 'other') {
+				colorScoreBonuses[colorKey] = Number(colorScoreBonuses[colorKey] || 0) + reward;
+			} else {
+				// Fallback: add to any available color bonus bucket
+				colorScoreBonuses.yellow = Number(colorScoreBonuses.yellow || 0) + reward;
+			}
+	  }
 	  if (coinsReward > 0) {
 		for (let i = 0; i < coinsReward; i++) addCoin();
 	  }
@@ -25986,7 +26275,8 @@ function getCollectedCoinCount(scores) {
 	  card.cardColor = cardData.color;
 	const isGoldenCard = !!cardData.isGolden || !!cardData.color?.isGolden;
 	const isBonusBoostCard = !!cardData.isBonusBoost;
-	const isBonusEchoCard = !!cardData.isBonusEcho;
+	const isReplayCopy = !!cardData.isBonusEchoReplayCopy;
+	const isBonusEchoCard = !!cardData.isBonusEcho && !isReplayCopy;
 	const isDeckCopy = !!cardData.isDeckCopy;
 	const isLuckyCopy = !!cardData.isLuckyCopy;
 	const displayName = getColorDisplayName(cardData.color);
@@ -26038,24 +26328,23 @@ function getCollectedCoinCount(scores) {
 	const label = document.createElement('div');
 	label.classList.add('card-label');
 	const labelText = document.createElement('span');
-	if (isBonusEchoCard) {
-		const variantCopy = (typeof getBonusEchoUiCopy === 'function') ? getBonusEchoUiCopy(cardData.bonusEchoVariant || 'replay') : { sub: 'LVL 2' };
-		labelText.textContent = String(variantCopy?.sub || 'LVL 2').toUpperCase();
+	if (isBonusEchoCard || isBonusBoostCard) {
+		labelText.textContent = '';
+		label.append(labelText);
 	} else {
-		labelText.textContent = isGoldenCard
-		  ? 'GOUD'
-		  : (displayName ? displayName.toUpperCase() : 'KAART');
+		label.classList.add('card-label--empty');
 	}
-	label.append(labelText);
 
 	const meta = document.createElement('div');
 	meta.classList.add('card-meta');
 	if (isBonusEchoCard) {
-		meta.classList.add('card-meta--level2');
-		meta.textContent = 'LVL 2';
-		if (cardData?.color?.code) meta.style.color = cardData.color.code;
+		const variant = cardData.bonusEchoVariant || 'replay';
+		buildBonusEchoLabelMeta(label, meta, variant);
+	} else if (isBonusBoostCard) {
+		const colorKey = getBonusKeyFromColorName(cardData?.color?.name);
+		buildBonusBoostLabelMeta(label, meta, colorKey);
 	} else {
-		meta.textContent = 'LVL 1';
+		meta.classList.add('card-meta--empty');
 	}
 
 	if (inlineLabel) {
@@ -26065,42 +26354,20 @@ function getCollectedCoinCount(scores) {
 	const hasReplayReady = isBonusEchoCard && Number(cardData.bonusEchoReplaysAvailable || 0) > 0;
 	const justGrantedReplay = !!cardData.bonusEchoReplayJustGranted;
 	if (isBonusEchoCard) {
-		const variant = cardData.bonusEchoVariant || 'replay';
-		const badge = createBonusEchoBadge(variant, hasReplayReady);
-		card.appendChild(badge);
 		if (justGrantedReplay) {
 			card.classList.add('card-replay-ready');
 			cardData.bonusEchoReplayJustGranted = false;
 		}
 	}
 
-	if (isBonusBoostCard) {
-		const colorKey = getBonusKeyFromColorName(cardData?.color?.name);
-		const effect = document.createElement('div');
-		effect.classList.add('card-effect', 'card-effect-boost');
-		const labelColor = (colorKey && BONUS_COLOR_CONFIG[colorKey])
-			? BONUS_COLOR_CONFIG[colorKey].label
-			: (cardData?.color?.name || '');
-		const icon = document.createElement('span');
-		icon.classList.add('card-effect-boost-icon');
-		icon.textContent = '⚡';
-		const textWrap = document.createElement('span');
-		textWrap.classList.add('card-effect-boost-text');
-		const title = document.createElement('span');
-		title.classList.add('card-effect-boost-title');
-		title.textContent = 'BONUS BOOST';
-		const sub = document.createElement('span');
-		sub.classList.add('card-effect-boost-sub');
-		sub.textContent = `2× ${labelColor}`;
-		textWrap.append(title, sub);
-		effect.append(icon, textWrap);
-		card.appendChild(effect);
+	if (cardData && cardData.isBonusEchoReplayCopy) {
+		card.classList.add('card-replay-copy');
+		if (cardData.replayCopyJustSpawned) {
+			cardData.replayCopyJustSpawned = false;
+		}
+	}
 
-		const boostBadge = document.createElement('div');
-		boostBadge.classList.add('card-boost-badge');
-		boostBadge.textContent = '2×';
-		card.appendChild(boostBadge);
-	} else if (isBonusEchoCard) {
+	if (isBonusEchoCard) {
 		const variant = cardData.bonusEchoVariant || 'replay';
 		attachBonusEchoTooltip(card, variant);
 	}
@@ -26389,7 +26656,7 @@ function getCollectedCoinCount(scores) {
 		console.log('📋 Container visible:', container.offsetParent !== null, 'display:', getComputedStyle(container).display);
 	  }
 	  
-	  const inlineButton = isMobileViewport();
+	  const inlineButton = true;
 
 	  container.innerHTML = '';
 	  selectedShape = null;
@@ -26679,7 +26946,7 @@ function getCollectedCoinCount(scores) {
 	  if (idx === -1) return null;
 	  const [played] = currentHand.splice(idx, 1);
 	  // Kopie-kaarten (van extraHandSize of luckyDraw) gaan niet naar discard pile
-	  if (!played.isDeckCopy && !played.isLuckyCopy) {
+	  if (!played.isDeckCopy && !played.isLuckyCopy && !played.isBonusEchoReplayCopy) {
 		discardPile.push(played);
 	  }
 	  selectedCardId = null;
@@ -26694,9 +26961,27 @@ function getCollectedCoinCount(scores) {
 	  };
 	}
 
+	function triggerBonusEchoGoalEffect(placementResult, text = '') {
+		try {
+			const cells = Array.isArray(placementResult?.cells) ? placementResult.cells.filter(Boolean) : [];
+			const anchor = cells.length ? cells[0] : null;
+			let x = window.innerWidth / 2;
+			let y = window.innerHeight / 2;
+			if (anchor && typeof anchor.getBoundingClientRect === 'function') {
+				const rect = anchor.getBoundingClientRect();
+				x = rect.left + rect.width / 2;
+				y = rect.top + rect.height / 2;
+			}
+			sparkleEffect(x, y, 10);
+			if (text) {
+				showScoreAnimation(x, y - 10, text, '#f7e58f');
+			}
+		} catch (_) {}
+	}
+
 	function applyBonusEchoOutcome(playedCard, placementResult, options = {}) {
 		const wasReplayPlay = !!options.wasReplayPlay;
-		if (!playedCard || !playedCard.isBonusEcho) {
+		if (!playedCard || !playedCard.isBonusEcho || playedCard.isBonusEchoReplayCopy) {
 			bonusEchoStreak = 0;
 			lastCardWasBonusEcho = false;
 			lastBonusEchoVariant = null;
@@ -26722,6 +27007,7 @@ function getCollectedCoinCount(scores) {
 					pointsAwarded = colorKey ? BONUS_ECHO_SCORE_BONUS : 0;
 					if (pointsAwarded > 0 && colorKey) {
 						colorScoreBonuses[colorKey] = Number(colorScoreBonuses[colorKey] || 0) + pointsAwarded;
+						triggerBonusEchoGoalEffect(placementResult, `+${pointsAwarded}`);
 					}
 				}
 				break;
@@ -26731,12 +27017,14 @@ function getCollectedCoinCount(scores) {
 						const key = BONUS_ORDER[Math.floor(Math.random() * BONUS_ORDER.length)];
 						if (key && BONUS_COLOR_CONFIG[key]) bonusRewards.push(key);
 					}
+					if (bonusRewards.length) triggerBonusEchoGoalEffect(placementResult, `+${BONUS_ECHO_BONUS_REWARD}`);
 				}
 				break;
 			}
 			case 'replay':
 				if (meetsBonusRequirement && !wasReplayPlay && Number(playedCard.bonusEchoReplaysAvailable || 0) <= 0) {
 					replayGranted = true;
+					triggerBonusEchoGoalEffect(placementResult, '↻');
 				}
 				break;
 			default:
@@ -26764,7 +27052,7 @@ function getCollectedCoinCount(scores) {
 	  if (currentHand.length === 0) return;
 	  // Filter kopie-kaarten uit voordat ze naar discard gaan
 	  currentHand.forEach(card => {
-		if (!card.isDeckCopy && !card.isLuckyCopy) {
+		if (!card.isDeckCopy && !card.isLuckyCopy && !card.isBonusEchoReplayCopy) {
 			discardPile.push(card);
 		}
 	  });
@@ -26848,11 +27136,22 @@ function getCollectedCoinCount(scores) {
 	}
 	if (playedCard && playedCard.isBonusEcho) {
 		if (bonusEchoReplayGranted) {
-			playedCard.bonusEchoReplaysAvailable = Math.min(1, Number(playedCard.bonusEchoReplaysAvailable || 0) + 1);
-			playedCard.bonusEchoReplayJustGranted = true;
-			const discardIdx = discardPile.findIndex(card => card && card.id === playedCard.id);
-			if (discardIdx !== -1) discardPile.splice(discardIdx, 1);
-			currentHand.push(playedCard);
+			const replayCopy = {
+				id: nextCardInstanceId(),
+				blueprintId: playedCard.blueprintId,
+				shapeName: playedCard.shapeName,
+				matrix: cloneShape(playedCard.matrix),
+				category: playedCard.category,
+				color: cloneColor(playedCard.color),
+				isGolden: !!(playedCard.isGolden || playedCard.color?.isGolden),
+				isBonusBoost: false,
+				isBonusEcho: true,
+				bonusEchoVariant: playedCard.bonusEchoVariant || 'replay',
+				bonusEchoReplaysAvailable: 1,
+				isBonusEchoReplayCopy: true,
+				replayCopyJustSpawned: true
+			};
+			currentHand.push(replayCopy);
 			bonusEchoFreePlays = Number(bonusEchoFreePlays || 0) + 1;
 		}
 		if (bonusEchoExtraTurnGranted) {
@@ -27256,7 +27555,7 @@ function getCollectedCoinCount(scores) {
 			const level2Desc = level2Meta?.desc || 'Level 2 upgrade.';
 			upgradeHeader.innerHTML = `<span class="upgrade-icon">🔁</span><span class="upgrade-name">Level 2 • ${level2Label}</span>`;
 			upgradeDesc.textContent = upgradableCount > 0
-				? `Type: ${level2Label} — ${level2Desc} Upgrade kaarten voor ${BONUS_ECHO_UPGRADE_COST} munten per kaart.`
+				? `Type: ${level2Label} — ${level2Desc} Upgrade kaarten voor ${BONUS_ECHO_UPGRADE_COST} munten per kaart. Max 1 upgrade per shop.`
 				: 'Alle kaarten hebben al een Level 2 upgrade.';
 			const upgradeActions = document.createElement('div');
 			upgradeActions.classList.add('shop-upgrade-actions');
@@ -27264,16 +27563,16 @@ function getCollectedCoinCount(scores) {
 			const effectiveCost = debugMode ? 0 : BONUS_ECHO_UPGRADE_COST;
 			if (debugMode) {
 				buyBtn.textContent = `Upgrade (gratis) • ${level2Label}`;
-				buyBtn.disabled = upgradableCount === 0;
+				buyBtn.disabled = upgradableCount === 0 || shopLevel2Used;
 				buyBtn.title = upgradableCount === 0
 					? 'Geen kaarten om te upgraden'
-					: `Upgrade met ${level2Label} (debug)`;
+					: (shopLevel2Used ? 'Je hebt al een upgrade gekozen in deze shop' : `Upgrade met ${level2Label} (debug)`);
 			} else {
 				buyBtn.innerHTML = `Upgrade ${level2Label} (${BONUS_ECHO_UPGRADE_COST} ${coinIcon()})`;
-				buyBtn.disabled = coins < BONUS_ECHO_UPGRADE_COST || upgradableCount === 0;
+				buyBtn.disabled = coins < BONUS_ECHO_UPGRADE_COST || upgradableCount === 0 || shopLevel2Used;
 				buyBtn.title = upgradableCount === 0
 					? 'Geen kaarten om te upgraden'
-					: (coins < BONUS_ECHO_UPGRADE_COST ? 'Onvoldoende munten' : `Upgrade met ${level2Label}`);
+					: (shopLevel2Used ? 'Je hebt al een upgrade gekozen in deze shop' : (coins < BONUS_ECHO_UPGRADE_COST ? 'Onvoldoende munten' : `Upgrade met ${level2Label}`));
 			}
 			buyBtn.addEventListener('click', () => startBonusEchoUpgradeFlow({ forcedVariant: level2VariantKey }));
 			upgradeActions.appendChild(buyBtn);
@@ -27283,7 +27582,7 @@ function getCollectedCoinCount(scores) {
 	}
 
 		function getLevel2UpgradeCandidates() {
-			return ownedDeckBlueprints.filter(bp => bp && !bp.isBonusEchoUpgrade && !bp.isBonusEcho);
+			return ownedDeckBlueprints.filter(bp => bp && !bp.isBonusEchoUpgrade && !bp.isBonusEcho && !bp.isBonusBoost);
 		}
 
 		function applyBonusEchoUpgradeToBlueprint(blueprint, variantKey) {
@@ -27310,6 +27609,10 @@ function getCollectedCoinCount(scores) {
 
 		function startBonusEchoUpgradeFlow(options = {}) {
 			const { free = false, forcedVariant = null, markUsed = true } = options;
+			if (markUsed && shopLevel2Used) {
+				if (shopModalMessage) shopModalMessage.textContent = 'Je kunt maar 1 kaart upgraden per shop.';
+				return;
+			}
 			const candidates = getLevel2UpgradeCandidates();
 			if (!candidates.length) {
 				if (shopModalMessage) shopModalMessage.textContent = 'Geen kaarten om te upgraden.';
@@ -27330,6 +27633,7 @@ function getCollectedCoinCount(scores) {
 				}
 				if (!applyBonusEchoUpgradeToBlueprint(pickedBlueprint, variant)) return;
 				if (UPGRADES.bonusEcho) UPGRADES.bonusEcho.purchased = true;
+				if (markUsed) shopLevel2Used = true;
 				const variantLabel = (getBonusEchoUiCopy(variant).sub || variant).toUpperCase();
 				showObjectiveToast(`🔁 Level 2 (${variantLabel}) toegevoegd aan je kaart!`);
 				updateDeckPreview();
@@ -35444,7 +35748,8 @@ body { background: transparent; }
 
 	function applyCardSizing() {
 	const { cellSize: fallbackCellSize } = getCardSizing();
-	document.querySelectorAll('#card-choice-zone .card-option, .shop-card .card-option, #deck-modal-content .card-option').forEach(card => {
+	const allCards = document.querySelectorAll('#card-choice-zone .card-option, .shop-card .card-option, #deck-modal-content .card-option, #golden-unlock-content .card-option');
+	allCards.forEach(card => {
 		const cols = parseInt(card.dataset.shapeCols || '0', 10);
 		const rows = parseInt(card.dataset.shapeRows || '0', 10);
 		const pattern = card.querySelector('.card-pattern');
@@ -35458,7 +35763,31 @@ body { background: transparent; }
 		  cell.style.width = `${cellSize}px`;
 		  cell.style.height = `${cellSize}px`;
 		});
-	  });
+	});
+
+	const sizingGroups = [
+		{ selector: '#card-choice-zone .card-option', extra: 92 },
+		{ selector: '#deck-modal-content .card-option', extra: 82 },
+		{ selector: '#golden-unlock-content .card-option', extra: 82 },
+		{ selector: '.shop-card .card-option', extra: 82 }
+	];
+	sizingGroups.forEach(group => {
+		const cards = Array.from(document.querySelectorAll(group.selector));
+		if (!cards.length) return;
+		const maxRows = cards.reduce((max, card) => {
+			const rows = parseInt(card.dataset.shapeRows || '0', 10);
+			return Math.max(max, Number.isFinite(rows) ? rows : 0);
+		}, 0);
+		const sample = cards[0];
+		const cssCellSizeRaw = (getComputedStyle(sample).getPropertyValue('--preview-cell') || '').trim();
+		const cssCellSize = parseFloat(cssCellSizeRaw);
+		const cellSize = Number.isFinite(cssCellSize) && cssCellSize > 0 ? cssCellSize : fallbackCellSize;
+		const minHeight = Math.max(160, (maxRows * cellSize) + group.extra);
+		cards.forEach(card => {
+			card.style.minHeight = `${minHeight}px`;
+			card.style.height = 'auto';
+		});
+	});
 	}
 
 	function applyMobileHandFitForFiveCards() {
