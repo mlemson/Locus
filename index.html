@@ -35166,6 +35166,8 @@ body { background: transparent; }
 		  
 		  // NU pas currentLevel updaten
 		  currentLevel = upcomingLevel;
+		  // Werk de objective header meteen bij (leveltitel verversen)
+		  try { setCurrentObjectiveForLevel(currentLevel); } catch (e) {}
 		  
 		  // Save direct na level completion
 		  saveGameState();
