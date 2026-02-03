@@ -1218,13 +1218,13 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 
 	@media (max-width: 650px) {
 		:root {
-			--bottom-bar-height: 120px;
+			--bottom-bar-height: 110px;
 			--bottom-bar-gap: 4px;
 			--bottom-bar-bottom-offset: -16px;
 			--card-hand-lift: 0px;
-			--hand-card-width: 40px;
+			--hand-card-width: 36px;
 			--hand-card-gap: 4px;
-			--hand-card-height: 70px;
+			--hand-card-height: 50px;
 		}
 
 		#bottom-bar {
@@ -1292,8 +1292,6 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	#bottom-bar #card-choice-zone .card-option {
 		width: var(--hand-card-width);
 		max-width: var(--hand-card-width);
-		height: var(--hand-card-height);
-		min-height: var(--hand-card-height);
 		align-self: flex-start;
 		--preview-cell: 6px;
 		border-radius: 6px;
@@ -1334,12 +1332,12 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 
 	@media (max-width: 520px) {
 	  :root {
-		--bottom-bar-height: 120px;
+		--bottom-bar-height: 110px;
 		--bottom-bar-gap: 4px;
 		--card-hand-lift: 0px;
-		--hand-card-width: 40px;
+		--hand-card-width: 36px;
 		--hand-card-gap: 4px;
-		--hand-card-height: 80px;
+		--hand-card-height: 50px;
 	  }
 
 	  #bottom-bar {
@@ -1350,7 +1348,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 
 	  #bottom-bar-cards {
 		margin-top: 0;
-		height: calc(var(--hand-card-height) + 20px);
+		height: calc(var(--hand-card-height) + 10px);
 	  }
 
 	  #bottom-bar #card-options {
@@ -1390,8 +1388,6 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 
 	  #bottom-bar #card-choice-zone .card-option {
 		width: var(--hand-card-width);
-		height: var(--hand-card-height);
-		min-height: var(--hand-card-height);
 		align-self: flex-start;
 		--preview-cell: 6px;
 		border-radius: 6px;
@@ -1403,35 +1399,33 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 		border-radius: clamp(2px, calc(var(--card-cell-size, 22px) / 6), 6px);
 	  }
 
-	/* Mobile: scale hand cards up on wider phones (use extra space).
-	   Base (<=290px): 40x80
-	   >290px: +33%
-	   >340px: +66%
-	   >390px: +100% (2x)
+	/* Mobile: compactere kaarten op alle mobiele schermen.
+	   Deze waarden worden later door FINAL OVERRIDES overschreven,
+	   maar we zetten hier al kleinere basiswaarden voor consistentie.
 	*/
 	@media (max-width: 650px) and (min-width: 291px) {
 		:root {
-			--hand-card-width: 53px;
-			--hand-card-height: 78px;
-			--bottom-bar-height: 150px;
+			--hand-card-width: 40px;
+			--hand-card-height: 55px;
+			--bottom-bar-height: 115px;
 		}
-		#bottom-bar #card-choice-zone .card-option { --preview-cell: 8px; }
+		#bottom-bar #card-choice-zone .card-option { --preview-cell: 6px; }
 	}
 	@media (max-width: 650px) and (min-width: 341px) {
 		:root {
-			--hand-card-width: 66px;
-			--hand-card-height: 96px;
-			--bottom-bar-height: 170px;
+			--hand-card-width: 44px;
+			--hand-card-height: 60px;
+			--bottom-bar-height: 120px;
 		}
-		#bottom-bar #card-choice-zone .card-option { --preview-cell: 10px; }
+		#bottom-bar #card-choice-zone .card-option { --preview-cell: 7px; }
 	}
 	@media (max-width: 650px) and (min-width: 391px) {
 		:root {
-			--hand-card-width: 80px;
-			--hand-card-height: 115px;
-			--bottom-bar-height: 190px;
+			--hand-card-width: 48px;
+			--hand-card-height: 65px;
+			--bottom-bar-height: 125px;
 		}
-		#bottom-bar #card-choice-zone .card-option { --preview-cell: 12px; }
+		#bottom-bar #card-choice-zone .card-option { --preview-cell: 8px; }
 	}
 
 	  #bottom-bar #card-choice-zone .card-option .card-cell {
@@ -1543,7 +1537,9 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 		/* Bottom bar: make the 3 hand cards visibly smaller (≈25%), while keeping cell-size identical to the board. */
 		#bottom-bar #card-choice-zone .card-option {
 			width: var(--hand-card-width);
+			height: var(--hand-card-height);
 			min-height: var(--hand-card-height);
+			max-height: var(--hand-card-height);
 			padding: 4px 4px 6px;
 			gap: 0;
 			justify-content: center;
@@ -1640,7 +1636,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 
 	@media (max-width: 600px) {
 			:root {
-				--bottom-bar-height: 211px;
+				--bottom-bar-height: 115px;
 				--zoom-top: 32%;
 				--zoom-scale: 0.95;
 			}
@@ -1677,7 +1673,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	
 	@media (max-width: 550px) {
 			:root {
-				--bottom-bar-height: 196px;
+				--bottom-bar-height: 115px;
 				--zoom-top: 35%;
 				--zoom-scale: 0.95;
 			}
@@ -1717,7 +1713,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	@media (max-width: 490px) {
 	
 		:root {
-			--bottom-bar-height: 175px;
+			--bottom-bar-height: 110px;
 		}
 	
 		.board {
@@ -1750,7 +1746,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	@media (max-width: 450px) {
 	
 		:root {
-			--bottom-bar-height: 175px;
+			--bottom-bar-height: 110px;
 		}
 	
 		.board {
@@ -1782,7 +1778,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	@media (max-width: 430px) {
 	
 		:root {
-			--bottom-bar-height: 175px;
+			--bottom-bar-height: 110px;
 		}
 	
 		.board {
@@ -1813,7 +1809,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	@media (max-width: 410px) {
 	
 		:root {
-			--bottom-bar-height: 175px;
+			--bottom-bar-height: 110px;
 			--zoom-scale: 0.93;
 		}
 	
@@ -1827,7 +1823,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	@media (max-width: 390px) {
 	
 		:root {
-			--bottom-bar-height: 175px;
+			--bottom-bar-height: 110px;
 			--zoom-scale: 0.60;
 		}
 	
@@ -4952,11 +4948,11 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		transform: none;
 		width: 100%;
 		max-width: 120px;
-		min-height: 120px;
+		min-height: 50px;
 		height: auto;
 		margin: 0 auto;
-		padding: 10px 8px;
-		--preview-cell: 18px;
+		padding: 5px 4px;
+		--preview-cell: 14px;
 		gap: 0;
 		justify-content: center;
 		align-items: center;
@@ -7903,6 +7899,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			border: none;
 			border-radius: 0;
 			box-shadow: none;
+			padding: 0;
 			position: relative;
 			z-index: 0;
 		}
@@ -7926,6 +7923,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			max-width: none;
 			overflow: visible;
 			clip-path: none;
+			margin: 0;
+			padding: 0;
 		}
 
 		#card-action-buttons {
@@ -8286,7 +8285,9 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			flex: 1 1 auto;
 			width: var(--hand-card-width, 75px);
 			max-width: var(--hand-card-width, 75px);
-			min-height: var(--hand-card-height, 100px);
+			height: var(--hand-card-height);
+			min-height: var(--hand-card-height);
+			max-height: var(--hand-card-height);
 			padding: 4px 5px 6px;
 			display: flex;
 			flex-direction: column;
@@ -8411,7 +8412,6 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 			#bottom-bar #card-choice-zone .card-option {
 				width: var(--hand-card-width, 50px);
-				min-height: var(--hand-card-height, 65px);
 				padding: 2px;
 			}
 
@@ -12184,6 +12184,104 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		font-size: 0.64rem;
 		padding: 1px 5px;
 	  }
+	}
+
+	/* FINAL OVERRIDES: mobile hand cards + bottom-bar height (ensure these win) */
+	/* Compacte kaarten met HOGERE bottom-bar voor voldoende ruimte */
+	@media (max-width: 650px) {
+		:root {
+			--hand-card-height: 40px;
+			--hand-card-width: 30px;
+			--bottom-bar-height: 180px;
+		}
+		#card-choice-zone .card-option {
+			height: var(--hand-card-height);
+			min-height: var(--hand-card-height);
+			max-height: var(--hand-card-height);
+		}
+		#bottom-bar-cards {
+			height: calc(var(--hand-card-height) + 35px);
+			min-height: calc(var(--hand-card-height) + 35px);
+		}
+		#bottom-bar #card-choice-zone .card-option {
+			width: var(--hand-card-width);
+			max-width: var(--hand-card-width);
+			height: var(--hand-card-height);
+			min-height: var(--hand-card-height);
+			max-height: var(--hand-card-height);
+			padding: 3px 3px 4px;
+			gap: 1px;
+			--preview-cell: 5px;
+		}
+		#bottom-bar #card-choice-zone .card-option .card-cell {
+			width: 8px;
+			height: 8px;
+		}
+	}
+	@media (max-width: 650px) and (min-width: 291px) {
+		:root {
+			--hand-card-height: 45px;
+			--hand-card-width: 34px;
+			--bottom-bar-height: 190px;
+		}
+		#bottom-bar #card-choice-zone .card-option {
+			--preview-cell: 6px;
+		}
+		#bottom-bar #card-choice-zone .card-option .card-cell {
+			width: 8px;
+			height: 8px;
+		}
+	}
+	@media (max-width: 650px) and (min-width: 341px) {
+		:root {
+			--hand-card-height: 50px;
+			--hand-card-width: 38px;
+			--bottom-bar-height: 200px;
+		}
+		#bottom-bar #card-choice-zone .card-option {
+			--preview-cell: 7px;
+		}
+		#bottom-bar #card-choice-zone .card-option .card-cell {
+			width: 8px;
+			height: 8px;
+		}
+	}
+	@media (max-width: 650px) and (min-width: 391px) {
+		:root {
+			--hand-card-height: 55px;
+			--hand-card-width: 42px;
+			--bottom-bar-height: 210px;
+		}
+		#bottom-bar #card-choice-zone .card-option {
+			--preview-cell: 8px;
+		}
+		#bottom-bar #card-choice-zone .card-option .card-cell {
+			width: 8px;
+			height: 8px;
+		}
+	}
+
+	/* Deck modal: compactere kaarten op mobiel */
+	@media (max-width: 650px) {
+		.deck-modal-grid {
+			grid-template-columns: repeat(4, 1fr);
+			gap: 8px;
+			max-height: 60vh;
+		}
+		.deck-modal-grid .card-option {
+			min-height: 70px;
+			max-height: 90px;
+			padding: 6px 4px;
+			--preview-cell: 10px;
+		}
+		.deck-modal-grid .card-option .card-cell {
+			width: 9px;
+			height: 9px;
+		}
+		#deck-modal {
+			width: 95vw;
+			max-height: 75vh;
+		}
 	}
 
 	/* print */
