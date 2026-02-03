@@ -18,85 +18,13 @@
 				const canScroll = (el) => {
 					if (!el || !el.closest) return false;
 					if (el.closest('#green-zone, #blue-zone, #card-options, #preworld-pick-grid, #deck-modal-content, #blackhole-card-grid')) return true;
-							const gridRect = lookup.grid.getBoundingClientRect();
-							let sampleCell = null;
-							try { sampleCell = lookup.map.values().next().value || null; } catch (_) { sampleCell = null; }
-							if (!sampleCell) sampleCell = lookup.grid.querySelector('.cell:not(.void-cell)');
-							if (sampleCell) {
-								const sampleRect = sampleCell.getBoundingClientRect();
-								const sampleCenterX = sampleRect.left + (sampleRect.width / 2);
-								const sampleCenterY = sampleRect.top + (sampleRect.height / 2);
-								const sampleX = Number(sampleCell.dataset.x);
-								const sampleY = Number(sampleCell.dataset.y);
-								const gapRaw = getComputedStyle(lookup.grid).gap || '0px';
-								const gap = parseFloat(gapRaw) || 0;
-								let stepGX = 0;
-								let stepGY = 0;
-								try {
-									const neighborX = lookup.map.get(`${sampleX + 1},${sampleY}`) || null;
-									if (neighborX) {
-										const nr = neighborX.getBoundingClientRect();
-										stepGX = Math.abs((nr.left + nr.width / 2) - sampleCenterX);
-									}
-									const neighborY = lookup.map.get(`${sampleX},${sampleY + 1}`) || null;
-									if (neighborY) {
-										const nr = neighborY.getBoundingClientRect();
-										stepGY = Math.abs((nr.top + nr.height / 2) - sampleCenterY);
-									}
-								} catch (_) {}
-								if (!(stepGX > 0)) stepGX = sampleRect.width + gap;
-								if (!(stepGY > 0)) stepGY = sampleRect.height + gap;
-								const canUseSample = stepGX > 0 && stepGY > 0 && Number.isFinite(sampleX) && Number.isFinite(sampleY);
-								if (canUseSample) {
-									for (let row = 0; row < shapeHeight; row++) {
-										for (let col = 0; col < shapeWidth; col++) {
-											if (!isSolidShapeCell(draggedShape[row][col])) continue;
-											const cellX = blockRect.left + (col * stepX) + (stepX / 2);
-											const cellY = blockRect.top + (row * stepY) + (stepY / 2);
-											const gridX = Math.round((cellX - sampleCenterX) / stepGX) + sampleX;
-											const gridY = Math.round((cellY - sampleCenterY) / stepGY) + sampleY;
-											const gridCell = lookup.map.get(`${gridX},${gridY}`) || null;
-											if (gridCell && gridCell.dataset.x !== undefined && gridCell.dataset.y !== undefined) {
-												cellHits.push({
-													gridCell,
-													zone: zoneForMath,
-													shapeRow: row,
-													shapeCol: col,
-													gridX: parseInt(gridCell.dataset.x, 10),
-													gridY: parseInt(gridCell.dataset.y, 10)
-												});
-											}
-										}
-									}
-									usedMathHitTest = cellHits.length > 0;
-								} else {
-									const cellSize = Math.min(sampleRect.width, sampleRect.height) || 0;
-									const stepGX = cellSize + gap;
-									const stepGY = cellSize + gap;
-									if (cellSize > 0 && stepGX > 0 && stepGY > 0) {
-										for (let row = 0; row < shapeHeight; row++) {
-											for (let col = 0; col < shapeWidth; col++) {
-												if (!isSolidShapeCell(draggedShape[row][col])) continue;
-												const cellX = blockRect.left + (col * stepX) + (stepX / 2);
-												const cellY = blockRect.top + (row * stepY) + (stepY / 2);
-												const gridX = Math.round((cellX - gridRect.left - (cellSize / 2)) / stepGX);
-												const gridY = Math.round((cellY - gridRect.top - (cellSize / 2)) / stepGY);
-												const gridCell = lookup.map.get(`${gridX},${gridY}`) || null;
-												if (gridCell && gridCell.dataset.x !== undefined && gridCell.dataset.y !== undefined) {
-													cellHits.push({
-														gridCell,
-														zone: zoneForMath,
-														shapeRow: row,
-														shapeCol: col,
-														gridX: parseInt(gridCell.dataset.x, 10),
-														gridY: parseInt(gridCell.dataset.y, 10)
-													});
-												}
-											}
-										}
-										usedMathHitTest = cellHits.length > 0;
-									}
-								}
+					let node = el;
+					while (node && node !== document.body) {
+						try {
+							const style = window.getComputedStyle(node);
+							const overflowY = style.overflowY;
+							const overflowX = style.overflowX;
+							const canScrollY = (overflowY === 'auto' || overflowY === 'scroll') && node.scrollHeight > node.clientHeight + 1;
 							const canScrollX = (overflowX === 'auto' || overflowX === 'scroll') && node.scrollWidth > node.clientWidth + 1;
 							if (canScrollY || canScrollX) return true;
 						} catch (_) {}
