@@ -1290,13 +1290,13 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 
 	@media (max-width: 650px) {
 		:root {
-			--bottom-bar-height: 140px;
+			--bottom-bar-height: 120px;
 			--bottom-bar-gap: 4px;
 			--bottom-bar-bottom-offset: -16px;
 			--card-hand-lift: 0px;
 			--hand-card-width: 40px;
 			--hand-card-gap: 4px;
-			--hand-card-height: 80px;
+			--hand-card-height: 70px;
 		}
 
 		#bottom-bar {
@@ -1484,24 +1484,24 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	@media (max-width: 650px) and (min-width: 291px) {
 		:root {
 			--hand-card-width: 53px;
-			--hand-card-height: 90px;
-			--bottom-bar-height: 170px;
+			--hand-card-height: 78px;
+			--bottom-bar-height: 150px;
 		}
 		#bottom-bar #card-choice-zone .card-option { --preview-cell: 8px; }
 	}
 	@media (max-width: 650px) and (min-width: 341px) {
 		:root {
 			--hand-card-width: 66px;
-			--hand-card-height: 115px;
-			--bottom-bar-height: 200px;
+			--hand-card-height: 96px;
+			--bottom-bar-height: 170px;
 		}
 		#bottom-bar #card-choice-zone .card-option { --preview-cell: 10px; }
 	}
 	@media (max-width: 650px) and (min-width: 391px) {
 		:root {
 			--hand-card-width: 80px;
-			--hand-card-height: 140px;
-			--bottom-bar-height: 230px;
+			--hand-card-height: 115px;
+			--bottom-bar-height: 190px;
 		}
 		#bottom-bar #card-choice-zone .card-option { --preview-cell: 12px; }
 	}
@@ -1616,20 +1616,44 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 		#bottom-bar #card-choice-zone .card-option {
 			width: var(--hand-card-width);
 			min-height: var(--hand-card-height);
-			padding: 3px 4px;
-			gap: 2px;
-			justify-content: flex-start;
+			padding: 4px 4px 6px;
+			gap: 0;
+			justify-content: center;
 		}
 		#bottom-bar #card-choice-zone .card-pattern {
 			gap: var(--preview-gap);
+			margin: auto;
+			flex: 1 1 auto;
+			display: grid;
+			place-items: center;
 		}
 		#bottom-bar #card-choice-zone .card-label {
-			font-size: 0.52rem;
-			padding: 1px 4px;
-			gap: 3px;
+			display: none;
 		}
 		#bottom-bar #card-choice-zone .card-meta {
-			font-size: 0.6rem;
+			display: none;
+		}
+
+		/* Overlay badges so they never push the pattern */
+		#bottom-bar #card-choice-zone .card-boost-badge {
+			position: absolute;
+			left: 5px;
+			bottom: 5px;
+			z-index: 6;
+			min-width: 18px;
+			height: 16px;
+			font-size: 0.55rem;
+			padding: 0 3px;
+		}
+		#bottom-bar #card-choice-zone .card-meta--echo,
+		#bottom-bar #card-choice-zone .card-label--echo {
+			position: absolute;
+			right: 5px;
+			bottom: 5px;
+			z-index: 6;
+			font-size: 0.55rem;
+			padding: 2px 5px;
+			border-radius: 4px;
 		}
 
 		/* Red zone sub-grids: center the grid inside each quadrant (also when NOT zoomed). */
@@ -5000,15 +5024,17 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		transform: none;
 		width: 100%;
 		max-width: 120px;
-		min-height: var(--card-min-height, 190px);
+		min-height: 140px;
 		height: auto;
 		margin: 0 auto;
-		padding: 8px;
-		--preview-cell: 20px;
-		gap: 8px;
+		padding: 10px 8px;
+		--preview-cell: 18px;
+		gap: 0;
 		justify-content: center;
 		align-items: center;
 		text-align: center;
+		position: relative;
+		overflow: hidden;
 	}
 
 	/* The deck overview modal is a read-only preview: clicking should NOT select cards there. */
@@ -5017,19 +5043,41 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		cursor: default;
 	}
 
-	/* Deck overview cards: clean, simple styling without heavy effects */
-	#deck-modal-content.deck-modal-grid .card-option {
+	/* Deck overview cards: styled like desktop hand cards */
+	body:not(.dark-mode) #deck-modal-content.deck-modal-grid .card-option {
 		background: 
-			radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.05) 0%, transparent 60%),
-			linear-gradient(175deg, rgba(50,60,85,0.7) 0%, rgba(35,42,60,0.8) 100%);
-		border: 1px solid rgba(130,150,200,0.2);
+			radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.7) 0%, transparent 60%),
+			linear-gradient(175deg, #f8faff 0%, #e8ecf6 100%);
+		border: 1.5px solid rgba(100,120,180,0.22);
 		box-shadow: 
-			0 4px 8px rgba(0,0,0,0.15),
-			0 8px 16px rgba(0,0,0,0.1);
+			0 4px 8px rgba(0,0,0,0.08),
+			0 10px 20px rgba(30,50,100,0.12),
+			inset 0 1px 0 rgba(255,255,255,0.9);
 	}
 
+	body.dark-mode #deck-modal-content.deck-modal-grid .card-option {
+		background: 
+			radial-gradient(ellipse 80% 50% at 50% 0%, rgba(80,100,160,0.18) 0%, transparent 60%),
+			linear-gradient(175deg, #2a3248 0%, #1c2030 100%);
+		border: 1.5px solid rgba(130,150,210,0.28);
+		box-shadow: 
+			0 4px 8px rgba(0,0,0,0.2),
+			0 10px 20px rgba(0,0,0,0.25),
+			inset 0 1px 0 rgba(255,255,255,0.06);
+	}
+
+	/* Shiny highlight overlay */
 	#deck-modal-content.deck-modal-grid .card-option::after {
-		display: none;
+		content: "";
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 50%;
+		border-radius: inherit;
+		background: linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 100%);
+		pointer-events: none;
+		z-index: 0;
 	}
 
 	/* Remove golden card shine animation in deck overview */
@@ -5060,10 +5108,46 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	}
 
 	.deck-modal-grid .card-pattern {
-		gap: 3px;
-		margin: 0 auto;
-		/* Reduce shadow in deck overview for cleaner look */
-		filter: drop-shadow(0 2px 3px rgba(0,0,0,0.15));
+		gap: 2px;
+		margin: auto;
+		flex: 1 1 auto;
+		display: grid;
+		place-items: center;
+		filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+		position: relative;
+		z-index: 1;
+	}
+
+	/* Hide labels in deck overview - only show pattern */
+	.deck-modal-grid .card-option .card-label,
+	.deck-modal-grid .card-option .card-meta:not(.card-meta--echo) {
+		display: none;
+	}
+
+	/* Badges as overlay - absolute positioned at bottom */
+	.deck-modal-grid .card-option .card-boost-badge {
+		position: absolute;
+		top: auto;
+		bottom: 6px;
+		left: 6px;
+		z-index: 10;
+		font-size: 0.6rem;
+		min-width: 18px;
+		height: 16px;
+		padding: 0 3px;
+	}
+
+	.deck-modal-grid .card-option .card-meta--echo {
+		position: absolute;
+		bottom: 6px;
+		right: 6px;
+		z-index: 10;
+		font-size: 0.55rem;
+		background: rgba(100,160,255,0.9);
+		color: #fff;
+		padding: 2px 5px;
+		border-radius: 4px;
+		font-weight: 700;
 	}
 
 	/* Reward picker (golden/XL/XXL) - larger, balanced layout */
@@ -5094,16 +5178,24 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		max-width: none;
 		min-height: 190px;
 		height: 190px;
-		padding: 8px;
+		padding: 12px;
 		gap: 8px;
 		justify-content: center;
 		align-items: center;
 		text-align: center;
+		--preview-cell: 22px;
+		--card-cell-size: 22px;
+	}
+
+	/* Show labels in golden unlock modal */
+	#golden-unlock-content.deck-modal-grid .card-option .card-label {
+		display: inline-flex;
 	}
 
 	/* Deck overview: smaller preview cells than the selectable hand cards. */
 	.deck-modal-grid .card-option {
-		--preview-cell: 14px;
+		--preview-cell: 16px;
+		--card-cell-size: 16px;
 	}
 
 	.deck-modal-grid .deck-modal-card.deck-modal-card--depleted {
@@ -5177,38 +5269,43 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		box-shadow: 0 2px 10px rgba(0,0,0,0.3);
 	}
 	
-	/* Keep golden border on deck overview cards but no animation */
+	/* Keep golden border on deck overview cards - enhanced styling */
 	#deck-modal-content.deck-modal-grid .card-option.card-golden {
-		border: 2px solid rgba(200,160,50,0.5);
-		box-shadow: 0 0 12px rgba(200,160,40,0.15);
+		border: 2px solid rgba(200,160,50,0.6);
+		box-shadow: 
+			0 4px 8px rgba(0,0,0,0.08),
+			0 10px 20px rgba(30,50,100,0.12),
+			0 0 12px rgba(200,160,40,0.25),
+			inset 0 1px 0 rgba(255,220,100,0.3);
 	}
 	
 	body.dark-mode #deck-modal-content.deck-modal-grid .card-option.card-golden {
-		border: 2px solid rgba(200,160,50,0.4);
-		box-shadow: 0 0 12px rgba(200,160,40,0.12);
+		border: 2px solid rgba(200,160,50,0.6);
+		box-shadow: 
+			0 4px 8px rgba(0,0,0,0.2),
+			0 10px 20px rgba(0,0,0,0.25),
+			0 0 14px rgba(200,160,40,0.25),
+			inset 0 1px 0 rgba(255,220,100,0.12);
 	}
 
-	body.dark-mode #deck-modal-content.deck-modal-grid .card-option {
-		background: 
-			radial-gradient(ellipse 80% 50% at 50% 0%, rgba(80,100,160,0.1) 0%, transparent 60%),
-			linear-gradient(175deg, rgba(42,50,72,0.85) 0%, rgba(28,32,48,0.9) 100%);
-		border: 1px solid rgba(130,150,210,0.2);
-		box-shadow: 0 2px 10px rgba(0,0,0,0.25);
-	}
-
+	/* Dark mode deck-modal content uses same styling as .deck-modal-grid */
 	body.dark-mode #deck-modal-content.deck-modal-grid .card-option::after {
-		display: none;
+		content: "";
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 50%;
+		border-radius: inherit;
+		background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 100%);
+		pointer-events: none;
+		z-index: 0;
 	}
 
-	/* Remove golden card shine animation in deck overview (dark mode) */
+	/* Remove golden card shine in deck overview (dark mode) */
 	body.dark-mode #deck-modal-content.deck-modal-grid .card-option.card-golden::before {
 		animation: none;
 		display: none;
-	}
-
-	.deck-modal-grid .card-option .card-label,
-	.deck-modal-grid .card-option .card-meta {
-		justify-content: center;
 	}
 
 	.deck-modal-empty {
@@ -5454,22 +5551,36 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		color: rgba(255, 255, 255, 0.65);
 	}
 	body.dark-mode .deck-modal-grid .card-option {
-	  background: linear-gradient(160deg, #2d3142 0%, #232635 45%, #1b1e2c 100%);
-	  border: 1px solid rgba(120,140,220,0.2);
-	  box-shadow: 0 18px 32px rgba(0,0,0,0.45);
+	  background: 
+		radial-gradient(ellipse 80% 50% at 50% 0%, rgba(80,100,160,0.18) 0%, transparent 60%),
+		linear-gradient(175deg, #2a3248 0%, #1c2030 100%);
+	  border: 1.5px solid rgba(130,150,210,0.28);
+	  box-shadow: 
+		0 4px 8px rgba(0,0,0,0.2),
+		0 10px 20px rgba(0,0,0,0.25),
+		inset 0 1px 0 rgba(255,255,255,0.06);
 	}
 
 	body.dark-mode .deck-modal-grid .card-option.card-golden {
-	  border: 2px solid rgba(200,160,30,0.78);
+	  border: 2px solid rgba(200,160,50,0.7);
 	  box-shadow:
-		0 18px 32px rgba(0,0,0,0.45),
-		0 0 0 2px rgba(200,160,30,0.32) inset,
-		0 0 16px rgba(227,196,94,0.20);
+		0 4px 8px rgba(0,0,0,0.2),
+		0 10px 20px rgba(0,0,0,0.25),
+		0 0 12px rgba(200,160,40,0.2),
+		inset 0 1px 0 rgba(255,220,100,0.1);
 	}
 
 	body.dark-mode .deck-modal-grid .card-option::after {
-	  background: linear-gradient(120deg, rgba(255,255,255,0.18), rgba(255,255,255,0));
-	  opacity: 0.35;
+	  content: "";
+	  position: absolute;
+	  top: 0;
+	  left: 0;
+	  right: 0;
+	  height: 50%;
+	  border-radius: inherit;
+	  background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 100%);
+	  pointer-events: none;
+	  z-index: 0;
 	}
 
 	body.dark-mode .deck-modal-grid .card-option.card-golden::after {
@@ -8262,6 +8373,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			gap: var(--preview-gap);
 			align-items: center;
 			justify-items: center;
+			margin: auto;
+			flex: 1 1 auto;
 		}
 
 		#bottom-bar #card-choice-zone .card-option .card-cell {
@@ -8274,17 +8387,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		}
 
 		#bottom-bar #card-choice-zone .card-label {
-			display: inline-flex;
-			align-items: center;
-			gap: 2px;
-			padding: 2px 5px;
-			border-radius: 999px;
-			background: rgba(20,24,36,0.06);
-			font-size: 0.56rem;
-			font-weight: 600;
-			letter-spacing: 0.055em;
-			text-transform: uppercase;
-			color: rgba(20,24,36,0.62);
+			display: none;
 		}
 
 		#bottom-bar #card-choice-zone .card-label span {
@@ -8292,9 +8395,28 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		}
 
 		#bottom-bar #card-choice-zone .card-meta {
-			font-size: 0.6rem;
-			letter-spacing: 0.045em;
-			color: rgba(20,24,36,0.52);
+			display: none;
+		}
+
+		#bottom-bar #card-choice-zone .card-boost-badge {
+			position: absolute;
+			left: 5px;
+			bottom: 5px;
+			z-index: 6;
+			min-width: 18px;
+			height: 16px;
+			font-size: 0.55rem;
+			padding: 0 3px;
+		}
+		#bottom-bar #card-choice-zone .card-meta--echo,
+		#bottom-bar #card-choice-zone .card-label--echo {
+			position: absolute;
+			right: 5px;
+			bottom: 5px;
+			z-index: 6;
+			font-size: 0.55rem;
+			padding: 2px 5px;
+			border-radius: 4px;
 		}
 
 		body.dark-mode #bottom-bar #card-choice-zone .card-option {
