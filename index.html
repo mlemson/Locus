@@ -35934,10 +35934,15 @@ body { background: transparent; }
 		const cssCellSize = parseFloat(cssCellSizeRaw);
 		const cellSize = Number.isFinite(cssCellSize) && cssCellSize > 0 ? cssCellSize : fallbackCellSize;
 		// Laat de hoogte meeschalen met de inhoud; mobile mag lager en regelbaar via JS.
-		const requestedHeight = Math.max(0, (maxRows * cellSize) + group.extra);
+		let requestedHeight = Math.max(0, (maxRows * cellSize) + group.extra);
 		const isMobile = window.innerWidth <= (typeof MOBILE_BREAKPOINT !== 'undefined' ? MOBILE_BREAKPOINT : 650);
 		const mobileCap = typeof window.mobileHandHeightCap === 'number' ? window.mobileHandHeightCap : 120;
 		const mobileFloor = typeof window.mobileHandHeightFloor === 'number' ? window.mobileHandHeightFloor : 60;
+		// Maak hand-kaarten op mobiel ~20% lager (deck-overview formaat) tenzij overschreven.
+		if (isMobile && group.selector === '#card-choice-zone .card-option') {
+			const handHeightScale = typeof window.mobileHandHeightScale === 'number' ? window.mobileHandHeightScale : 0.8;
+			requestedHeight = requestedHeight * handHeightScale;
+		}
 		const minHeight = isMobile
 			? Math.min(Math.max(mobileFloor, requestedHeight), mobileCap)
 			: requestedHeight;
@@ -35999,9 +36004,9 @@ body { background: transparent; }
 		if (!(available > 0)) return;
 
 		const targetWidth = Math.floor((available - (cardGap * Math.max(0, cardCount - 1))) / cardCount);
-		// Boost de gewenste breedte lichtjes voor meer leesbaarheid.
+		// Boost de gewenste breedte lichtjes voor meer leesbaarheid (20% default).
 		const desired = parseFloat(rootStyles.getPropertyValue('--hand-card-width')) || 40;
-		const widthBoost = typeof window.mobileHandWidthBoost === 'number' ? window.mobileHandWidthBoost : 1.1;
+		const widthBoost = typeof window.mobileHandWidthBoost === 'number' ? window.mobileHandWidthBoost : 1.2;
 		const boostedDesired = desired * widthBoost;
 		const fitted = Math.max(32, Math.min(targetWidth, boostedDesired));
 		bottomBar.style.setProperty('--hand-card-width', `${fitted}px`);
