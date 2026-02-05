@@ -4,7 +4,7 @@
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 	<meta title="LOCUS Digitaal">
-	<link rel="stylesheet" href="css/print.css" media="print">
+	<link rel="stylesheet" href="print.css" media="print">
 	<script>
 		// Prevent pinch/double-touch zoom on phones; keep single-finger scrolling intact.
 		(function disableTouchZoom() {
@@ -10843,7 +10843,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  
 	  /* Scrolling alleen wanneer er 4+ kaarten zijn (class toegevoegd via JS) */
 	  #desktop-right #card-options.has-scroll {
-		max-height: 610px;
+		max-height: 920px;
 		min-height: 0;
 		overflow-y: auto;
 		scrollbar-width: thin;
@@ -10955,7 +10955,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		font-size: 1.2rem;
 		font-weight: 800;
 		color: #333;
-		margin-top: 2px;
+		margin-top: 8px;
+		text-align: center;
 		white-space: nowrap;
 		max-width: 100%;
 		overflow: hidden;
@@ -11023,10 +11024,11 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  }
 
 	  #gold-zone h2 {
-		margin: 0 0 8px 0;
+		margin: 0 0 14px 0;
 		font-size: 1.1rem;
 		font-weight: 600;
 		color: #333;
+		text-align: center;
 	  }
 
 	  body.dark-mode #gold-zone {
@@ -11167,7 +11169,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  /* Desktop request: remove rotate/mirror buttons from the UI. */
 	  #rotate-card-btn,
 	  #mirror-card-btn {
-		display: none;
+		display: none !important;
 	  }
 
 	  /* ============================================
@@ -11666,7 +11668,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  }
 
 	  #rotate-card-btn {
-		display: inline-flex;
+		display: none;
 		align-items: center;
 		justify-content: flex-start;
 		gap: 8px;
@@ -12360,7 +12362,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	}
 
 	</style>
-	<link rel="stylesheet" href="css/responsive.css">
+	<link rel="stylesheet" href="responsive.css">
 	<script>
     // Simple menu toggle: toggles .open on #controls and .active on #menu-toggle
     document.addEventListener('DOMContentLoaded', function() {
@@ -24318,7 +24320,7 @@ const XL_6_SHAPES = BASE_SHAPES.xl6;
 	// Battery saver toggle: flip to false to disable the low-power tweaks below.
 	// Use var to avoid temporal dead zone when referenced earlier in the file.
 	var BATTERY_SAVER_ENABLED = true;
-	var BATTERY_SUPPRESS_LOGS = false;
+	var BATTERY_SUPPRESS_LOGS = true;
 	var BATTERY_THROTTLE_DRAG = true;
 	var BATTERY_REDUCE_ANIM = false;
 
@@ -28329,6 +28331,8 @@ function resetWorldLayoutStyles() {
 	  // Ensure layout is rebuilt after world switches (prevents stale sizing/layout state).
 	  try {
 		if (typeof scheduleLayoutReflow === 'function') {
+			// Force reflow even if viewport hasn't changed (level change at same window size).
+			if (typeof lastLayoutViewportKey !== 'undefined') lastLayoutViewportKey = '';
 			scheduleLayoutReflow(0);
 		}
 	  } catch (e) {}
