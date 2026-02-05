@@ -3900,7 +3900,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		place-items: center;
 		filter: var(--card-glow);
 		margin: auto;
-		flex: 1 1 auto;
+		flex: 0 0 auto;
 		align-self: center;
 		justify-self: center;
 	}
@@ -11322,19 +11322,16 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		display: none;
 	  }
 
-	#card-choice-zone .card-option > :not(.card-echo-badge):not(.card-echo-tooltip) {
+	/* Only pattern and regular label are in flow; everything else stays absolute */
+	#card-choice-zone .card-option > .card-pattern,
+	#card-choice-zone .card-option > .card-label:not(.card-label--echo) {
 		position: static;
 	}
 
 	  /* Labels en metadata zichtbaar op desktop */
-	  #card-choice-zone .card-label {
+	  #card-choice-zone .card-label:not(.card-label--echo) {
 		display: inline-flex;
 		margin-top: 8px;
-	  }
-
-	  #card-choice-zone .card-meta {
-		display: block;
-		margin-top: 4px;
 	  }
 
 	  /* Kaart patroon (grid met cellen) */
