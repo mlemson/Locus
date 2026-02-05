@@ -11354,6 +11354,11 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		position: static;
 	}
 
+	/* Meta overlay must always paint in front of the pattern */
+	#card-choice-zone .card-option .card-meta {
+		z-index: 30;
+	}
+
 	  /* Labels en metadata zichtbaar op desktop */
 	  #card-choice-zone .card-label:not(.card-label--echo) {
 		display: inline-flex;
@@ -12023,7 +12028,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			max-height: var(--hand-card-height);
 			padding: 3px 3px 4px;
 			gap: 1px;
-			--preview-cell: 6px;
+			--preview-cell: 12px;
 		}
 		#bottom-bar #card-choice-zone .card-option .card-cell {
 			width: 10px;
@@ -12037,7 +12042,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			--bottom-bar-height: 190px;
 		}
 		#bottom-bar #card-choice-zone .card-option {
-			--preview-cell: 7px;
+			--preview-cell: 12px;
 		}
 		#bottom-bar #card-choice-zone .card-option .card-cell {
 			width: 10px;
@@ -12051,7 +12056,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			--bottom-bar-height: 200px;
 		}
 		#bottom-bar #card-choice-zone .card-option {
-			--preview-cell: 8px;
+			--preview-cell: 12px;
 		}
 		#bottom-bar #card-choice-zone .card-option .card-cell {
 			width: 10px;
@@ -12065,7 +12070,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			--bottom-bar-height: 210px;
 		}
 		#bottom-bar #card-choice-zone .card-option {
-			--preview-cell: 10px;
+			--preview-cell: 12px;
 		}
 		#bottom-bar #card-choice-zone .card-option .card-cell {
 			width: 10px;
@@ -22610,7 +22615,10 @@ document.addEventListener('pointermove', ev => {
 	  const cssCellSizeRaw = (card.style && card.style.getPropertyValue('--preview-cell')) || '';
 	  const computedCellSizeRaw = !cssCellSizeRaw ? (getComputedStyle(card).getPropertyValue('--preview-cell') || '') : '';
 	  const overrideCellSize = parseFloat((cssCellSizeRaw || computedCellSizeRaw || '').trim());
-	  const { cellSize: defaultCellSize } = getCardSizing();
+	  // On mobile, cards inside #bottom-bar must NOT fall back to board cell size;
+	  // they use only their CSS --preview-cell value.
+	  const isMobileBottomBar = (window.innerWidth <= (typeof MOBILE_BREAKPOINT !== 'undefined' ? MOBILE_BREAKPOINT : 650)) && card.closest && card.closest('#bottom-bar');
+	  const { cellSize: defaultCellSize } = isMobileBottomBar ? { cellSize: 10 } : getCardSizing();
 	  const cellSize = Number.isFinite(overrideCellSize) && overrideCellSize > 0 ? overrideCellSize : defaultCellSize;
 
 	  // Normalize ragged shapes so previews keep all columns.
@@ -35686,12 +35694,30 @@ body { background: transparent; }
 
 	function applyCardSizing() {
 	const { cellSize: fallbackCellSize } = getCardSizing();
+	const isMobile = window.innerWidth <= (typeof MOBILE_BREAKPOINT !== 'undefined' ? MOBILE_BREAKPOINT : 650);
 	const allCards = document.querySelectorAll('#card-choice-zone .card-option, .shop-card .card-option, #deck-modal-content .card-option, #golden-unlock-content .card-option');
 	allCards.forEach(card => {
 		const cols = parseInt(card.dataset.shapeCols || '0', 10);
 		const rows = parseInt(card.dataset.shapeRows || '0', 10);
 		const pattern = card.querySelector('.card-pattern');
 		const cells = pattern ? pattern.querySelectorAll('.card-cell') : card.querySelectorAll('.card-cell');
+
+		// On mobile, cards inside #bottom-bar use their CSS --preview-cell value;
+		// we must actively re-apply it because updateCardPattern may have set
+		// board-sized inline styles before the card was in the DOM.
+		if (isMobile && card.closest('#bottom-bar')) {
+			const cssCellSizeRaw = (getComputedStyle(card).getPropertyValue('--preview-cell') || '').trim();
+			const cssCellSize = parseFloat(cssCellSizeRaw);
+			const cellSize = Number.isFinite(cssCellSize) && cssCellSize > 0 ? cssCellSize : 8;
+			if (pattern && cols) pattern.style.gridTemplateColumns = `repeat(${cols}, ${cellSize}px)`;
+			if (pattern && rows) pattern.style.gridTemplateRows = `repeat(${rows}, ${cellSize}px)`;
+			cells.forEach(cell => {
+			  cell.style.width = `${cellSize}px`;
+			  cell.style.height = `${cellSize}px`;
+			});
+			return;
+		}
+
 		const cssCellSizeRaw = (getComputedStyle(card).getPropertyValue('--preview-cell') || '').trim();
 		const cssCellSize = parseFloat(cssCellSizeRaw);
 		const cellSize = Number.isFinite(cssCellSize) && cssCellSize > 0 ? cssCellSize : fallbackCellSize;
