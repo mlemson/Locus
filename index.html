@@ -925,19 +925,9 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	   Golden cards and selection disabled states
 	*/
 	.card-option.card-golden {
-		position: relative;
-		overflow: hidden;
 		/* Golden card = golden frame + subtle glow */
-		border: 2px solid rgba(210,170,50,0.85);
-		box-shadow:
-			0 4px 8px rgba(0,0,0,0.12),
-			0 12px 24px rgba(30,50,100,0.15),
-			0 0 20px rgba(200,160,40,0.2);
-		/* Force same layout as regular cards */
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
+		--card-border: 2px solid rgba(210,170,50,0.85);
+		--card-shadow: 0 4px 8px rgba(0,0,0,0.12), 0 12px 24px rgba(30,50,100,0.15), 0 0 20px rgba(200,160,40,0.2);
 	}
 
 	/* Static golden shine effect - no animation for better performance */
@@ -1005,11 +995,8 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	}
 
 	body.dark-mode .card-option.card-golden {
-		border: 2px solid rgba(200,160,40,0.75);
-		box-shadow:
-			0 2px 4px rgba(0,0,0,0.2),
-			0 8px 24px rgba(0,0,0,0.3),
-			0 0 24px rgba(200,160,40,0.18);
+		--card-border: 2px solid rgba(200,160,40,0.75);
+		--card-shadow: 0 2px 4px rgba(0,0,0,0.2), 0 8px 24px rgba(0,0,0,0.3), 0 0 24px rgba(200,160,40,0.18);
 	}
 
 	body.dark-mode .card-option.card-golden::before {
@@ -1019,26 +1006,6 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 			rgba(255,200,80,0.08) 50%,
 			rgba(255,220,120,0.15) 75%,
 			rgba(255,200,80,0.12) 100%);
-	}
-
-	/*
-		#card-choice-zone defines its own (more specific) `.card-option` background later.
-		These overrides ensure golden styling remains visible inside the card-choice UI.
-	*/
-	#card-choice-zone .card-option.card-golden {
-		border: 2px solid rgba(210,170,50,0.85);
-		box-shadow:
-			0 2px 4px rgba(0,0,0,0.06),
-			0 8px 20px rgba(30,50,100,0.1),
-			0 0 20px rgba(200,160,40,0.2);
-	}
-
-	body.dark-mode #card-choice-zone .card-option.card-golden {
-		border: 2px solid rgba(200,160,40,0.75);
-		box-shadow:
-			0 2px 4px rgba(0,0,0,0.2),
-			0 8px 24px rgba(0,0,0,0.3),
-			0 0 24px rgba(200,160,40,0.18);
 	}
 
 	body.dark-mode #card-choice-zone .card-option.selection-disabled {
@@ -1078,167 +1045,111 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 		display: none;
 	}
 
-	/*
-		EN:
-		- DUPLICATE/OVERRIDE: There are many `@media (max-width: 650px)` blocks in this file.
-		  They stack and later rules win, so the *order* in this CSS file is part of the behavior.
-		- TIP: If something "randomly" changes on mobile, search for the same selector in later @media blocks.
-	*/
 	@media (max-width: 650px) {
-
-
-	#bottom-bar {
-		padding-left: 5px;
-		padding-right: 5px;
-	}
-
-	  #bottom-bar-score,
-	  #bottom-bar-coins {
-		flex: 0 0 50%;
-		min-width: 0;
-	  }
-
-	  #bottom-bar #scoreboard,
-	  #bottom-bar #gold-zone {
-		width: 100%;
-		padding: 6px 10px;
-		box-sizing: border-box;
-	  }
-
-	  #bottom-bar #gold-zone {
-		min-width: 0;
-	  }
-
-	  #bottom-bar #new-cards-btn {
-		height: 48px;
-		padding: 8px 12px;
-		font-size: 0.76rem;
-	  }
-
-	  #bottom-bar #rotate-card-btn {
-		height: 44px;
-		padding: 7px 12px;
-		font-size: 0.7rem;
-		margin-top: 8px;
-		width: 104px;
-	  }
-
-	  #bottom-bar #card-options .card-option {
-		max-width: 110px;
-	  }
-	}
-
-	@media (max-width: 650px) {
-	  .bottom-bar-footer {
-		display: flex;
-		flex-direction: column;
-		align-items: stretch;
-		gap: 2px;
-		justify-content: flex-start;
-		margin-top: 10px;
-	  }
-
-	  #bottom-bar-left {
-		display: flex;
-		flex-direction: column;
-		flex-wrap: nowrap;
-		gap: 4px;
-		flex: 1 1 auto;
-		min-width: 0;
-		align-items: stretch;
-	  }
-
-	  #bottom-bar-bonus {
-		order: 2;
-		flex: 0 0 auto;
-		display: flex;
-		flex-direction: column;
-		align-items: stretch;
-		justify-content: flex-start;
-		gap: 8px;
-	  }
-
-	  #bottom-bar-score-coins {
-		display: flex;
-		flex-direction: row;
-		gap: 4px;
-		align-items: center;
-		order: 3;
-		flex: 1 1 auto;
-		min-width: 0;
-	  }
-
-	  #bottom-bar-score {
-		flex: 1 1 auto;
-		min-width: 0;
-	  }
-
-	  #bottom-bar-coins {
-		display: none;
-	  }
-
-	  #bottom-bar #scoreboard,
-	  #bottom-bar #gold-zone {
-		width: 100%;
-		box-sizing: border-box;
-		height: auto;
-	  }
-
-	  #bottom-bar #bonus-zone {
-		width: auto;
-		flex: 1 1 auto;
-		min-width: 0;
-		padding: 6px 8px;
-	  }
-
-	  /* Place the coin panel next to the bonus inventory. */
-	  #bottom-bar-bonus #gold-zone {
-		width: 100%;
-		flex: 0 0 auto;
-		padding: 3px 6px;
-		margin: 0;
-		display: flex;
-		flex-direction: column;
-		align-items: stretch;
-		justify-content: flex-start;
-		gap: 4px;
-	  }
-	  #bottom-bar-bonus #gold-zone .buy-placement-btn {
-		margin-left: 0;
-	  }
-	  
-
-	#bottom-bar #collected-coins {
-		grid-template-rows: repeat(3, 12px);
-		grid-auto-columns: 12px;
-		column-gap: 4px;
-		row-gap: 4px;
-	}
-	}
-
-
-	@media (max-width: 650px) {
-		:root {
-			--bottom-bar-height: 110px;
-			--bottom-bar-gap: 4px;
-			--bottom-bar-bottom-offset: -16px;
-			--card-hand-lift: 0px;
-		}
-
 		#bottom-bar {
 			padding-left: 5px;
 			padding-right: 5px;
 			margin-bottom: 5px;
 		}
 
+		#bottom-bar-score,
+		#bottom-bar-coins {
+			flex: 0 0 50%;
+			min-width: 0;
+		}
+
 		#bottom-bar #scoreboard,
 		#bottom-bar #gold-zone {
+			width: 100%;
 			padding: 6px 8px;
+			box-sizing: border-box;
 		}
 
 		#bottom-bar #gold-zone {
 			min-width: 0;
 			gap: 9px;
+		}
+
+		#bottom-bar #card-options .card-option {
+			max-width: 110px;
+		}
+
+		.bottom-bar-footer {
+			display: flex;
+			flex-direction: column;
+			align-items: stretch;
+			gap: 2px;
+			justify-content: flex-start;
+			margin-top: 10px;
+		}
+
+		#bottom-bar-left {
+			display: flex;
+			flex-direction: column;
+			flex-wrap: nowrap;
+			gap: 4px;
+			flex: 1 1 auto;
+			min-width: 0;
+			align-items: stretch;
+		}
+
+		#bottom-bar-bonus {
+			order: 2;
+			flex: 0 0 auto;
+			display: flex;
+			flex-direction: column;
+			align-items: stretch;
+			justify-content: flex-start;
+			gap: 8px;
+		}
+
+		#bottom-bar-score-coins {
+			display: flex;
+			flex-direction: row;
+			gap: 4px;
+			align-items: center;
+			order: 3;
+			flex: 1 1 auto;
+			min-width: 0;
+		}
+
+		#bottom-bar-score {
+			flex: 1 1 auto;
+			min-width: 0;
+		}
+
+		#bottom-bar-coins {
+			display: none;
+		}
+
+		#bottom-bar #bonus-zone {
+			width: auto;
+			flex: 1 1 auto;
+			min-width: 0;
+			padding: 6px 8px;
+		}
+
+		/* Place the coin panel next to the bonus inventory. */
+		#bottom-bar-bonus #gold-zone {
+			width: 100%;
+			flex: 0 0 auto;
+			padding: 3px 6px;
+			margin: 0;
+			display: flex;
+			flex-direction: column;
+			align-items: stretch;
+			justify-content: flex-start;
+			gap: 4px;
+		}
+		#bottom-bar-bonus #gold-zone .buy-placement-btn {
+			margin-left: 0;
+		}
+
+		:root {
+			--bottom-bar-height: 110px;
+			--bottom-bar-gap: 4px;
+			--bottom-bar-bottom-offset: -16px;
+			--card-hand-lift: 0px;
 		}
 
 		#bottom-bar #card-options {
@@ -1248,71 +1159,70 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 			overflow-y: hidden;
 		}
 
-	  #bonus-zone .bonus-hint {
-		display: none;
-	  }
+		#bonus-zone .bonus-hint {
+			display: none;
+		}
 
-	  #bottom-bar #scoreboard {
-		--score-chip-gap: 3px;
-	  }
-	  
-	  /* Hide desktop bonus-zone on mobile (it's in bottom-bar) */
-	  #original-bonus-zone {
-		display: none;
-	  }
+		#bottom-bar #scoreboard {
+			--score-chip-gap: 3px;
+		}
 
-	  #bottom-bar #scoreboard .score-row {
-		font-size: 0.62rem;
-		padding: 2px 4px;
-	  }
+		/* Hide desktop bonus-zone on mobile (it's in bottom-bar) */
+		#original-bonus-zone {
+			display: none;
+		}
 
-	  #bottom-bar #scoreboard .score-row .color-box {
-		width: 8px;
-		height: 8px;
-	  }
+		#bottom-bar #scoreboard .score-row {
+			font-size: 0.62rem;
+			padding: 2px 4px;
+		}
 
-	  #bottom-bar #scoreboard .score-row .score {
-		font-size: 0.66rem;
-	  }
+		#bottom-bar #scoreboard .score-row .color-box {
+			width: 8px;
+			height: 8px;
+		}
 
-	  #bottom-bar #scoreboard .score-total {
-		font-size: 0.68rem;
-	  }
+		#bottom-bar #scoreboard .score-row .score {
+			font-size: 0.66rem;
+		}
 
-	  #bottom-bar #scoreboard .score-total .total-score {
-		font-size: 0.78rem;
-	  }
+		#bottom-bar #scoreboard .score-total {
+			font-size: 0.68rem;
+		}
 
-	  #bottom-bar #scoreboard .score-total .label {
-		font-size: 0.64rem;
-	  }
+		#bottom-bar #scoreboard .score-total .total-score {
+			font-size: 0.78rem;
+		}
 
+		#bottom-bar #scoreboard .score-total .label {
+			font-size: 0.64rem;
+		}
 
-	  #bottom-bar #new-cards-btn {
-		height: 36px;
-		padding: 6px 11px;
-		font-size: 0.66rem;
-	  }
+		#bottom-bar #new-cards-btn {
+			height: 36px;
+			padding: 6px 11px;
+			font-size: 0.66rem;
+		}
 
-	  #bottom-bar #rotate-card-btn {
-		height: 34px;
-		padding: 6px 10px;
-		font-size: 0.62rem;
-		width: 102px;
-		margin-top: 6px;
-	  }
+		#bottom-bar #rotate-card-btn {
+			height: 34px;
+			padding: 6px 10px;
+			font-size: 0.62rem;
+			width: 102px;
+			margin-top: 6px;
+		}
 
-	#bottom-bar #collected-coins {
-		grid-template-rows: repeat(3, 12px);
-		grid-auto-columns: 12px;
-		column-gap: 4px;
-		row-gap: 4px;
-	}
+		#bottom-bar #collected-coins {
+			grid-template-rows: repeat(3, 12px);
+			grid-auto-columns: 12px;
+			column-gap: 4px;
+			row-gap: 4px;
+		}
 
-	#bottom-bar .coin {
-		width: 12px;
-		height: 12px;
-	}
+		#bottom-bar .coin {
+			width: 12px;
+			height: 12px;
+		}
 	}
 
 	@media (max-width: 520px) {
@@ -1475,50 +1385,20 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 			max-height: none;
 		}
 
-		/* Bottom bar: make the 3 hand cards visibly smaller (≈25%), while keeping cell-size identical to the board. */
+		/* Bottom bar: keep hand cards same cell size as board, allow full card styling and labels. */
 		#bottom-bar #card-choice-zone .card-option {
-			width: var(--hand-card-width);
-			height: var(--hand-card-height);
-			min-height: var(--hand-card-height);
-			max-height: var(--hand-card-height);
-			padding: 4px 4px 6px;
-			gap: 0;
-			justify-content: center;
+			width: 138px;
+			min-height: 180px;
+			padding: 10px;
+			gap: 8px;
+		}
+		#bottom-bar #card-choice-zone .card-option .card-cell {
+			width: var(--cell-size);
+			height: var(--cell-size);
+			border-radius: var(--cell-radius);
 		}
 		#bottom-bar #card-choice-zone .card-pattern {
-			gap: var(--preview-gap);
-			margin: auto;
-			flex: 1 1 auto;
-			display: grid;
-			place-items: center;
-		}
-		#bottom-bar #card-choice-zone .card-label {
-			display: none;
-		}
-		#bottom-bar #card-choice-zone .card-meta {
-			display: none;
-		}
-
-		/* Overlay badges so they never push the pattern */
-		#bottom-bar #card-choice-zone .card-boost-badge {
-			position: absolute;
-			left: 5px;
-			bottom: 5px;
-			z-index: 6;
-			min-width: 18px;
-			height: 16px;
-			font-size: 0.55rem;
-			padding: 0 3px;
-		}
-		#bottom-bar #card-choice-zone .card-meta--echo,
-		#bottom-bar #card-choice-zone .card-label--echo {
-			position: absolute;
-			right: 5px;
-			bottom: 5px;
-			z-index: 6;
-			font-size: 0.55rem;
-			padding: 2px 5px;
-			border-radius: 4px;
+			gap: var(--card-preview-gap);
 		}
 
 		/* Red zone sub-grids: center the grid inside each quadrant (also when NOT zoomed). */
@@ -3459,13 +3339,36 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  to { transform: translate(-50%, -50%) scale(1); }
 	}
 
+	/*
+	   Card theming: use CSS variables so variants (golden/dark) only adjust a few values.
+	*/
+	:root {
+		--card-bg: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.8) 0%, transparent 60%),
+				linear-gradient(175deg, #f8faff 0%, #e8ecf6 100%);
+		--card-border: 1.5px solid rgba(100,120,180,0.2);
+		--card-shadow: 0 4px 8px rgba(0,0,0,0.08), 0 12px 24px rgba(30,50,100,0.12), 0 0 22px rgba(74,144,226,0.18), inset 0 1px 0 rgba(255,255,255,0.9);
+		--card-cell-bg: rgba(255,255,255,0.95);
+		--card-cell-size: var(--cell-size);
+		--card-cell-radius: var(--cell-radius);
+		--card-preview-gap: var(--preview-gap);
+		--card-glow: drop-shadow(0 0 10px rgba(80,120,200,0.28)) drop-shadow(0 4px 10px rgba(0,0,0,0.2));
+	}
+
+	body.dark-mode {
+		--card-bg: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(80,100,160,0.15) 0%, transparent 60%),
+				linear-gradient(175deg, #2a3248 0%, #1c2030 100%);
+		--card-border: 1.5px solid rgba(130,150,210,0.25);
+		--card-shadow: 0 4px 8px rgba(0,0,0,0.2), 0 12px 28px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06);
+		--card-cell-bg: rgba(20,26,40,0.85);
+	}
+
 	#card-choice-zone {
 	  background: #fffbea;
-	  border-radius: 12px;
+	  border-radius: 16px;
 	  color: #333;
 	  font-family: "Segoe UI", sans-serif;
 	  width: min(402px, 100%);
-	  box-shadow: 0 0 8px rgba(0,0,0,0.4);
+	  box-shadow: 0 0 12px rgba(0,0,0,0.45);
 	  overflow: hidden;
 	}
 
@@ -3797,30 +3700,29 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	}
 
 	.card-option {
+		position: relative;
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
 		flex: 0 0 auto;
 		width: 138px;
 		min-height: 180px;
 		padding: 12px 10px;
-		display: flex;
-		flex-direction: column;
-		--preview-cell: 20px;
-		align-items: center;
-		justify-content: center;
 		gap: 10px;
-		border-radius: 14px;
-		background: 
-			radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.8) 0%, transparent 60%),
-			linear-gradient(175deg, #f8faff 0%, #e8ecf6 100%);
-		border: 1.5px solid rgba(100,120,180,0.2);
 		box-sizing: border-box;
-		box-shadow: 
-			0 4px 8px rgba(0,0,0,0.08),
-			0 12px 24px rgba(30,50,100,0.12),
-			inset 0 1px 0 rgba(255,255,255,0.9);
-		position: relative;
-		overflow: hidden;
+		border-radius: 16px;
+		--preview-cell: var(--card-cell-size);
+		background: var(--card-bg);
+		border: var(--card-border);
+		box-shadow: var(--card-shadow);
 		transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 	}
+
+	.card-option .card-label,
+	.card-option .card-label--echo { order: 2; }
+	.card-option .card-meta--echo { order: 1; }
 
 	/* Desktop landscape request: cards a bit shorter (≈10px). */
 	body.desktop-landscape #card-choice-zone .card-option {
@@ -3846,6 +3748,16 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 	.card-option > * {
 		position: relative;
+		z-index: 1;
+	}
+
+	.card-meta-trigger {
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		height: clamp(24px, 30%, 40px);
+		pointer-events: auto;
 		z-index: 1;
 	}
 
@@ -3979,25 +3891,27 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	}
 
 	.card-pattern {
-		display: inline-grid;
-		gap: var(--preview-gap, 2px);
+		display: grid;
+		gap: var(--card-preview-gap);
 		align-items: center;
 		justify-items: center;
 		justify-content: center;
 		align-content: center;
-		filter: drop-shadow(0 3px 4px rgba(0,0,0,0.2));
+		place-items: center;
+		filter: var(--card-glow);
+		margin: auto;
+		flex: 1 1 auto;
+		align-self: center;
+		justify-self: center;
 	}
 
 	.card-option .card-cell {
-		width: var(--card-cell-size, 22px);
-		height: var(--card-cell-size, 22px);
-		/* Keep the same rounding style as board cells */
-		border-radius: clamp(3px, calc(var(--card-cell-size, 22px) / 5), 6px);
+		width: var(--card-cell-size);
+		height: var(--card-cell-size);
+		border-radius: var(--card-cell-radius);
 		border: 1.5px solid rgba(0,0,0,0.12);
-		box-shadow: 
-			inset 0 1px 2px rgba(0,0,0,0.08),
-			0 1px 0 rgba(255,255,255,0.8);
-		background: rgba(255,255,255,0.95);
+		box-shadow: inset 0 1px 2px rgba(0,0,0,0.08), 0 1px 0 rgba(255,255,255,0.8);
+		background: var(--card-cell-bg);
 	}
 
 	.card-label {
@@ -4023,19 +3937,38 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	.card-meta {
 		font-size: 0.72rem;
 		letter-spacing: 0.05em;
-		color: rgba(24,32,54,0.55);
+		color: rgba(24,32,54,0.9);
 		text-align: center;
 		align-self: center;
+		position: absolute;
+		inset: 10px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 10px 12px;
+		background: rgba(15,20,32,0.8);
+		color: #f2f6ff;
+		border-radius: 12px;
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.15s ease;
+		z-index: 7;
 	}
 
 	.card-meta.card-meta--empty {
 		display: none;
 	}
 
+	/* Show description only when card gets explicit meta toggle */
+	.card-option.show-meta .card-meta {
+		opacity: 1;
+		pointer-events: auto;
+	}
+
 	.card-meta.card-meta--echo {
 		display: flex;
 		flex-direction: column;
-		gap: 4px;
+		gap: 6px;
 		align-items: center;
 		font-size: 0.68rem;
 		letter-spacing: 0.06em;
@@ -4049,10 +3982,11 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	}
 
 	.card-meta--echo .card-meta-line {
-		display: inline-flex;
+		display: flex;
+		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: 4px;
+		gap: 6px;
 		text-align: center;
 		font-size: 0.9rem;
 	}
@@ -4254,19 +4188,6 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		z-index: 5;
 	}
 
-	.card-option { position: relative; }
-	.card-option {
-		justify-content: center;
-	}
-	.card-option .card-pattern {
-		margin: auto;
-		flex: 1 1 auto;
-		display: grid;
-		place-items: center;
-		align-self: center;
-		justify-self: center;
-	}
-
 	.card-echo-badge {
 		position: absolute;
 		bottom: 6px;
@@ -4350,22 +4271,10 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		z-index: 3;
 	}
 
-	.card-bonus-echo:hover .card-echo-tooltip,
-	.card-bonus-echo:focus-within .card-echo-tooltip,
+	.card-bonus-echo.show-meta .card-echo-tooltip,
 	.card-bonus-echo.card-echo-tooltip-active .card-echo-tooltip {
 		opacity: 1;
 		transform: translateX(-50%) translateY(0);
-	}
-
-	body.dark-mode .card-option {
-		background: 
-			radial-gradient(ellipse 80% 50% at 50% 0%, rgba(80,100,160,0.15) 0%, transparent 60%),
-			linear-gradient(175deg, #2a3248 0%, #1c2030 100%);
-		border-color: rgba(130,150,210,0.25);
-		box-shadow: 
-			0 4px 8px rgba(0,0,0,0.2),
-			0 12px 28px rgba(0,0,0,0.3),
-			inset 0 1px 0 rgba(255,255,255,0.06);
 	}
 
 	.card-bonus-echo {
@@ -4389,7 +4298,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		box-shadow: 
 			inset 0 1px 3px rgba(0,0,0,0.3),
 			0 1px 0 rgba(255,255,255,0.05);
-		background: rgba(20,26,40,0.85);
+		background: var(--card-cell-bg);
 	}
 
 	body.dark-mode .card-label {
@@ -4463,14 +4372,6 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		0% { opacity: 0; }
 		40% { opacity: 0.6; }
 		100% { opacity: 0; }
-	}
-
-	#card-options {
-	  display: flex;
-	  flex-wrap: wrap;
-	  gap: 12px;
-	  justify-content: center;
-	  margin-top: 12px;
 	}
 
 	@keyframes coinPop {
@@ -4888,18 +4789,28 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	.deck-modal-grid .card-option {
 		transform: none;
 		width: 100%;
-		max-width: 120px;
-		min-height: 50px;
+		max-width: 138px;
+		min-height: 180px;
 		height: auto;
 		margin: 0 auto;
-		padding: 5px 4px;
-		--preview-cell: 14px;
+		padding: 12px 8px;
+		--preview-cell: var(--card-cell-size);
 		gap: 0;
+		display: flex;
+		flex-direction: column;
 		justify-content: center;
 		align-items: center;
 		text-align: center;
 		position: relative;
 		overflow: hidden;
+		background: linear-gradient(165deg, #ffffff 0%, #eef2ff 45%, #dfe4ff 100%);
+		border: 1px solid rgba(40,55,120,0.18);
+		box-shadow: 0 8px 16px rgba(10,12,20,0.15);
+		border-radius: 12px;
+	}
+
+	.deck-modal-grid .card-option::after {
+		display: none;
 	}
 
 	/* The deck overview modal is a read-only preview: clicking should NOT select cards there. */
@@ -4908,63 +4819,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		cursor: default;
 	}
 
-	/* Deck overview cards: styled like desktop hand cards */
-	body:not(.dark-mode) #deck-modal-content.deck-modal-grid .card-option {
-		background: 
-			radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.7) 0%, transparent 60%),
-			linear-gradient(175deg, #f8faff 0%, #e8ecf6 100%);
-		border: 1.5px solid rgba(100,120,180,0.22);
-		box-shadow: 
-			0 4px 8px rgba(0,0,0,0.08),
-			0 10px 20px rgba(30,50,100,0.12),
-			inset 0 1px 0 rgba(255,255,255,0.9);
-	}
-
-	body.dark-mode #deck-modal-content.deck-modal-grid .card-option {
-		background: 
-			radial-gradient(ellipse 80% 50% at 50% 0%, rgba(80,100,160,0.18) 0%, transparent 60%),
-			linear-gradient(175deg, #2a3248 0%, #1c2030 100%);
-		border: 1.5px solid rgba(130,150,210,0.28);
-		box-shadow: 
-			0 4px 8px rgba(0,0,0,0.2),
-			0 10px 20px rgba(0,0,0,0.25),
-			inset 0 1px 0 rgba(255,255,255,0.06);
-	}
-
-	/* Shiny highlight overlay */
-	#deck-modal-content.deck-modal-grid .card-option::after {
-		content: "";
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		height: 50%;
-		border-radius: inherit;
-		background: linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 100%);
-		pointer-events: none;
-		z-index: 0;
-	}
-
 	/* Remove golden card shine animation in deck overview */
 	#deck-modal-content.deck-modal-grid .card-option.card-golden::before {
 		animation: none;
 		display: none;
 	}
 	
-	/* Ensure golden cards in deck modal have same layout as regular cards */
-	#deck-modal-content.deck-modal-grid .card-option.card-golden {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-	}
-	
-	#deck-modal-content.deck-modal-grid .card-option.card-golden .card-pattern {
-		margin: auto;
-		flex: 1 1 auto;
-		display: grid;
-		place-items: center;
-	}
+	/* Golden cards in deck modal inherit the same flex layout. */
 
 	/* The golden unlock modal MUST be clickable (pick 1 of 3). */
 	#golden-unlock-content.deck-modal-grid .card-option {
@@ -4973,30 +4834,48 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	}
 
 	.deck-modal-grid .card-pattern {
-		gap: 2px;
+		gap: var(--card-preview-gap);
 		margin: auto;
-		flex: 1 1 auto;
+		flex: 0 0 auto;
 		display: grid;
 		place-items: center;
-		filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+		filter: var(--card-glow);
 		position: relative;
 		z-index: 1;
 	}
 
-	/* Hide labels in deck overview - only show pattern */
-	#deck-modal-content.deck-modal-grid .card-option .card-label,
-	#deck-modal-content.deck-modal-grid .card-option .card-meta,
-	#deck-modal-content.deck-modal-grid .card-option .card-boost-badge {
-		display: none;
+	/* Deck overview: pattern is the ONLY centered flow child.
+	   All other children are absolute overlays so they never push the pattern. */
+	.deck-modal-grid .card-option .card-label,
+	.deck-modal-grid .card-option .card-meta,
+	.deck-modal-grid .card-option .card-boost-badge,
+	.deck-modal-grid .card-option .card-echo-badge,
+	.deck-modal-grid .card-option .card-echo-tooltip {
+		position: absolute;
+		pointer-events: none;
+		z-index: 10;
 	}
 
-	/* Badges as overlay - absolute positioned at bottom */
-	.deck-modal-grid .card-option .card-boost-badge {
+	/* Meta trigger stays absolute but MUST receive pointer events for hover */
+	.deck-modal-grid .card-option .card-meta-trigger {
 		position: absolute;
+		pointer-events: auto;
+		z-index: 11;
+	}
+
+	/* Label badge at bottom center */
+	.deck-modal-grid .card-option .card-label {
+		bottom: 8px;
+		left: 8px;
+		right: 8px;
+		margin: 0;
+		justify-content: center;
+	}
+
+	.deck-modal-grid .card-option .card-boost-badge {
 		top: auto;
-		bottom: 6px;
-		left: 6px;
-		z-index: 10;
+		bottom: 8px;
+		left: 8px;
 		font-size: 0.6rem;
 		min-width: 18px;
 		height: 16px;
@@ -5004,10 +4883,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	}
 
 	.deck-modal-grid .card-option .card-meta--echo {
-		position: absolute;
-		bottom: 6px;
-		right: 6px;
-		z-index: 10;
+		bottom: 8px;
+		right: 8px;
 		font-size: 0.55rem;
 		background: rgba(100,160,255,0.9);
 		color: #fff;
@@ -5020,7 +4897,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	.deck-modal-grid .deck-modal-combo-badge {
 		position: absolute;
 		left: 50%;
-		bottom: 6px;
+		bottom: 8px;
 		transform: translateX(-50%);
 		display: inline-flex;
 		align-items: center;
@@ -5081,8 +4958,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		justify-content: center;
 		align-items: center;
 		text-align: center;
-		--preview-cell: 22px;
-		--card-cell-size: 22px;
+		--preview-cell: var(--card-cell-size);
 	}
 
 	/* Show labels in golden unlock modal */
@@ -5090,10 +4966,9 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		display: inline-flex;
 	}
 
-	/* Deck overview: smaller preview cells than the selectable hand cards. */
+	/* Deck overview: use same cell size as board for consistency. */
 	.deck-modal-grid .card-option {
-		--preview-cell: 16px;
-		--card-cell-size: 16px;
+		--preview-cell: var(--card-cell-size);
 	}
 
 	.deck-modal-grid .deck-modal-card.deck-modal-card--depleted {
@@ -5185,21 +5060,6 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			0 0 14px rgba(200,160,40,0.25),
 			inset 0 1px 0 rgba(255,220,100,0.12);
 	}
-
-	/* Dark mode deck-modal content uses same styling as .deck-modal-grid */
-	body.dark-mode #deck-modal-content.deck-modal-grid .card-option::after {
-		content: "";
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		height: 50%;
-		border-radius: inherit;
-		background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 100%);
-		pointer-events: none;
-		z-index: 0;
-	}
-
 	/* Remove golden card shine in deck overview (dark mode) */
 	body.dark-mode #deck-modal-content.deck-modal-grid .card-option.card-golden::before {
 		animation: none;
@@ -5449,14 +5309,9 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		color: rgba(255, 255, 255, 0.65);
 	}
 	body.dark-mode .deck-modal-grid .card-option {
-	  background: 
-		radial-gradient(ellipse 80% 50% at 50% 0%, rgba(80,100,160,0.18) 0%, transparent 60%),
-		linear-gradient(175deg, #2a3248 0%, #1c2030 100%);
-	  border: 1.5px solid rgba(130,150,210,0.28);
-	  box-shadow: 
-		0 4px 8px rgba(0,0,0,0.2),
-		0 10px 20px rgba(0,0,0,0.25),
-		inset 0 1px 0 rgba(255,255,255,0.06);
+		background: linear-gradient(160deg, #2d3142 0%, #232635 45%, #1b1e2c 100%);
+		border: 1px solid rgba(120,140,220,0.2);
+		box-shadow: 0 8px 20px rgba(0,0,0,0.4);
 	}
 
 	body.dark-mode .deck-modal-grid .card-option.card-golden {
@@ -5468,22 +5323,6 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		inset 0 1px 0 rgba(255,220,100,0.1);
 	}
 
-	body.dark-mode .deck-modal-grid .card-option::after {
-	  content: "";
-	  position: absolute;
-	  top: 0;
-	  left: 0;
-	  right: 0;
-	  height: 50%;
-	  border-radius: inherit;
-	  background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 100%);
-	  pointer-events: none;
-	  z-index: 0;
-	}
-
-	body.dark-mode .deck-modal-grid .card-option.card-golden::after {
-	  opacity: 0.28;
-	}
 	body.dark-mode .blackhole-stats {
 	  color: rgba(220, 224, 248, 0.82);
 	}
@@ -5576,23 +5415,25 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		}
 
 		.deck-modal-grid .card-option {
-			max-width: 82px;
-			min-height: 148px;
-			height: 148px;
-			padding: 4px;
+			max-width: 90px;
+			min-height: 152px;
+			height: 152px;
+			padding: 8px 6px;
 			overflow: hidden;
+			display: flex;
 			justify-content: center;
 			align-items: center;
+			gap: 0;
 			text-align: center;
 		}
 
 		.deck-modal-grid .card-pattern {
-			gap: 2px;
+			gap: 4px;
 			margin: 0 auto;
 		}
 
 		.deck-modal-grid .card-option {
-			--preview-cell: 9px;
+			--preview-cell: 12px;
 		}
 
 		/* Reward picker (golden unlock) on mobile: keep 3 columns, smaller cells, bigger cards */
@@ -5646,24 +5487,26 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		}
 
 		.deck-modal-grid .card-option {
-			min-height: 124px;
-			height: 124px;
-			max-width: 72px;
-			padding: 4px;
+			min-height: 130px;
+			height: 130px;
+			max-width: 80px;
+			padding: 6px 5px;
 			transform: none;
 			overflow: hidden;
+			display: flex;
 			justify-content: center;
 			align-items: center;
+			gap: 0;
 			text-align: center;
 		}
 
 		.deck-modal-grid .card-pattern {
-			gap: var(--preview-gap);
+			gap: 3px;
 			margin: 0 auto;
 		}
 
 		.deck-modal-grid .card-option {
-			--preview-cell: 8px;
+			--preview-cell: 11px;
 		}
 
 		/* Reward picker (golden unlock) on small phones */
@@ -8299,6 +8142,11 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 		#bottom-bar #card-choice-zone .card-meta {
 			display: none;
+		}
+
+		#bottom-bar #card-choice-zone .card-label--echo,
+		#bottom-bar #card-choice-zone .card-meta--echo {
+			display: inline-flex;
 		}
 
 		#bottom-bar #card-choice-zone .card-boost-badge {
@@ -12205,23 +12053,26 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	/* Deck modal: compactere kaarten op mobiel */
 	@media (max-width: 650px) {
 		.deck-modal-grid {
-			grid-template-columns: repeat(4, 1fr);
-			gap: 8px;
-			max-height: 60vh;
+			grid-template-columns: repeat(auto-fit, minmax(64px, 1fr));
+			gap: 12px;
+			max-height: 54vh;
 		}
 		.deck-modal-grid .card-option {
-			min-height: 70px;
-			max-height: 90px;
-			padding: 6px 4px;
-			--preview-cell: 10px;
-		}
-		.deck-modal-grid .card-option .card-cell {
-			width: 9px;
-			height: 9px;
+			max-width: 90px;
+			min-height: 152px;
+			height: 152px;
+			padding: 8px 6px;
+			overflow: hidden;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			gap: 0;
+			--preview-cell: 12px;
 		}
 		#deck-modal {
-			width: 95vw;
-			max-height: 75vh;
+			width: min(96vw, 560px);
+			max-height: 74vh;
+			padding: 12px;
 		}
 	}
 
@@ -23912,86 +23763,91 @@ function optionalCellsTouchActive(zone, pendingCells) {
 		bonuses,
 		scoreDelta: scoreAfter - scoreBefore
 	};
-}	// ========== KAARTEN SYSTEEM ==========
-	// Centraal systeem voor alle kaart blueprints
-	const CARD_BLUEPRINTS = {
-		// Mini kaarten (2-3 blokjes)
-		mini: [
-			{ name: 'Domino', matrix: [[1],[1]], weight: 1 },
-			{ name: 'Tri-bar', matrix: [[1],[1],[1]], weight: 1 },
-			{ name: 'Mini L', matrix: [[1,0],[1,1]], weight: 1 },
-		],
-		// Standaard Tetris (4 blokjes)
-		standard: [
-			{ name: 'I', matrix: [[1],[1],[1],[1]], weight: 1 },
-			{ name: 'O', matrix: [[1,1],[1,1]], weight: 1 },
-			{ name: 'T', matrix: [[1,0],[1,1],[1,0]], weight: 1 },
-			{ name: 'L', matrix: [[1,0],[1,0],[1,1]], weight: 1 },
-			{ name: 'S', matrix: [[0,1],[1,1],[1,0]], weight: 1 },
-		],
-		// Grote/creatieve vormen
-		large: [
-			{ name: 'Plus', matrix: [[0,1,0],[1,1,1],[0,1,0]], weight: 0.5 },
-			{ name: 'U vorm', matrix: [[1,0,1],[1,1,1]], weight: 1 },
-			{ name: 'L groot', matrix: [[1,0],[1,0],[1,0],[1,1]], weight: 0.5 },
-			{ name: 'Kolom-L', matrix: [[1,0,0],[1,0,0],[1,1,1]], weight: 1 },
-			{ name: 'Trap', matrix: [[1,0,0],[1,1,0],[0,1,1]], weight: 1 },
-			{ name: 'Hoefijzer', matrix: [[1,1,0],[1,0,0],[1,1,0]], weight: 1 },
-			{ name: 'Pijl', matrix: [[0,0,1],[1,1,1],[0,1,0]], weight: 1 },
-			{ name: 'Lang 5', matrix: [[1],[1],[1],[1],[1]], weight: 1 },
-			{ name: 'Z dubbel', matrix: [[0,1],[1,0],[1,1]], weight: 0.5 },
-			{ name: 'Hoekspiegel', matrix: [[1,0,0],[1,1,1],[0,0,1]], weight: 1 }
-		],
-		// Gouden kaarten (speciale category)
-		golden: [
-			// Mini variants
-			{ name: 'Gouden Domino', matrix: [[1],[1]], weight: 1 },
-			{ name: 'Gouden Tri-bar', matrix: [[1],[1],[1]], weight: 1 },
-			{ name: 'Gouden Mini L', matrix: [[1,0],[1,1]], weight: 1 },
-			// Standard Tetris variants
-			{ name: 'Gouden Vierkant', matrix: [[1,1],[1,1]], weight: 1 },
-			{ name: 'Gouden L', matrix: [[1,0],[1,0],[1,1]], weight: 1 },
-			{ name: 'Gouden I', matrix: [[1],[1],[1],[1]], weight: 1 },
-			{ name: 'Gouden T', matrix: [[1,0],[1,1],[1,0]], weight: 1 },
-			{ name: 'Gouden J', matrix: [[0,1],[0,1],[1,1]], weight: 1 },
-			{ name: 'Gouden S', matrix: [[0,1],[1,1],[1,0]], weight: 1 },
-			// Large/creative variants
-			{ name: 'Gouden Plus', matrix: [[0,1,0],[1,1,1],[0,1,0]], weight: 1 },
-			{ name: 'Gouden U vorm', matrix: [[1,0,1],[1,1,1]], weight: 1 },
-			{ name: 'Gouden L groot', matrix: [[1,0],[1,0],[1,0],[1,1]], weight: 1 },
-			{ name: 'Gouden Kolom-L', matrix: [[1,0,0],[1,0,0],[1,1,1]], weight: 1 },
-			{ name: 'Gouden Trap', matrix: [[1,0,0],[1,1,0],[0,1,1]], weight: 1 },
-			{ name: 'Gouden Hoefijzer', matrix: [[1,1,0],[1,0,0],[1,1,0]], weight: 1 },
-			{ name: 'Gouden Pijl', matrix: [[0,0,1],[1,1,1],[0,1,0]], weight: 1 },
-			{ name: 'Gouden Lang 5', matrix: [[1],[1],[1],[1],[1]], weight: 1 },
-			{ name: 'Gouden Z dubbel', matrix: [[0,1],[1,0],[1,1]], weight: 1 },
-			{ name: 'Gouden Hoekspiegel', matrix: [[1,0,0],[1,1,1],[0,0,1]], weight: 1 },
-			// XL (6) shapes - golden variants
-			{ name: 'Gouden XL 2x3', matrix: [[1,1,1],[1,1,1]], weight: 1 },
-			{ name: 'Gouden XL Lang 6', matrix: [[1],[1],[1],[1],[1],[1]], weight: 0.5 },
-			// Extra large (7) shapes - golden variants
-			{ name: 'Gouden Extra Groot Randhoek', matrix: [[1,1,1],[1,0,0],[1,1,1]], weight: 0.08 },
-			{ name: 'Gouden Extra Groot Dubbele balk', matrix: [[1,1,1],[0,1,0],[1,1,1]], weight: 0.08 }
-		]
-	};
+}
 
-	// Extra grote (7 blokjes) vormen: zeldzaam + pas na upgrade.
-	const EXTRA_LARGE_7_SHAPES = [
-		{ name: 'Extra Groot (7) - Randhoek', matrix: [[1,1,1],[1,0,0],[1,1,1]], weight: 0.08 },
-		{ name: 'Extra Groot (7) - Dubbele balk', matrix: [[1,1,1],[0,1,0],[1,1,1]], weight: 0.08 }
-	];
-
-	// XL vormen (6 blokjes): pas na upgrade.
-	const XL_6_SHAPES = [
+// ========== KAARTEN SYSTEEM ==========
+// Centraliseer card shapes zodat ze op één plek aanpasbaar zijn.
+const BASE_SHAPES = {
+	mini: [
+		{ name: 'Domino', matrix: [[1],[1]], weight: 1 },
+		{ name: 'Tri-bar', matrix: [[1],[1],[1]], weight: 1 },
+		{ name: 'Mini L', matrix: [[1,0],[1,1]], weight: 1 }
+	],
+	standard: [
+		{ name: 'I', matrix: [[1],[1],[1],[1]], weight: 1 },
+		{ name: 'O', matrix: [[1,1],[1,1]], weight: 1 },
+		{ name: 'T', matrix: [[1,0],[1,1],[1,0]], weight: 1 },
+		{ name: 'L', matrix: [[1,0],[1,0],[1,1]], weight: 1 },
+		{ name: 'S', matrix: [[0,1],[1,1],[1,0]], weight: 1 }
+	],
+	large: [
+		{ name: 'Plus', matrix: [[0,1,0],[1,1,1],[0,1,0]], weight: 0.5 },
+		{ name: 'U vorm', matrix: [[1,0,1],[1,1,1]], weight: 1 },
+		{ name: 'L groot', matrix: [[1,0],[1,0],[1,0],[1,1]], weight: 0.5 },
+		{ name: 'Kolom-L', matrix: [[1,0,0],[1,0,0],[1,1,1]], weight: 1 },
+		{ name: 'T groot', matrix: [[1,1,1],[0,1,0],[0,1,1]], weight: 1 },
+		{ name: 'Trap', matrix: [[1,0,0],[1,1,0],[0,1,1]], weight: 1 },
+		{ name: 'Hoefijzer', matrix: [[1,1,0],[1,0,0],[1,1,0]], weight: 1 },
+		{ name: 'Pijl', matrix: [[0,0,1],[1,1,1],[0,1,0]], weight: 1 },
+		{ name: 'Lang 5', matrix: [[1],[1],[1],[1],[1]], weight: 1 },
+		{ name: 'Z dubbel', matrix: [[0,1],[1,0],[1,1]], weight: 0.5 },
+		{ name: 'Hoekspiegel', matrix: [[1,0,0],[1,1,1],[0,0,1]], weight: 1 }
+	],
+	// Upgrade-gated shapes (kept separate for clarity)
+	xl6: [
 		{ name: 'XL (6) - 2x3', matrix: [[1,1,1],[1,1,1]], weight: 1 },
 		{ name: 'XL (6) - Lang 6', matrix: [[1],[1],[1],[1],[1],[1]], weight: 0.5 }
-	];
+	],
+	extra7: [
+		{ name: 'Extra Groot (7) - Randhoek', matrix: [[1,1,1],[1,0,0],[1,1,1]], weight: 0.08 },
+		{ name: 'Extra Groot (7) - Dubbele balk', matrix: [[1,1,1],[0,1,0],[1,1,1]], weight: 0.08 }
+	]
+};
 
-	const SHAPE_CATEGORY_WEIGHTS = {
-		mini: 0.35,      
-		standard: 1,     
-		large: 0.35      
-	};
+// Gewicht per categorie voor willekeurige keuzes.
+const SHAPE_CATEGORY_WEIGHTS = {
+	mini: 0.35,
+	standard: 1,
+	large: 0.35
+};
+
+// Helper: maak golden varianten op basis van base shapes, behoud gewicht tenzij override.
+function deriveGoldenShapes(baseShapes, overrides = {}) {
+	return baseShapes.map(shape => {
+		const override = overrides[shape.name];
+		return {
+			name: `Gouden ${shape.name}`,
+			matrix: cloneShape(shape.matrix),
+			weight: (override && override.weight != null) ? override.weight : shape.weight
+		};
+	});
+}
+
+// Verzamel alle blueprints op één plek.
+const CARD_BLUEPRINTS = {
+	mini: BASE_SHAPES.mini,
+	standard: BASE_SHAPES.standard,
+	large: BASE_SHAPES.large,
+	// Golden worden afgeleid van alle vormen (inclusief upgradevormen) met speciale weight overrides voor zeldzame 7-blok varianten.
+	golden: (() => {
+		const rareOverrides = {
+			'Extra Groot (7) - Randhoek': { weight: 0.08 },
+			'Extra Groot (7) - Dubbele balk': { weight: 0.08 }
+		};
+		const source = [
+			...BASE_SHAPES.mini,
+			...BASE_SHAPES.standard,
+			...BASE_SHAPES.large,
+			...BASE_SHAPES.xl6,
+			...BASE_SHAPES.extra7
+		];
+		return deriveGoldenShapes(source, rareOverrides);
+	})()
+};
+
+// Losse lijsten voor upgrades worden behouden voor eenvoudige gating.
+const EXTRA_LARGE_7_SHAPES = BASE_SHAPES.extra7;
+const XL_6_SHAPES = BASE_SHAPES.xl6;
 
 	// Bouw shapePool dynamisch op basis van upgrades
 	function buildShapePool() {
@@ -25030,37 +24886,12 @@ function getCollectedCoinCount(scores) {
 	} else {
 		meta.classList.add('card-meta--empty');
 	}
-	card.append(label, meta);
-
-	// Deck overview: combine badge + meta into a single overlay pill
-	if (!interactive && (isBonusEcho || isBonusBoost)) {
-		const combo = document.createElement('div');
-		combo.className = 'deck-modal-combo-badge';
-		const icons = document.createElement('span');
-		icons.className = 'combo-icons';
-		const arrow = document.createElement('span');
-		arrow.className = 'combo-arrow';
-		arrow.textContent = '→';
-		const text = document.createElement('span');
-		text.className = 'combo-text';
-
-		if (isBonusEcho) {
-			const variant = blueprint.bonusEchoVariant || 'replay';
-			const badgeText = BONUS_ECHO_BADGE_TEXT[variant] || '↻';
-			if (variant === 'points') {
-				icons.append(createMetaIcon('coin'), createMetaIcon('coin'));
-			} else {
-				icons.append(createMetaIcon('bonus'), createMetaIcon('bonus'));
-			}
-			text.textContent = badgeText;
-		} else {
-			icons.append(createMetaIcon('bonus'), createMetaIcon('bonus'));
-			text.textContent = '2×';
-		}
-
-		combo.append(icons, arrow, text);
-		card.appendChild(combo);
-	}
+	// Always add meta trigger, meta and label so hover-to-show-meta works
+	// everywhere. CSS makes them position:absolute so they never push the pattern.
+	const metaTrigger = document.createElement('div');
+	metaTrigger.className = 'card-meta-trigger';
+	card.append(metaTrigger, meta, label);
+	attachCardMetaHover(card, [metaTrigger]);
 
 	if (isBonusEcho) {
 		const variant = blueprint.bonusEchoVariant || 'replay';
@@ -26319,6 +26150,28 @@ function getCollectedCoinCount(scores) {
 		}
 	}
 
+	function attachCardMetaHover(card, triggers = []) {
+		let hideTimeout = null;
+		const toggle = (state) => {
+			if (hideTimeout) {
+				clearTimeout(hideTimeout);
+				hideTimeout = null;
+			}
+			if (state) {
+				card.classList.add('show-meta');
+			} else {
+				hideTimeout = setTimeout(() => card.classList.remove('show-meta'), 80);
+			}
+		};
+
+		triggers.filter(Boolean).forEach((el) => {
+			el.addEventListener('pointerenter', () => toggle(true));
+			el.addEventListener('pointerleave', () => toggle(false));
+			el.addEventListener('focusin', () => toggle(true));
+			el.addEventListener('focusout', () => toggle(false));
+		});
+	}
+
 	function createCardElement(cardData, inlineLabel, options = {}) {
 	  const { onSelect } = options;
 	  const card = document.createElement('div');
@@ -26405,8 +26258,12 @@ function getCollectedCoinCount(scores) {
 		meta.classList.add('card-meta--empty');
 	}
 
+	const metaTrigger = document.createElement('div');
+	metaTrigger.className = 'card-meta-trigger';
+
 	if (inlineLabel) {
-		card.append(label, meta);
+		card.append(metaTrigger, meta, label);
+		attachCardMetaHover(card, [metaTrigger]);
 	}
 
 	const hasReplayReady = isBonusEchoCard && Number(cardData.bonusEchoReplaysAvailable || 0) > 0;
