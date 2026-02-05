@@ -4,6 +4,7 @@
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 	<meta title="LOCUS Digitaal">
+	<link rel="stylesheet" href="css/print.css" media="print">
 	<script>
 		// Prevent pinch/double-touch zoom on phones; keep single-finger scrolling intact.
 		(function disableTouchZoom() {
@@ -12224,91 +12225,6 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		}
 	}
 
-	/* print */
-	@media print {
-	  body {
-		background: white;
-		margin: 0;
-		-webkit-print-color-adjust: exact;
-		print-color-adjust: exact;
-	  }
-	  * {
-		-webkit-print-color-adjust: exact;
-		print-color-adjust: exact;
-	  }
-	  .zone { page-break-inside: avoid; }
-	  .layout { display: block; }
-
-	/* Print must contain only the board (and keep hamburger if present). */
-	  .blur-overlay,
-	  #drag-overlay,
-	  #floating-preview,
-	  #placement-zoom-lens,
-	  #mobile-objective-banner,
-	  #bottom-bar,
-	  #card-choice-zone,
-	  #bonus-zone,
-	  #scoreboard,
-	  #objective-zone,
-	  #original-coins-zone,
-	  #gold-zone,
-	  #collected-coins,
-	  #buy-placement-container,
-	  #controls,
-	  #round-modal-layer,
-	  #shop-modal-layer,
-	  #upgrade-modal-layer,
-	  #deck-modal-layer,
-	  #golden-unlock-layer,
-	  #blackhole-modal-layer,
-	  .objective-toast,
-	  .zone-nav-arrow,
-	  .zone-info-btn,
-	  .zone-info-popover,
-	  .zone-delete,
-	  .trash-btn {
-		display: none;
-	  }
-
-	  #board {
-		display: flex;
-		position: static;
-		left: 0;
-		top: 0;
-		margin: 0;
-		transform: none;
-	  }
-
-	  /* Ensure print contains full grids, not only the visible part of scroll containers. */
-	  #yellow-zone,
-	  #green-zone,
-	  #red-zone,
-	  #purple-zone,
-	  #blue-zone {
-		overflow: visible;
-		height: auto;
-		max-height: none;
-	  }
-	  #yellow-grid,
-	  #green-grid,
-	  #purple-grid,
-	  #blue-grid,
-	  #red-zone .grid {
-		overflow: visible;
-		max-height: none;
-	  }
-	  .board {
-		transform: none;
-		max-height: none;
-	  }
-	  #board > .column:last-child {
-		display: none;
-	  }
-	  #menu-toggle {
-		display: inline-flex;
-	  }
-    }
-
 	/*
 		EN:
 		- FIX: Some desktop "sub-breakpoint" rules are written as nested @media blocks inside
@@ -12564,18 +12480,9 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		}
 	}
 
-  </style>
-	<style>
-		/* Ensure desktop wrapper stays centered on very wide screens (override later rules) */
-		@media (min-width:2000px) {
-			body #desktop-wrapper {
-				max-width: 1600px;
-				margin-left: auto;
-				margin-right: auto;
-			}
-		}
 	</style>
-  <script>
+	<link rel="stylesheet" href="css/responsive.css">
+	<script>
     // Simple menu toggle: toggles .open on #controls and .active on #menu-toggle
     document.addEventListener('DOMContentLoaded', function() {
         const menuToggle = document.getElementById('menu-toggle');
@@ -24524,7 +24431,7 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	// Battery saver toggle: flip to false to disable the low-power tweaks below.
 	// Use var to avoid temporal dead zone when referenced earlier in the file.
 	var BATTERY_SAVER_ENABLED = true;
-	var BATTERY_SUPPRESS_LOGS = true;
+	var BATTERY_SUPPRESS_LOGS = false;
 	var BATTERY_THROTTLE_DRAG = true;
 	var BATTERY_REDUCE_ANIM = false;
 
@@ -36021,6 +35928,7 @@ body { background: transparent; }
 		const isDesktop = window.innerWidth > MOBILE_BREAKPOINT;
 		const isMobileSidebar = document.body.classList.contains('mobile-sidebar-layout');
 		if (!isDesktop || isMobileSidebar) {
+			logLayout('scale:desktop:skip', { isDesktop, isMobileSidebar });
 			if (desktopWrapper) {
 				desktopWrapper.style.removeProperty('transform');
 				desktopWrapper.style.removeProperty('transform-origin');
@@ -36041,6 +35949,7 @@ body { background: transparent; }
 			board.style.removeProperty('transform');
 			board.style.removeProperty('transform-origin');
 			document.body.classList.remove('board-scaled');
+			logLayout('scale:desktop:no-wrapper');
 			return;
 		}
 
@@ -36119,6 +36028,7 @@ body { background: transparent; }
 		const boardWidth = board.scrollWidth;
 		const boardHeight = board.scrollHeight;
 		if (!boardWidth || !boardHeight) return;
+		logLayout('scale:desktop:measure', { boardWidth, boardHeight, availableWidth, availableHeight, isPortrait, isLandscape });
 
 		// For constrained viewports (925-1650px), be more aggressive with scaling
 		const isConstrainedLandscape = isLandscape && window.innerWidth < 1650;
@@ -36148,6 +36058,7 @@ body { background: transparent; }
 			board.style.transform = `translateX(${offsetX.toFixed(1)}px) scale(${scale})`;
 			board.style.transformOrigin = 'top left';
 			document.body.classList.add('board-scaled');
+			logLayout('scale:desktop:set', { scale, offsetX, boardWidth, boardHeight, availableWidth, availableHeight });
 		} else {
 			board.style.removeProperty('transform');
 			board.style.removeProperty('transform-origin');
@@ -36158,6 +36069,7 @@ body { background: transparent; }
 				desktopBottom.style.removeProperty('margin-top');
 			}
 			document.body.classList.remove('board-scaled');
+			logLayout('scale:desktop:clear');
 		}
 	}
 
@@ -36168,6 +36080,7 @@ body { background: transparent; }
 		if (!isMobile) {
 			document.documentElement.style.removeProperty('--board-scale');
 			document.body.classList.remove('board-mobile-scaled');
+			logLayout('scale:mobile:skip');
 			return;
 		}
 		const isClassicMode = document.body.classList.contains('classic-mode');
@@ -36199,6 +36112,7 @@ body { background: transparent; }
 		const boardWidth = board.scrollWidth;
 		const boardHeight = board.scrollHeight;
 		if (!boardWidth || !boardHeight) return;
+		logLayout('scale:mobile:measure', { boardWidth, boardHeight, availableWidth, availableHeight, bottomBarHeight, objectiveHeight });
 
 		const scaleW = availableWidth / boardWidth;
 		const scaleH = availableHeight / boardHeight;
@@ -36209,6 +36123,7 @@ body { background: transparent; }
 		scale = Math.max(0.25, Math.min(scale, 1));
 		document.documentElement.style.setProperty('--board-scale', scale.toFixed(3));
 		document.body.classList.add('board-mobile-scaled');
+		logLayout('scale:mobile:set', { scale, scaleW, scaleH, heightIsTall });
 	}
 
 	// Remove desktop-wrapper when switching layouts to force rebuild
@@ -36352,6 +36267,16 @@ body { background: transparent; }
 	  } else {
 		  document.body.classList.remove('desktop-portrait', 'desktop-landscape');
 	  }
+	logLayout('moveGameElements:mode', {
+		width,
+		height,
+		isMobile,
+		isTouchDevice,
+		useMobileSidebarLayout,
+		useDesktopLayout,
+		useDesktopLandscape,
+		useDesktopPortrait
+	});
 
 		  const coins = document.getElementById('gold-zone');
 		  const score = document.getElementById('scoreboard');
@@ -36390,6 +36315,7 @@ body { background: transparent; }
 				if (!mlWrapper || !mlLeft || !mlCenter || !mlRight) {
 					console.warn('Mobile landscape wrapper elements not found, cannot use sidebar layout');
 				} else {
+					logLayout('moveGameElements:mobile-sidebar');
 				// Remove desktop wrapper if exists - use centralized cleanup
 				if (document.getElementById('desktop-wrapper')) {
 					cleanupDesktopWrapper();
@@ -36420,6 +36346,7 @@ body { background: transparent; }
 			if (mlObjectiveTop) mlObjectiveTop.style.display = 'none';
 
 				if (isMobile) {
+				logLayout('moveGameElements:mobile-bottom', { classic: document.body.classList.contains('classic-mode') });
 				const isClassicMode = document.body.classList.contains('classic-mode');
 				// Remove desktop wrapper if exists - use centralized cleanup
 				if (document.getElementById('desktop-wrapper')) {
@@ -36445,6 +36372,7 @@ body { background: transparent; }
 				
 			} else {
 			closeZoom();
+			logLayout('moveGameElements:desktop', { landscape: useDesktopLandscape, portrait: useDesktopPortrait });
 
 				// Ensure the buy button lives inside the coin zone again on desktop.
 				const buyPlacementContainer = document.getElementById('buy-placement-container');
@@ -36683,6 +36611,30 @@ body { background: transparent; }
 	let layoutReflowInProgress = false;
 	let lastLayoutViewportKey = '';
 	let lastLayoutMode = ''; // track layout mode to detect switches
+	const LOG_LAYOUT = true;
+	let pendingReflowKey = null;
+	let pendingReflowDelay = 0;
+
+	function logLayout(step, data) {
+		if (!LOG_LAYOUT) return;
+		const t = (performance && typeof performance.now === 'function') ? performance.now().toFixed(1) : Date.now();
+		try {
+			console.log(`[layout] ${t} ${step}`, data || '');
+		} catch (_) {}
+	}
+
+	// Ensure font-dependent sizing settles before scaling/layout steps that measure text.
+	function waitForFontsReadyThen(cb) {
+		try {
+			const ready = document.fonts && document.fonts.ready;
+			if (ready && typeof ready.then === 'function') {
+				ready.then(() => { try { cb(); } catch (_) {} }).catch(() => { try { cb(); } catch (_) {} });
+				return;
+			}
+		} catch (_) {}
+		// Fallback: run on next frame so layout has a chance to settle.
+		try { requestAnimationFrame(() => { try { cb(); } catch (_) {} }); } catch (_) { try { cb(); } catch (_) {} }
+	}
 	function resetLayoutTransforms() {
 		try {
 			const board = document.getElementById('board');
@@ -36746,12 +36698,14 @@ body { background: transparent; }
 	function reflowLayout() {
 		if (layoutReflowInProgress) return;
 		layoutReflowInProgress = true;
+		logLayout('reflowLayout:start');
 		try { document.body.classList.add('layout-reflow'); } catch (_) {}
 		
 		// Detect layout mode changes and clean up wrapper if needed
 		try {
 			const currentMode = getCurrentLayoutMode();
 			if (lastLayoutMode && lastLayoutMode !== currentMode) {
+				logLayout('layoutMode:change', { from: lastLayoutMode, to: currentMode });
 				// Layout mode changed - clean up old wrapper to force rebuild
 				cleanupDesktopWrapper();
 				// Also reset all body layout classes
@@ -36766,11 +36720,18 @@ body { background: transparent; }
 		// Step 1: clear stale inline sizing/transforms
 		try { resetWorldLayoutStyles(); } catch (_) {}
 		try { resetLayoutTransforms(); } catch (_) {}
+		logLayout('layout:reset-done');
 		// Step 2: re-place DOM blocks for current breakpoint/orientation
-		try { moveGameElements(); } catch (_) {}
+		try {
+			moveGameElements();
+			logLayout('layout:moved');
+		} catch (e) {
+			logLayout('layout:moved:error', e?.message || e);
+		}
 		// Step 3: run sizing/spacing on next frames so layout has settled
 		try {
 			requestAnimationFrame(() => {
+				logLayout('layout:rAF-phase1');
 				try { hideEmptyZones(); } catch (_) {}
 				try { runZoneSizingOnce(); } catch (_) {}
 				try { renderTrapSummary(); } catch (_) {}
@@ -36782,21 +36743,73 @@ body { background: transparent; }
 				try { if (activeZoomZone) applyMobileZoomSizing(activeZoomZone); } catch (_) {}
 				try { if (activeZoomZone) schedulePlaceholderSync(activeZoomZone); } catch (_) {}
 				requestAnimationFrame(() => {
-					// Now scale the board AFTER layout has settled
-					try { scaleBoardForDesktop(); } catch (_) {}
-					try { scaleBoardForMobile(); } catch (_) {}
-					try { document.body.classList.remove('layout-reflow'); } catch (_) {}
-					try { document.body.classList.remove('board-loading'); } catch (_) {}
-					layoutReflowInProgress = false;
+					// Now scale the board AFTER layout has settled and fonts are ready
+					logLayout('layout:rAF-phase2');
+					waitForFontsReadyThen(() => {
+						try {
+							scaleBoardForDesktop();
+							logLayout('scale:desktop');
+						} catch (e) {
+							logLayout('scale:desktop:error', e?.message || e);
+						}
+						try {
+							scaleBoardForMobile();
+							logLayout('scale:mobile');
+						} catch (e) {
+							logLayout('scale:mobile:error', e?.message || e);
+						}
+						try { document.body.classList.remove('layout-reflow'); } catch (_) {}
+						try { document.body.classList.remove('board-loading'); } catch (_) {}
+						layoutReflowInProgress = false;
+						logLayout('reflowLayout:done');
+						if (pendingReflowKey) {
+							const nextKey = pendingReflowKey;
+							const nextDelay = pendingReflowDelay;
+							pendingReflowKey = null;
+							pendingReflowDelay = 0;
+							if (nextKey === lastLayoutViewportKey) {
+								logLayout('reflowLayout:pending-skip-same', { key: nextKey });
+							} else {
+								// reset last key so the queued run executes
+								lastLayoutViewportKey = '';
+								scheduleLayoutReflow(nextDelay || 0);
+								logLayout('reflowLayout:run-pending', { key: nextKey, delay: nextDelay });
+							}
+						}
+					});
 				});
 			});
 		} catch (_) {
 			// Fallback if rAF is blocked
-			try { scaleBoardForDesktop(); } catch (_) {}
-			try { scaleBoardForMobile(); } catch (_) {}
+			try {
+				scaleBoardForDesktop();
+				logLayout('scale:desktop:fallback');
+			} catch (e) {
+				logLayout('scale:desktop:error:fallback', e?.message || e);
+			}
+			try {
+				scaleBoardForMobile();
+				logLayout('scale:mobile:fallback');
+			} catch (e) {
+				logLayout('scale:mobile:error:fallback', e?.message || e);
+			}
 			try { document.body.classList.remove('layout-reflow'); } catch (_) {}
 			try { document.body.classList.remove('board-loading'); } catch (_) {}
 			layoutReflowInProgress = false;
+			logLayout('reflowLayout:done:fallback');
+			if (pendingReflowKey) {
+				const nextKey = pendingReflowKey;
+				const nextDelay = pendingReflowDelay;
+				pendingReflowKey = null;
+				pendingReflowDelay = 0;
+				if (nextKey === lastLayoutViewportKey) {
+					logLayout('reflowLayout:pending-skip-same', { key: nextKey, fallback: true });
+				} else {
+					lastLayoutViewportKey = '';
+					scheduleLayoutReflow(nextDelay || 0);
+					logLayout('reflowLayout:run-pending', { key: nextKey, delay: nextDelay, fallback: true });
+				}
+			}
 		}
 	}
 
@@ -36807,10 +36820,26 @@ body { background: transparent; }
 		// Include layout mode in key so orientation changes trigger reflow even at same dimensions
 		const currentMode = getCurrentLayoutMode();
 		const key = `${w}x${h}:${currentMode}`;
-		if (key === lastLayoutViewportKey && !layoutReflowInProgress) return;
+
+		if (layoutReflowInProgress) {
+			// Avoid stacking identical requests while a reflow is active.
+			if (key === lastLayoutViewportKey || key === pendingReflowKey) {
+				logLayout('schedule:pending-skip-same', { key, pending: pendingReflowKey, last: lastLayoutViewportKey });
+				return;
+			}
+			pendingReflowKey = key;
+			pendingReflowDelay = delay;
+			logLayout('schedule:pending-in-progress', { key, delay });
+			return;
+		}
+		if (key === lastLayoutViewportKey && !layoutReflowInProgress) {
+			logLayout('schedule:skip-same-key', { key });
+			return;
+		}
 		lastLayoutViewportKey = key;
 		if (layoutReflowTimer) clearTimeout(layoutReflowTimer);
 		layoutReflowTimer = setTimeout(() => {
+			logLayout('schedule:run', { key, delay });
 			try { requestAnimationFrame(reflowLayout); } catch (_) { reflowLayout(); }
 		}, delay);
 	}
@@ -37139,44 +37168,4 @@ body { background: transparent; }
 	}
 	
   </script>
-  <style>
-	/* Zoomed In Uniformity (non-mobile): Force all zoomed zones to be the same size.
-	   IMPORTANT: mobile zoom sizing/placement is handled by the dedicated @media (max-width: 650px) block above.
-	*/
-	@media (min-width: 651px) {
-		body.zoomed-in .zone.zoom-focus {
-			width: 90vw;
-			height: 65vh;
-			max-width: none;
-			max-height: none;
-			min-width: 0;
-			min-height: 0;
-			overflow: auto;
-			position: fixed;
-			top: 50%;
-			left: 50%;
-			transform: translate(-50%, -50%);
-			z-index: 1000;
-			margin: 0;
-		}
-	}
-
-	/* 4. Desktop Landscape Fixes */
-	@media (min-width: 900px) {
-		#green-zone {
-			flex-shrink: 0; /* Prevent shrinking */
-			min-width: calc(13 * var(--cell-size));
-		}
-		#blue-zone {
-			min-height: 600px; /* Ensure it stays long */
-			width: 400px;
-			flex-shrink: 0; /* Prevent shrinking */
-		}
-		.board {
-			justify-content: center;
-			gap: 20px; /* More space between columns */
-		}
-	}
-
-  </style>
 </html>

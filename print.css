@@ -1,0 +1,84 @@
+/* Print-only overrides extracted from index.html */
+@media print {
+  body {
+    background: white;
+    margin: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .zone { page-break-inside: avoid; }
+  .layout { display: block; }
+
+  /* Print must contain only the board (and keep hamburger if present). */
+  .blur-overlay,
+  #drag-overlay,
+  #floating-preview,
+  #placement-zoom-lens,
+  #mobile-objective-banner,
+  #bottom-bar,
+  #card-choice-zone,
+  #bonus-zone,
+  #scoreboard,
+  #objective-zone,
+  #original-coins-zone,
+  #gold-zone,
+  #collected-coins,
+  #buy-placement-container,
+  #controls,
+  #round-modal-layer,
+  #shop-modal-layer,
+  #upgrade-modal-layer,
+  #deck-modal-layer,
+  #golden-unlock-layer,
+  #blackhole-modal-layer,
+  .objective-toast,
+  .zone-nav-arrow,
+  .zone-info-btn,
+  .zone-info-popover,
+  .zone-delete,
+  .trash-btn {
+    display: none;
+  }
+
+  #board {
+    display: flex;
+    position: static;
+    left: 0;
+    top: 0;
+    margin: 0;
+    transform: none;
+  }
+
+  /* Ensure print contains full grids, not only the visible part of scroll containers. */
+  #yellow-zone,
+  #green-zone,
+  #red-zone,
+  #purple-zone,
+  #blue-zone {
+    overflow: visible;
+    height: auto;
+    max-height: none;
+  }
+  #yellow-grid,
+  #green-grid,
+  #purple-grid,
+  #blue-grid,
+  #red-zone .grid {
+    overflow: visible;
+    max-height: none;
+  }
+  .board {
+    transform: none;
+    max-height: none;
+  }
+  #board > .column:last-child {
+    display: none;
+  }
+  #menu-toggle {
+    display: inline-flex;
+  }
+}
