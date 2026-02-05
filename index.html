@@ -3974,11 +3974,23 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		letter-spacing: 0.06em;
 		color: rgba(15,20,32,0.68);
 		position: absolute;
+		inset: auto;
 		left: 8px;
 		bottom: 8px;
 		z-index: 5;
 		margin: 0;
+		padding: 0;
+		background: transparent;
+		border-radius: 0;
+		opacity: 0;
 		pointer-events: none;
+		transition: opacity 0.15s ease;
+	}
+
+	/* Show echo meta icons on hover */
+	.card-option:hover .card-meta.card-meta--echo,
+	.card-option.show-meta .card-meta.card-meta--echo {
+		opacity: 1;
 	}
 
 	.card-meta--echo .card-meta-line {
@@ -3992,9 +4004,9 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	}
 
 	.card-meta--echo .bonus-mini-icon {
-		width: 12px;
-		height: 12px;
-		border-radius: 4px;
+		width: 18px;
+		height: 18px;
+		border-radius: 5px;
 		background: linear-gradient(135deg, #ff5757 0%, #ffbf3a 22%, #8cff6a 45%, #47b1ff 70%, #b16cff 100%);
 		box-shadow: inset 0 0 4px rgba(0,0,0,0.25), 0 2px 4px rgba(0,0,0,0.2);
 		border: 1px solid rgba(120,120,180,0.35);
@@ -4002,8 +4014,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 	.card-meta--echo .coin-icon {
 		display: inline-block;
-		width: 12px;
-		height: 12px;
+		width: 18px;
+		height: 18px;
 		border-radius: 50%;
 		background: radial-gradient(circle at 30% 30%, #fff6b5, #f7bb36 60%, #d49f20);
 		box-shadow: inset 0 -1px 2px rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.2);
@@ -4789,8 +4801,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	.deck-modal-grid .card-option {
 		transform: none;
 		width: 100%;
-		max-width: 138px;
-		min-height: 180px;
+		max-width: 160px;
+		min-height: 200px;
 		height: auto;
 		margin: 0 auto;
 		padding: 12px 8px;
@@ -4884,13 +4896,12 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 	.deck-modal-grid .card-option .card-meta--echo {
 		bottom: 8px;
-		right: 8px;
+		left: 8px;
+		right: auto;
 		font-size: 0.55rem;
-		background: rgba(100,160,255,0.9);
-		color: #fff;
-		padding: 2px 5px;
-		border-radius: 4px;
-		font-weight: 700;
+		background: transparent;
+		padding: 0;
+		border-radius: 0;
 	}
 
 	/* Combined deck overview badge: icons -> text */
@@ -8166,6 +8177,20 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			bottom: 5px;
 			z-index: 6;
 			font-size: 0.55rem;
+		}
+
+		#bottom-bar #card-choice-zone .card-meta--echo .bonus-mini-icon {
+			width: 8px;
+			height: 8px;
+			border-radius: 2px;
+		}
+		#bottom-bar #card-choice-zone .card-meta--echo .coin-icon {
+			width: 8px;
+			height: 8px;
+		}
+		#bottom-bar #card-choice-zone .card-meta--echo .meta-target-icon {
+			font-size: 0.6em;
+		}
 			padding: 2px 5px;
 			border-radius: 4px;
 		}
@@ -11977,7 +12002,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	@media (max-width: 650px) {
 		:root {
 			--hand-card-height: 20px;
-			--hand-card-width: 30px;
+			--hand-card-width: 36px;
 			--bottom-bar-height: 180px;
 		}
 		#card-choice-zone .card-option {
@@ -12007,7 +12032,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	@media (max-width: 650px) and (min-width: 291px) {
 		:root {
 			--hand-card-height: 22px;
-			--hand-card-width: 34px;
+			--hand-card-width: 41px;
 			--bottom-bar-height: 190px;
 		}
 		#bottom-bar #card-choice-zone .card-option {
@@ -12021,7 +12046,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	@media (max-width: 650px) and (min-width: 341px) {
 		:root {
 			--hand-card-height: 25px;
-			--hand-card-width: 38px;
+			--hand-card-width: 46px;
 			--bottom-bar-height: 200px;
 		}
 		#bottom-bar #card-choice-zone .card-option {
@@ -12035,7 +12060,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	@media (max-width: 650px) and (min-width: 391px) {
 		:root {
 			--hand-card-height: 28px;
-			--hand-card-width: 42px;
+			--hand-card-width: 50px;
 			--bottom-bar-height: 210px;
 		}
 		#bottom-bar #card-choice-zone .card-option {
