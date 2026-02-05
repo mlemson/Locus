@@ -8941,25 +8941,29 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 	.score-popup {
 	  position: fixed;
-	  font-size: 1.4rem;
-	  font-weight: bold;
-	  color: #222;
-	  text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+	  font-size: 1.5rem;
+	  font-weight: 900;
+	  color: white;
+	  text-shadow: 0 0 6px rgba(0,0,0,0.7), 0 0 12px rgba(255,255,255,0.5);
 	  pointer-events: none;
-	  opacity: 0;
-	  transform: translateY(0);
-	  animation: floatUp 1s ease-out forwards;
+	  opacity: 1;
+	  transform: translateY(0) translateX(-50%);
+	  animation: floatUp 1.2s ease-out forwards;
 	  z-index: var(--z-score);
+	  white-space: nowrap;
 	}
 
 	@keyframes floatUp {
 	  0% {
 		opacity: 1;
-		transform: translateY(0);
+		transform: translateY(0) translateX(-50%);
+	  }
+	  70% {
+		opacity: 1;
 	  }
 	  100% {
 		opacity: 0;
-		transform: translateY(-40px);
+		transform: translateY(-45px) translateX(-50%);
 	  }
 	}
 	
@@ -19705,9 +19709,7 @@ let shopLevel2Used = false;
 	if(cell.classList.contains('gold-cell')){
       if(cell.classList.contains('active')) { 
 	  const rect = cell.getBoundingClientRect();
-		const scrollX = window.scrollX || window.pageXOffset;
-		const scrollY = window.scrollY || window.pageYOffset;
-		sparkleEffect(rect.left + rect.width / 2 + scrollX, rect.top + scrollY);
+		sparkleEffect(rect.left + rect.width / 2, rect.top);
 	  addCoin(); 
 	} else removeCoin();
     }
@@ -19728,10 +19730,8 @@ let shopLevel2Used = false;
 			cell.dataset.bonusConsumed = 'true';
 			hasSymbol.classList.add('bonus-used');
 			const rect = cell.getBoundingClientRect();
-			const scrollX = window.scrollX || window.pageXOffset;
-			const scrollY = window.scrollY || window.pageYOffset;
 			const color = getComputedStyle(hasSymbol).backgroundColor;
-			showScoreAnimation(rect.left + rect.width/2 + scrollX, rect.top + rect.height/2 + scrollY, "MEGA BONUS!", color);
+			showScoreAnimation(rect.left + rect.width/2, rect.top + rect.height/2, "MEGA BONUS!", color);
 			// Bonus shop is now a field event (no modal). Grant a free random upgrade.
 			setTimeout(() => {
 				grantRandomBonusUpgrade();
@@ -19744,10 +19744,8 @@ let shopLevel2Used = false;
 				cell.dataset.bonusConsumed = 'true';
 				hasSymbol.classList.add('bonus-used');
 				const rect = cell.getBoundingClientRect();
-				const scrollX = window.scrollX || window.pageXOffset;
-				const scrollY = window.scrollY || window.pageYOffset;
 				const color = getComputedStyle(hasSymbol).backgroundColor;
-				showScoreAnimation(rect.left + rect.width/2 + scrollX, rect.top + rect.height/2 + scrollY, "BONUS", color);
+				showScoreAnimation(rect.left + rect.width/2, rect.top + rect.height/2, "BONUS", color);
 				bonusClaim = createBonusClaim(cell, hasSymbol, bonusKey, grantedAmount);
 				if (!partOfShape) {
 					const lastHistory = historyStack[historyStack.length - 1];
@@ -20169,11 +20167,9 @@ let shopLevel2Used = false;
 	  const el = document.getElementById(scoreElId);
 	  if (!el) return;
 	  const rect = el.getBoundingClientRect();
-	  const scrollX = window.scrollX || window.pageXOffset;
-	  const scrollY = window.scrollY || window.pageYOffset;
 	  showScoreAnimation(
-		rect.left + rect.width / 2 + scrollX,
-		rect.top + rect.height / 2 + scrollY,
+		rect.left + rect.width / 2,
+		rect.top + rect.height / 2,
 		`-${penalty}`,
 		'rgba(196,56,56,0.9)'
 	  );
@@ -20300,11 +20296,9 @@ let shopLevel2Used = false;
 	  lastTrapHighlightId = trapId;
 	  if (!silent && penaltyValue > 0) {
 		const rect = cell.getBoundingClientRect();
-		const scrollX = window.scrollX || window.pageXOffset;
-		const scrollY = window.scrollY || window.pageYOffset;
 		showScoreAnimation(
-		  rect.left + rect.width / 2 + scrollX,
-		  rect.top + rect.height / 2 + scrollY,
+		  rect.left + rect.width / 2,
+		  rect.top + rect.height / 2,
 		  `-${penaltyValue}`,
 		  'rgba(196,56,56,0.9)'
 		);
@@ -20475,9 +20469,7 @@ let shopLevel2Used = false;
 			green = activeEndCells.length * 8;
 			if (cell != null && cell.classList.contains('end-cell') && cell.classList.contains('active')) {
 				const rect = cell.getBoundingClientRect();
-				const scrollX = window.scrollX || window.pageXOffset;
-				const scrollY = window.scrollY || window.pageYOffset;
-				showScoreAnimation(rect.left + rect.width / 2 + scrollX, rect.top + rect.height / 2 + scrollY, "+ 8", "green");
+				showScoreAnimation(rect.left + rect.width / 2, rect.top + rect.height / 2, "+ 8", "green");
 			}
 			return;
 		}
@@ -20510,10 +20502,8 @@ let shopLevel2Used = false;
 
 		if (cell != null && cell.classList.contains('end-cell') && cell.classList.contains('active')) {
 			const rect = cell.getBoundingClientRect();
-			const scrollX = window.scrollX || window.pageXOffset;
-			const scrollY = window.scrollY || window.pageYOffset;
 			const pts = pointsFor(cell);
-			showScoreAnimation(rect.left + rect.width / 2 + scrollX, rect.top + rect.height / 2 + scrollY, `+ ${pts}`, "green");
+			showScoreAnimation(rect.left + rect.width / 2, rect.top + rect.height / 2, `+ ${pts}`, "green");
 		}
 	})();
 
@@ -20547,11 +20537,9 @@ let shopLevel2Used = false;
 				const anchor = allCells[middleIndex];
 				if (anchor && anchor.getBoundingClientRect) {
 					const rect = anchor.getBoundingClientRect();
-					const scrollX = window.scrollX || window.pageXOffset;
-					const scrollY = window.scrollY || window.pageYOffset;
 					showScoreAnimation(
-						rect.left + rect.width / 2 + scrollX,
-						rect.top + rect.height / 2 + scrollY,
+						rect.left + rect.width / 2,
+						rect.top + rect.height / 2,
 						`+${points}`,
 						'red'
 					);
@@ -20628,11 +20616,9 @@ let shopLevel2Used = false;
 			const anchorCell = cells && cells[0];
 			if (anchorCell) {
 				const rect = anchorCell.getBoundingClientRect();
-				const scrollX = window.scrollX || window.pageXOffset;
-				const scrollY = window.scrollY || window.pageYOffset;
 				showScoreAnimation(
-					rect.left + rect.width / 2 + scrollX,
-					rect.top + rect.height / 2 + scrollY,
+					rect.left + rect.width / 2,
+					rect.top + rect.height / 2,
 					`+${points}`,
 					"yellow"
 				);
@@ -20647,11 +20633,9 @@ let shopLevel2Used = false;
 			const anchorCell = cells && cells[0];
 			if (anchorCell) {
 				const rect = anchorCell.getBoundingClientRect();
-				const scrollX = window.scrollX || window.pageXOffset;
-				const scrollY = window.scrollY || window.pageYOffset;
 				showScoreAnimation(
-					rect.left + rect.width / 2 + scrollX,
-					rect.top + rect.height / 2 + scrollY,
+					rect.left + rect.width / 2,
+					rect.top + rect.height / 2,
 					`−${Number.isFinite(lost) ? lost : points}`,
 					"yellow"
 				);
@@ -20721,11 +20705,9 @@ let shopLevel2Used = false;
 				const anchorCell = cells[0];
 				if (anchorCell) {
 					const rect = anchorCell.getBoundingClientRect();
-					const scrollX = window.scrollX || window.pageXOffset;
-					const scrollY = window.scrollY || window.pageYOffset;
 					showScoreAnimation(
-						rect.left + rect.width / 2 + scrollX,
-						rect.top + rect.height / 2 + scrollY,
+						rect.left + rect.width / 2,
+						rect.top + rect.height / 2,
 						`+${points}`,
 						"yellow"
 					);
@@ -20738,11 +20720,9 @@ let shopLevel2Used = false;
 				const anchorCell = cells[0];
 				if (anchorCell) {
 					const rect = anchorCell.getBoundingClientRect();
-					const scrollX = window.scrollX || window.pageXOffset;
-					const scrollY = window.scrollY || window.pageYOffset;
 					showScoreAnimation(
-						rect.left + rect.width / 2 + scrollX,
-						rect.top + rect.height / 2 + scrollY,
+						rect.left + rect.width / 2,
+						rect.top + rect.height / 2,
 						`−${Number.isFinite(lost) ? lost : points}`,
 						"yellow"
 					);
@@ -20900,11 +20880,9 @@ let shopLevel2Used = false;
 		  const anchorCell = colCells[0];
 		  if (anchorCell) {
 			const rect = anchorCell.getBoundingClientRect();
-			const scrollX = window.scrollX || window.pageXOffset;
-			const scrollY = window.scrollY || window.pageYOffset;
 			showScoreAnimation(
-			  rect.left + rect.width / 2 + scrollX,
-			  rect.top + rect.height / 2 + scrollY,
+			  rect.left + rect.width / 2,
+			  rect.top + rect.height / 2,
 			  `+${columnPointsValue}`,
 			  "yellow"
 			);
@@ -20918,11 +20896,9 @@ let shopLevel2Used = false;
 		  const anchorCell = colCells[0];
 		  if (anchorCell) {
 			const rect = anchorCell.getBoundingClientRect();
-			const scrollX = window.scrollX || window.pageXOffset;
-			const scrollY = window.scrollY || window.pageYOffset;
 			showScoreAnimation(
-			  rect.left + rect.width / 2 + scrollX,
-			  rect.top + rect.height / 2 + scrollY,
+			  rect.left + rect.width / 2,
+			  rect.top + rect.height / 2,
 			  `−${columnPointsValue}`,
 			  "yellow"
 			);
@@ -20942,11 +20918,9 @@ let shopLevel2Used = false;
 			const storedScore = Number(cell.dataset.clusterScore || '0');
 			if (cell.dataset.clusterPending === "true" && storedScore > 0) {
 				const rect = cell.getBoundingClientRect();
-				const scrollX = window.scrollX || window.pageXOffset;
-				const scrollY = window.scrollY || window.pageYOffset;
 				showScoreAnimation(
-					rect.left + rect.width / 2 + scrollX,
-					rect.top + rect.height / 2 + scrollY,
+					rect.left + rect.width / 2,
+					rect.top + rect.height / 2,
 					`+${storedScore}`,
 					"purple"
 				);
@@ -21271,12 +21245,10 @@ let shopLevel2Used = false;
 		const showChangePopup = (cell, diff) => {
 			if (!cell || diff === 0) return;
 			const rect = cell.getBoundingClientRect();
-			const scrollX = window.scrollX || window.pageXOffset;
-			const scrollY = window.scrollY || window.pageYOffset;
 			const amountText = diff > 0 ? `+${diff}` : `-${Math.abs(diff)}`;
 			showScoreAnimation(
-				rect.left + rect.width / 2 + scrollX,
-				rect.top + rect.height / 2 + scrollY,
+				rect.left + rect.width / 2,
+				rect.top + rect.height / 2,
 				amountText,
 				"blue"
 			);
@@ -21443,14 +21415,17 @@ let shopLevel2Used = false;
 	}
 	
 	// showScoreAnimation: positioneert tov viewport (fixed) zodat getBoundingClientRect() direct werkt
-	function showScoreAnimation(x, y, text = "+1", color = "black") {
+	function showScoreAnimation(x, y, text = "+1", color = "white") {
 	  const el = document.createElement("div");
 	  el.className = "score-popup";
 	  el.style.left = `${x}px`;
 	  el.style.top  = `${y}px`;
+	  el.style.color = color;
 	  el.textContent = text;
 	  document.body.appendChild(el);
-	  setTimeout(() => el.remove(), 1000);
+	  // Force reflow so animation plays reliably
+	  void el.offsetWidth;
+	  setTimeout(() => el.remove(), 1200);
 	}
 	
 	// Sparkle effect
