@@ -171,7 +171,7 @@
 			--z-blur: 400;        /* blur backdrop */
 			--z-zoom: 500;        /* focused/zoomed zone */
 			--z-drag: 600;        /* drag overlay (highest for dragged items) */
-			--z-score: 700;       /* transient score / sparkle popups */
+			--z-score: 1050;      /* transient score / sparkle popups — must be above zoom-focus (1000 on desktop) */
 			--z-draggable: 600;   /* draggable block default */
 
 
@@ -8941,8 +8941,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 	.score-popup {
 	  position: fixed;
-	  font-size: 1.5rem;
-	  font-weight: 900;
+	  font-size: 1.2rem;
+	  font-weight: 700;
 	  color: white;
 	  text-shadow: 0 0 6px rgba(0,0,0,0.7), 0 0 12px rgba(255,255,255,0.5);
 	  pointer-events: none;
@@ -21416,16 +21416,72 @@ let shopLevel2Used = false;
 	
 	// showScoreAnimation: positioneert tov viewport (fixed) zodat getBoundingClientRect() direct werkt
 	function showScoreAnimation(x, y, text = "+1", color = "white") {
+	  try {
+		if (window.debugScoreAnimations) {
+			console.log('showScoreAnimation:call', { x, y, text, color, time: Date.now() });
+		}
+	  } catch (_) {}
 	  const el = document.createElement("div");
 	  el.className = "score-popup";
+	  // Inline fallback styles in case CSS doesn't apply for any reason.
+	  el.style.position = 'fixed';
+	  el.style.pointerEvents = 'none';
+	  el.style.fontSize = '1.2rem';
+	  el.style.fontWeight = '700';
+	  el.style.textShadow = '0 0 6px rgba(0,0,0,0.7), 0 0 12px rgba(255,255,255,0.5)';
+	  el.style.whiteSpace = 'nowrap';
+	  el.style.opacity = '1';
+	  el.style.transform = 'translate(-50%, 0)';
+	  el.style.zIndex = 'var(--z-score)';
 	  el.style.left = `${x}px`;
 	  el.style.top  = `${y}px`;
 	  el.style.color = color;
 	  el.textContent = text;
 	  document.body.appendChild(el);
+	  try {
+		if (window.debugScoreAnimations) {
+			const cs = window.getComputedStyle(el);
+			const rect = el.getBoundingClientRect();
+			console.log('showScoreAnimation:mounted', {
+				zIndex: cs.zIndex,
+				opacity: cs.opacity,
+				display: cs.display,
+				visibility: cs.visibility,
+				position: cs.position,
+				left: cs.left,
+				top: cs.top,
+				transform: cs.transform,
+				animationName: cs.animationName,
+				animationDuration: cs.animationDuration,
+				rect: { x: rect.x, y: rect.y, w: rect.width, h: rect.height }
+			});
+			window.lastScorePopupRect = { x: rect.x, y: rect.y, w: rect.width, h: rect.height };
+		}
+	  } catch (_) {}
 	  // Force reflow so animation plays reliably
 	  void el.offsetWidth;
+	  try {
+		const cs = window.getComputedStyle(el);
+		const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		const batterySaver = document.body && document.body.classList.contains('battery-saver');
+		const cssAnimActive = cs.animationName && cs.animationName !== 'none' && cs.animationDuration !== '0s';
+		if (!prefersReduced && !batterySaver && !cssAnimActive && el.animate) {
+			el.animate(
+				[
+					{ opacity: 1, transform: 'translate(-50%, 0px)' },
+					{ opacity: 1, transform: 'translate(-50%, -18px)' },
+					{ opacity: 0, transform: 'translate(-50%, -45px)' }
+				],
+				{ duration: 1200, easing: 'ease-out', fill: 'forwards' }
+			);
+		}
+	  } catch (_) {}
 	  setTimeout(() => el.remove(), 1200);
+	}
+	if (typeof window !== 'undefined' && !window.triggerScoreAnimation) {
+		window.triggerScoreAnimation = function () {
+			showScoreAnimation(window.innerWidth / 2, window.innerHeight / 2, '+TEST', 'lime');
+		};
 	}
 	
 	// Sparkle effect
@@ -24295,7 +24351,7 @@ const XL_6_SHAPES = BASE_SHAPES.xl6;
 	// Battery saver toggle: flip to false to disable the low-power tweaks below.
 	// Use var to avoid temporal dead zone when referenced earlier in the file.
 	var BATTERY_SAVER_ENABLED = true;
-	var BATTERY_SUPPRESS_LOGS = true;
+	var BATTERY_SUPPRESS_LOGS = false;
 	var BATTERY_THROTTLE_DRAG = true;
 	var BATTERY_REDUCE_ANIM = false;
 
