@@ -19730,8 +19730,8 @@ let shopLevel2Used = false;
 			cell.dataset.bonusConsumed = 'true';
 			hasSymbol.classList.add('bonus-used');
 			const rect = cell.getBoundingClientRect();
-			const color = getComputedStyle(hasSymbol).backgroundColor;
-			showScoreAnimation(rect.left + rect.width/2, rect.top + rect.height/2, "MEGA BONUS!", color);
+			const popupColor = megaBonusColor || zoneColor || 'white';
+			showScoreAnimation(rect.left + rect.width/2, rect.top + rect.height/2, "MEGA BONUS!", popupColor);
 			// Bonus shop is now a field event (no modal). Grant a free random upgrade.
 			setTimeout(() => {
 				grantRandomBonusUpgrade();
@@ -19744,8 +19744,8 @@ let shopLevel2Used = false;
 				cell.dataset.bonusConsumed = 'true';
 				hasSymbol.classList.add('bonus-used');
 				const rect = cell.getBoundingClientRect();
-				const color = getComputedStyle(hasSymbol).backgroundColor;
-				showScoreAnimation(rect.left + rect.width/2, rect.top + rect.height/2, "BONUS", color);
+				const popupColor = bonusKey || zoneColor || 'white';
+				showScoreAnimation(rect.left + rect.width/2, rect.top + rect.height/2, "BONUS", popupColor);
 				bonusClaim = createBonusClaim(cell, hasSymbol, bonusKey, grantedAmount);
 				if (!partOfShape) {
 					const lastHistory = historyStack[historyStack.length - 1];
@@ -21416,6 +21416,24 @@ let shopLevel2Used = false;
 	
 	// showScoreAnimation: positioneert tov viewport (fixed) zodat getBoundingClientRect() direct werkt
 	function showScoreAnimation(x, y, text = "+1", color = "white") {
+	  const colorKeyMap = {
+		yellow: '#cfba51',
+		geel: '#cfba51',
+		red: '#b56069',
+		rood: '#b56069',
+		green: '#92c28c',
+		groen: '#92c28c',
+		purple: '#8f76b8',
+		paars: '#8f76b8',
+		blue: '#5689b0',
+		blauw: '#5689b0'
+	  };
+	  try {
+		if (typeof color === 'string') {
+			const normalized = color.trim().toLowerCase();
+			if (colorKeyMap[normalized]) color = colorKeyMap[normalized];
+		}
+	  } catch (_) {}
 	  try {
 		if (window.debugScoreAnimations) {
 			console.log('showScoreAnimation:call', { x, y, text, color, time: Date.now() });
