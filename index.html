@@ -26795,9 +26795,9 @@ function getCollectedCoinCount(scores) {
 		}
 			const label = (BONUS_COLOR_CONFIG[colorKey]?.label) || playedCard?.color?.name || '';
 			if (pointsAwarded > 0) {
-				showObjectiveToast(`🔁 Bonus Echo: +${pointsAwarded} ${label}`);
+				showObjectiveToast(`🔁 Bonus: +${pointsAwarded} ${label}`);
 			} else if (bonusRewards.length > 0) {
-				showObjectiveToast(`🔁 Bonus Echo: +${bonusRewards.length} bonussen`);
+				showObjectiveToast(`🔁 Bonus: +${bonusRewards.length} bonussen`);
 			}
 		bonusEchoStreak = 0;
 		lastCardWasBonusEcho = false;
