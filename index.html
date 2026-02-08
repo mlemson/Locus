@@ -35642,7 +35642,11 @@ body { background: transparent; }
 			const contentHeight = desktopWrapper.scrollHeight;
 			if (!(contentWidth > 0 && contentHeight > 0)) return;
 
-			const scale = Math.min(availableWidth / contentWidth, availableHeight / contentHeight, 1);
+			let scale = Math.min(availableWidth / contentWidth, availableHeight / contentHeight, 1);
+			const needsTabletLandscapeFit = viewportW >= 800 && viewportW <= 1450 && viewportH >= 550 && viewportH <= 850;
+			if (needsTabletLandscapeFit) {
+				scale = Math.min(scale * 0.95, 1);
+			}
 			if (scale < 0.999) {
 				// Anchor to the left so narrow screens don't waste space on the left,
 				// but center it when there is spare horizontal room after scaling.
