@@ -3693,6 +3693,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 
 	.card-option {
 		position: relative;
+		isolation: isolate;
 		overflow: hidden;
 		display: flex;
 		flex-direction: column;
@@ -3895,6 +3896,8 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 		flex: 0 0 auto;
 		align-self: center;
 		justify-self: center;
+		position: relative;
+		z-index: 2;
 	}
 
 	.card-option .card-cell {
@@ -3944,7 +3947,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 		opacity: 0;
 		pointer-events: none;
 		transition: opacity 0.15s ease;
-		z-index: 20;
+		z-index: 5;
 	}
 
 	.card-meta.card-meta--empty {
@@ -4272,7 +4275,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 		pointer-events: none;
 		transform: translateX(-50%) translateY(6px);
 		transition: opacity 0.16s ease, transform 0.16s ease;
-		z-index: 3;
+		z-index: 5;
 	}
 
 	.card-bonus-echo.show-meta .card-echo-tooltip,
@@ -9658,7 +9661,8 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 			align-items: stretch;
 			gap: 8px;
 			padding: 4px 8px;
-			max-height: 160px;
+			max-height: none;
+			overflow: visible;
 		}
 
 		body.desktop-portrait.desktop-portrait #desktop-bottom-left {
@@ -11945,14 +11949,10 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 
 	/* Desktop sub-breakpoints: compactere layout bij smallere viewport */
 	@media (min-width: 651px) and (max-width: 1100px) {
-		#card-choice-zone .card-label,
-		#card-choice-zone .card-meta {
-			display: none;
-		}
 
 		#card-choice-zone .card-option {
 			min-width: 80px;
-			min-height: 140px;
+			min-height: 160px;
 			padding: 8px 4px;
 		}
 
