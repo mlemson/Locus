@@ -67,7 +67,7 @@
 				// and text color before external/embedded CSS parses fully.
 				var _s = document.createElement('style');
 				_s.setAttribute('data-locus-theme-preload','true');
-				_s.textContent = 'html,body { background: #1b1d22; color: #e5e5e5; }\n'
+				_s.textContent = 'html,body { background: #1e1f23; color: #e5e5e5; }\n'
 					+ '#menu-toggle { background: var(--color-menu-bg, #2f3546); border-color: var(--shadow-light, rgba(255,255,255,0.12)); }\n'
 					+ '#menu-toggle span { background: rgba(255,255,255,0.88); }\n'
 					+ '#mobile-objective-banner, #ml-objective-top { background: transparent; }\n'
@@ -180,10 +180,10 @@
 			--card-bg-dark: #2d2d2d;
 			
 			/* Refactored colors - Phase 2 */
-			--color-dark-bg: #1b1d22;
+			--color-dark-bg: #1e1f23;
 			--color-dark-panel: #2d2d2d;
 			--color-text-light: #e5e5e5;
-			--color-accent-blue: #4a90e2;
+			--color-accent-blue: #3d75b5;
 			--color-menu-bg: #2f3546;
 			--color-dark-gray: #333;
 			--color-border-dark: #2d2f36;
@@ -3332,22 +3332,22 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	*/
 	:root {
 		--card-bg: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.8) 0%, transparent 60%),
-				linear-gradient(175deg, #f8faff 0%, #e8ecf6 100%);
-		--card-border: 1.5px solid rgba(100,120,180,0.2);
-		--card-shadow: 0 4px 8px rgba(0,0,0,0.08), 0 12px 24px rgba(30,50,100,0.12), 0 0 22px rgba(74,144,226,0.18), inset 0 1px 0 rgba(255,255,255,0.9);
+				linear-gradient(175deg, #f6f6f7 0%, #e2e4e8 100%);
+		--card-border: 1.5px solid rgba(90,95,110,0.2);
+		--card-shadow: 0 4px 8px rgba(0,0,0,0.08), 0 12px 24px rgba(20,24,32,0.12), 0 0 18px rgba(30,32,40,0.12), inset 0 1px 0 rgba(255,255,255,0.9);
 		--card-cell-bg: rgba(255,255,255,0.95);
 		--card-cell-size: var(--cell-size);
 		--card-cell-radius: var(--cell-radius);
 		--card-preview-gap: var(--preview-gap);
-		--card-glow: drop-shadow(0 0 10px rgba(80,120,200,0.28)) drop-shadow(0 4px 10px rgba(0,0,0,0.2));
+		--card-glow: drop-shadow(0 0 10px rgba(70,75,90,0.28)) drop-shadow(0 4px 10px rgba(0,0,0,0.2));
 	}
 
 	{
-		--card-bg: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(80,100,160,0.15) 0%, transparent 60%),
-				linear-gradient(175deg, #2a3248 0%, #1c2030 100%);
-		--card-border: 1.5px solid rgba(130,150,210,0.25);
+		--card-bg: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(80,90,110,0.15) 0%, transparent 60%),
+				linear-gradient(175deg, #2b2d33 0%, #1f2126 100%);
+		--card-border: 1.5px solid rgba(150,155,170,0.22);
 		--card-shadow: 0 4px 8px rgba(0,0,0,0.2), 0 12px 28px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06);
-		--card-cell-bg: rgba(20,26,40,0.85);
+		--card-cell-bg: rgba(24,26,32,0.85);
 	}
 
 	#card-choice-zone {
@@ -7308,14 +7308,14 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 			padding: 16px 8px calc(var(--bottom-bar-clearance) + 24px);
 			padding-top: 62px;
 			box-sizing: border-box;
-			background: linear-gradient(180deg, #171822 0%, #101018 55%, #0a0b12 100%);
+			background: linear-gradient(180deg, #1e1f23 0%, #16171b 55%, #101114 100%);
 			color: #f5f6ff;
 			overflow-x: hidden;
 			overflow-y: hidden;
 		}
 
 		html {
-			background: #101018;
+			background: #16171b;
 		}
 
 		{
@@ -9397,11 +9397,11 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	}
 
 	:is(#bonus-zone, #bottom-bar-bonus) .bonus-badge.bonus-mastered .bonus-count {
-		/* stronger high-contrast pill when a bonus is mastered/upgraded */
-		background: linear-gradient(150deg, rgba(18,22,30,0.95), rgba(40,48,60,0.95));
+		/* Keep the pill visible for mastered bonuses */
+		background: rgba(6,10,16,0.6);
 		color: #fff;
 		font-weight: 700;
-		box-shadow: 0 6px 12px rgba(6,8,12,0.35) inset;
+		box-shadow: none;
 	}
 
 	:is(#bonus-zone, #bottom-bar-bonus) .bonus-badge.disabled,
@@ -9494,6 +9494,11 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	:is(#bonus-zone, #bottom-bar-bonus) .bonus-badge .bonus-count {
 		background: rgba(12,14,20,0.55);
 		color: #f5f6ff;
+	}
+
+	:is(#bonus-zone, #bottom-bar-bonus) .bonus-badge.bonus-mastered .bonus-count {
+		background: rgba(12,14,20,0.55);
+		box-shadow: none;
 	}
 
 	
@@ -12212,16 +12217,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 		color: rgba(235,238,255,0.95);
 	}
 
-	/* Bonus counts: remove light/gray pill and keep readable light text */
-	:is(#bonus-zone, #bottom-bar-bonus) .bonus-badge .bonus-count,
-	#bottom-bar .bonus-badge .bonus-count,
-	#bottom-bar-bonus .bonus-badge .bonus-count {
-		background: none;
-		border: none;
-		box-shadow: none;
-		color: rgba(235,238,255,0.95);
-		padding: 0 4px;
-	}
+	/* Bonus counts: keep pill visible (desktop + mobile) */
 
 	</style>
 	<link rel="stylesheet" href="responsive.css">
