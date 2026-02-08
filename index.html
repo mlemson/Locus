@@ -26004,6 +26004,10 @@ function getCollectedCoinCount(scores) {
 			if (state) {
 				card.classList.add('show-meta');
 			} else {
+				const holdUntil = Number(card?.dataset?.metaHoldUntil || 0);
+				if (holdUntil && Date.now() < holdUntil) {
+					return;
+				}
 				hideTimeout = setTimeout(() => card.classList.remove('show-meta'), 80);
 			}
 		};
@@ -26372,7 +26376,18 @@ function getCollectedCoinCount(scores) {
 		const clickedMeta = !!event.target.closest('.card-meta, .card-meta-trigger');
 		if (wantsEchoInfo && clickedMeta) {
 			event.preventDefault();
-			card.classList.toggle('show-meta');
+			const holdMs = 2000;
+			const holdUntil = Date.now() + holdMs;
+			card.dataset.metaHoldUntil = String(holdUntil);
+			card.classList.add('show-meta');
+			if (card._metaHoldTimer) {
+				clearTimeout(card._metaHoldTimer);
+			}
+			card._metaHoldTimer = setTimeout(() => {
+				delete card.dataset.metaHoldUntil;
+				card.classList.remove('show-meta');
+				card._metaHoldTimer = null;
+			}, holdMs);
 			return;
 		}
 		// Allow toggling off the currently selected card even during suppression windows.
