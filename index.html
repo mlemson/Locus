@@ -26367,6 +26367,14 @@ function getCollectedCoinCount(scores) {
 
 	  card.addEventListener('click', event => {
 		event.stopPropagation();
+		const isMobileLayout = isMobileViewport();
+		const wantsEchoInfo = isMobileLayout && card.classList.contains('card-bonus-echo');
+		const clickedMeta = !!event.target.closest('.card-meta, .card-meta-trigger');
+		if (wantsEchoInfo && clickedMeta) {
+			event.preventDefault();
+			card.classList.toggle('show-meta');
+			return;
+		}
 		// Allow toggling off the currently selected card even during suppression windows.
 		const clickedCardId = card?.dataset?.cardId || null;
 		const isToggleOffClick = !!clickedCardId && !!selectedCardId && clickedCardId === selectedCardId;
