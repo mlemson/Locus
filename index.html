@@ -195,6 +195,73 @@
 			--shadow-light: rgba(0,0,0,0.12);
 			--shadow-medium: rgba(0,0,0,0.3);
 			--shadow-dark: rgba(0,0,0,0.5);
+
+			/* Zone background colors */
+			--zone-yellow: #f0dc7d;
+			--zone-green: #a8d5a2;
+			--zone-purple: #a48dcc;
+			--zone-blue: #6ba8d8;
+			--zone-red: #de838c;
+			--zone-gold: #fffbea;
+
+			/* Cell colors per zone (bg, border, active, active-border) */
+			--cell-yellow-bg: #fff3b0;
+			--cell-yellow-color: #3e2f00;
+			--cell-yellow-border: #fffba8;
+			--cell-yellow-active: #cfba51;
+			--cell-yellow-active-border: #f7dc54;
+
+			--cell-red-bg: #ffd6d1;
+			--cell-red-color: #4b0000;
+			--cell-red-border: #ff7b73;
+			--cell-red-active: #b56069;
+			--cell-red-active-border: #ff7b73;
+
+			--cell-purple-bg: #f3e8fa;
+			--cell-purple-border: #e6a8ff;
+			--cell-purple-active: #8f76b8;
+			--cell-purple-active-color: #33004b;
+			--cell-purple-active-border: #e6a8ff;
+
+			--cell-green-bg: #d6f5d6;
+			--cell-green-color: #003300;
+			--cell-green-border: #c1ffa8;
+			--cell-green-active: #92c28c;
+			--cell-green-active-border: #c1ffa8;
+			--cell-green-end: #7bba7b;
+			--cell-green-end-border: #7bb57f;
+			--cell-green-end-active: #5da35d;
+			--cell-green-end-active-border: #518755;
+
+			--cell-blue-bg: #d6eaff;
+			--cell-blue-color: #001f3f;
+			--cell-blue-border: #a8d8ff;
+			--cell-blue-active: #5689b0;
+			--cell-blue-active-border: #a8d8ff;
+
+			/* Spacing scale */
+			--space-xs: 2px;
+			--space-sm: 4px;
+			--space-md: 8px;
+			--space-lg: 12px;
+			--space-xl: 16px;
+			--space-2xl: 24px;
+
+			/* Border-radius scale */
+			--radius-sm: 6px;
+			--radius-md: 10px;
+			--radius-lg: 16px;
+			--radius-xl: 20px;
+			--radius-pill: 999px;
+
+			/* Typography scale */
+			--text-xs: 0.65rem;
+			--text-sm: 0.78rem;
+			--text-base: 0.88rem;
+			--text-md: 1rem;
+			--text-lg: 1.25rem;
+			--text-xl: 1.5rem;
+			--text-2xl: 2rem;
 		}
 
 		* {
@@ -1672,7 +1739,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	   Dark mode krijgt donkere gradient overlays (zie verderop)
 	*/
 	#yellow-zone,
-	#yellow-zone--placeholder { background:#f0dc7d; height: 450px; min-width: 300px; padding: 14px; }
+	#yellow-zone--placeholder { background: var(--zone-yellow); height: 450px; min-width: 300px; padding: 14px; }
 	/* World 3: yellow zone should not stretch to the (wide) column; match grid/purple width.
 	   IMPORTANT: keep zoomed-in view consistent across worlds, so apply only when NOT zoomed. */
 	body.world-3:not(.zoomed-in) #yellow-zone,
@@ -1691,7 +1758,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 		justify-content: center;
 	}
 	#green-zone,
-	#green-zone--placeholder { background:#a8d5a2; }
+	#green-zone--placeholder { background: var(--zone-green); }
 	/* Mobile layout: keep green aligned with red (same outer margin). */
 	@media (max-width: 650px) {
 		#green-zone,
@@ -1780,9 +1847,9 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 		overflow: hidden;
 	}
 	#purple-zone,
-	#purple-zone--placeholder { background:#a48dcc; height: 310px;  }
+	#purple-zone--placeholder { background: var(--zone-purple); height: 310px; }
 	#blue-zone,
-	#blue-zone--placeholder { background:#6ba8d8; height: 760px; }
+	#blue-zone--placeholder { background: var(--zone-blue); height: 760px; }
 
 	/* World 4: keep the 3 visible zones aligned (same height as the blue zone) */
 	@media (min-width: 651px) {
@@ -1873,9 +1940,9 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 		display: none;
 	}
 	#gold-zone,
-	#gold-zone--placeholder { background:#fffbea; height: 100px; width: 280px; box-shadow: 0 0 8px rgba(0,0,0,0.4); }
+	#gold-zone--placeholder { background: var(--zone-gold); height: 100px; width: 280px; box-shadow: 0 0 8px var(--shadow-medium); }
 	#red-zone,
-	#red-zone--placeholder { background:#de838c; height: auto; margin: 10px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+	#red-zone--placeholder { background: var(--zone-red); height: auto; margin: 10px; border-radius: var(--radius-md); box-shadow: 0 2px 6px var(--shadow-light);
 	  box-sizing: border-box; padding: 10px; touch-action: manipulation; overflow: visible; position: relative; }
 	#red-zone.red-group {
 		display: grid;
@@ -1924,17 +1991,17 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	}
 	  
 	#red-grid1,
-	#red-grid1--placeholder { background:#de838c; margin: 10px; border-radius: 0; border:0; box-shadow: none; }
+	#red-grid1--placeholder { background: var(--zone-red); margin: 10px; border-radius: 0; border:0; box-shadow: none; }
 	#red-grid2,
-	#red-grid2--placeholder { background:#de838c; margin: 10px; border-radius: 0; border:0; box-shadow: none; }
+	#red-grid2--placeholder { background: var(--zone-red); margin: 10px; border-radius: 0; border:0; box-shadow: none; }
 	#red-grid3,
-	#red-grid3--placeholder { background:#de838c; margin: 10px; border-radius: 0; border:0; box-shadow: none; }
+	#red-grid3--placeholder { background: var(--zone-red); margin: 10px; border-radius: 0; border:0; box-shadow: none; }
 	#red-grid4,
-	#red-grid4--placeholder { background:#de838c; margin: 10px; border-radius: 0; border:0; box-shadow: none; }
+	#red-grid4--placeholder { background: var(--zone-red); margin: 10px; border-radius: 0; border:0; box-shadow: none; }
 	#red-grid5,
-	#red-grid5--placeholder { background:#de838c; margin: 10px; border-radius: 0; border:0; box-shadow: none; }
+	#red-grid5--placeholder { background: var(--zone-red); margin: 10px; border-radius: 0; border:0; box-shadow: none; }
 	#red-grid6,
-	#red-grid6--placeholder { background:#de838c; margin: 10px; border-radius: 0; border:0; box-shadow: none; }
+	#red-grid6--placeholder { background: var(--zone-red); margin: 10px; border-radius: 0; border:0; box-shadow: none; }
 	@media (min-width: 651px) {
 		#red-zone.red-group #red-grid1,
 		#red-zone.red-group #red-grid2,
@@ -1972,32 +2039,32 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	   .end-cell = speciale eindcel in groen vak
 	*/
 	#yellow-zone .cell,
-	#yellow-zone--placeholder .cell { background: #fff3b0; color: #3e2f00; border-color: #fffba8; }
+	#yellow-zone--placeholder .cell { background: var(--cell-yellow-bg); color: var(--cell-yellow-color); border-color: var(--cell-yellow-border); }
 	#red-zone .cell,
-	#red-zone--placeholder .cell { background: #ffd6d1; color: #4b0000; border-color: #ff7b73; }
+	#red-zone--placeholder .cell { background: var(--cell-red-bg); color: var(--cell-red-color); border-color: var(--cell-red-border); }
 	#purple-zone .cell,
-	#purple-zone--placeholder .cell { background: #f3e8fa; border-color: #e6a8ff; }
+	#purple-zone--placeholder .cell { background: var(--cell-purple-bg); border-color: var(--cell-purple-border); }
 	#green-zone .cell,
-	#green-zone--placeholder .cell { background: #d6f5d6; color: #003300; border-color: #c1ffa8; } 
+	#green-zone--placeholder .cell { background: var(--cell-green-bg); color: var(--cell-green-color); border-color: var(--cell-green-border); } 
 	#green-zone .cell.end-cell,
-	#green-zone--placeholder .cell.end-cell {background-color: #7bba7b; border-color: #7bb57f; } 
+	#green-zone--placeholder .cell.end-cell {background-color: var(--cell-green-end); border-color: var(--cell-green-end-border); } 
 	#blue-zone .cell,
-	#blue-zone--placeholder .cell { background: #d6eaff; color: #001f3f; border-color: #a8d8ff; }
+	#blue-zone--placeholder .cell { background: var(--cell-blue-bg); color: var(--cell-blue-color); border-color: var(--cell-blue-border); }
 	#yellow-zone .cell.active,
-	#yellow-zone--placeholder .cell.active { background: #cfba51; border-color: #f7dc54; } 
+	#yellow-zone--placeholder .cell.active { background: var(--cell-yellow-active); border-color: var(--cell-yellow-active-border); } 
 	/* Yellow: highlight completed lines/segments/rings a bit darker (all worlds). */
 	#yellow-zone .cell.active.yellow-completed-path,
 	#yellow-zone--placeholder .cell.active.yellow-completed-path {
 		filter: brightness(0.86);
 	}
 	#red-zone .cell.active,
-	#red-zone--placeholder .cell.active { background: #b56069; border-color: #ff7b73; }
+	#red-zone--placeholder .cell.active { background: var(--cell-red-active); border-color: var(--cell-red-active-border); }
 	#purple-zone .cell.active,
-	#purple-zone--placeholder .cell.active { background: #8f76b8; color: #33004b; border-color: #e6a8ff; }
+	#purple-zone--placeholder .cell.active { background: var(--cell-purple-active); color: var(--cell-purple-active-color); border-color: var(--cell-purple-active-border); }
 	#green-zone .cell.active,
-	#green-zone--placeholder .cell.active { background: #92c28c; border-color: #c1ffa8; }
+	#green-zone--placeholder .cell.active { background: var(--cell-green-active); border-color: var(--cell-green-active-border); }
 	#green-zone .cell.end-cell.active,
-	#green-zone--placeholder .cell.end-cell.active {background-color: #5da35d !important; border-color: #518755 !important; } 
+	#green-zone--placeholder .cell.end-cell.active {background-color: var(--cell-green-end-active) !important; border-color: var(--cell-green-end-active-border) !important; } 
 #yellow-zone .cell.end-cell.active,
 #yellow-zone--placeholder .cell.end-cell.active { background-color: #cfae4a; border-color: #b8963c; }
 #purple-zone .cell.end-cell.active,
@@ -2008,15 +2075,15 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	/* Bold start cells should keep the normal active background but have a thicker/darker border */
 	#green-zone .cell.bold-cell.active,
 	#green-zone--placeholder .cell.bold-cell.active {
-		background-color: #92c28c; /* match normal green active */
+		background-color: var(--cell-green-active); /* match normal green active */
 		border-color: #2b572b;
 	}
 
 	/* Start cell in green should not use the dark end-cell active color */
 	#green-zone .cell.start-cell.active,
-	#green-zone--placeholder .cell.start-cell.active { background-color: #92c28c; border-color: #c1ffa8; }
+	#green-zone--placeholder .cell.start-cell.active { background-color: var(--cell-green-active); border-color: var(--cell-green-active-border); }
 	#blue-zone .cell.active,
-	#blue-zone--placeholder .cell.active { background: #5689b0; border-color: #a8d8ff; }
+	#blue-zone--placeholder .cell.active { background: var(--cell-blue-active); border-color: var(--cell-blue-active-border); }
 
 	/* ============================================
 	   COIN SYMBOL STYLING
@@ -7239,11 +7306,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 	/* VERWIJDERD: Dubbele #card-choice-zone .card-option styling - deze stond al eerder gedefinieerd */
 
-	@keyframes coinPop {
-	  0% { transform: translate(-50%, -50%) scale(0); opacity: 0.2; }
-	  70% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
-	  100% { transform: translate(-50%, -50%) scale(1); }
-	}
+	/* VERWIJDERD: Dubbele @keyframes coinPop - definitie staat eerder in het bestand */
 
 	.objective-toast {
 		position: fixed;
@@ -7320,10 +7383,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	}
 
 
-	@keyframes growRoot {
-	  from { opacity: 0; transform: scale(0.5); }
-	  to { opacity: 1; transform: scale(1); }
-	}
+	/* VERWIJDERD: Dubbele @keyframes growRoot - definitie staat eerder in het bestand */
 
 	/* === Mobile layout (<=650px): keep compact 23-10 HUD === */
 	@media (max-width: 650px) {
@@ -12917,7 +12977,6 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	}
 	
 	const historyStack = [];
-	const MAX_COINS = Infinity; // Geen limiet meer
 	const MOBILE_BREAKPOINT = 650;
 	const DESKTOP_LOW_HEIGHT_BREAKPOINT = 1080;
 	const TRAP_PENALTY = 5;
@@ -12934,10 +12993,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		}
 	}
 
-	function isMobileViewport() {
-		// Mobile = small width OR (phone-landscape style: short height on coarse pointer).
-		return window.innerWidth <= MOBILE_BREAKPOINT || (isCoarsePointer() && window.innerHeight <= 600);
-	}
+	// isMobileViewport() is defined later in the file with a more comprehensive implementation.
+
 	// User request: black holes should be rarer.
 	const BLACK_HOLE_DEFAULT_CHANCE = 0.12;
 	const BLACK_HOLE_CARD_COUNT = 25; // 5x5 grid
@@ -13423,23 +13480,18 @@ let shopLevel2Used = false;
 		});
 		
 		unlockModalLayer.classList.add('show');
-		console.log('🎉 Unlock modal shown');
 	}
 
 	function hideUnlockModal() {
-		console.log('🎉 hideUnlockModal called');
 		const unlockModalLayer = document.getElementById('unlock-modal-layer');
 		if (unlockModalLayer) {
 			unlockModalLayer.classList.remove('show');
 		}
 		// Roep de callback aan als die er is
 		if (typeof pendingUnlockCallback === 'function') {
-			console.log('🎉 Calling unlock callback');
 			const cb = pendingUnlockCallback;
 			pendingUnlockCallback = null;
 			cb();
-		} else {
-			console.log('🎉 No unlock callback to call');
 		}
 	}
 
@@ -13460,10 +13512,7 @@ let shopLevel2Used = false;
 		const availableZones = candidateZoneIds
 			.map(id => ({ id, el: document.getElementById(id) }))
 			.filter(z => z.el);
-		if (!availableZones.length) {
-			console.log('🌐 No zones available for portals');
-			return;
-		}
+		if (!availableZones.length) return;
 
 		const zonesWithCells = availableZones
 			.map(({ id, el }) => ({
@@ -13473,10 +13522,7 @@ let shopLevel2Used = false;
 			}))
 			.filter(z => z.cells.length > 0);
 
-		if (!zonesWithCells.length) {
-			console.log('🌐 No free cells available for portals');
-			return;
-		}
+		if (!zonesWithCells.length) return;
 
 		const chosen = [];
 
@@ -13504,7 +13550,6 @@ let shopLevel2Used = false;
 			portalCells.push(cell);
 		});
 
-		console.log('🌐 Portals placed for this level:', portalCells.map(c => c?.dataset?.zoneId || c?.closest?.('.zone')?.id || 'unknown'));
 	}
 	
 	function clearPortals() {
@@ -13530,7 +13575,6 @@ let shopLevel2Used = false;
 		portalSymbol.textContent = '🌐';
 		cell.appendChild(portalSymbol);
 		
-		console.log('🌐 Portal placed in', zoneId);
 	}
 
 	// Mega Bonus systeem - random spawning vanaf level 4
@@ -18621,7 +18665,6 @@ let shopLevel2Used = false;
 		applyMobileZoomSizing(zone);
 		if (zone.id === 'red-zone') {
 			// Ensure World 3 red stage visibility is applied before showing the zoomed red zone.
-			console.log('🔴 Opening red-zone zoom. world3RedStage:', world3RedStage, 'currentLevel:', currentLevel);
 			try {
 				const info = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(currentLevel) : null;
 				const isWorld3 = !!(info && Number(info.world) === 3);
@@ -21522,11 +21565,8 @@ let shopLevel2Used = false;
 	function highlightEdgeCells(gridOrId) {
 	const grid = typeof gridOrId === 'string' ? document.getElementById(gridOrId) : gridOrId;
 	const gridLabel = typeof gridOrId === 'string' ? gridOrId : (gridOrId && gridOrId.id) || '(anonymous zone)';
-	console.log("highlightEdgeCells called with:", gridLabel);
-	    console.log("grid found?", !!grid);
 
 	  if (!grid) return;
-	  console.log('test2');
 
 	  const cells = Array.from(grid.querySelectorAll('.cell'));
 	  if (cells.length === 0) return;
@@ -21579,8 +21619,7 @@ let shopLevel2Used = false;
 		}
 	  }
 
-	  // Debug info in console
-	  console.log(`[${gridLabel}] edge-cells found:`, edgeCount);
+	  // Debug info removed (was console.log for edge-cell count)
 
 		  const zoomZone = grid.closest('.zone.zoom-focus');
 		  if (zoomZone) schedulePlaceholderSync(zoomZone);
@@ -23239,7 +23278,6 @@ function clearElPos(el) {
 	
 	// Speciaal voor root-based grids: zoek cellen op fysieke positie op het scherm
 	function collectPlacementCellsForRootGrid(zone, baseX, baseY, shape) {
-	  console.log('🌳 Root grid - searching by SCREEN position');
 	  
 	  // Vind de eerste gevulde cel in de shape (anchor point)
 	  let anchorShapeX = -1, anchorShapeY = -1;
@@ -23258,12 +23296,7 @@ function clearElPos(el) {
 	  const anchorY = baseY + anchorShapeY;
 	  const anchorCell = getCell(zone, anchorX, anchorY);
 	  
-	  if (!anchorCell || anchorCell.classList.contains('active')) {
-		console.log('❌ Anchor cell not available');
-		return null;
-	  }
-	  
-	  console.log('✅ Anchor cell found, now searching by screen position...');
+	  if (!anchorCell || anchorCell.classList.contains('active')) return null;
 	  
 	  // Get de fysieke positie van de anchor cell
 	  const anchorRect = anchorCell.getBoundingClientRect();
@@ -23282,8 +23315,6 @@ function clearElPos(el) {
 		const gridY = Math.round((rect.top - anchorRect.top) / cellSize);
 		const key = `${gridX},${gridY}`;
 		positionMap.set(key, cell);
-		
-		console.log(`Cell at screen grid position (${gridX}, ${gridY}):`, cell.dataset.x, cell.dataset.y);
 	  }
 	  
 	  // Nu loop door de shape en zoek elke cel op basis van FYSIEKE positie
@@ -23297,20 +23328,13 @@ function clearElPos(el) {
 		  const relY = shapeY - anchorShapeY;
 		  const key = `${relX},${relY}`;
 		  
-		  console.log(`Looking for shape position (${shapeX},${shapeY}) at relative grid (${relX},${relY})`);
-		  
 		  const cell = positionMap.get(key);
-		  if (!cell) {
-			console.log(`❌ No cell found at relative position (${relX},${relY})`);
-			return null;
-		  }
+		  if (!cell) return null;
 		  
-		  console.log(`✅ Found cell at (${relX},${relY}):`, cell.dataset.x, cell.dataset.y);
 		  result.push(cell);
 		}
 	  }
 	  
-	  console.log(`✅ All ${result.length} cells found successfully!`);
 	  return result;
 	}
 	
@@ -27843,10 +27867,8 @@ function purchaseUpgrade(upgradeId) {
 }
 
 function openShopModal(callback) {
-	  console.log('🛒 openShopModal called with callback:', typeof callback);
 	  pendingShopCallback = callback;
 	  if (!shopModalLayer || getSpendableCoinCount() === 0) {
-		console.log('🛒 No shop (no coins or no modal), calling callback immediately');
 		if (typeof pendingShopCallback === 'function') pendingShopCallback();
 		pendingShopCallback = null;
 		return;
@@ -28268,7 +28290,6 @@ function openShopModal(callback) {
 	}
 
 	function skipShop() {
-	  console.log('🛒 skipShop called, pendingShopCallback:', typeof pendingShopCallback);
 	  
 	  // Herstel normale shop layout
 	  const shopModalTitle = document.getElementById('shop-modal-title');
@@ -28332,7 +28353,6 @@ function resetWorldLayoutStyles() {
 	  // This prevents upgrade callbacks (e.g., blackHoleAccess) from overwriting the imported layout.
 	  try {
 		if (window && window._locusScenarioMode && !isLoadingGame) {
-			console.log('🧩 Scenario mode: rebuildGameBoards() skipped');
 			return;
 		}
 	  } catch (e) {}
@@ -29100,7 +29120,6 @@ function resetWorldLayoutStyles() {
 		  splitOffset = currentOffset + currentWidth - 1; // 1 cell overlap voor connectie
 		  prevSplitOffset = splitOffset;
 		  prevSplitWidth = splitWidth;
-		  console.log(`🌊 Split start at row ${i}: main at ${currentOffset}-${currentOffset+currentWidth-1}, split at ${splitOffset}-${splitOffset+splitWidth-1}`);
 		}
 		
 		// Als we in split zijn, COMBINEER main en split in één row MAAR markeer gap als void
@@ -29188,7 +29207,6 @@ function resetWorldLayoutStyles() {
 		  blueRowPattern[blueRowPattern.length - 1] = combinedWidth;
 		  blueRowOffsets[blueRowOffsets.length - 1] = combinedStart;
 		  
-		  console.log(`🔗 Row ${i}: Combined width=${combinedWidth}, offset=${combinedStart} [main: ${currentOffset}-${actualMainEnd-1}, ${actualMainEnd < actualSplitStart ? `GAP: ${actualMainEnd}-${actualSplitStart-1}, ` : ''}split: ${splitOffset}-${splitOffset+splitWidth-1}] ${isEndingPhase ? '(ending phase)' : ''}`);
 		  
 		  prevSplitOffset = splitOffset;
 		  prevSplitWidth = splitWidth;
@@ -29196,14 +29214,11 @@ function resetWorldLayoutStyles() {
 		  splitRowsLeft--;
 		  if (splitRowsLeft <= 0) {
 			inSplit = false;
-			console.log(`🌊 Split ends at row ${i}, main river continues normally`);
 		  }
 		}
 	  }
 	  
 	  const blueRows = 60;
-	  
-	  console.log(`🌊 Blue grid: ${blueRows} rows, ${blueCols} cols, ${blueSplitData.length} split cells prepared`);
 	  
 	  // PAARS (World 2): bigger grid (+1 row/col) with fixed corner bold cells
 	  const purpleSize = 13;
@@ -29320,7 +29335,6 @@ function resetWorldLayoutStyles() {
 		  // UX: start the blue view at the bottom once after rebuild.
 		  const blueZone = document.getElementById('blue-zone');
 		  if (blueZone) blueZone.dataset.needsInitialScrollBottom = 'true';
-		  console.log(`🌊 Blue grid created with split pattern (${blueGapCells.size} gap cells)`);
 		},
 		
 		// Groen: Complexe wortelstructuur met meer vertakkingen (smaller maar hoger)
@@ -29371,8 +29385,6 @@ function resetWorldLayoutStyles() {
 	  // Defer zone sizing to the centralized one-time layout pass
 	  markZoneSizingNeeded();
 	  
-	  // Log voor debugging
-	  console.log('🌍 World 2 grids generated for level', currentLevel, 'sublevel', subLevel);
 	}
 	
 	// WORLD 3: Ultimate challenge - Mix van World 1 en 2 met extra moeilijkheid (levels 21-30)
@@ -29714,8 +29726,6 @@ function resetWorldLayoutStyles() {
 	  markZoneSizingNeeded();
 	  // Extra safeguard: recentre green after sizing settles so it does not jump left on World 3.
 	  try { scheduleGreenCenter({ force: true, allowZoom: false, fallback: true, fallbackDelay: 160 }); } catch (_) {}
-	  
-	  console.log('🔥 World 3 grids generated for level', currentLevel, 'sublevel', subLevel);
 	}
 	
 	// Pas zone groottes dynamisch aan voor World 2 grids
@@ -29945,7 +29955,6 @@ function resetWorldLayoutStyles() {
 		}
 		restoreOrAnchorZoneScroll(blueZone, (z) => resetBlueZoomScroll(z));
 		enableZoneDragScroll(blueZone, { ignoreSelectors: '#controls,#bottom-bar,#card-choice-zone,.card,.card-option' });
-		console.log(`30a Blue zone: width=${blueTargetWidthPx}px, scroll enabled, maxHeight=${tallZoneMaxVh}`);
 	  }
 	  
 	  // Groen zone
@@ -29959,7 +29968,6 @@ function resetWorldLayoutStyles() {
 			greenZone.style.touchAction = 'manipulation';
 			greenZone.scrollTop = 0;
 			greenZone.scrollLeft = 0;
-			console.log('💚 Green zone: scroll disabled for World 1');
 		} else {
 			greenZone.classList.remove('no-scroll');
 			// Keep green scrollable when content exceeds the viewport.
@@ -29971,7 +29979,6 @@ function resetWorldLayoutStyles() {
 			// NOTE: Don't remove min-height here - syncZoneHeights() manages it.
 			greenZone.style.removeProperty('max-height');
 			enableZoneDragScroll(greenZone, { ignoreSelectors: '#controls,#bottom-bar,#card-choice-zone,.card,.card-option' });
-			console.log('💚 Green zone: scroll enabled');
 		}
 	  }
 	  
@@ -29989,7 +29996,6 @@ function resetWorldLayoutStyles() {
 			redZone.style.height = 'auto';
 			redZone.style.minHeight = `${redRows * cellSize + 150}px`; // Nog meer buffer
 			redZone.style.overflow = 'visible'; // Laat uitstekende cells zien
-			console.log(`🔴 Red zone ${zoneId}: ${redCols}x${redRows} cells, auto height with min ${redRows * cellSize + 150}px`);
 		  }
 		}
 	  });
@@ -30172,13 +30178,11 @@ function resetWorldLayoutStyles() {
 
 	function startLevel(level, options) {
 	  const opts = (options && typeof options === 'object') ? options : {};
-	  console.log('🎮 startLevel called with level:', level);
 	  // If a scenario is active, never regenerate boards via the normal level pipeline.
 	  // Some UI flows (e.g., shop modal callbacks) historically call startLevel() again.
 	  // In scenario mode we route to startScenarioRun() to avoid overwriting the imported board.
 	  try {
 		if (window && window._locusScenarioMode && !isLoadingGame) {
-			console.log('🧩 Scenario mode active: startLevel() skipped board generation; restarting scenario run.');
 			try { if (typeof startScenarioRun === 'function') startScenarioRun(); } catch (e) {}
 			return;
 		}
@@ -30342,7 +30346,6 @@ function resetWorldLayoutStyles() {
 		resetDeckToStandard();
 	}
 
-	  console.log('🃏 Building deck from', ownedDeckBlueprints.length, 'blueprints');
 	  
 	  // Bij laden van een save: gebruik de opgeslagen deck state indien beschikbaar
 	  if (isLoadingGame && savedDeckState) {
@@ -30359,7 +30362,6 @@ function resetWorldLayoutStyles() {
 		discardPile = savedDeckState.discardPile || [];
 		currentHand = savedDeckState.currentHand || [];
 		turnCount = savedDeckState.turnCount || 0;
-		console.log('🎴 Restored deck from save:', drawPile.length, 'in draw,', currentHand.length, 'in hand,', discardPile.length, 'in discard');
 	} else {
 		// Nieuwe start: maak fresh deck
 		if (currentLevel === 0) {
@@ -30381,10 +30383,7 @@ function resetWorldLayoutStyles() {
 		discardPile = [];
 		currentHand = [];
 		turnCount = 0;
-		console.log('🎴 Fresh deck created:', drawPile.length, 'cards in draw pile');
 	}
-	  
-	  console.log('🎴 First card:', drawPile[0]?.shapeName, drawPile[0]?.color?.name);
 	  
 	  updateDeckPreview();
 	  updateTurnCounterDisplay();
@@ -30393,12 +30392,9 @@ function resetWorldLayoutStyles() {
 	  // Anders, trek nieuwe kaarten
 	  if (isLoadingGame && savedDeckState && currentHand.length > 0) {
 		renderCurrentHand();
-		console.log('🎴 Restored hand rendered');
 	  } else {
 		renderCurrentHand();
 		drawNextHand();
-		console.log('🎴 After drawNextHand - currentHand:', currentHand.length, 'cards');
-		console.log('🎴 After drawNextHand - drawPile:', drawPile.length, 'cards remaining');
 	  }
 	  
 	  updateDeckPreview();
@@ -30415,6 +30411,24 @@ function resetWorldLayoutStyles() {
 	}
 
 	// ========== SAVE/LOAD SYSTEM ==========
+
+	/** Serialize a single card object for save/export. Used by saveGameState(). */
+	function serializeCard(card) {
+		return {
+			id: card.id,
+			blueprintId: card.blueprintId,
+			shapeName: card.shapeName,
+			matrix: card.matrix,
+			category: card.category,
+			color: card.color ? { name: card.color.name, code: card.color.code, isGolden: card.color.isGolden } : null,
+			isGolden: card.isGolden || false,
+			isBonusBoost: card.isBonusBoost || false,
+			isBonusEcho: card.isBonusEcho || false,
+			bonusEchoVariant: card.bonusEchoVariant || null,
+			bonusEchoReplaysAvailable: card.bonusEchoReplaysAvailable || 0
+		};
+	}
+
 	function saveGameState() {
 	  try {
 		// Scenario-link sessions are meant to be temporary/shareable.
@@ -30489,45 +30503,9 @@ function resetWorldLayoutStyles() {
 		  })),
 		  
 		  // Current game state (drawPile, discardPile, currentHand)
-		  drawPile: drawPile.map(card => ({
-			id: card.id,
-			blueprintId: card.blueprintId,
-			shapeName: card.shapeName,
-			matrix: card.matrix,
-			category: card.category,
-			color: card.color ? { name: card.color.name, code: card.color.code, isGolden: card.color.isGolden } : null,
-			isGolden: card.isGolden || false,
-			isBonusBoost: card.isBonusBoost || false,
-			isBonusEcho: card.isBonusEcho || false,
-			bonusEchoVariant: card.bonusEchoVariant || null,
-			bonusEchoReplaysAvailable: card.bonusEchoReplaysAvailable || 0
-		  })),
-		  discardPile: discardPile.map(card => ({
-			id: card.id,
-			blueprintId: card.blueprintId,
-			shapeName: card.shapeName,
-			matrix: card.matrix,
-			category: card.category,
-			color: card.color ? { name: card.color.name, code: card.color.code, isGolden: card.color.isGolden } : null,
-			isGolden: card.isGolden || false,
-			isBonusBoost: card.isBonusBoost || false,
-			isBonusEcho: card.isBonusEcho || false,
-			bonusEchoVariant: card.bonusEchoVariant || null,
-			bonusEchoReplaysAvailable: card.bonusEchoReplaysAvailable || 0
-		  })),
-		  currentHand: currentHand.map(card => ({
-			id: card.id,
-			blueprintId: card.blueprintId,
-			shapeName: card.shapeName,
-			matrix: card.matrix,
-			category: card.category,
-			color: card.color ? { name: card.color.name, code: card.color.code, isGolden: card.color.isGolden } : null,
-			isGolden: card.isGolden || false,
-			isBonusBoost: card.isBonusBoost || false,
-			isBonusEcho: card.isBonusEcho || false,
-			bonusEchoVariant: card.bonusEchoVariant || null,
-			bonusEchoReplaysAvailable: card.bonusEchoReplaysAvailable || 0
-		  })),
+		  drawPile: drawPile.map(serializeCard),
+		  discardPile: discardPile.map(serializeCard),
+		  currentHand: currentHand.map(serializeCard),
 		  cardsPlayedThisTurn: cardsPlayedThisTurn,
 		  turnCount: turnCount,
 		  
@@ -30555,8 +30533,6 @@ function resetWorldLayoutStyles() {
 		}
 		
 		localStorage.setItem('locusGameSave', JSON.stringify(gameState));
-		console.log('✅ Game saved successfully at level', currentLevel);
-		console.log('💾 Full save data:', JSON.stringify(gameState, null, 2));
 		return true;
 	  } catch (error) {
 		console.error('❌ Failed to save game:', error);
@@ -30733,7 +30709,6 @@ function isWorld4CardAllowed(cardData) {
 	  try {
 		const saved = localStorage.getItem('locusGameSave');
 		if (!saved) {
-		  console.log('📂 No save data found');
 		  return false;
 		}
 		
@@ -30753,8 +30728,6 @@ function isWorld4CardAllowed(cardData) {
 		  return false;
 		}
 		
-		console.log('📂 Loading saved game from level', gameState.currentLevel);
-		console.log('📂 Full loaded data:', JSON.stringify(gameState, null, 2));
 		
 		// Determine if this save represents an editor/scenario/custom-board session.
 		// IMPORTANT: Old saves may contain boardHtml snapshots from normal runs; we must ignore those.
@@ -30845,7 +30818,6 @@ function isWorld4CardAllowed(cardData) {
 			}
 		}
 		currentLevel = loadedLevel;
-		console.log('📂 Set currentLevel to:', currentLevel);
 		// World 3 red progression: always start at stage 1 on load (do not carry stage 2 across reloads).
 		world3RedStage = 1;
 		turnCount = gameState.turnCount || 0;
@@ -31043,12 +31015,10 @@ function isWorld4CardAllowed(cardData) {
 			
 			// Als alle kaarten in discard zitten (einde van een ronde), herstel ze naar draw pile
 			if (savedDeckState.drawPile.length === 0 && savedDeckState.currentHand.length === 0 && savedDeckState.discardPile.length > 0) {
-			  console.log('📦 All cards in discard, moving to draw pile for fresh start');
 			  savedDeckState.drawPile = shuffleArray(savedDeckState.discardPile);
 			  savedDeckState.discardPile = [];
 			}
 			
-			console.log('📦 Prepared saved deck state:', savedDeckState.drawPile.length, 'draw,', savedDeckState.currentHand.length, 'hand,', savedDeckState.discardPile.length, 'discard');
 		} else {
 			savedDeckState = null;
 		}
@@ -31123,7 +31093,6 @@ function isWorld4CardAllowed(cardData) {
 		
 		updateBonusInventoryUI();
 		
-		console.log('✅ Game loaded successfully!');
 		return true;
 	  } catch (error) {
 		console.error('❌ Failed to load game:', error);
@@ -31134,7 +31103,6 @@ function isWorld4CardAllowed(cardData) {
 	function clearSaveData() {
 	  try {
 		localStorage.removeItem('locusGameSave');
-		console.log('🗑️ Save data cleared');
 		return true;
 	  } catch (error) {
 		console.error('❌ Failed to clear save data:', error);
@@ -33276,9 +33244,6 @@ function showFloatingPreview(shape, color, options = {}) {
 					const dstNonVoid = destGrid ? destGrid.querySelectorAll('.cell:not(.void-cell)').length : 0;
 					const srcSymbols = srcContainer ? srcContainer.querySelectorAll('.symbol,.trap-symbol,.portal-symbol').length : 0;
 					const dstSymbols = destGrid ? destGrid.querySelectorAll('.symbol,.trap-symbol,.portal-symbol').length : 0;
-					if (String(color).toLowerCase() === 'groen' || String(color).toLowerCase() === 'blauw') {
-						console.log(`📦 import ${color}: srcCells=${srcCount}(${srcNonVoid} nonVoid, ${srcSymbols} symbols) destCells=${dstCount}(${dstNonVoid} nonVoid, ${dstSymbols} symbols) srcGrid=${!!srcGrid} destGrid=${!!destGrid}`);
-					}
 				} catch (e) {}
 
 				// Special handling for green zone: synchronize end-cell / start markers from the editor
@@ -33486,7 +33451,6 @@ function showFloatingPreview(shape, color, options = {}) {
 					// Diagnostics for red import
 					try {
 						const dstSubCount = Array.from(destRed.querySelectorAll(':scope > .zone')).map(z => z.querySelectorAll('.cell').length);
-						console.log('📦 import rood: subgrid cell counts', dstSubCount);
 					} catch (e) {}
 			}
 		}
@@ -35435,11 +35399,9 @@ body { background: transparent; }
 	});
 	if (roundModalNext) {
 	  const handleRoundNext = () => {
-		console.log('🎯 Round modal Next clicked, lastRoundWasSuccess:', lastRoundWasSuccess);
 		hideAllModals();
 		if (lastRoundWasSuccess) {
 		  const upcomingLevel = currentLevel + 1;
-		  console.log('🎯 Going to level:', upcomingLevel);
 		  try {
 			const prevWorldInfo = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(currentLevel) : { world: 1 };
 			const nextWorldInfo = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(upcomingLevel) : { world: 1 };
@@ -35496,12 +35458,10 @@ body { background: transparent; }
 			});
 		  }
 		  const hasUnlocks = levelUnlocks.cardCategories.length > 0 || levelUnlocks.upgrades.length > 0 || (levelUnlocks.features && levelUnlocks.features.length > 0);
-		  console.log('🎯 Has unlocks:', hasUnlocks);
 		  
 		  if (hasUnlocks) {
 			// Toon unlock modal met callback naar shop
 			showUnlockModal(levelUnlocks, () => {
-				console.log('🎉 Unlock modal callback, opening shop');
 				openShopModal(() => startLevel(currentLevel));
 			});
 		  } else {
@@ -35597,7 +35557,6 @@ body { background: transparent; }
 	const unlockModalContinue = document.getElementById('unlock-modal-continue');
 	if (unlockModalContinue) {
 		const handleUnlockContinue = () => {
-			console.log('🎉 Unlock continue button pressed');
 			hideUnlockModal();
 		};
 		unlockModalContinue.addEventListener('click', handleUnlockContinue);
@@ -36570,7 +36529,7 @@ body { background: transparent; }
 	let layoutReflowInProgress = false;
 	let lastLayoutViewportKey = '';
 	let lastLayoutMode = ''; // track layout mode to detect switches
-	const LOG_LAYOUT = true;
+	const LOG_LAYOUT = false; // Set to true for layout debugging
 	let pendingReflowKey = null;
 	let pendingReflowDelay = 0;
 
@@ -36806,30 +36765,25 @@ body { background: transparent; }
 	// Laad opgeslagen spel of start nieuw spel (na alle initialisaties)
 	// Check EERST of er een save is voordat we iets doen
 	(function initializeGame() {
-		console.log('🔍 Initializing game...');
 		// Scenario links must take full control and stay isolated from saves/current run.
 		try {
 			if (typeof tryLoadScenarioFromUrl === 'function' && tryLoadScenarioFromUrl()) {
-				console.log('🔗 Scenario loaded from URL. Skipping save/new-run init.');
 				if (typeof scheduleLayoutReflow === 'function') scheduleLayoutReflow(0);
 				return;
 			}
 		} catch (e) {}
 		const hasSave = localStorage.getItem('locusGameSave');
-		console.log('💾 Save found:', !!hasSave);
 		// By default do NOT auto-restore save on page reload to avoid surprising persistent decks.
 		// Set AUTO_LOAD_SAVED_GAME = true to restore previous behavior.
 		const AUTO_LOAD_SAVED_GAME = true;
 		if (hasSave && AUTO_LOAD_SAVED_GAME) {
 			if (loadGameState()) {
-				console.log('✅ Successfully loaded saved game');
 				if (typeof scheduleLayoutReflow === 'function') scheduleLayoutReflow(0);
 				return;
 			} else {
 				console.warn('⚠️ Failed to load save, starting new game');
 			}
 		} else {
-			console.log('🎮 Starting new game (auto-restore disabled)');
 		}
 		
 		// Als we hier komen: geen save of laden mislukt

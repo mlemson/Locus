@@ -1,6 +1,13 @@
 :root {
   --cell-size: 26px;
   --board-grid-gap: 2px;
+
+  /* Zone colors (shared with index.html) */
+  --zone-yellow: #f0dc7d;
+  --zone-green: #a8d5a2;
+  --zone-purple: #a48dcc;
+  --zone-blue: #6ba8d8;
+  --zone-red: #de838c;
 }
 
 * { box-sizing: border-box; }
@@ -282,11 +289,11 @@ html, body {
   opacity: 1 !important;
 }
 
-.zone[data-color="geel"] { background: #f0dc7d; }
-.zone[data-color="paars"] { background: #a48dcc; }
-.zone[data-color="groen"] { background: #a8d5a2; }
-.zone[data-color="rood"] { background: #de838c; }
-.zone[data-color="blauw"] { background: #6ba8d8; }
+.zone[data-color="geel"] { background: var(--zone-yellow); }
+.zone[data-color="paars"] { background: var(--zone-purple); }
+.zone[data-color="groen"] { background: var(--zone-green); }
+.zone[data-color="rood"] { background: var(--zone-red); }
+.zone[data-color="blauw"] { background: var(--zone-blue); }
 
 .zone.red-group {
   display: grid;
