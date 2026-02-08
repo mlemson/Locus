@@ -7801,7 +7801,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 			font-size: 1.6rem;
 		}
 
-		/* Deck preview: zelfde stijl als card action buttons */
+		/* Deck preview: zelfde stijl als card action buttons (mobile) */
 		#card-action-buttons .deck-preview {
 			min-height: 50px;
 			width: 50px;
@@ -7811,9 +7811,10 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			background: linear-gradient(155deg, #eff3ff 0%, #dbe2f6 100%);
-			border: 1px solid rgba(26,32,48,0.16);
-			box-shadow: 0 12px 22px rgba(10,12,20,0.25);
+			background: linear-gradient(160deg, #2c3144 0%, #222635 100%);
+			border: 1px solid rgba(140,150,200,0.3);
+			box-shadow: 0 16px 30px rgba(0,0,0,0.42);
+			color: rgba(235,238,255,0.88);
 		}
 
 		#card-action-buttons .deck-preview::after {
@@ -12214,6 +12215,12 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 			overflow: auto;
 			-webkit-overflow-scrolling: touch;
 		}
+	}
+
+	/* Mobile / touch override: hide floating undo (inline undo used) */
+	@media (max-width: 650px), (hover: none) and (pointer: coarse) {
+		#undo-floating-btn { display: none; }
+		#undo-inline-btn { display: inline-flex; }
 	}
 
 	</style>
