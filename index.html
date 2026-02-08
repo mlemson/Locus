@@ -62,11 +62,8 @@
 		*/
 		(function preloadThemeClass() {
 			try {
-				// Force dark mode as the default. We still keep the DOMContentLoaded
-				// handler as the source-of-truth for toggles, but ensure the page
-				// renders in dark immediately to avoid a flash of the wrong theme.
-				document.documentElement.classList.add('dark-mode');
-				// Also inject a minimal inline style to ensure immediate dark background
+				// Dark mode is the base styling now (no class needed).
+				// Inject a minimal inline style to ensure immediate dark background
 				// and text color before external/embedded CSS parses fully.
 				var _s = document.createElement('style');
 				_s.setAttribute('data-locus-theme-preload','true');
@@ -312,7 +309,7 @@
 			box-shadow: 0 12px 32px rgba(0,0,0,0.4);
 		}
 
-	body.dark-mode #floating-preview {
+	#floating-preview {
 		background: linear-gradient(165deg, #2d2d2d 0%, #1f2233 45%, #1a1d2e 100%);
 		border-color: #5a9fd4;
 	}	#floating-preview-pattern {
@@ -349,7 +346,7 @@
 			transform: scale(0.95);
 		}
 
-		body.dark-mode #floating-preview-rotate {
+		#floating-preview-rotate {
 			background: #5a9fd4;
 			border-color: #1e2128;
 		}
@@ -379,7 +376,7 @@
 			transform: scale(0.95);
 		}
 
-		body.dark-mode #floating-preview-mirror {
+		#floating-preview-mirror {
 			background: #8e44ad;
 			border-color: #1e2128;
 		}
@@ -409,7 +406,7 @@
 			transform: scale(0.95);
 		}
 
-		body.dark-mode #floating-preview-cancel {
+		#floating-preview-cancel {
 			background: #c0392b;
 			border-color: #1e2128;
 		}
@@ -428,7 +425,7 @@
 			transition: opacity 0.15s ease;
 		}
 
-		body.dark-mode #placement-zoom-lens {
+		#placement-zoom-lens {
 			background: rgba(30, 33, 40, 0.98);
 			border-color: #5a9fd4;
 			box-shadow: 0 12px 32px rgba(0,0,0,0.7), 0 0 0 2px rgba(90, 159, 212, 0.3);
@@ -456,7 +453,7 @@
 			border: 1px solid rgba(0,0,0,0.15);
 		}
 
-		body.dark-mode #zoom-lens-content .zoom-cell {
+		#zoom-lens-content .zoom-cell {
 			border-color: rgba(255,255,255,0.2);
 		}
 
@@ -488,7 +485,7 @@
 		   DARK MODE - BASIS STYLING
 		   ============================================
 		*/
-		body.dark-mode {
+		{
 			background: var(--color-dark-bg);
 			color: var(--color-text-light);
 		}
@@ -560,7 +557,7 @@
 	}
 
 
-	body.dark-mode .zone {
+	.zone {
 		border: 1px solid var(--color-border-dark);
 		box-shadow: 0 4px 10px var(--shadow-dark);
 	}.zone-placeholder {
@@ -974,13 +971,13 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 			right: 20px;
 		}
 
-		body.dark-mode .zone-nav-arrow {
+		.zone-nav-arrow {
 			background: rgba(30, 35, 50, 0.9);
 			border-color: rgba(140, 150, 200, 0.4);
 			color: rgba(240, 242, 255, 0.9);
 		}
 
-		body.dark-mode .zone-nav-arrow:hover {
+		.zone-nav-arrow:hover {
 			background: rgba(40, 45, 60, 1);
 		}
 
@@ -1061,12 +1058,12 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 		filter: grayscale(0.25);
 	}
 
-	body.dark-mode .card-option.card-golden {
+	.card-option.card-golden {
 		--card-border: 2px solid rgba(200,160,40,0.75);
 		--card-shadow: 0 2px 4px rgba(0,0,0,0.2), 0 8px 24px rgba(0,0,0,0.3), 0 0 24px rgba(200,160,40,0.18);
 	}
 
-	body.dark-mode .card-option.card-golden::before {
+	.card-option.card-golden::before {
 		background: linear-gradient(135deg, 
 			rgba(255,200,80,0.12) 0%, 
 			rgba(255,220,120,0.2) 25%, 
@@ -1075,7 +1072,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 			rgba(255,200,80,0.12) 100%);
 	}
 
-	body.dark-mode #card-choice-zone .card-option.selection-disabled {
+	#card-choice-zone .card-option.selection-disabled {
 		opacity: 0.32;
 		filter: grayscale(0.4);
 	}
@@ -1089,10 +1086,10 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 		display: none;
 		content: '';
 	}
-	body.dark-mode #card-choice-zone .card-option.card-deck-copy {
+	#card-choice-zone .card-option.card-deck-copy {
 		border-color: transparent;
 	}
-	body.dark-mode #card-choice-zone .card-option.card-deck-copy::before {
+	#card-choice-zone .card-option.card-deck-copy::before {
 		display: none;
 	}
 
@@ -1105,10 +1102,10 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 		display: none;
 		content: '';
 	}
-	body.dark-mode #card-choice-zone .card-option.card-lucky-copy {
+	#card-choice-zone .card-option.card-lucky-copy {
 		border-color: transparent;
 	}
-	body.dark-mode #card-choice-zone .card-option.card-lucky-copy::before {
+	#card-choice-zone .card-option.card-lucky-copy::before {
 		display: none;
 	}
 
@@ -1585,19 +1582,6 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	
 	}
 	  
-	@media (max-width: 510px) {
-	
-		.board {
-			gap: 3px;
-			padding: 0;
-		}
-
-		#blue-zone.zoom-focus {
-			max-height: 66vh;
-		}
-	
-	}
-
 	@media (max-width: 490px) {
 	
 		:root {
@@ -1622,69 +1606,6 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 			overflow-y: auto;
 		}
 
-
-
-		.bottom-bar-footer {
-			margin-top: 0px;
-			padding-top: 0px;
-		}
-	
-	}
-
-	@media (max-width: 450px) {
-	
-		:root {
-			--bottom-bar-height: 110px;
-		}
-	
-		.board {
-			gap: 2px;
-			padding: 0;
-		}
-
-		#blue-zone.zoom-focus {
-			max-height: 66vh;
-		}
-		
-		.zone.zoom-focus {
-			max-height: 80vh;
-			overflow: hidden;
-		}
-		#blue-zone.zoom-focus {
-			overflow-y: auto;
-		}
-
-
-
-		.bottom-bar-footer {
-			margin-top: 0px;
-			padding-top: 0px;
-		}
-	
-	}
-
-	@media (max-width: 430px) {
-	
-		:root {
-			--bottom-bar-height: 110px;
-		}
-	
-		.board {
-			gap: 2px;
-			padding: 0;
-		}
-
-		#blue-zone.zoom-focus {
-			max-height: 66vh;
-		}
-		
-		.zone.zoom-focus {
-			max-height: 80vh;
-			overflow: hidden;
-		}
-		#blue-zone.zoom-focus {
-			overflow-y: auto;
-		}
 
 
 		.bottom-bar-footer {
@@ -1729,7 +1650,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	   Dark mode krijgt lichtere grijstint voor betere leesbaarheid
 	*/
 	h2 { color: #555; margin:0 0 8px; font-size:1rem; text-align:center }
-	body.dark-mode h2 { color: #b0b0b0; }
+	h2 { color: #b0b0b0; }
 
 	/* ============================================
 	   ZONE KLEUREN & AFMETINGEN
@@ -1962,7 +1883,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 		color: rgba(0, 0, 0, 0.48);
 		opacity: 0.85;
 	}
-	body.dark-mode #world3-red-lock {
+	#world3-red-lock {
 		color: rgba(255, 255, 255, 0.38);
 	}
 	#world3-red-lock svg {
@@ -2024,7 +1945,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 
 	/* DARK MODE: Override zone kleuren met donkere gradient */
 
-	body.dark-mode #gold-zone--placeholder { 
+	#gold-zone--placeholder { 
 		background: linear-gradient(145deg, #2d2920, #232119);
 		border: 1px solid #3d3930;
 	}
@@ -2192,7 +2113,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	#yellow-grid .cell.diag-shade-odd:not(.void-cell):not(.active) {
 	  filter: brightness(0.985);
 	}
-	body.dark-mode #yellow-grid .cell.diag-shade-odd:not(.void-cell):not(.active) {
+	#yellow-grid .cell.diag-shade-odd:not(.void-cell):not(.active) {
 	  filter: brightness(1.06);
 	}
 
@@ -2223,11 +2144,11 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	  background: #f3eefb;
 	  filter: brightness(1.00);
 	}
-	body.dark-mode #purple-grid .cell.outer-ring-0:not(.void-cell):not(.active) {
+	#purple-grid .cell.outer-ring-0:not(.void-cell):not(.active) {
 	  background: #d3c3ea;
 	  filter: brightness(0.97);
 	}
-	body.dark-mode #purple-grid .cell.outer-ring-1:not(.void-cell):not(.active) {
+	#purple-grid .cell.outer-ring-1:not(.void-cell):not(.active) {
 	  background: #d9ccec;
 	  filter: brightness(0.97);
 	}
@@ -2240,7 +2161,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 			0 0 0 2px rgba(220,180,60,0.50) inset,
 			0 0 18px rgba(184,120,18,0.28);
 	}
-	body.dark-mode #bottom-bar #card-choice-zone .card-option.card-golden {
+	#bottom-bar #card-choice-zone .card-option.card-golden {
 		border: 2px solid rgba(200,160,30,0.78);
 		box-shadow:
 			0 26px 44px rgba(0,0,0,0.55),
@@ -2383,7 +2304,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 
 /* Diamond glyph styling for inline text (toasts, titles) */
 .diamond-glyph { color: #0b3b4a; font-weight: 700; text-shadow: 0 1px 0 rgba(255,255,255,0.25); }
-body.dark-mode .diamond-glyph { color: #bfefff; }
+.diamond-glyph { color: #bfefff; }
 
 	.symbol.upgrade-shop-symbol:hover {
 	  transform: translate(-50%, -50%) scale(1.15);
@@ -2480,16 +2401,16 @@ body.dark-mode .diamond-glyph { color: #bfefff; }
 		transform: scale(1);
 	}
 
-	body.dark-mode .coin {
+	.coin {
 		background: rgba(255,255,255,0.14);
 		border-color: rgba(255,255,255,0.24);
 	}
 
-	body.dark-mode .coin.active {
+	.coin.active {
 		background: radial-gradient(circle at 30% 30%, #ffe58c, #f5b72f 70%);
 	}
 
-	body.dark-mode .coin.used {
+	.coin.used {
 		background: rgba(60,60,72,0.7);
 		border-color: rgba(110,110,130,0.55);
 		box-shadow: inset 0 0 0 1px rgba(0,0,0,0.55);
@@ -2576,23 +2497,23 @@ body.dark-mode .diamond-glyph { color: #bfefff; }
 		box-shadow: inset 0 -1px 2px rgba(0,0,0,0.2);
 		border: 1px solid #c9960a;
 	}
-	body.dark-mode .buy-placement-btn {
+	.buy-placement-btn {
 		background: linear-gradient(160deg, #2c3144 0%, #222635 100%);
 		border-color: rgba(140,150,200,0.3);
 		color: rgba(235,238,255,0.88);
 		box-shadow: 0 16px 30px rgba(0,0,0,0.42);
 	}
-	body.dark-mode .buy-placement-btn:hover:not(:disabled) {
+	.buy-placement-btn:hover:not(:disabled) {
 		background: linear-gradient(160deg, #333a52 0%, #252a3b 100%);
 		box-shadow: 0 20px 34px rgba(0,0,0,0.5);
 	}
-	body.dark-mode .buy-placement-btn:disabled {
+	.buy-placement-btn:disabled {
 		background: linear-gradient(135deg, #3a3a3a, #2a2a2a);
 		border-color: rgba(140,150,200,0.2);
 		color: #888;
 		transform: scale(1);
 	}
-	body.dark-mode .buy-placement-rainbow-cell {
+	.buy-placement-rainbow-cell {
 		box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12), 0 2px 8px rgba(0,0,0,0.55);
 	}
 
@@ -2645,11 +2566,11 @@ body.dark-mode .diamond-glyph { color: #bfefff; }
 			padding: 8px 12px;
 		}
 	}
-	body.dark-mode .purchased-block-preview {
+	.purchased-block-preview {
 		background: linear-gradient(135deg, rgba(240,98,114,0.1), rgba(255,245,90,0.1), rgba(78,211,70,0.1), rgba(93,144,240,0.1));
 		border-color: rgba(180,140,220,0.4);
 	}
-	body.dark-mode .purchased-block-label {
+	.purchased-block-label {
 		color: #c9b0e8;
 	}
 	/* Keep the purchased preview visible everywhere; it's the drag handle to place the bought block. */
@@ -2685,7 +2606,7 @@ body.dark-mode .diamond-glyph { color: #bfefff; }
 	  margin: 0;
 	}
 
-	body.dark-mode #scoreboard {
+	#scoreboard {
 	  background: linear-gradient(145deg, #2d2920, #232119);
 	  border: 1px solid #3d3930;
 	  color: #e0e0e0;
@@ -2751,7 +2672,7 @@ body.dark-mode .diamond-glyph { color: #bfefff; }
 		scrollbar-gutter: stable;
 	}
 
-	body.dark-mode .zone-info-btn {
+	.zone-info-btn {
 		border-color: rgba(255,255,255,0.18);
 		background: rgba(0,0,0,0.2);
 		color: rgba(255,255,255,0.82);
@@ -2762,7 +2683,7 @@ body.dark-mode .diamond-glyph { color: #bfefff; }
 		outline-offset: 2px;
 	}
 
-	body.dark-mode .zone-info-btn:focus {
+	.zone-info-btn:focus {
 		outline-color: rgba(255,255,255,0.22);
 	}
 
@@ -2789,7 +2710,7 @@ body.dark-mode .diamond-glyph { color: #bfefff; }
 		backdrop-filter: blur(6px);
 	}
 
-	body.dark-mode .zone-info-popover {
+	.zone-info-popover {
 		background: rgba(35, 33, 25, 0.96);
 		border-color: rgba(255,255,255,0.12);
 		box-shadow: 0 10px 22px rgba(0,0,0,0.55);
@@ -2802,7 +2723,7 @@ body.dark-mode .diamond-glyph { color: #bfefff; }
 		pointer-events: auto;
 	}
 	
-	body.dark-mode .score-row {
+	.score-row {
 	  background: #383838;
 	  color: #e0e0e0;
 	}
@@ -2815,7 +2736,7 @@ body.dark-mode .diamond-glyph { color: #bfefff; }
 	  /* Animation removed for performance */
 	}
 	
-	body.dark-mode .score-row.objective-achieved {
+	.score-row.objective-achieved {
 	  box-shadow: 0 0 14px 3px rgba(255, 215, 0, 0.8);
 	  /* Animation removed for performance */
 	}
@@ -2948,7 +2869,7 @@ body.dark-mode .diamond-glyph { color: #bfefff; }
 		/* Animation removed for performance - static glow */
 	}
 
-	body.dark-mode .score-row:hover {
+	.score-row:hover {
 	  background: #484848;
 	}
 
@@ -2968,7 +2889,7 @@ body.dark-mode .diamond-glyph { color: #bfefff; }
 	  margin: 0;
 	}
 
-	body.dark-mode #scoreboard hr {
+	#scoreboard hr {
 	  border-top-color: rgba(255,255,255,0.12);
 	}
 
@@ -2994,12 +2915,12 @@ body.dark-mode .diamond-glyph { color: #bfefff; }
 	  /* Animation removed for performance */
 	}
 	
-	body.dark-mode #scoreboard .score-total.objective-achieved {
+	#scoreboard .score-total.objective-achieved {
 	  box-shadow: 0 0 14px 3px rgba(255, 215, 0, 0.8);
 	  /* Animation removed for performance */
 	}
 
-	body.dark-mode #scoreboard .score-total {
+	#scoreboard .score-total {
 	  background: #2f3239;
 	  border-color: #3d4048;
 	  color: var(--color-text-light);
@@ -3176,96 +3097,96 @@ body.dark-mode .diamond-glyph { color: #bfefff; }
 	}
 
 
-	body.dark-mode #scoreboard .score-total {
+	#scoreboard .score-total {
 	  background: linear-gradient(140deg, #3a331f, #2b2619);
 	  border-color: rgba(255, 199, 63, 0.25);
 	  color: #f6f1dd;
 	  box-shadow: 0 16px 30px rgba(0,0,0,0.35);
 	}
 
-	body.dark-mode #scoreboard .trap-summary {
+	#scoreboard .trap-summary {
 	  background: rgba(255,255,255,0.03);
 	  border-color: rgba(255,255,255,0.07);
 	}
 
-	body.dark-mode .trap-icon {
+	.trap-icon {
 	  background: radial-gradient(circle at 30% 30%, #3c1e1e, #281111);
 	  border-color: rgba(196,56,56,0.45);
 	  color: #f3bbbb;
 	  box-shadow: 0 4px 12px rgba(0,0,0,0.45);
 	}
 
-	body.dark-mode .trap-icon.trap-icon--black-hole {
+	.trap-icon.trap-icon--black-hole {
 	  background: radial-gradient(circle at 38% 32%, #403472 0%, #291f55 58%, #110b30 100%);
 	  border-color: rgba(150,120,240,0.55);
 	  color: #d9d5ff;
 	  box-shadow: 0 6px 16px rgba(50,30,120,0.45);
 	}
 
-	body.dark-mode .trap-icon .penalty-chip {
+	.trap-icon .penalty-chip {
 	  background: rgba(70,20,20,0.85);
 	  color: #ffc9c9;
 	}
 
-	body.dark-mode .trap-icon.trap-icon--black-hole .penalty-chip {
+	.trap-icon.trap-icon--black-hole .penalty-chip {
 	  background: rgba(24,18,70,0.9);
 	  color: #f0ecff;
 	}
 
-	body.dark-mode #scoreboard .trap-summary-header {
+	#scoreboard .trap-summary-header {
 	  color: rgba(255,240,210,0.6);
 	}
 
-	body.dark-mode #scoreboard .trap-summary-header .trap-label {
+	#scoreboard .trap-summary-header .trap-label {
 	  color: rgba(255,240,210,0.9);
 	}
 
-	body.dark-mode #scoreboard .trap-count {
+	#scoreboard .trap-count {
 	  color: #ff8585;
 	}
 
-	body.dark-mode #scoreboard .trap-preview:empty::after {
+	#scoreboard .trap-preview:empty::after {
 	  color: rgba(255,255,255,0.35);
 	}
 
-	body.dark-mode .trap-preview::-webkit-scrollbar-track {
+	.trap-preview::-webkit-scrollbar-track {
 	  background: rgba(255,255,255,0.05);
 	}
 
-	body.dark-mode .trap-preview::-webkit-scrollbar-thumb {
+	.trap-preview::-webkit-scrollbar-thumb {
 	  background: rgba(255,120,120,0.45);
 	}
 
-	body.dark-mode .trap-compact-chip {
+	.trap-compact-chip {
 	  background: rgba(196,56,56,0.18);
 	  color: #ffb3b3;
 	  border-color: rgba(196,56,56,0.32);
 	}
 
-	body.dark-mode .trap-compact-chip--black-hole {
+	.trap-compact-chip--black-hole {
 	  background: rgba(79, 64, 150, 0.22);
 	  color: #d6d1ff;
 	  border-color: rgba(131, 117, 210, 0.35);
 	}
 
-	body.dark-mode .trap-icon {
+	.trap-icon {
 	  background: radial-gradient(circle at 30% 30%, #4b1c1c, #2a1212);
 	  border-color: rgba(255,120,120,0.45);
 	  color: #ffb3b3;
 	  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
 	}
 
-	body.dark-mode .trap-icon .penalty-chip {
+	.trap-icon .penalty-chip {
 	  background: #901717;
 	  color: #ffe0e0;
 	  border-color: rgba(0,0,0,0.45);
 	}
 
-	body.dark-mode #scoreboard .score-total .label {
+	#scoreboard .score-total .label {
 	  color: rgba(255, 243, 205, 0.8);
 	}
 
-	body.dark-mode #scoreboard .score-total .total-score {
+	#scoreboard .score-total .total-score {
 	  color: #ffe6a3;
 	}
 
@@ -3302,7 +3223,7 @@ body.dark-mode .diamond-glyph { color: #bfefff; }
 		font-weight: 800;
 	}
 
-	body.dark-mode .highscore-toast {
+	.highscore-toast {
 		background: linear-gradient(120deg, #2f2a1f, #4d3f1d);
 		color: #fff6cc;
 		box-shadow: 0 20px 46px rgba(0,0,0,0.6);
@@ -3335,7 +3256,7 @@ body.dark-mode .diamond-glyph { color: #bfefff; }
 		max-width: 90%;
 		width: 300px;
 	}
-	body.dark-mode .highscore-modal {
+	.highscore-modal {
 		background: #2d2d2d;
 		color: #eee;
 	}
@@ -3354,11 +3275,11 @@ body.dark-mode .diamond-glyph { color: #bfefff; }
 		font-weight: bold;
 	}
 	.highscore-close-btn:hover { background: #ddd; }
-	body.dark-mode .highscore-close-btn {
+	.highscore-close-btn {
 		background: #444;
 		color: #eee;
 	}
-	body.dark-mode .highscore-close-btn:hover {
+	.highscore-close-btn:hover {
 		background: #555;
 	}
 
@@ -3379,14 +3300,14 @@ body.dark-mode .diamond-glyph { color: #bfefff; }
 #saved-levels-modal .modal-btn.primary:hover { filter: brightness(0.95); }
 
 /* Dark mode overrides for better contrast */
-body.dark-mode #saved-levels-modal .modal-btn { background: #3a3a3a; color: #eee; border: 1px solid rgba(255,255,255,0.04); }
-body.dark-mode #saved-levels-modal .modal-btn.primary { background: linear-gradient(135deg,#2b6fb8,#4a90e2); color: #fff; }
-body.dark-mode #saved-levels-modal .modal-btn.primary:hover { filter: brightness(1.05); }
-body.dark-mode #saved-levels-modal .trash-btn { color: #ccc; }
+#saved-levels-modal .modal-btn { background: #3a3a3a; color: #eee; border: 1px solid rgba(255,255,255,0.04); }
+#saved-levels-modal .modal-btn.primary { background: linear-gradient(135deg,#2b6fb8,#4a90e2); color: #fff; }
+#saved-levels-modal .modal-btn.primary:hover { filter: brightness(1.05); }
+#saved-levels-modal .trash-btn { color: #ccc; }
 
 /* Saved item title and label colors */
 #saved-levels-modal .saved-title { font-size: 14px; color: rgba(0,0,0,0.9); }
-body.dark-mode #saved-levels-modal .saved-title { color: #fff; }
+#saved-levels-modal .saved-title { color: #fff; }
 
 /* Custom scrollbar for saved-levels list */
 #saved-levels-modal #saved-levels-list::-webkit-scrollbar { width:10px; }
@@ -3396,7 +3317,7 @@ body.dark-mode #saved-levels-modal .saved-title { color: #fff; }
 
 /* Saved level item text */
 #saved-levels-modal .saved-obj-text { font-size: 13px; color: rgba(0,0,0,0.85); opacity: 1; }
-body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95; }
+#saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95; }
 
 	/* ============================================
 	   ANIMATIES
@@ -3421,7 +3342,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		--card-glow: drop-shadow(0 0 10px rgba(80,120,200,0.28)) drop-shadow(0 4px 10px rgba(0,0,0,0.2));
 	}
 
-	body.dark-mode {
+	{
 		--card-bg: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(80,100,160,0.15) 0%, transparent 60%),
 				linear-gradient(175deg, #2a3248 0%, #1c2030 100%);
 		--card-border: 1.5px solid rgba(130,150,210,0.25);
@@ -3439,7 +3360,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  overflow: hidden;
 	}
 
-	body.dark-mode #card-choice-zone {
+	#card-choice-zone {
 	  background: linear-gradient(145deg, #22252b, #1a1c21);
 	  border: 1px solid #2d2f36;
 	  box-shadow: 0 0 12px rgba(0,0,0,0.6);
@@ -3547,7 +3468,11 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			display: none;
 		}
 		#card-action-buttons #new-cards-btn { order: 0; }
-		#card-action-buttons #deck-preview { order: 1; }
+		#card-action-buttons #undo-inline-btn { order: 1; }
+		#card-action-buttons #rotate-card-btn { order: 2; }
+		#card-action-buttons #mirror-card-btn { order: 3; }
+		#card-action-buttons #bonus-shop-btn { order: 4; }
+		#card-action-buttons #deck-preview { order: 5; }
 		
 		/* Deck preview: vierkant en zelfde kleur als andere buttons */
 		.deck-preview {
@@ -3602,12 +3527,12 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			display: none;
 		}
 
-		body.dark-mode .deck-preview {
+		.deck-preview {
 			background: linear-gradient(160deg, #2c3144 0%, #222635 100%);
 			border-color: rgba(140,150,200,0.3);
 		}
 
-		body.dark-mode .deck-count {
+		.deck-count {
 			color: rgba(235,238,255,0.88);
 		}
 	}
@@ -3630,25 +3555,25 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		box-shadow: none;
 	}
 
-	body.dark-mode .card-action-btn {
+	.card-action-btn {
 		background: linear-gradient(160deg, #2c3144 0%, #222635 100%);
 		border-color: rgba(140,150,200,0.3);
 		color: rgba(235,238,255,0.88);
 		box-shadow: 0 16px 30px rgba(0,0,0,0.42);
 	}
 
-	body.dark-mode .card-action-btn:hover:not(:disabled),
-	body.dark-mode .card-action-btn:focus-visible {
+	.card-action-btn:hover:not(:disabled),
+	.card-action-btn:focus-visible {
 		box-shadow: 0 20px 34px rgba(0,0,0,0.5);
 	}
 
 	/* Dark mode deck preview matching card buttons */
-	body.dark-mode #card-action-buttons .deck-preview {
+	#card-action-buttons .deck-preview {
 		background: linear-gradient(160deg, #2c3144 0%, #222635 100%);
 		border-color: rgba(140,150,200,0.3);
 	}
 
-	body.dark-mode #card-action-buttons .deck-count {
+	#card-action-buttons .deck-count {
 		color: rgba(235,238,255,0.88);
 	}
 
@@ -3733,22 +3658,22 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		font-size: 1.1rem;
 	}
 
-	body.dark-mode .deck-preview {
+	.deck-preview {
 		background: linear-gradient(160deg, #2c3144 0%, #1f2333 100%);
 		border-color: rgba(140,150,200,0.28);
 		color: rgba(235,238,255,0.9);
 		box-shadow: 0 18px 30px rgba(0,0,0,0.4);
 	}
 
-	body.dark-mode .deck-preview::after {
+	.deck-preview::after {
 		color: rgba(235,238,255,0.75);
 	}
 
-	body.dark-mode .deck-preview:focus-visible {
+	.deck-preview:focus-visible {
 		outline-color: rgba(120,160,255,0.7);
 	}
 
-	body.dark-mode .deck-count {
+	.deck-count {
 		background: rgba(18,22,36,0.92);
 		border-color: rgba(120,140,220,0.38);
 		color: rgba(235,238,255,0.88);
@@ -3759,7 +3684,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		display: none;
 	}
 
-	body.dark-mode #turn-counter-inline {
+	#turn-counter-inline {
 		background: linear-gradient(145deg, #22252b, #1a1c21);
 		border: 1px solid var(--color-border-dark);
 		box-shadow: 0 6px 14px rgba(0,0,0,0.45);
@@ -3942,17 +3867,17 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		transform: scale(0.95);
 	}
 
-	body.dark-mode .card-control-rotate {
+	.card-control-rotate {
 		background: #5a9fd4;
 		border-color: #1e2128;
 	}
 
-	body.dark-mode .card-control-mirror {
+	.card-control-mirror {
 		background: #8e44ad;
 		border-color: #1e2128;
 	}
 
-	body.dark-mode .card-control-cancel {
+	.card-control-cancel {
 		background: #c0392b;
 		border-color: #1e2128;
 	}
@@ -4128,16 +4053,16 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		line-height: 1;
 	}
 
-	body.dark-mode .card-label.card-label--echo {
+	.card-label.card-label--echo {
 		background: linear-gradient(135deg, rgba(79,195,255,0.2), rgba(106,139,255,0.2));
 		color: #e7f2ff;
 	}
 
-	body.dark-mode .card-meta.card-meta--echo {
+	.card-meta.card-meta--echo {
 		color: rgba(230,235,255,0.78);
 	}
 
-	body.dark-mode .card-meta--echo .card-meta-note {
+	.card-meta--echo .card-meta-note {
 		color: rgba(230,235,255,0.6);
 	}
 
@@ -4368,11 +4293,11 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		box-shadow: 0 26px 44px rgba(0,0,0,0.4);
 	}
 
-	body.dark-mode .card-option::after {
+	.card-option::after {
 		background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 100%);
 	}
 
-	body.dark-mode .card-option .card-cell {
+	.card-option .card-cell {
 		border-color: rgba(255,255,255,0.15);
 		box-shadow: 
 			inset 0 1px 3px rgba(0,0,0,0.3),
@@ -4380,46 +4305,46 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		background: var(--card-cell-bg);
 	}
 
-	body.dark-mode .card-label {
+	.card-label {
 		background: rgba(255,255,255,0.08);
 		color: rgba(220,230,255,0.85);
 	}
 
-	body.dark-mode .card-meta {
+	.card-meta {
 		color: rgba(255,255,255,0.65);
 	}
 
-	body.dark-mode .card-effect {
+	.card-effect {
 		color: rgba(255,255,255,0.85);
 		background: rgba(255,255,255,0.08);
 	}
 
-	body.dark-mode .card-effect.card-effect-echo {
+	.card-effect.card-effect-echo {
 		background: linear-gradient(135deg, #1f2f4c, #1a2741);
 		color: #e7f2ff;
 		box-shadow: 0 10px 22px rgba(0,0,0,0.45);
 	}
 
-	body.dark-mode .card-effect.card-effect-boost {
+	.card-effect.card-effect-boost {
 		background: linear-gradient(135deg, #3b2a12, #2a1f10);
 		color: #ffe9b0;
 		box-shadow: 0 10px 22px rgba(0,0,0,0.45);
 	}
 
-	body.dark-mode .card-effect-boost .card-effect-boost-icon {
+	.card-effect-boost .card-effect-boost-icon {
 		background: linear-gradient(135deg, #ffcc66, #ffb347);
 		color: #2a1b00;
 		box-shadow: 0 6px 14px rgba(0,0,0,0.35);
 	}
 
-	body.dark-mode .card-boost-badge {
+	.card-boost-badge {
 		background: linear-gradient(135deg, #3b2a12, #2a1f10);
 		color: #ffe9b0;
 		border-color: rgba(255,233,176,0.2);
 		box-shadow: 0 8px 16px rgba(0,0,0,0.35);
 	}
 
-	body.dark-mode .card-effect-echo .card-effect-echo-icon {
+	.card-effect-echo .card-effect-echo-icon {
 		background: linear-gradient(135deg, #5ac8ff, #809cff);
 		color: #0b1626;
 		box-shadow: 0 6px 14px rgba(0,0,0,0.35);
@@ -4494,7 +4419,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		position: relative;
 	}
 
-	body.dark-mode .game-modal {
+	.game-modal {
 		background: rgba(12, 14, 20, 0.95);
 		border-color: rgba(255, 255, 255, 0.14);
 		color: #f5f6ff;
@@ -4518,7 +4443,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		color: rgba(27, 33, 48, 0.7);
 	}
 
-	body.dark-mode .modal-subtext {
+	.modal-subtext {
 		color: rgba(245, 246, 255, 0.7);
 	}
 
@@ -4552,7 +4477,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		box-shadow: none;
 	}
 
-	body.dark-mode .modal-actions button {
+	.modal-actions button {
 		background: linear-gradient(145deg, #2f3546, #1c2233);
 		border-color: rgba(255, 255, 255, 0.12);
 		color: #f5f6ff;
@@ -4614,13 +4539,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		background: linear-gradient(145deg, #7a8ff0, #8a5cb8);
 	}
 
-	body.dark-mode .modal-button {
+	.modal-button {
 		background: linear-gradient(145deg, #4a5fb8, #5a3d8a);
 		border-color: rgba(139, 159, 245, 0.4);
 		box-shadow: 0 8px 20px rgba(74, 95, 184, 0.4);
 	}
 
-	body.dark-mode .modal-button:hover {
+	.modal-button:hover {
 		background: linear-gradient(145deg, #5a6fc8, #6a4d9a);
 		box-shadow: 0 12px 28px rgba(74, 95, 184, 0.55);
 	}
@@ -4652,7 +4577,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		background-clip: text;
 	}
 
-	body.dark-mode .unlock-title {
+	.unlock-title {
 		background: linear-gradient(135deg, #8b9ff5 0%, #a77bc9 100%);
 		-webkit-background-clip: text;
 		-webkit-text-fill-color: transparent;
@@ -4677,7 +4602,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		animation: unlock-slide-in 0.4s ease-out backwards;
 	}
 
-	body.dark-mode .unlock-item {
+	.unlock-item {
 		background: linear-gradient(145deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
 		border-color: rgba(139, 159, 245, 0.4);
 	}
@@ -4714,7 +4639,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		color: #667eea;
 	}
 
-	body.dark-mode .unlock-item-name {
+	.unlock-item-name {
 		color: #8b9ff5;
 	}
 
@@ -4729,7 +4654,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		background: linear-gradient(145deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
 	}
 
-	body.dark-mode .unlock-item--feature {
+	.unlock-item--feature {
 		border-color: rgba(139, 159, 245, 0.6);
 		background: linear-gradient(145deg, rgba(102, 126, 234, 0.25), rgba(118, 75, 162, 0.25));
 	}
@@ -4738,7 +4663,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		color: #8b6dff;
 	}
 
-	body.dark-mode .unlock-item--feature .unlock-item-name {
+	.unlock-item--feature .unlock-item-name {
 		color: #a899ff;
 	}
 
@@ -4747,7 +4672,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		background: linear-gradient(145deg, rgba(255, 99, 71, 0.1), rgba(255, 140, 0, 0.1));
 	}
 
-	body.dark-mode .unlock-item--challenge {
+	.unlock-item--challenge {
 		border-color: rgba(255, 140, 0, 0.5);
 		background: linear-gradient(145deg, rgba(255, 99, 71, 0.15), rgba(255, 140, 0, 0.15));
 	}
@@ -4756,17 +4681,17 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		color: #ff6347;
 	}
 
-	body.dark-mode .unlock-item--challenge .unlock-item-name {
+	.unlock-item--challenge .unlock-item-name {
 		color: #ff8c69;
 	}
 
-	body.dark-mode .round-summary-card {
+	.round-summary-card {
 		background: linear-gradient(145deg, rgba(46, 54, 78, 0.9), rgba(32, 39, 58, 0.95));
 		border-color: rgba(255, 255, 255, 0.08);
 		box-shadow: 0 18px 28px rgba(5, 8, 16, 0.6);
 	}
 
-	body.dark-mode .round-summary-card--coins {
+	.round-summary-card--coins {
 		background: linear-gradient(145deg, rgba(66, 52, 22, 0.82), rgba(97, 76, 36, 0.92));
 	}
 
@@ -4785,7 +4710,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		margin-bottom: 4px;
 	}
 
-	body.dark-mode .round-summary-label {
+	.round-summary-label {
 		color: rgba(245, 246, 255, 0.6);
 	}
 
@@ -4796,7 +4721,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		color: #1f2433;
 	}
 
-	body.dark-mode .round-summary-value {
+	.round-summary-value {
 		color: #f5f6ff;
 	}
 
@@ -4813,7 +4738,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		color: #1f2433;
 	}
 
-	body.dark-mode .round-summary-bonus {
+	.round-summary-bonus {
 		background: rgba(245, 246, 255, 0.15);
 		color: #f5f6ff;
 	}
@@ -4837,7 +4762,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		border-bottom: none;
 	}
 
-	body.dark-mode .modal-summary-line {
+	.modal-summary-line {
 		border-color: rgba(255, 255, 255, 0.12);
 	}
 
@@ -5115,8 +5040,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		box-shadow: 0 2px 8px rgba(0,0,0,0.12);
 	}
 
-	body.dark-mode .deck-modal-grid .card-option:hover,
-	body.dark-mode .deck-modal-grid .card-option:focus {
+	.deck-modal-grid .card-option:hover,
+	.deck-modal-grid .card-option:focus {
 		box-shadow: 0 2px 10px rgba(0,0,0,0.3);
 	}
 	
@@ -5130,7 +5055,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			inset 0 1px 0 rgba(255,220,100,0.3);
 	}
 	
-	body.dark-mode #deck-modal-content.deck-modal-grid .card-option.card-golden {
+	#deck-modal-content.deck-modal-grid .card-option.card-golden {
 		border: 2px solid rgba(200,160,50,0.6);
 		box-shadow: 
 			0 4px 8px rgba(0,0,0,0.2),
@@ -5139,7 +5064,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			inset 0 1px 0 rgba(255,220,100,0.12);
 	}
 	/* Remove golden card shine in deck overview (dark mode) */
-	body.dark-mode #deck-modal-content.deck-modal-grid .card-option.card-golden::before {
+	#deck-modal-content.deck-modal-grid .card-option.card-golden::before {
 		animation: none;
 		display: none;
 	}
@@ -5379,20 +5304,20 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  min-width: 140px;
 	}
 
-	body.dark-mode .deck-modal-grid::-webkit-scrollbar-thumb {
+	.deck-modal-grid::-webkit-scrollbar-thumb {
 		background: rgba(160, 170, 210, 0.25);
 	}
 
-	body.dark-mode .deck-modal-empty {
+	.deck-modal-empty {
 		color: rgba(255, 255, 255, 0.65);
 	}
-	body.dark-mode .deck-modal-grid .card-option {
+	.deck-modal-grid .card-option {
 		background: linear-gradient(160deg, #2d3142 0%, #232635 45%, #1b1e2c 100%);
 		border: 1px solid rgba(120,140,220,0.2);
 		box-shadow: 0 8px 20px rgba(0,0,0,0.4);
 	}
 
-	body.dark-mode .deck-modal-grid .card-option.card-golden {
+	.deck-modal-grid .card-option.card-golden {
 	  border: 2px solid rgba(200,160,50,0.7);
 	  box-shadow:
 		0 4px 8px rgba(0,0,0,0.2),
@@ -5401,19 +5326,19 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		inset 0 1px 0 rgba(255,220,100,0.1);
 	}
 
-	body.dark-mode .blackhole-stats {
+	.blackhole-stats {
 	  color: rgba(220, 224, 248, 0.82);
 	}
 
-	body.dark-mode .blackhole-stats strong {
+	.blackhole-stats strong {
 	  color: #d4cffd;
 	}
 
-	body.dark-mode .blackhole-feedback {
+	.blackhole-feedback {
 	  color: rgba(210, 210, 248, 0.75);
 	}
 
-	body.dark-mode .blackhole-feedback[data-tone="warn"] {
+	.blackhole-feedback[data-tone="warn"] {
 	  color: #ff9a9a;
 	}
 
@@ -5458,11 +5383,11 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		font-weight: 600;
 	}
 
-	body.dark-mode .rules-section h3 {
+	.rules-section h3 {
 		color: rgba(255, 255, 255, 0.95);
 	}
 
-	body.dark-mode .rules-section strong {
+	.rules-section strong {
 		color: rgba(255, 255, 255, 0.9);
 	}
 
@@ -5826,38 +5751,38 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		background: linear-gradient(180deg, rgba(120, 140, 200, 0.8), rgba(100, 120, 180, 0.6));
 	}
 
-	body.dark-mode #shop-modal {
+	#shop-modal {
 		background: linear-gradient(160deg, rgba(28,30,44,0.96), rgba(20,22,35,0.96));
 		border-color: rgba(140,150,220,0.22);
 		box-shadow: 0 34px 60px rgba(0,0,0,0.55);
 		scrollbar-color: rgba(140, 160, 220, 0.4) transparent;
 	}
-	body.dark-mode #shop-modal::-webkit-scrollbar-thumb {
+	#shop-modal::-webkit-scrollbar-thumb {
 		background: linear-gradient(180deg, rgba(100, 120, 180, 0.5), rgba(80, 100, 160, 0.3));
 		border-color: rgba(255,255,255,0.1);
 	}
-	body.dark-mode #shop-modal::-webkit-scrollbar-thumb:hover {
+	#shop-modal::-webkit-scrollbar-thumb:hover {
 		background: linear-gradient(180deg, rgba(120, 140, 200, 0.6), rgba(100, 120, 180, 0.5));
 	}
-	body.dark-mode .shop-coin-display {
+	.shop-coin-display {
 		background: linear-gradient(145deg, rgba(42,44,62,0.92), rgba(32,34,52,0.9));
 		border-color: rgba(160, 178, 255, 0.24);
 		box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08), 0 18px 34px rgba(0,0,0,0.5);
 	}
-	body.dark-mode .shop-coin-label {
+	.shop-coin-label {
 		color: rgba(214, 220, 255, 0.72);
 	}
-	body.dark-mode .shop-coin-balance {
+	.shop-coin-balance {
 		color: #f6f7ff;
 	}
-	body.dark-mode .shop-coin-display.is-empty {
+	.shop-coin-display.is-empty {
 		background: linear-gradient(145deg, rgba(110, 32, 32, 0.4), rgba(140, 28, 28, 0.35));
 		border-color: rgba(255, 120, 120, 0.35);
 	}
-	body.dark-mode .shop-coin-display.is-empty .shop-coin-label {
+	.shop-coin-display.is-empty .shop-coin-label {
 		color: rgba(255, 196, 196, 0.78);
 	}
-	body.dark-mode .shop-coin-display.is-empty .shop-coin-balance {
+	.shop-coin-display.is-empty .shop-coin-balance {
 		color: rgba(255, 220, 220, 0.9);
 	}
 
@@ -6065,28 +5990,28 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		border: 1px solid rgba(255,196,0,0.35);
 		display: none;
 	}
-	body.dark-mode .preworld-pick-item {
+	.preworld-pick-item {
 		background: rgba(26,30,48,0.92);
 		border-color: rgba(140,160,220,0.22);
 	}
-	body.dark-mode .preworld-pick-item.selected {
+	.preworld-pick-item.selected {
 		border-color: rgba(120,160,255,0.95);
 		box-shadow: 0 14px 26px rgba(40,70,140,0.45), 0 0 0 2px rgba(110,160,255,0.35);
 		background: linear-gradient(180deg, rgba(40,48,80,0.95), rgba(30,35,60,0.9));
 	}
-	body.dark-mode .preworld-pick-item.selected::after {
+	.preworld-pick-item.selected::after {
 		background: rgba(120,160,255,0.95);
 		color: #0b1224;
 	}
-	body.dark-mode .preworld-pick-budget {
+	.preworld-pick-budget {
 		background: rgba(120,140,200,0.18);
 		color: rgba(230,235,255,0.85);
 	}
-	body.dark-mode .preworld-cost {
+	.preworld-cost {
 		background: linear-gradient(135deg, rgba(80,110,220,0.9), rgba(60,80,170,0.85));
 		color: rgba(240,245,255,0.95);
 	}
-	body.dark-mode .preworld-pick-warning {
+	.preworld-pick-warning {
 		background: rgba(255,196,0,0.12);
 		color: rgba(255,214,120,0.95);
 		border-color: rgba(255,196,0,0.35);
@@ -6120,12 +6045,12 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		transform: scale(1.1);
 	}
 
-	body.dark-mode .modal-close-btn {
+	.modal-close-btn {
 		background: rgba(255,255,255,0.1);
 		color: #ccc;
 	}
 
-	body.dark-mode .modal-close-btn:hover {
+	.modal-close-btn:hover {
 		background: rgba(255,255,255,0.15);
 		color: #fff;
 	}
@@ -6164,17 +6089,17 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		background: linear-gradient(90deg, transparent, rgba(40,55,120,0.15), transparent);
 	}
 
-	body.dark-mode .shop-upgrades-section,
-	body.dark-mode .shop-bonus-section,
-	body.dark-mode .shop-freeplace-section {
+	.shop-upgrades-section,
+	.shop-bonus-section,
+	.shop-freeplace-section {
 		background: linear-gradient(160deg, rgba(36,40,60,0.95), rgba(24,28,44,0.95));
 		border-color: rgba(150,170,240,0.2);
 		box-shadow: 0 12px 32px rgba(0,0,0,0.4);
 	}
 
-	body.dark-mode .shop-upgrades-section::before,
-	body.dark-mode .shop-bonus-section::before,
-	body.dark-mode .shop-freeplace-section::before {
+	.shop-upgrades-section::before,
+	.shop-bonus-section::before,
+	.shop-freeplace-section::before {
 		background: linear-gradient(90deg, transparent, rgba(150,170,240,0.2), transparent);
 	}
 
@@ -6199,7 +6124,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		content: '🎁';
 	}
 
-	body.dark-mode .shop-section-title {
+	.shop-section-title {
 		color: rgba(240,242,255,0.6);
 	}
 
@@ -6227,7 +6152,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		border: 1px dashed rgba(40,55,120,0.15);
 	}
 
-	body.dark-mode .shop-empty-state {
+	.shop-empty-state {
 		color: rgba(235,238,255,0.5);
 		background: rgba(255,255,255,0.03);
 		border-color: rgba(150,170,240,0.15);
@@ -6250,7 +6175,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		.shop-bonus-section {
 			padding: 16px;
 		}
-		body.dark-mode .shop-cards-section {
+		.shop-cards-section {
 			border-bottom-color: rgba(140,150,200,0.22);
 		}
 		.shop-card-list {
@@ -6280,11 +6205,11 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		flex: 0 0 auto;
 	}
 
-	body.dark-mode .shop-section-title {
+	.shop-section-title {
 		color: rgba(240,242,255,0.85);
 	}
 
-	body.dark-mode .shop-cards-section {
+	.shop-cards-section {
 		border-right-color: rgba(140,150,200,0.25);
 	}
 
@@ -6299,7 +6224,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		color: rgba(24,32,52,0.68);
 	}
 
-	body.dark-mode .shop-empty-state {
+	.shop-empty-state {
 		color: rgba(235,238,255,0.64);
 	}
 
@@ -6348,17 +6273,17 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		background: linear-gradient(90deg, #ffd700, #ffed4e, #ffd700);
 	}
 
-	body.dark-mode .shop-card {
+	.shop-card {
 		background: linear-gradient(155deg, rgba(38,42,58,0.95), rgba(28,32,48,0.95));
 		border-color: rgba(160, 170, 240, 0.22);
 		box-shadow: 0 4px 16px rgba(0,0,0,0.25), 0 12px 40px rgba(0,0,0,0.35);
 	}
 	
-	body.dark-mode .shop-card:hover {
+	.shop-card:hover {
 		box-shadow: 0 8px 24px rgba(0,0,0,0.35), 0 16px 48px rgba(0,0,0,0.45);
 	}
 	
-	body.dark-mode .shop-card-random {
+	.shop-card-random {
 		border-color: rgba(255, 215, 0, 0.3);
 		background: linear-gradient(155deg, rgba(48,44,32,0.95), rgba(38,36,28,0.95));
 	}
@@ -6382,7 +6307,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		color: #1a2644;
 	}
 	
-	body.dark-mode .shop-card-header span:first-child {
+	.shop-card-header span:first-child {
 		color: #e8ebff;
 	}
 	
@@ -6397,7 +6322,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		text-transform: uppercase;
 	}
 	
-	body.dark-mode .card-meta {
+	.card-meta {
 		background: rgba(120, 140, 220, 0.18);
 		color: #a8b8ff;
 	}
@@ -6413,7 +6338,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		display: inline-block;
 	}
 
-	body.dark-mode .shop-card-price {
+	.shop-card-price {
 		color: #ffb84d;
 		background: rgba(255, 184, 77, 0.12);
 	}
@@ -6429,7 +6354,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		min-height: 160px;
 	}
 
-	body.dark-mode .shop-card-preview {
+	.shop-card-preview {
 		background: linear-gradient(145deg, rgba(20,24,36,0.4), rgba(28,32,44,0.6));
 		border-color: rgba(120, 140, 220, 0.12);
 	}
@@ -6544,7 +6469,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		padding: 15px;
 	}
 
-	body.dark-mode .mystery-card-back {
+	.mystery-card-back {
 		background: rgba(28,32,44,0.95);
 	}
 
@@ -6610,7 +6535,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		height: 100%;
 	}
 
-	body.dark-mode .shop-bonus-card {
+	.shop-bonus-card {
 		background: rgba(28,30,48,0.92);
 		border-color: rgba(150,170,240,0.18);
 		box-shadow: 0 16px 30px rgba(0,0,0,0.45);
@@ -6624,7 +6549,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		color: rgba(26,34,52,0.88);
 	}
 
-	body.dark-mode .shop-bonus-info {
+	.shop-bonus-info {
 		color: rgba(235,238,255,0.88);
 	}
 
@@ -6636,7 +6561,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		box-shadow: inset 0 0 0 1px rgba(255,255,255,0.4);
 	}
 
-	body.dark-mode .shop-bonus-swatch {
+	.shop-bonus-swatch {
 		border-color: rgba(255,255,255,0.12);
 		box-shadow: inset 0 0 0 1px rgba(0,0,0,0.35);
 	}
@@ -6664,10 +6589,10 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		box-shadow: none;
 	}
 
-	body.dark-mode .shop-bonus-actions button {
+	.shop-bonus-actions button {
 		color: #062f45;
 	}
-	body.dark-mode .shop-bonus-upgrade-btn {
+	.shop-bonus-upgrade-btn {
 		background: linear-gradient(145deg, #d8a640, #f0c04f);
 		border-color: rgba(255,223,128,0.4);
 		color: #fff6d2;
@@ -6697,7 +6622,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		color: rgba(26,32,52,0.78);
 	}
 
-	body.dark-mode .shop-bonus-status {
+	.shop-bonus-status {
 		background: linear-gradient(135deg, rgba(40,42,60,0.9), rgba(32,34,52,0.88));
 		border-color: rgba(180,196,255,0.26);
 		color: rgba(236,240,255,0.85);
@@ -6827,43 +6752,43 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		box-shadow: 0 8px 20px rgba(129,140,248,0.4);
 	}
 
-	body.dark-mode .shop-upgrade-note {
+	.shop-upgrade-note {
 		color: rgba(240,242,255,0.65);
 	}
 
-	body.dark-mode .shop-upgrade-card {
+	.shop-upgrade-card {
 		background: linear-gradient(155deg, rgba(38,42,58,0.95), rgba(28,32,48,0.95));
 		border-color: rgba(150,170,240,0.2);
 		box-shadow: 0 8px 24px rgba(0,0,0,0.35);
 	}
 
-	body.dark-mode .shop-upgrade-card:hover {
+	.shop-upgrade-card:hover {
 		box-shadow: 0 12px 32px rgba(0,0,0,0.45);
 	}
 
-	body.dark-mode .shop-upgrade-header {
+	.shop-upgrade-header {
 		color: #e8ebff;
 	}
 
-	body.dark-mode .upgrade-icon {
+	.upgrade-icon {
 		background: linear-gradient(145deg, rgba(167,139,250,0.25), rgba(129,140,248,0.15));
 	}
 
-	body.dark-mode .shop-upgrade-desc {
+	.shop-upgrade-desc {
 		color: rgba(240,242,255,0.7);
 	}
 
-	body.dark-mode .shop-upgrade-price {
+	.shop-upgrade-price {
 		color: #ffb84d;
 		background: rgba(255, 184, 77, 0.15);
 	}
 
-	body.dark-mode .shop-upgrade-actions button {
+	.shop-upgrade-actions button {
 		background: linear-gradient(145deg, #a78bfa, #818cf8);
 		color: #fff;
 	}
 
-	body.dark-mode .shop-card-actions button {
+	.shop-card-actions button {
 		background: linear-gradient(145deg, #ffa940, #ff8835);
 		border-color: rgba(255, 255, 255, 0.16);
 	}
@@ -6941,28 +6866,28 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		color: rgba(30, 35, 60, 0.85);
 	}
 
-	body.dark-mode .shop-card .card-option {
+	.shop-card .card-option {
 		background: rgba(20, 24, 36, 0.82);
 		border-color: rgba(255, 255, 255, 0.16);
 		box-shadow: 0 18px 36px rgba(0, 0, 0, 0.5);
 	}
 
-	body.dark-mode .shop-card .card-option::after {
+	.shop-card .card-option::after {
 		background: linear-gradient(120deg, rgba(255,255,255,0.24), rgba(255,255,255,0) 62%);
 	}
 
-	body.dark-mode .shop-card .card-option .card-cell {
+	.shop-card .card-option .card-cell {
 		border-color: rgba(255,255,255,0.08);
 		background: rgba(32, 36, 52, 0.92);
 	}
 
-	body.dark-mode .shop-card .card-label {
+	.shop-card .card-label {
 		background: rgba(255,255,255,0.1);
 		color: #f3f4ff;
 		box-shadow: inset 0 0 0 1px rgba(255,255,255,0.18);
 	}
 
-	body.dark-mode .shop-card .card-meta {
+	.shop-card .card-meta {
 		color: rgba(240, 242, 255, 0.75);
 	}
 
@@ -7327,7 +7252,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		z-index: 1200;
 	}
 
-	body.dark-mode .objective-toast {
+	.objective-toast {
 		background: linear-gradient(135deg, #101423 0%, #1a1f33 65%, #181c2b 100%);
 		color: #f7f9ff;
 		box-shadow: 0 16px 28px rgba(0,0,0,0.5);
@@ -7358,7 +7283,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		z-index: 1300;
 	}
 
-	body.dark-mode .objective-popup {
+	.objective-popup {
 		background: linear-gradient(135deg, #0b1220, #0e1528);
 		color: #f1f5f9;
 		box-shadow: 0 24px 52px rgba(0,0,0,0.6);
@@ -7407,7 +7332,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			background: #101018;
 		}
 
-		body.dark-mode {
+		{
 			background: linear-gradient(180deg, #0b0c10 0%, #040406 100%);
 			color: #f5f6ff;
 		}
@@ -7463,7 +7388,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			color: rgba(20,24,36,0.72);
 		}
 
-		body.dark-mode #mobile-objective-banner #objective-zone h2 {
+		#mobile-objective-banner #objective-zone h2 {
 			color: rgba(230,235,255,0.8);
 		}
 
@@ -7536,6 +7461,42 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		#menu-toggle.active span:nth-child(2) { opacity: 0; }
 		#menu-toggle.active span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
 
+		/* ============================================
+		   FLOATING UNDO KNOP
+		   ============================================
+		   Altijd zichtbaar naast de hamburger (mobiel)
+		   of linksboven bij het bord (desktop).
+		*/
+		#undo-floating-btn {
+			position: fixed;
+			left: 12px;
+			top: 64px;
+			width: 38px;
+			height: 38px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 1.15rem;
+			line-height: 1;
+			border-radius: var(--radius-md, 8px);
+			background: linear-gradient(145deg, #2f3546, #1c2233);
+			border: 1px solid rgba(255,255,255,0.12);
+			box-shadow: 0 4px 10px rgba(0,0,0,0.28);
+			color: rgba(255,255,255,0.88);
+			cursor: pointer;
+			transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+			z-index: var(--z-menu);
+			padding: 0;
+		}
+		#undo-floating-btn:hover:not(:disabled) {
+			transform: scale(1.08);
+			box-shadow: 0 6px 14px rgba(0,0,0,0.32);
+		}
+		#undo-floating-btn:disabled {
+			opacity: 0.35;
+			cursor: not-allowed;
+		}
+
 		/* Styling is dark by default now. */
 
 		/* ============================================
@@ -7574,7 +7535,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			display: flex;
 		}
 
-		body.dark-mode #controls {
+		#controls {
 			background: rgba(8,9,14,0.96);
 			border-color: rgba(255,255,255,0.1);
 		}
@@ -7653,7 +7614,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			z-index: var(--z-bottom);
 		}
 
-		body.dark-mode #bottom-bar {
+		#bottom-bar {
 			background: linear-gradient(180deg, rgba(20,22,32,0.96) 0%, rgba(14,16,26,0.98) 55%, rgba(8,9,16,0.99) 100%);
 			border-top-color: rgba(255,255,255,0.1);
 		}
@@ -7797,21 +7758,26 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	}
 
 	#card-action-buttons .deck-preview {
-		order: 3;
+		order: 5;
 		margin: 0;
 	}
 
-#card-action-buttons #new-cards-btn {
-	order: 0;
-}	#card-action-buttons #rotate-card-btn,
-	#card-action-buttons #mirror-card-btn {
+	#card-action-buttons #new-cards-btn {
+		order: 0;
+	}
+	#card-action-buttons #undo-inline-btn {
 		order: 1;
+	}
+	#card-action-buttons #rotate-card-btn,
+	#card-action-buttons #mirror-card-btn {
+		order: 2;
 		display: none; /* Verberg in mobiel, toon alleen in floating preview */
 	}
 
 	#card-action-buttons #turn-counter-inline {
-		order: 4;
-	}		#card-action-buttons .card-action-btn {
+		order: 6;
+	}
+		#card-action-buttons .card-action-btn {
 			min-height: 50px;
 			width: 50px;
 			flex: 0 0 auto;
@@ -8081,27 +8047,27 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			transform: none;
 		}
 
-		body.dark-mode #bottom-bar #new-cards-btn {
+		#bottom-bar #new-cards-btn {
 			color: #f5f6ff;
 			border-color: rgba(255,255,255,0.16);
 			background: linear-gradient(155deg, #3c3f55 0%, #25283a 100%);
 			box-shadow: 0 10px 18px rgba(0,0,0,0.4);
 		}
 
-		body.dark-mode #bottom-bar #new-cards-btn::before {
+		#bottom-bar #new-cards-btn::before {
 			color: rgba(255,255,255,0.75);
 		}
 
-		body.dark-mode #bottom-bar #new-cards-btn.ready-for-next-turn {
+		#bottom-bar #new-cards-btn.ready-for-next-turn {
 			background: linear-gradient(155deg, #ffd560 0%, #ffb23c 100%);
 			border-color: rgba(255,255,255,0.35);
 		}
 
-		body.dark-mode #bottom-bar #new-cards-btn.ready-for-next-turn::before {
+		#bottom-bar #new-cards-btn.ready-for-next-turn::before {
 			color: #1c1c1c;
 		}
 
-		body.dark-mode #bottom-bar #new-cards-btn:disabled {
+		#bottom-bar #new-cards-btn:disabled {
 			background: linear-gradient(155deg, #3c3f55 0%, #25283a 100%);
 			border-color: rgba(255,255,255,0.16);
 			box-shadow: none;
@@ -8111,27 +8077,27 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			pointer-events: none;
 		}
 
-		body.dark-mode #bottom-bar #new-cards-btn:disabled::before {
+		#bottom-bar #new-cards-btn:disabled::before {
 			color: rgba(245,246,255,0.6);
 		}
 
-		body.dark-mode #bottom-bar #new-cards-btn.complete-round {
+		#bottom-bar #new-cards-btn.complete-round {
 			background: linear-gradient(155deg, #2e7d32 0%, #1b5e20 100%);
 			border-color: rgba(129,199,132,0.3);
 		}
 
-		body.dark-mode #bottom-bar #new-cards-btn.complete-round::before {
+		#bottom-bar #new-cards-btn.complete-round::before {
 			color: #a5d6a7;
 		}
 
-		body.dark-mode #bottom-bar #rotate-card-btn {
+		#bottom-bar #rotate-card-btn {
 			color: #f4f6ff;
 			border-color: rgba(255,255,255,0.18);
 			background: linear-gradient(155deg, #2b3247 0%, #1c2233 100%);
 			box-shadow: 0 9px 18px rgba(0,0,0,0.4);
 		}
 
-		body.dark-mode #bottom-bar #rotate-card-btn:disabled {
+		#bottom-bar #rotate-card-btn:disabled {
 			opacity: 0.5;
 			box-shadow: none;
 		}
@@ -8256,27 +8222,27 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			border-radius: 4px;
 		}
 
-		body.dark-mode #bottom-bar #card-choice-zone .card-option {
+		#bottom-bar #card-choice-zone .card-option {
 			background: linear-gradient(160deg, #2d3142 0%, #232635 45%, #1b1e2c 100%);
 			border-color: rgba(120,140,220,0.18);
 			box-shadow: 0 20px 34px rgba(0,0,0,0.5);
 		}
 
-		body.dark-mode #bottom-bar #card-choice-zone .card-option::after {
+		#bottom-bar #card-choice-zone .card-option::after {
 			opacity: 0.25;
 		}
 
-		body.dark-mode #bottom-bar #card-choice-zone .card-option .card-cell {
+		#bottom-bar #card-choice-zone .card-option .card-cell {
 			border-color: rgba(255,255,255,0.08);
 			box-shadow: inset 0 0 6px rgba(0,0,0,0.35);
 		}
 
-		body.dark-mode #bottom-bar #card-choice-zone .card-label {
+		#bottom-bar #card-choice-zone .card-label {
 			background: rgba(255,255,255,0.08);
 			color: rgba(255,255,255,0.8);
 		}
 
-		body.dark-mode #bottom-bar #card-choice-zone .card-meta {
+		#bottom-bar #card-choice-zone .card-meta {
 			color: rgba(255,255,255,0.65);
 		}
 
@@ -8326,7 +8292,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			color: #f5f6ff;
 		}
 
-		body.dark-mode #bottom-bar #scoreboard {
+		#bottom-bar #scoreboard {
 			background: rgba(12,14,22,0.92);
 			border-color: rgba(255,255,255,0.14);
 			color: #f5f6ff;
@@ -8426,7 +8392,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			display: none;
 		}
 
-		body.dark-mode #bottom-bar #scoreboard .trap-summary {
+		#bottom-bar #scoreboard .trap-summary {
 			background: rgba(255,255,255,0.04);
 		}
 
@@ -8496,7 +8462,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			min-height: 0;
 		}
 
-		body.dark-mode #bottom-bar #gold-zone {
+		#bottom-bar #gold-zone {
 			background: rgba(12,14,22,0.92);
 			border-color: rgba(255,255,255,0.14);
 		}
@@ -8514,12 +8480,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			gap: 4px;
 			flex: 0 0 auto;
 			cursor: pointer;
-			background: none;
-			border: none;
-			box-shadow: none;
+			background: linear-gradient(160deg, #2c3144 0%, #222635 100%);
+			border: 1px solid rgba(140,150,200,0.3);
+			box-shadow: 0 16px 30px rgba(0,0,0,0.42);
 			padding: 0;
 			min-height: 0;
 			transition: transform 0.15s ease;
+			color: rgba(235,238,255,0.88);
 		}
 
 		.deck-preview:hover {
@@ -8545,7 +8512,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			outline-offset: 4px;
 		}
 
-		body.dark-mode #card-action-buttons .deck-preview:focus-visible {
+		#card-action-buttons .deck-preview:focus-visible {
 			outline-color: rgba(120,160,255,0.65);
 		}
 
@@ -8580,7 +8547,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			outline-offset: 3px;
 		}
 
-		body.dark-mode .deck-preview:focus-visible .deck-count {
+		.deck-preview:focus-visible .deck-count {
 			outline-color: rgba(120, 160, 255, 0.8);
 		}
 
@@ -8589,7 +8556,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			font-size: 1.1rem;
 		}
 
-		body.dark-mode .deck-count {
+		.deck-count {
 			background: linear-gradient(145deg, #2f3546, #1c2233);
 			border-color: rgba(255,255,255,0.12);
 			color: rgba(255,255,255,0.88);
@@ -8677,19 +8644,19 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			transform: scale(1);
 		}
 
-		body.dark-mode #bottom-bar .coin {
+		#bottom-bar .coin {
 			background: rgba(255,255,255,0.14);
 			border-color: rgba(255,255,255,0.24);
 		}
 
-		body.dark-mode #bottom-bar .coin.used {
+		#bottom-bar .coin.used {
 			background: rgba(60,60,72,0.7);
 			border-color: rgba(110,110,130,0.55);
 			box-shadow: inset 0 0 0 1px rgba(0,0,0,0.55);
 			transform: scale(1);
 		}
 
-		body.dark-mode #bottom-bar .coin.active {
+		#bottom-bar .coin.active {
 			background: radial-gradient(circle at 30% 30%, #ffe58c, #f5b72f 70%);
 		}
 
@@ -9069,26 +9036,26 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 
 
 	/* Titels krijgen lichtblauwe gloed voor betere zichtbaarheid */
-	body.dark-mode h1, 
-	body.dark-mode #total-score {
+	h1, 
+	#total-score {
 	  color: #f0f3ff;
 	  text-shadow: 0 0 10px rgba(100, 150, 255, 0.3);
 	}
 
-	body.dark-mode h2 {
+	h2 {
 	  color: #a0a3ad;
 	  font-weight: 500;
 	}
 
 	/* Cellen: donker met blauwe gloed bij activatie */
-	body.dark-mode .cell {
+	.cell {
 	  background: #272a31;
 	  border: 1px solid #3a3d45;
 	  color: #ddd;
 	  transition: background 0.25s, transform 0.15s;
 	}
 
-	body.dark-mode .cell.active {
+	.cell.active {
 	  background: #3a6ff7;
 	  color: #fff;
 	  box-shadow: 0 0 8px rgba(58,111,247,0.4);
@@ -9200,24 +9167,24 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	}
 
 	/* Hover effect op cellen */
-	body.dark-mode .cell:hover {
+	.cell:hover {
 	  background: #31343b;
 	}
 
 	/* Symbolen iets minder verzadigd in dark mode */
-	body.dark-mode .symbol {
+	.symbol {
 	  filter: brightness(0.9) saturate(0.9);
 	}
 
-	body.dark-mode .symbol.trap-symbol {
+	.symbol.trap-symbol {
 	  background: #555555;
 	}
 
-	body.dark-mode .symbol.trap-symbol::after {
+	.symbol.trap-symbol::after {
 	  background: linear-gradient(135deg, rgba(220,220,220,0.25) 0%, rgba(220,220,220,0) 50%);
 	}
 
-	body.dark-mode .symbol.trap-symbol.trap-symbol--black-hole {
+	.symbol.trap-symbol.trap-symbol--black-hole {
 	  background: radial-gradient(circle, #2a2a3e 0%, #1a1a2e 60%, #0a0a15 100%);
 	  border-radius: 50%;
 	  box-shadow: 
@@ -9227,14 +9194,14 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  border: 2px solid rgba(138, 43, 226, 0.6);
 	}
 
-	body.dark-mode .symbol.trap-symbol.trap-symbol--black-hole::after {
+	.symbol.trap-symbol.trap-symbol--black-hole::after {
 	  background: radial-gradient(circle, rgba(138, 43, 226, 0.3) 0%, transparent 70%);
 	  opacity: 1;
 	  border-radius: 50%;
 	}
 	
 	/* Gouden vak wordt donkergrijs met scoreboard styling */
-	body.dark-mode #gold-zone { 
+	#gold-zone { 
 		background: linear-gradient(145deg, #22252b, #1a1c21);
 		border: 1px solid #2d2f36;
 		box-shadow: 0 0 12px rgba(0,0,0,0.6);
@@ -9242,14 +9209,14 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	}
 
 	/* Scorebord dark mode styling */
-	body.dark-mode #scoreboard {
+	#scoreboard {
 	  background: linear-gradient(145deg, #22252b, #1a1c21);
 	  border: 1px solid #2d2f36;
 	  box-shadow: 0 0 12px rgba(0,0,0,0.6);
 	  color: #e5e5e5;
 	}
 	
-	body.dark-mode .score-row { 
+	.score-row { 
 		background: #2a2d35;
 		color: #e5e5e5;
 	}
@@ -9308,7 +9275,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  text-shadow: 0 2px 6px rgba(0,0,0,0.35);
 	}
 	
-	body.dark-mode .card.selected {
+	.card.selected {
 	  outline: 3px solid #a7a9ad;
 	  outline-offset: -3px;
 	}
@@ -9487,65 +9454,65 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	}
 
 	/* Dark mode bonus badges */
-	body.dark-mode :is(#bonus-zone, #bottom-bar-bonus) .bonus-badge {
+	:is(#bonus-zone, #bottom-bar-bonus) .bonus-badge {
 		box-shadow: 0 16px 32px rgba(0,0,0,0.5);
 		color: #f5f6ff;
 	}
-	body.dark-mode :is(#bonus-zone, #bottom-bar-bonus) .bonus-badge.bonus-mastered {
+	:is(#bonus-zone, #bottom-bar-bonus) .bonus-badge.bonus-mastered {
 		box-shadow: 0 0 0 2px rgba(255, 214, 97, 0.7), 0 16px 34px rgba(255, 214, 97, 0.42);
 	}
 
-	body.dark-mode :is(#bonus-zone, #bottom-bar-bonus) .bonus-badge::before {
+	:is(#bonus-zone, #bottom-bar-bonus) .bonus-badge::before {
 		background: linear-gradient(120deg, rgba(255,255,255,0.18), rgba(255,255,255,0));
 		opacity: 0.3;
 	}
 
-	body.dark-mode :is(#bonus-zone, #bottom-bar-bonus) .bonus-badge[data-bonus-color="geel"] {
+	:is(#bonus-zone, #bottom-bar-bonus) .bonus-badge[data-bonus-color="geel"] {
 		background: linear-gradient(140deg, rgba(255, 207, 102, 0.24), rgba(198, 147, 44, 0.58));
 		border-color: rgba(255, 207, 102, 0.45);
 		color: #fff3c0;
 	}
 
-	body.dark-mode :is(#bonus-zone, #bottom-bar-bonus) .bonus-badge[data-bonus-color="rood"] {
+	:is(#bonus-zone, #bottom-bar-bonus) .bonus-badge[data-bonus-color="rood"] {
 		background: linear-gradient(140deg, rgba(255, 170, 174, 0.25), rgba(215, 90, 112, 0.6));
 		border-color: rgba(215, 90, 112, 0.45);
 		color: #ffd6dc;
 	}
 
-	body.dark-mode :is(#bonus-zone, #bottom-bar-bonus) .bonus-badge[data-bonus-color="groen"] {
+	:is(#bonus-zone, #bottom-bar-bonus) .bonus-badge[data-bonus-color="groen"] {
 		background: linear-gradient(140deg, rgba(158, 223, 175, 0.2), rgba(78, 148, 102, 0.55));
 		border-color: rgba(118, 186, 136, 0.45);
 		color: #ddffe7;
 	}
 
-	body.dark-mode :is(#bonus-zone, #bottom-bar-bonus) .bonus-badge[data-bonus-color="paars"] {
+	:is(#bonus-zone, #bottom-bar-bonus) .bonus-badge[data-bonus-color="paars"] {
 		background: linear-gradient(140deg, rgba(210, 186, 255, 0.24), rgba(120, 92, 190, 0.65));
 		border-color: rgba(167, 132, 230, 0.45);
 		color: #f0e9ff;
 	}
 
-	body.dark-mode :is(#bonus-zone, #bottom-bar-bonus) .bonus-badge[data-bonus-color="blauw"] {
+	:is(#bonus-zone, #bottom-bar-bonus) .bonus-badge[data-bonus-color="blauw"] {
 		background: linear-gradient(140deg, rgba(168, 205, 255, 0.22), rgba(70, 116, 186, 0.6));
 		border-color: rgba(120, 162, 226, 0.45);
 		color: #e2f1ff;
 	}
 
-	body.dark-mode :is(#bonus-zone, #bottom-bar-bonus) .bonus-badge.active {
+	:is(#bonus-zone, #bottom-bar-bonus) .bonus-badge.active {
 		box-shadow: 0 0 0 2px rgba(142,174,255,0.38), 0 16px 32px rgba(0,0,0,0.55);
 	}
 
-	body.dark-mode :is(#bonus-zone, #bottom-bar-bonus) .bonus-badge.disabled,
-	body.dark-mode :is(#bonus-zone, #bottom-bar-bonus) .bonus-badge:disabled {
+	:is(#bonus-zone, #bottom-bar-bonus) .bonus-badge.disabled,
+	:is(#bonus-zone, #bottom-bar-bonus) .bonus-badge:disabled {
 		opacity: 0.85;
 		border-color: rgba(142,174,255,0.35);
 	}
 
-	body.dark-mode :is(#bonus-zone, #bottom-bar-bonus) .bonus-badge.disabled::after,
-	body.dark-mode :is(#bonus-zone, #bottom-bar-bonus) .bonus-badge:disabled::after {
+	:is(#bonus-zone, #bottom-bar-bonus) .bonus-badge.disabled::after,
+	:is(#bonus-zone, #bottom-bar-bonus) .bonus-badge:disabled::after {
 		background: linear-gradient(0deg, rgba(4,6,14,0.55), rgba(4,6,14,0));
 	}
 
-	body.dark-mode :is(#bonus-zone, #bottom-bar-bonus) .bonus-badge .bonus-count {
+	:is(#bonus-zone, #bottom-bar-bonus) .bonus-badge .bonus-count {
 		background: rgba(12,14,20,0.55);
 		color: #f5f6ff;
 	}
@@ -9595,7 +9562,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		overflow: hidden;
 	  }
 
-	  body.dark-mode {
+	  {
 		background: var(--color-dark-bg);
 		color: var(--color-text-light);
 	  }
@@ -10407,16 +10374,16 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		transform: rotate(-45deg) translate(8px, -8px);
 	  }
 
-	  body.dark-mode #desktop-menu-toggle {
+	  #desktop-menu-toggle {
 		background: #2d2f36;
 		border-color: #4a4c54;
 	  }
 
-	  body.dark-mode #desktop-menu-toggle span {
+	  #desktop-menu-toggle span {
 		background: #eee;
 	  }
 
-	  body.dark-mode #desktop-menu-toggle:hover {
+	  #desktop-menu-toggle:hover {
 		background: #3a3c44;
 	  }
 
@@ -10473,7 +10440,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	border-radius: 10px;
 	border: 1px solid #e3e6ea;
 	box-shadow: 0 2px 6px rgba(0,0,0,0.12);
-  }	  body.dark-mode #objective-zone {
+  }	  #objective-zone {
 		background: linear-gradient(145deg, #22252b, #1a1c21);
 		border: 1px solid var(--color-border-dark);
 		box-shadow: 0 4px 10px var(--shadow-dark);
@@ -10489,7 +10456,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		color: #333;
 	  }
 
-	  body.dark-mode #objective-zone h2 {
+	  #objective-zone h2 {
 		color: var(--color-text-light);
 	  }
 
@@ -10665,8 +10632,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		border-radius: 10px;
 	  }
 
-	  body.dark-mode #desktop-left::-webkit-scrollbar-thumb,
-	  body.dark-mode #desktop-right::-webkit-scrollbar-thumb {
+	  #desktop-left::-webkit-scrollbar-thumb,
+	  #desktop-right::-webkit-scrollbar-thumb {
 		background: rgba(255, 255, 255, 0.16);
 	  }
 
@@ -10812,7 +10779,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		display: none !important;
 	  }
 
-	  body.dark-mode.desktop-portrait #gold-zone::after {
+	  body.desktop-portrait #gold-zone::after {
 		color: #e5e5e5;
 	  }
 
@@ -10876,7 +10843,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		min-height: 0;
 	  }
 
-	  body.dark-mode #desktop-right #card-choice-zone {
+	  #desktop-right #card-choice-zone {
 		background: linear-gradient(145deg, #22252b, #1a1c21);
 		border: 1px solid #2d2f36;
 	  }
@@ -10929,10 +10896,10 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		background: linear-gradient(180deg, rgba(120, 140, 200, 0.8), rgba(100, 120, 180, 0.6));
 	  }
 	  
-	  body.dark-mode #desktop-right #card-options.has-scroll {
+	  #desktop-right #card-options.has-scroll {
 		scrollbar-color: rgba(140, 160, 220, 0.4) transparent;
 	  }
-	  body.dark-mode #desktop-right #card-options.has-scroll::-webkit-scrollbar-thumb {
+	  #desktop-right #card-options.has-scroll::-webkit-scrollbar-thumb {
 		background: linear-gradient(180deg, rgba(100, 120, 180, 0.5), rgba(80, 100, 160, 0.3));
 	  }
 
@@ -11030,7 +10997,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  body.desktop-landscape:not(.classic-mode) #collected-coins {
 		display: none;
 	  }
-	  body.dark-mode.desktop-landscape:not(.classic-mode) #gold-zone::after {
+	  body.desktop-landscape:not(.classic-mode) #gold-zone::after {
 		color: var(--color-text-light);
 	  }
 
@@ -11095,14 +11062,14 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		text-align: center;
 	  }
 
-	  body.dark-mode #gold-zone {
+	  #gold-zone {
 		border: 1px solid var(--color-border-dark);
 		box-shadow: 0 4px 10px var(--shadow-dark);
 		background: linear-gradient(145deg, #22252b, #1a1c21);
 		color: var(--color-text-light);
 	  }
 
-	  body.dark-mode #gold-zone h2 {
+	  #gold-zone h2 {
 		color: var(--color-text-light);
 	  }
 
@@ -11130,18 +11097,18 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		display: none;
 	  }
 
-	  body.dark-mode #bonus-zone {
+	  #bonus-zone {
 		border: 1px solid #2d2f36;
 		box-shadow: 0 4px 10px rgba(0,0,0,0.5);
 		background: linear-gradient(145deg, #22252b, #1a1c21);
 		color: #e5e5e5;
 	  }
 
-	  body.dark-mode #bonus-zone h2 {
+	  #bonus-zone h2 {
 		color: var(--color-text-light);
 	  }
 
-	  body.dark-mode #bonus-zone h2 {
+	  #bonus-zone h2 {
 		color: var(--color-text-light);
 	  }
 
@@ -11215,12 +11182,22 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  #menu-toggle.active span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
 	  #menu-toggle.active span:nth-child(2) { opacity: 0; }
 	  #menu-toggle.active span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
-	  body.dark-mode #menu-toggle {
+	  #menu-toggle {
 		background: linear-gradient(145deg, #2f3546, #1c2233);
 		border-color: rgba(255,255,255,0.12);
 	  }
-	  body.dark-mode #menu-toggle span {
+	  #menu-toggle span {
 		background: rgba(255,255,255,0.88);
+	  }
+
+	  /* Floating undo knop — desktop positie */
+	  #undo-floating-btn {
+		left: 12px;
+		top: 64px;
+		width: 44px;
+		height: 44px;
+		font-size: 1.25rem;
+		border-radius: 12px;
 	  }
 
 	  /* Legacy desktop toggle (unused): keep hidden so only #menu-toggle is visible. */
@@ -11242,7 +11219,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	     Op desktop zijn controls altijd zichtbaar in de layout
 	  */
 
-	  body.dark-mode #controls {
+	  #controls {
 		background: #2d2f36;
 		color: #eee;
 		box-shadow: 0 4px 16px rgba(0,0,0,0.4);
@@ -11267,13 +11244,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		transform: translateY(-1px);
 	  }
 
-	  body.dark-mode #controls button {
+	  #controls button {
 		background: #3a3c44;
 		border-color: #4a4c54;
 		color: #eee;
 	  }
 
-	  body.dark-mode #controls button:hover {
+	  #controls button:hover {
 		background: #454750;
 	  }
 
@@ -11290,13 +11267,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		color: #0d3c60;
 	}
 
-	body.dark-mode #controls #debug-mode-toggle.debug-active {
+	#controls #debug-mode-toggle.debug-active {
 		background: linear-gradient(145deg, #17435f, #1f587c);
 		border-color: #39a1d9;
 		color: #e4f6ff;
 	}
 
-	  body.dark-mode #controls button {
+	  #controls button {
 		background: var(--color-dark-gray);
 		color: #eee;
 		border-color: #555;
@@ -11306,7 +11283,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		background: #f0f0f0;
 	  }
 
-	  body.dark-mode #controls button:hover:not(:disabled) {
+	  #controls button:hover:not(:disabled) {
 		background: #444;
 	  }
 
@@ -11337,14 +11314,14 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		color: #333;
 	  }
 
-	  body.dark-mode #card-choice-zone {
+	  #card-choice-zone {
 		background: linear-gradient(145deg, #22252b, #1a1c21);
 		border: 1px solid var(--color-border-dark);
 		box-shadow: 0 4px 10px var(--shadow-dark);
 		color: var(--color-text-light);
 	  }
 
-	  body.dark-mode #card-choice-zone h2 {
+	  #card-choice-zone h2 {
 		color: var(--color-text-light);
 	  }
 
@@ -11382,7 +11359,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		transition: transform 0.2s, box-shadow 0.2s;
 	  }
 
-	  body.dark-mode #card-choice-zone .card-option {
+	  #card-choice-zone .card-option {
 		background: linear-gradient(160deg, #2d3142 0%, #232635 45%, #1b1e2c 100%);
 		border: 1px solid rgba(120,140,220,0.2);
 		box-shadow: 0 8px 20px rgba(0,0,0,0.4);
@@ -11393,7 +11370,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		box-shadow: 0 0 10px rgba(0,0,0,0.25);
 	  }
 
-	  body.dark-mode #card-choice-zone .card-option:hover {
+	  #card-choice-zone .card-option:hover {
 		box-shadow: 0 0 14px rgba(0,0,0,0.5);
 	  }
 
@@ -11403,7 +11380,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		border-color: #3a6ff7;
 	  }
 
-	  body.dark-mode #card-choice-zone .card-option.selected {
+	  #card-choice-zone .card-option.selected {
 		outline: 3px solid #5a8fff;
 		outline-offset: -3px;
 		border-color: #5a8fff;
@@ -11505,36 +11482,36 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		font-weight: 900;
 	  }
 
-	  body.dark-mode #new-cards-btn {
+	  #new-cards-btn {
 		background: linear-gradient(145deg, #22252b, #1a1c21);
 		border: 1px solid #2d2f36;
 		box-shadow: 0 6px 14px rgba(0,0,0,0.45);
 		color: #e5e5e5;
 	  }
 
-	  body.dark-mode #new-cards-btn::before {
+	  #new-cards-btn::before {
 		color: rgba(255,255,255,0.75);
 	  }
 
-	  body.dark-mode #new-cards-btn.ready-for-next-turn {
+	  #new-cards-btn.ready-for-next-turn {
 		background: linear-gradient(155deg, #ffd560 0%, #ffb23c 100%);
 		border-color: rgba(255,255,255,0.35);
 	  }
 
-	  body.dark-mode #new-cards-btn.ready-for-next-turn::before {
+	  #new-cards-btn.ready-for-next-turn::before {
 		color: #1c1c1c;
 	  }
 
-	  body.dark-mode #new-cards-btn:disabled::before {
+	  #new-cards-btn:disabled::before {
 		color: rgba(245,246,255,0.6);
 	  }
 
-	  body.dark-mode #new-cards-btn.complete-round {
+	  #new-cards-btn.complete-round {
 		background: linear-gradient(155deg, #2e7d32 0%, #1b5e20 100%);
 		border-color: rgba(129,199,132,0.3);
 	  }
 
-	  body.dark-mode #new-cards-btn.complete-round::before {
+	  #new-cards-btn.complete-round::before {
 		color: #a5d6a7;
 	  }
 
@@ -11543,193 +11520,13 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		transform: translateY(-2px);
 	  }
 
-	  body.dark-mode #new-cards-btn:hover {
+	  #new-cards-btn:hover {
 		background: linear-gradient(150deg, #2a2d35, #1f2230);
 		border-color: #373a42;
 		box-shadow: 0 8px 18px rgba(0,0,0,0.5);
 	  }
 
-	  /* Compacte kaarten bij weinig ruimte - verberg labels en meta */
-	  @media (min-width: 651px) and (max-width: 1100px) {
-		#card-choice-zone .card-label,
-		#card-choice-zone .card-meta {
-		  display: none;
-		}
-		
-		#card-choice-zone .card-option {
-		  min-width: 80px;
-		  min-height: 140px;
-		  padding: 8px 4px;
-		}
-		
-		#card-choice-zone .card-option .card-cell {
-		  width: 18px;
-		  height: 18px;
-		}
-
-		/* Knoppen worden icoon-only */
-		#new-cards-btn,
-		#rotate-card-btn {
-		  width: 44px;
-		  height: 44px;
-		  padding: 0;
-		  font-size: 0;
-		  justify-content: center;
-		}
-
-		#new-cards-btn::before,
-		#rotate-card-btn::before {
-		  font-size: 1.8rem;
-		  position: absolute;
-		  top: 50%;
-		  left: 50%;
-		  transform: translate(-50%, -50%);
-		}
-
-		#rotate-card-btn {
-		  margin-top: 8px;
-		}
-
-		/* Deck-count compacter maken */
-		.deck-count {
-		  height: 44px;
-		  min-width: 44px;
-		  padding: 6px 8px;
-		  font-size: 0.95rem;
-		}
-
-		/* Deck preview tekst verbergen, alleen icoon en getal */
-		.deck-preview {
-		  padding: 6px 8px;
-		  min-height: 44px;
-		  width: auto;
-		  gap: 4px;
-		}
-
-		.deck-preview::after {
-		  display: none;
-		}
-
-		/* Turn counter styling - naast buttons */
-		#turn-counter-inline {
-		  text-align: left;
-		  font-size: 0.9rem;
-		  padding-left: 8px;
-		}
-
-		/* "Beurt" tekst verwijderen */
-		#turn-counter-inline::before {
-		  content: '';
-		}
-
-		/* Objective zone aanpassingen voor smaller schermen */
-		#objective-zone {
-		  width: 85%;
-		  max-width: 900px;
-		  padding: 8px 12px;
-		}
-
-		/* Zijkolommen kunnen krimpen */
-		#desktop-bottom-left,
-		#desktop-bottom-right {
-		  width: auto;
-		  min-width: 280px;
-		  max-width: 360px;
-		  flex-shrink: 1;
-		}
-
-		/* Desktop wrapper minder padding */
-		#desktop-wrapper {
-		  padding: 8px;
-		  gap: 12px;
-		}
-	  }
-
-	  /* Extra aanpassingen voor zeer smalle desktop schermen */
-	  @media (min-width: 651px) and (max-width: 850px) {
-		#objective-zone {
-		  width: 92%;
-		  max-width: 700px;
-		  padding: 8px 12px;
-		  font-size: 0.9rem;
-		}
-
-		#objective-zone h2 {
-		  font-size: 0.9rem;
-		}
-
-		#objective-current {
-		  font-size: 0.85rem;
-		}
-
-		#desktop-wrapper {
-		  padding: 8px;
-		  gap: 10px;
-		}
-
-		#desktop-bottom-left,
-		#desktop-bottom-right {
-		  min-width: 240px;
-		  max-width: 320px;
-		}
-
-		#desktop-bottom {
-		  gap: 8px;
-		}
-	  }
-
-	  /* Narrow portrait desktop (651-900px): tighter layout to fit all elements */
-	  @media (min-width: 651px) and (max-width: 900px) {
-		body.desktop-portrait.desktop-portrait #desktop-bottom {
-		  gap: 8px;
-		  padding: 0 8px;
-		}
-
-		body.desktop-portrait.desktop-portrait #desktop-bottom-left {
-		  flex: 0 1 180px;
-		  min-width: 130px;
-		  max-width: 200px;
-		}
-
-		body.desktop-portrait.desktop-portrait #desktop-bottom-center {
-		  flex: 1 1 340px;
-		  min-width: 240px;
-		  max-width: 480px;
-		}
-
-		body.desktop-portrait.desktop-portrait #desktop-bottom-right {
-		  flex: 0 1 160px;
-		  min-width: 120px;
-		  max-width: 200px;
-		}
-
-		/* Compact scoreboard for narrow widths */
-		body.desktop-portrait #scoreboard {
-		  max-width: 190px;
-		  padding: 4px 5px;
-		  font-size: 0.8rem;
-		}
-
-		body.desktop-portrait #scoreboard .score-row {
-		  padding: 1px 3px;
-		  font-size: 0.75rem;
-		}
-
-		body.desktop-portrait #scoreboard .score-total {
-		  padding: 3px 5px;
-		  font-size: 0.78rem;
-		}
-
-		body.desktop-portrait #gold-zone {
-		  padding: 2px 6px;
-		  font-size: 0.85rem;
-		}
-
-		body.desktop-portrait .bonus-badge {
-		  padding: 4px 6px;
-		  font-size: 0.68rem;
-		}
-	  }
+	  /* Sub-breakpoints verplaatst naar top-level @media blokken (regel ~12223+) */
 
 	  #rotate-card-btn {
 		display: none;
@@ -11761,14 +11558,14 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		line-height: 1;
 	  }
 
-	  body.dark-mode #rotate-card-btn {
+	  #rotate-card-btn {
 		background: linear-gradient(145deg, #22252b, #1a1c21);
 		border: 1px solid #2d2f36;
 		box-shadow: 0 6px 14px rgba(0,0,0,0.45);
 		color: #e5e5e5;
 	  }
 
-	  body.dark-mode #rotate-card-btn::before {
+	  #rotate-card-btn::before {
 		color: rgba(255,255,255,0.75);
 	  }
 
@@ -11777,7 +11574,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		transform: translateY(-1px);
 	  }
 
-	  body.dark-mode #rotate-card-btn:hover:not(:disabled) {
+	  #rotate-card-btn:hover:not(:disabled) {
 		background: linear-gradient(150deg, #2a2d35, #1f2230);
 		border-color: #373a42;
 		box-shadow: 0 8px 18px rgba(0,0,0,0.5);
@@ -11815,7 +11612,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		margin: 2px 0;
 	  }
 
-	  body.dark-mode #scoreboard {
+	  #scoreboard {
 		background: linear-gradient(145deg, #22252b, #1a1c21);
 		border: 1px solid var(--color-border-dark);
 		box-shadow: 0 4px 10px var(--shadow-dark);
@@ -11827,11 +11624,11 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		display: block;
 	  }
 
-	  body.dark-mode #scoreboard h2 {
+	  #scoreboard h2 {
 		color: var(--color-text-light);
 	  }
 
-	  body.dark-mode #scoreboard hr {
+	  #scoreboard hr {
 		border-color: #3d4048;
 	  }
 
@@ -11844,7 +11641,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		transition: transform 0.1s ease, background 0.3s;
 	  }
 
-	  body.dark-mode #scoreboard .score-row {
+	  #scoreboard .score-row {
 		background: #2a2d35;
 		color: var(--color-text-light);
 	  }
@@ -11855,7 +11652,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		color: #222;
 	  }
 
-	  body.dark-mode #scoreboard .score-row:hover {
+	  #scoreboard .score-row:hover {
 		background: #32353d;
 	  }
 
@@ -11881,7 +11678,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		font-weight: 600;
 	  }
 
-	  body.dark-mode #scoreboard .score-total {
+	  #scoreboard .score-total {
 		background: #2f3239;
 		border-color: #3d4048;
 		color: #e5e5e5;
@@ -11904,7 +11701,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		display: none;
 	  }
 
-	  body.dark-mode #objective-zone {
+	  #objective-zone {
 		background: linear-gradient(145deg, #22252b, #1a1c21);
 		border: 1px solid var(--color-border-dark);
 		box-shadow: 0 4px 10px var(--shadow-dark);
@@ -11932,7 +11729,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		color: rgba(20,24,36,0.6);
 	  }
 
-	  body.dark-mode .objective-history {
+	  .objective-history {
 		color: rgba(255,255,255,0.6);
 	  }
 
@@ -11948,7 +11745,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		color: #2c9a4b;
 	  }
 
-	  body.dark-mode .objective-history li::before {
+	  .objective-history li::before {
 		color: #7fe48e;
 	  }
 
@@ -11957,7 +11754,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		color: rgba(20,24,36,0.6);
 	  }
 
-	  body.dark-mode .objective-empty-state {
+	  .objective-empty-state {
 		color: rgba(255,255,255,0.55);
 	  }
 
@@ -11973,8 +11770,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 	  }
 
 	  /* Desktop Dark Mode voor Bonus Zone - mooie gradient zoals objective-zone */
-	  body.dark-mode #bonus-zone,
-	  body.dark-mode #original-bonus-zone .zone {
+	  #bonus-zone,
+	  #original-bonus-zone .zone {
 		background: linear-gradient(145deg, #22252b, #1a1c21);
 		border: 1px solid var(--color-border-dark);
 		box-shadow: 0 4px 10px var(--shadow-dark);
@@ -11986,8 +11783,8 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		margin: 0;
 	  }
 
-	  body.dark-mode #bonus-zone h2,
-	  body.dark-mode #original-bonus-zone .zone h2 {
+	  #bonus-zone h2,
+	  #original-bonus-zone .zone h2 {
 		color: #e4e8ff;
 	  }
 
@@ -12170,13 +11967,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 		}
 	}
 
-	/*
-		EN:
-		- FIX: Some desktop "sub-breakpoint" rules are written as nested @media blocks inside
-		  `@media (min-width: 651px) { ... }`. CSS nesting support varies by browser.
-		- To make behavior consistent, we also include top-level versions of those @media queries here.
-		- DUPLICATE: These mirror the nested blocks; keep them in sync if you edit one.
-	*/
+	/* Desktop sub-breakpoints: compactere layout bij smallere viewport */
 	@media (min-width: 651px) and (max-width: 1100px) {
 		#card-choice-zone .card-label,
 		#card-choice-zone .card-meta {
@@ -12533,6 +12324,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
     <span></span>
     <span></span>
   </button>
+	<button id="undo-floating-btn" onclick="undo()" title="Undo (Ctrl+Z)" aria-label="Undo" disabled>↩</button>
 	<div id="mobile-objective-banner"></div>
 
 	<!-- Mobile Sidebar Layout Container (hidden by default, JS populates for mobile) -->
@@ -12593,6 +12385,7 @@ body.dark-mode #saved-levels-modal .saved-obj-text { color: #ddd; opacity: 0.95;
 			  <div id="turn-counter-inline" aria-live="polite">Beurt 1</div>
 				<div id="card-action-buttons">
 				<button id="new-cards-btn" class="card-action-btn" type="button" data-icon="➜" data-label="Volgende hand" aria-label="Volgende hand"></button>
+				<button id="undo-inline-btn" class="card-action-btn" type="button" onclick="undo()" title="Undo (Ctrl+Z)" aria-label="Undo" disabled>↩</button>
 				<button id="rotate-card-btn" class="card-action-btn" type="button" data-icon="⟳" data-label="Draai kaart" aria-label="Draai kaart"></button>
 				<button id="mirror-card-btn" class="card-action-btn" type="button" data-icon="⇄" data-label="Spiegel kaart" aria-label="Spiegel kaart"></button>
 				<button id="bonus-shop-btn" class="card-action-btn" type="button" data-icon="🏪" data-label="Bonuswinkel" aria-label="Open bonuswinkel" style="display: none;"></button>
@@ -17501,14 +17294,7 @@ let shopLevel2Used = false;
 		markActiveBonusButton(colorKey);
 	}
 	
-	// --- Dark mode: force dark-only behavior ---
-	document.addEventListener('DOMContentLoaded', () => {
-		try {
-			document.documentElement.classList.add('dark-mode');
-			document.body && document.body.classList.add('dark-mode');
-			try { localStorage.setItem('theme', 'dark'); } catch (e) {}
-		} catch (e) {}
-	});
+	// Dark mode is now the base styling — no class toggle needed.
 
 	// Prevent pinch-zoom gestures on mobile Safari/iOS
 	['gesturestart', 'gesturechange', 'gestureend'].forEach(type => {
@@ -19650,6 +19436,7 @@ let shopLevel2Used = false;
 	  if (!partOfShape) {
 		const actionId = ++actionSequence;
 		historyStack.push({cell:cell, wasActive: was, sequence: actionId});
+		updateUndoButton();
 	  }
 
 	  // bepaal zone en zoneColor op een robuuste manier
@@ -20486,132 +20273,110 @@ let shopLevel2Used = false;
      
      Toont ook animaties bij score veranderingen
   */
-  function updateScore(cell){
-	// Local refs (avoid ReferenceErrors if other scopes also use these names)
+
+  /* ---------- Per-zone scoring helpers ---------- */
+
+  /** Groen: distance-based end-cell scoring (World 2+) or flat 8pt (World 1). */
+  function scoreGreen(cell) {
 	const safeLevel = (typeof currentLevel !== 'undefined') ? currentLevel : 1;
 	const worldInfo = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(safeLevel) : { world: 1 };
-	const isWorld2 = Number(worldInfo?.world || 1) === 2;
-	const isWorld3 = Number(worldInfo?.world || 1) === 3;
-	const isWorld4 = Number(worldInfo?.world || 1) === 4;
+	const w = Number(worldInfo?.world || 1);
 	const greenGrid = document.getElementById('green-grid');
+	const activeEndCells = Array.from(document.querySelectorAll('#green-grid .cell.end-cell.active'));
 
-		try {
-			if (window.debugScoreUpdates) {
-				console.debug('updateScore:called', { cellId: cell ? (cell.id || null) : null, time: Date.now() });
-			}
-		} catch(e) {}
-
-    /* === GROEN SCORE === 
-       Elke ingevulde eindcel = 8 punten */
-	(() => {
-		/* === ROOD SCORE ===
-		Elk volledig gevuld subgrid geeft vaste punten (per subgrid).
-		Score verdwijnt als grid weer onvolledig gemaakt wordt. */
-		const activeEndCells = Array.from(document.querySelectorAll('#green-grid .cell.end-cell.active'));
-		if (!(isWorld2 || isWorld3 || isWorld4) || !greenGrid) {
-			green = activeEndCells.length * 8;
-			if (cell != null && cell.classList.contains('end-cell') && cell.classList.contains('active')) {
-				const rect = cell.getBoundingClientRect();
-				showScoreAnimation(rect.left + rect.width / 2, rect.top + rect.height / 2, "+ 8", "green");
-			}
-			return;
-		}
-
-		const greenCfg = window.greenGridConfig || {};
-		const minPts = Math.max(0, Number(greenCfg.minEndCellPoints) || 8);
-		const maxPts = Math.max(minPts, Number(greenCfg.maxEndCellPoints) || 30);
-		const rows = Number(greenGrid.dataset.rows) || 0;
-		const cols = Number(greenGrid.dataset.cols) || 0;
-		const startX = Number(greenGrid.dataset.startX);
-		const startY = Number(greenGrid.dataset.startY);
-		const safeStartX = Number.isFinite(startX) ? startX : Math.floor(cols / 2);
-		const safeStartY = Number.isFinite(startY) ? startY : Math.floor(rows / 2);
-		const cornerDists = [
-			Math.abs(0 - safeStartX) + Math.abs(0 - safeStartY),
-			Math.abs((cols - 1) - safeStartX) + Math.abs(0 - safeStartY),
-			Math.abs(0 - safeStartX) + Math.abs((rows - 1) - safeStartY),
-			Math.abs((cols - 1) - safeStartX) + Math.abs((rows - 1) - safeStartY)
-		];
-		const maxDist = Math.max(1, ...cornerDists.filter(Number.isFinite));
-		const pointsFor = (endCell) => {
-			const x = Number(endCell.dataset.x ?? endCell.dataset.c);
-			const y = Number(endCell.dataset.y ?? endCell.dataset.r);
-			if (!Number.isFinite(x) || !Number.isFinite(y)) return minPts;
-			const dist = Math.abs(x - safeStartX) + Math.abs(y - safeStartY);
-			const t = Math.max(0, Math.min(1, dist / maxDist));
-			return Math.round(minPts + t * (maxPts - minPts));
-		};
-		green = activeEndCells.reduce((sum, c) => sum + pointsFor(c), 0);
-
+	if (w < 2 || !greenGrid) {
+		green = activeEndCells.length * 8;
 		if (cell != null && cell.classList.contains('end-cell') && cell.classList.contains('active')) {
 			const rect = cell.getBoundingClientRect();
-			const pts = pointsFor(cell);
-			showScoreAnimation(rect.left + rect.width / 2, rect.top + rect.height / 2, `+ ${pts}`, "green");
+			showScoreAnimation(rect.left + rect.width / 2, rect.top + rect.height / 2, "+ 8", "green");
 		}
-	})();
+		return;
+	}
 
-	/* === BLAUW SCORE ===
-	   Per rij met ≥1 actieve bold-cel: 1e rij → 6, 2e → 8, 3e → 10, enz. */
-	blue = calculateBlueScore('blue-grid', 3, 4, 8, cell);
+	const greenCfg = window.greenGridConfig || {};
+	const minPts = Math.max(0, Number(greenCfg.minEndCellPoints) || 8);
+	const maxPts = Math.max(minPts, Number(greenCfg.maxEndCellPoints) || 30);
+	const rows = Number(greenGrid.dataset.rows) || 0;
+	const cols = Number(greenGrid.dataset.cols) || 0;
+	const startX = Number(greenGrid.dataset.startX);
+	const startY = Number(greenGrid.dataset.startY);
+	const safeStartX = Number.isFinite(startX) ? startX : Math.floor(cols / 2);
+	const safeStartY = Number.isFinite(startY) ? startY : Math.floor(rows / 2);
+	const cornerDists = [
+		Math.abs(0 - safeStartX) + Math.abs(0 - safeStartY),
+		Math.abs((cols - 1) - safeStartX) + Math.abs(0 - safeStartY),
+		Math.abs(0 - safeStartX) + Math.abs((rows - 1) - safeStartY),
+		Math.abs((cols - 1) - safeStartX) + Math.abs((rows - 1) - safeStartY)
+	];
+	const maxDist = Math.max(1, ...cornerDists.filter(Number.isFinite));
+	const pointsFor = (endCell) => {
+		const x = Number(endCell.dataset.x ?? endCell.dataset.c);
+		const y = Number(endCell.dataset.y ?? endCell.dataset.r);
+		if (!Number.isFinite(x) || !Number.isFinite(y)) return minPts;
+		const dist = Math.abs(x - safeStartX) + Math.abs(y - safeStartY);
+		const t = Math.max(0, Math.min(1, dist / maxDist));
+		return Math.round(minPts + t * (maxPts - minPts));
+	};
+	green = activeEndCells.reduce((sum, c) => sum + pointsFor(c), 0);
 
-	/* === ROOD SCORE ===
-	   Elk volledig gevuld subgrid geeft vaste punten.
-	   World 3: stage gating bepaalt zichtbaarheid, maar score blijft cumulatief over alle grids. */
-	(() => {
-		let computedRed = 0;
-		const allRedIds = ['red-grid1', 'red-grid2', 'red-grid3', 'red-grid4', 'red-grid5', 'red-grid6'];
+	if (cell != null && cell.classList.contains('end-cell') && cell.classList.contains('active')) {
+		const rect = cell.getBoundingClientRect();
+		const pts = pointsFor(cell);
+		showScoreAnimation(rect.left + rect.width / 2, rect.top + rect.height / 2, `+ ${pts}`, "green");
+	}
+  }
 
-		allRedIds.forEach(id => {
-			const grid = document.getElementById(id);
-			if (!grid) return;
-			const allCells = grid.querySelectorAll('.cell:not(.void-cell)');
-			const activeCells = grid.querySelectorAll('.cell.active:not(.void-cell)');
-			const isFull = allCells.length > 0 && allCells.length === activeCells.length;
-			const wasFull = grid.dataset.completed === 'true';
-			const configuredPoints = Number(grid.dataset.redTargetPoints);
-			const points = (Number.isFinite(configuredPoints) && configuredPoints > 0) ? configuredPoints : (allCells.length * 2);
-			if (isFull) computedRed += points;
+  /** Rood: punten per volledig gevuld subgrid + World 3 stage gating. */
+  function scoreRed(cell) {
+	const safeLevel = (typeof currentLevel !== 'undefined') ? currentLevel : 1;
+	const worldInfo = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(safeLevel) : { world: 1 };
+	const isWorld3 = Number(worldInfo?.world || 1) === 3;
+	let computedRed = 0;
+	const allRedIds = ['red-grid1', 'red-grid2', 'red-grid3', 'red-grid4', 'red-grid5', 'red-grid6'];
 
-			if (isFull && !wasFull) {
-				try { highlightEdgeCells(grid); } catch (e) {}
-				grid.dataset.completed = 'true';
-				grid.dataset.score = String(points);
-				const middleIndex = Math.floor(allCells.length / 2);
-				const anchor = allCells[middleIndex];
-				if (anchor && anchor.getBoundingClientRect) {
-					const rect = anchor.getBoundingClientRect();
-					showScoreAnimation(
-						rect.left + rect.width / 2,
-						rect.top + rect.height / 2,
-						`+${points}`,
-						'red'
-					);
-				}
-			} else if (!isFull && wasFull) {
-				grid.dataset.completed = 'false';
-				grid.dataset.score = '0';
+	allRedIds.forEach(id => {
+		const grid = document.getElementById(id);
+		if (!grid) return;
+		const allCells = grid.querySelectorAll('.cell:not(.void-cell)');
+		const activeCells = grid.querySelectorAll('.cell.active:not(.void-cell)');
+		const isFull = allCells.length > 0 && allCells.length === activeCells.length;
+		const wasFull = grid.dataset.completed === 'true';
+		const configuredPoints = Number(grid.dataset.redTargetPoints);
+		const points = (Number.isFinite(configuredPoints) && configuredPoints > 0) ? configuredPoints : (allCells.length * 2);
+		if (isFull) computedRed += points;
+
+		if (isFull && !wasFull) {
+			try { highlightEdgeCells(grid); } catch (e) {}
+			grid.dataset.completed = 'true';
+			grid.dataset.score = String(points);
+			const middleIndex = Math.floor(allCells.length / 2);
+			const anchor = allCells[middleIndex];
+			if (anchor && anchor.getBoundingClientRect) {
+				const rect = anchor.getBoundingClientRect();
+				showScoreAnimation(rect.left + rect.width / 2, rect.top + rect.height / 2, `+${points}`, 'red');
 			}
-		});
-
-		// World 3 stage progression trigger: when all 4 initial red grids are complete, unlock stage 2.
-		if (isWorld3 && Number(world3RedStage) !== 2) {
-			try {
-				const allFour = ['red-grid1', 'red-grid2', 'red-grid3', 'red-grid4'].every(id => isRedSubgridFull(id));
-				if (allFour) {
-					world3RedStage = 2;
-					applyWorld3RedStage(2);
-					try { saveGameState(); } catch (e) {}
-				}
-			} catch (e) {}
+		} else if (!isFull && wasFull) {
+			grid.dataset.completed = 'false';
+			grid.dataset.score = '0';
 		}
+	});
 
-		red = computedRed;
-	})();
+	if (isWorld3 && Number(world3RedStage) !== 2) {
+		try {
+			const allFour = ['red-grid1', 'red-grid2', 'red-grid3', 'red-grid4'].every(id => isRedSubgridFull(id));
+			if (allFour) {
+				world3RedStage = 2;
+				applyWorld3RedStage(2);
+				try { saveGameState(); } catch (e) {}
+			}
+		} catch (e) {}
+	}
 
+	red = computedRed;
+  }
 
-    /* === GEEL SCORE ===
-       Volle rijen geven punten: basis 10 + 4 per upgrade level
-       Bijv level 3 = 10 + 2*4 = 18 punten per rij */
+  /** Geel: kolommen (World 1), diagonalen (World 2) of ringen (World 3). */
+  function scoreYellow(cell) {
 	const yellowContainer = document.getElementById('yellow-grid');
 	const yellowConfig = window.yellowGridConfig || {};
 	const fallbackRowCount = Number(yellowContainer?.dataset?.rows || yellowConfig.rows || 0);
@@ -20630,8 +20395,8 @@ let shopLevel2Used = false;
 	})();
 	const yellowCols = Number(yellowConfig.cols) || Number(yellowContainer?.dataset?.cols || 0) || 0;
 	const columnPoints = Array.isArray(yellowConfig.pointsByColumn) ? yellowConfig.pointsByColumn : [];
-	const fallbackColumnPoints = yellowConfig.pointsPerColumn || yellowConfig.pointsPerRow || 0;
 	const playableYellowCells = yellowContainer ? Array.from(yellowContainer.querySelectorAll('.cell:not(.void-cell)')) : [];
+
 	const bumpYellowCompletionMark = (cells, delta) => {
 		if (!Array.isArray(cells) || !cells.length || !delta) return;
 		for (const c of cells) {
@@ -20642,6 +20407,7 @@ let shopLevel2Used = false;
 			c.classList.toggle('yellow-completed-path', next > 0);
 		}
 	};
+
 	const scoreYellowKey = (key, points, cells, full) => {
 		if (!key) return;
 		window.scoredYellowSegments = window.scoredYellowSegments || new Set();
@@ -20659,12 +20425,7 @@ let shopLevel2Used = false;
 			const anchorCell = cells && cells[0];
 			if (anchorCell) {
 				const rect = anchorCell.getBoundingClientRect();
-				showScoreAnimation(
-					rect.left + rect.width / 2,
-					rect.top + rect.height / 2,
-					`+${points}`,
-					"yellow"
-				);
+				showScoreAnimation(rect.left + rect.width / 2, rect.top + rect.height / 2, `+${points}`, "yellow");
 			}
 		} else if (!full && wasFull) {
 			const lost = Number(pointsByKey.get(key));
@@ -20676,17 +20437,12 @@ let shopLevel2Used = false;
 			const anchorCell = cells && cells[0];
 			if (anchorCell) {
 				const rect = anchorCell.getBoundingClientRect();
-				showScoreAnimation(
-					rect.left + rect.width / 2,
-					rect.top + rect.height / 2,
-					`−${Number.isFinite(lost) ? lost : points}`,
-					"yellow"
-				);
+				showScoreAnimation(rect.left + rect.width / 2, rect.top + rect.height / 2, `−${Number.isFinite(lost) ? lost : points}`, "yellow");
 			}
 		}
 	};
+
 	if (yellowConfig.scoreMode === 'rings') {
-		// World 3 request: score by "circles" (rings) of the diamond.
 		const ringMinPoints = Math.max(0, Number(yellowConfig.ringMinPoints) || 12);
 		const ringMaxPoints = Math.max(ringMinPoints, Number(yellowConfig.ringMaxPoints) || 64);
 		const cellByCoord = new Map();
@@ -20736,7 +20492,7 @@ let shopLevel2Used = false;
 		const scoredRings = window.scoredYellowRings;
 		for (const [depth, cells] of rings.entries()) {
 			const denom = Math.max(1, maxDepth);
-			const t = (denom - Number(depth)) / denom; // outer (0) => 1, inner => 0
+			const t = (denom - Number(depth)) / denom;
 			const points = Math.round(ringMinPoints + t * (ringMaxPoints - ringMinPoints));
 			const full = cells.every(c => c.classList.contains('active'));
 			const key = `ring:${depth}`;
@@ -20748,12 +20504,7 @@ let shopLevel2Used = false;
 				const anchorCell = cells[0];
 				if (anchorCell) {
 					const rect = anchorCell.getBoundingClientRect();
-					showScoreAnimation(
-						rect.left + rect.width / 2,
-						rect.top + rect.height / 2,
-						`+${points}`,
-						"yellow"
-					);
+					showScoreAnimation(rect.left + rect.width / 2, rect.top + rect.height / 2, `+${points}`, "yellow");
 				}
 			} else if (!full && wasFull) {
 				const lost = Number(scoredRings.get(key));
@@ -20763,18 +20514,11 @@ let shopLevel2Used = false;
 				const anchorCell = cells[0];
 				if (anchorCell) {
 					const rect = anchorCell.getBoundingClientRect();
-					showScoreAnimation(
-						rect.left + rect.width / 2,
-						rect.top + rect.height / 2,
-						`−${Number.isFinite(lost) ? lost : points}`,
-						"yellow"
-					);
+					showScoreAnimation(rect.left + rect.width / 2, rect.top + rect.height / 2, `−${Number.isFinite(lost) ? lost : points}`, "yellow");
 				}
 			}
 		}
 	} else if (yellowConfig.scoreMode === 'diagonal') {
-	  // World 2: score *segments* on diagonals (irregular shapes can have gaps)
-	  // Points scale as requested: 4→8, 6→16, 8→32 (doubling every +2 length)
 	  const minLen = Math.max(1, Number(yellowConfig.minDiagonalLength) || 4);
 	  const computeSegmentPoints = (len) => {
 		if (!Number.isFinite(len) || len < minLen) return 0;
@@ -20797,7 +20541,6 @@ let shopLevel2Used = false;
 			const x0 = Number(startCell.dataset.x);
 			const y0 = Number(startCell.dataset.y);
 			if (!Number.isFinite(x0) || !Number.isFinite(y0)) continue;
-			// Segment start if previous neighbor in this diagonal direction doesn't exist
 			if (tryGet(x0 - dx, y0 - dy)) continue;
 			const segmentCells = [];
 			let x = x0;
@@ -20820,7 +20563,6 @@ let shopLevel2Used = false;
 		return segments;
 	  };
 
-	  // World 2 request: score BOTH diagonal directions.
 	  const segments = [
 		...collectSegments(1, 1, 'segNWSE'),
 		...collectSegments(1, -1, 'segNESW')
@@ -20835,7 +20577,6 @@ let shopLevel2Used = false;
 			continue;
 		}
 
-		// World 2 request: allow scoring for corner → center (bold) diagonal segments too.
 		const mid = Math.floor(seg.cells.length / 2);
 		const boldIdxs = [];
 		for (let i = 0; i < seg.cells.length; i++) {
@@ -20855,7 +20596,6 @@ let shopLevel2Used = false;
 		const keyA = `${seg.key}:halfA`;
 		const keyB = `${seg.key}:halfB`;
 
-		// If full diagonal is complete, score ONLY the full line and remove half-scores.
 		if (seg.points > 0) scoreYellowKey(keyFull, seg.points, seg.cells, fullDiag);
 		if (fullDiag) {
 			if (pointsA > 0) scoreYellowKey(keyA, pointsA, cellsA, false);
@@ -20906,7 +20646,6 @@ let shopLevel2Used = false;
 		const colCells = (columnCellMap.get(col) || []).slice().sort((a, b) => Number(a.dataset.y) - Number(b.dataset.y));
 		const full = colCells.length === expectedHeight && colCells.every(cell => cell.classList.contains('active'));
 		const wasFull = window.scoredYellowColumns.has(col);
-		// World 1: elke 2 kolommen delen een vaste waarde (1-2:12, 3-4:18, 5-6:30, 7-8:42, 9-10:60; daarna 60)
 		const columnPairIndex = Math.floor(col / 2);
 		const world1ColumnPairPoints = [12, 18, 30, 42, 60];
 		const columnPointsValue = world1ColumnPairPoints[Math.min(columnPairIndex, world1ColumnPairPoints.length - 1)] || 0;
@@ -20919,79 +20658,63 @@ let shopLevel2Used = false;
 		  yellow += columnPointsValue;
 		  window.scoredYellowColumns.add(col);
 		  bumpYellowCompletionMark(colCells, +1);
-
 		  const anchorCell = colCells[0];
 		  if (anchorCell) {
 			const rect = anchorCell.getBoundingClientRect();
-			showScoreAnimation(
-			  rect.left + rect.width / 2,
-			  rect.top + rect.height / 2,
-			  `+${columnPointsValue}`,
-			  "yellow"
-			);
+			showScoreAnimation(rect.left + rect.width / 2, rect.top + rect.height / 2, `+${columnPointsValue}`, "yellow");
 		  }
-
 		} else if (!full && wasFull) {
 		  yellow -= columnPointsValue;
 		  window.scoredYellowColumns.delete(col);
 		  bumpYellowCompletionMark(colCells, -1);
-
 		  const anchorCell = colCells[0];
 		  if (anchorCell) {
 			const rect = anchorCell.getBoundingClientRect();
-			showScoreAnimation(
-			  rect.left + rect.width / 2,
-			  rect.top + rect.height / 2,
-			  `−${columnPointsValue}`,
-			  "yellow"
-			);
+			showScoreAnimation(rect.left + rect.width / 2, rect.top + rect.height / 2, `−${columnPointsValue}`, "yellow");
 		  }
 		}
 	  }
 	}
+  }
 
-	// ---------- Purple clusters (floodfill BFS on active cells) ----------
+  /** Paars: BFS floodfill clusters van actieve cellen, scored per bold-cell verbindingen. */
+  function scorePurple(cell) {
 	const purpleContainer = document.getElementById('purple-grid');
-	if (purpleContainer) {
-	  // Bind 1 delegated click handler (instead of rebinding onclick for every cell on every score tick)
-	  if (!purpleContainer._clusterClickBound) {
+	if (!purpleContainer) { purple = 0; return; }
+
+	if (!purpleContainer._clusterClickBound) {
 		purpleContainer.addEventListener('click', (ev) => {
-			const cell = ev.target && ev.target.closest ? ev.target.closest('.cell.bold-cell.active') : null;
-			if (!cell || !purpleContainer.contains(cell)) return;
-			const storedScore = Number(cell.dataset.clusterScore || '0');
-			if (cell.dataset.clusterPending === "true" && storedScore > 0) {
-				const rect = cell.getBoundingClientRect();
-				showScoreAnimation(
-					rect.left + rect.width / 2,
-					rect.top + rect.height / 2,
-					`+${storedScore}`,
-					"purple"
-				);
-				cell.dataset.clusterPending = "false";
+			const c = ev.target && ev.target.closest ? ev.target.closest('.cell.bold-cell.active') : null;
+			if (!c || !purpleContainer.contains(c)) return;
+			const storedScore = Number(c.dataset.clusterScore || '0');
+			if (c.dataset.clusterPending === "true" && storedScore > 0) {
+				const rect = c.getBoundingClientRect();
+				showScoreAnimation(rect.left + rect.width / 2, rect.top + rect.height / 2, `+${storedScore}`, "purple");
+				c.dataset.clusterPending = "false";
 			}
 		}, { passive: true });
 		purpleContainer._clusterClickBound = true;
-	  }
+	}
 
-	  const purpleCells = Array.from(purpleContainer.querySelectorAll('.cell'));
-	  const totalPurple = purpleCells.length;
-	  let purpleCols = Number(purpleContainer.dataset.cols) || 0;
-	  const styleCols = purpleContainer.style.gridTemplateColumns;
-	  const repeatMatch = styleCols && styleCols.match(/repeat\(\s*(\d+)\s*,/i);
-	  if (!purpleCols && repeatMatch) purpleCols = parseInt(repeatMatch[1], 10);
-	  else if (!purpleCols) {
+	const purpleCells = Array.from(purpleContainer.querySelectorAll('.cell'));
+	const totalPurple = purpleCells.length;
+	let purpleCols = Number(purpleContainer.dataset.cols) || 0;
+	const styleCols = purpleContainer.style.gridTemplateColumns;
+	const repeatMatch = styleCols && styleCols.match(/repeat\(\s*(\d+)\s*,/i);
+	if (!purpleCols && repeatMatch) purpleCols = parseInt(repeatMatch[1], 10);
+	else if (!purpleCols) {
 		const computed = getComputedStyle(purpleContainer).gridTemplateColumns;
 		purpleCols = computed ? computed.split(/\s+/).length : Math.round(Math.sqrt(totalPurple)) || 1;
-	  }
-	  const purpleRows = Math.ceil(totalPurple / purpleCols);
-	  const visited = new Array(totalPurple).fill(false);
-	  const connections = [];
-	  const purpleConfig = window.purpleGridConfig || {};
-	  const isWorld2Purple = purpleConfig.world2 === true;
-	  const isWorld3Purple = purpleConfig.world3 === true;
-	  const useExpandedPurpleScoring = isWorld2Purple || isWorld3Purple;
+	}
+	const purpleRows = Math.ceil(totalPurple / purpleCols);
+	const visited = new Array(totalPurple).fill(false);
+	const connections = [];
+	const purpleConfig = window.purpleGridConfig || {};
+	const isWorld2Purple = purpleConfig.world2 === true;
+	const isWorld3Purple = purpleConfig.world3 === true;
+	const useExpandedPurpleScoring = isWorld2Purple || isWorld3Purple;
 
-	  for (let i = 0; i < totalPurple; i++) {
+	for (let i = 0; i < totalPurple; i++) {
 		if (visited[i]) continue;
 		if (!purpleCells[i].classList.contains('active')) { visited[i] = true; continue; }
 
@@ -21024,7 +20747,6 @@ let shopLevel2Used = false;
 
 		let clusterScore = 0;
 		if (useExpandedPurpleScoring) {
-		  // Requested values: inner↔inner = 8, inner↔outer = 10, outer↔outer = 25
 		  const perOuterConn = Number(purpleConfig.outerRingBonusPerBold) || 25;
 		  const perInnerConn = Number(purpleConfig.innerBoldConnectionPoints) || 8;
 		  const perMixedConn = Number(purpleConfig.outerInnerConnectionPoints) || 10;
@@ -21035,19 +20757,17 @@ let shopLevel2Used = false;
 			return acc + (isOuter ? 1 : 0);
 		  }, 0);
 		  const innerBoldCount = Math.max(0, boldCount - outerBoldCount);
-		  if (outerBoldCount >= 2) clusterScore += (outerBoldCount - 1) * perOuterConn; // outer↔outer: 25 each
-		  if (innerBoldCount >= 2) clusterScore += (innerBoldCount - 1) * perInnerConn; // inner↔inner: 8 each
-		  // Mixed link: inner ↔ outer
+		  if (outerBoldCount >= 2) clusterScore += (outerBoldCount - 1) * perOuterConn;
+		  if (innerBoldCount >= 2) clusterScore += (innerBoldCount - 1) * perInnerConn;
 		  if (outerBoldCount > 0 && innerBoldCount > 0) {
 			const mixedConnections = Math.min(outerBoldCount, innerBoldCount);
-			clusterScore += mixedConnections * perMixedConn; // default 10 each
+			clusterScore += mixedConnections * perMixedConn;
 		  }
 		} else {
 		  if (boldCount >= 2) clusterScore = (boldCount - 1) * 8;
 		}
 		const hasClusterScore = clusterScore > 0;
 
-		// Sla cluster info op bij elke bold & actieve cell
 		cluster.forEach(idx => {
 		  const cell = purpleCells[idx];
 		  if (cell.classList.contains('bold-cell') && cell.classList.contains('active')) {
@@ -21057,17 +20777,17 @@ let shopLevel2Used = false;
 		});
 
 		connections.push({ indices: cluster, boldCount, score: clusterScore });
-	  }
-
-	  purple = connections.reduce((s, c) => s + c.score, 0);
-	  window.purpleConnections = connections;
 	}
-	
-	// Additional scoring: any active end-cell outside the green grid grants 8 points to its zone's color
+
+	purple = connections.reduce((s, c) => s + c.score, 0);
+	window.purpleConnections = connections;
+  }
+
+  /** Extra end-cells buiten het groene grid krijgen 8pt voor hun zone-kleur. */
+  function scoreExtraEndCells() {
 	try {
 		const extraEndCells = Array.from(document.querySelectorAll('.cell.end-cell.active'));
 		extraEndCells.forEach(c => {
-			// skip green because green scoring already handles variable points
 			if (c.closest && c.closest('#green-grid')) return;
 			let zone = c.closest && c.closest('.zone') ? c.closest('.zone') : null;
 			let colorKey = zone && zone.dataset ? String(zone.dataset.color || '').toLowerCase() : '';
@@ -21086,6 +20806,22 @@ let shopLevel2Used = false;
 			else if (colorKey === 'rood' || colorKey === 'red') red += 8;
 		});
 	} catch (e) {}
+  }
+
+  function updateScore(cell){
+		try {
+			if (window.debugScoreUpdates) {
+				console.debug('updateScore:called', { cellId: cell ? (cell.id || null) : null, time: Date.now() });
+			}
+		} catch(e) {}
+
+	/* Score per zone berekenen via helpers */
+	scoreGreen(cell);
+	blue = calculateBlueScore('blue-grid', 3, 4, 8, cell);
+	scoreRed(cell);
+	scoreYellow(cell);
+	scorePurple(cell);
+	scoreExtraEndCells();
 
 	// Trap penalties should apply to the affected color and remain stable across updates.
 	// Keep base color scores intact; apply penalties/bonuses to local display values.
@@ -21640,6 +21376,15 @@ let shopLevel2Used = false;
 
 
   // ---------- Undo / Clear ----------
+  /** Update disabled state of the floating undo button. */
+  function updateUndoButton() {
+	const btn = document.getElementById('undo-floating-btn');
+	if (!btn) return;
+	const canUndo = (cardPlacementHistory && cardPlacementHistory.length > 0) ||
+	                (historyStack && historyStack.length > 0);
+	btn.disabled = !canUndo;
+  }
+
   function undo(){
 	const lastPlacement = cardPlacementHistory.length ? cardPlacementHistory[cardPlacementHistory.length - 1] : null;
 	const lastToggle = historyStack.length ? historyStack[historyStack.length - 1] : null;
@@ -21739,6 +21484,7 @@ let shopLevel2Used = false;
 	  updateDrawButtonState();
 	  recomputeTurnCardFlags();
 	  applyTurnCardLocks();
+	  updateUndoButton();
 	  return;
 	}
 
@@ -21758,6 +21504,7 @@ let shopLevel2Used = false;
 	// Recompute per-turn flags after toggling a cell state which may have affected bonuses
 	recomputeTurnCardFlags();
 	applyTurnCardLocks();
+	updateUndoButton();
   }
 	function clearBoard(){
 	  if (!debugMode) return;
@@ -21767,6 +21514,7 @@ let shopLevel2Used = false;
 	  historyStack.length = 0;
 	  resetScoreState();
 	  updateScore();
+	  updateUndoButton();
 	if (activeZoomZone) schedulePlaceholderSync(activeZoomZone);
 	}
 	
@@ -26760,6 +26508,7 @@ function getCollectedCoinCount(scores) {
 			sequence: actionId,
 			bonusSpent: true
 		});
+		updateUndoButton();
 		updateDrawButtonState();
 		try {
 			document.dispatchEvent(new CustomEvent('locus:tutorial-bonus-placed', { detail: { bonusKey: 'purchased' } }));
@@ -26781,6 +26530,7 @@ function getCollectedCoinCount(scores) {
 		sequence: actionId,
 		bonusSpent: consumed
 	  });
+	  updateUndoButton();
 	if (consumed) {
 		updateBonusInventoryUI();
 	}
@@ -26884,6 +26634,7 @@ function getCollectedCoinCount(scores) {
 		cardPlacementHistory = [];
 		cardsPlayedThisTurn = 0;
 		resetTurnCardFlags();
+		updateUndoButton();
 		showObjectiveToast('🔁 Bonusbeurt! Je gespeelde kaarten keren terug voor een extra ronde.');
 		updateDeckPreview();
 		return true;
@@ -26949,6 +26700,7 @@ function getCollectedCoinCount(scores) {
 	  cardPlacementHistory = [];
 	  cardsPlayedThisTurn = 0;
 	resetTurnCardFlags();
+	updateUndoButton();
 	bonusEchoFreePlays = 0;
 	  
 	  const BASE_HAND_DRAW = 3;
@@ -27081,6 +26833,7 @@ function getCollectedCoinCount(scores) {
 	  cardPlacementHistory = [];
 	cardsPlayedThisTurn = 0;
 	resetTurnCardFlags();
+	updateUndoButton();
 	  selectedCardId = null;
 	  selectedCardElement = null;
 	  selectedShape = null;
@@ -27198,6 +26951,7 @@ function getCollectedCoinCount(scores) {
 		bonusEchoColorKey,
 		bonusEchoBonusesGranted
 	});
+	updateUndoButton();
 	try {
 		document.dispatchEvent(new CustomEvent('locus:tutorial-card-placed', { detail: { placement: placementResult } }));
 	} catch (_) {}
@@ -30336,6 +30090,7 @@ function resetWorldLayoutStyles() {
 	  cardsPlayedThisTurn = 0;
 	  actionSequence = 0;
 	  resetTurnCardFlags();
+	  updateUndoButton();
 	  
 	// Intro level gebruikt een vaste paarse deck zodat de eerste hand altijd paars bevat
 	if (currentLevel === 0 && !isLoadingGame) {
@@ -35172,14 +34927,6 @@ body { margin: 0; padding: 0; background: ${lightMode ? 'white' : '#111'}; color
 
 		// Build head: include original stylesheets and a minimal set of print-only overrides.
 		let htmlClass = (document.documentElement && document.documentElement.className) ? document.documentElement.className : '';
-		// Respect the print lightMode option: if true, remove dark-mode; if false, ensure dark-mode present.
-		if (typeof opts !== 'undefined' && opts) {
-			if (opts.lightMode) {
-				htmlClass = htmlClass.replace(/\bdark-mode\b/g, '').trim();
-			} else {
-				if (!/\bdark-mode\b/.test(htmlClass)) htmlClass = (htmlClass + ' dark-mode').trim();
-			}
-		}
 		const printOverrides = `
 /* Minimal print overrides: hide UI elements, keep original colors and sizing */
 @page { size: A4 landscape; margin: 8mm; }
