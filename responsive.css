@@ -1,3 +1,5 @@
+@import url("./locus-ui-v2.css");
+
 /* Wide desktop centering */
 @media (min-width: 2000px) {
   body #desktop-wrapper {
