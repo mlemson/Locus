@@ -12218,7 +12218,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	/* Bonus counts: keep pill visible (desktop + mobile) */
 
 	</style>
-	<link rel="stylesheet" href="responsive.css">
+	<link rel="stylesheet" href="responsive.css?v=3">
 	<script>
     // Simple menu toggle: toggles .open on #controls and .active on #menu-toggle
     document.addEventListener('DOMContentLoaded', function() {
@@ -12964,19 +12964,9 @@ let shopLevel2Used = false;
 			icon: '🪙',
 			purchased: false,
 			onPurchase: () => {
-				// Geef direct 2 munten
-				const goldZone = document.getElementById('collected-coins');
-				if (goldZone) {
-					const coins = goldZone.querySelectorAll('.coin');
-					let added = 0;
-					coins.forEach(coin => {
-						if (!coin.classList.contains('active') && added < 2) {
-							coin.classList.add('active');
-							added++;
-						}
-					});
-					updateCoinCounter();
-				}
+				// De beloning hoort bij het begin van een level. startLevel() kent hem toe;
+				// hier niets direct toevoegen, anders krijgt de aankoop-levelovergang dubbel munten.
+				showObjectiveToast('🪙 Muntmeester actief: +2 munten bij elk nieuw level.');
 			}
 		},
 		blackHoleAccess: {
@@ -27047,13 +27037,27 @@ function getCollectedCoinCount(scores) {
 		return rotations;
 	}
 
+	function getUniquePlayableTransforms(shape) {
+		const transforms = [];
+		const seen = new Set();
+		[cloneShape(shape), mirrorShape(cloneShape(shape))].forEach(variant => {
+			getUniqueRotations(variant).forEach(rotation => {
+				const key = JSON.stringify(rotation);
+				if (seen.has(key)) return;
+				seen.add(key);
+				transforms.push(rotation.map(row => row.slice()));
+			});
+		});
+		return transforms;
+	}
+
 	function cardHasPlayablePlacement(card) {
 		if (!card || !Array.isArray(card.matrix) || !card.matrix.length) return false;
 		const colorName = card.color?.name || null;
 		// Golden is a card modifier (frame-only), not a wildcard for placement.
 		const zones = getCandidateZonesForColor(colorName);
 		if (!zones.length) return false;
-		const rotations = getUniqueRotations(card.matrix);
+		const rotations = getUniquePlayableTransforms(card.matrix);
 		for (const zone of zones) {
 			const metrics = getZoneMetrics(zone);
 			if (!metrics || metrics.maxX < metrics.minX || metrics.maxY < metrics.minY) continue;
@@ -30048,8 +30052,9 @@ function resetWorldLayoutStyles() {
 	  // still mounted until rebuildGameBoards() runs. Calling updateScore() now would
 	  // repopulate latestScoreSnapshot with old scores and incorrectly affect objectives.
 	  
-	  // Apply coinMaster upgrade if active: grant immediate coins visually
-	  if (hasUpgrade('coinMaster')) {
+	  // Apply Muntmeester only on a real level start, never while reconstructing a saved run.
+	  // Otherwise every browser refresh would grant the level-start reward again.
+	  if (!opts.suppressLevelStartRewards && hasUpgrade('coinMaster')) {
 		const bonusAmount = UPGRADES.coinMaster.bonusCoins || 2;
 		for (let i = 0; i < bonusAmount; i++) addCoin();
 	  }
@@ -30063,8 +30068,8 @@ function resetWorldLayoutStyles() {
 				if (!currentObjectiveId) setCurrentObjectiveForLevel(level);
 			} catch (e) {}
 	  }
-	  // Extra bonussen wanneer het doel "in elke kleur" vereist: 2 per kleur bij de start van het level.
-	  if (!isLoadingGame) {
+	  // Extra bonussen voor "in elke kleur" zijn eveneens een eenmalige level-start beloning.
+	  if (!isLoadingGame && !opts.suppressLevelStartRewards) {
 		try {
 			const objective = getObjectiveById(currentObjectiveId);
 			grantAllColorObjectiveBonuses(objective);
@@ -30788,9 +30793,14 @@ function isWorld4CardAllowed(cardData) {
 			savedDeckState = null;
 		}
 		
-		// Start the loaded level (resume deck only for custom/scenario boards)
+		// Reconstruct the loaded level. Normal runs intentionally keep the existing
+		// clean-level rebuild behaviour, but level-start rewards must never fire on refresh.
 		isLoadingGame = resumeDeckState;
-		startLevel(currentLevel, { preserveLoadedCustomMeta: isCustomBoardSave, preserveLoadedObjectives: resumeDeckState });
+		startLevel(currentLevel, {
+			preserveLoadedCustomMeta: isCustomBoardSave,
+			preserveLoadedObjectives: resumeDeckState,
+			suppressLevelStartRewards: true
+		});
 		// Only restore the board snapshot for editor/scenario saves.
 		// Normal runs should rebuild the board from the level/world mapping.
 		if (isCustomBoardSave) {
@@ -35195,7 +35205,9 @@ body { background: transparent; }
 		  saveGameState();
 		  
 		  // Check voor nieuwe unlocks
-		  const levelUnlocks = UNLOCK_PROGRESSION.getLevelUnlocks(upcomingLevel, currentWorld);
+		  const upcomingWorldInfo = getWorldAndSubLevel(upcomingLevel);
+		  const upcomingWorld = Number(upcomingWorldInfo && upcomingWorldInfo.world) || currentWorld || 1;
+		  const levelUnlocks = UNLOCK_PROGRESSION.getLevelUnlocks(upcomingLevel, upcomingWorld);
 		  // One-time announcement: traps become relevant after completing level 4.
 		  let announceTraps = false;
 		  try {
@@ -35362,9 +35374,9 @@ body { background: transparent; }
 	  });
 	}
 	updateBonusInventoryUI();
-	// startNewRun() is verplaatst naar de game initialization functie
+	// Prepare coin placeholders only. startNewRun() or loadGameState() owns the actual balance.
+	// Do not activate a coin here: this code also runs before restoring a saved game.
 	initialiseCoins();
-	addCoin();
 	
 	// Initialiseer de +1 blokplaatsing knop en preview
 	const buyPlacementBtn = document.getElementById('buy-placement-btn');
@@ -35442,7 +35454,7 @@ body { background: transparent; }
 	}
  
 	function getCardSizing() {
-		const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
+		const isMobile = window.innerWidth <= MOBILE_BREAKPOINT || document.body.classList.contains('mobile-sidebar-layout');
 		// If we're in a zoomed-in mobile view, prefer measuring the actual
 		// rendered cell size from the active zoom zone so card previews use
 		// the same cell size as the board.
@@ -35463,7 +35475,7 @@ body { background: transparent; }
 
 	function applyCardSizing() {
 	const { cellSize: fallbackCellSize } = getCardSizing();
-	const isMobile = window.innerWidth <= (typeof MOBILE_BREAKPOINT !== 'undefined' ? MOBILE_BREAKPOINT : 650);
+	const isMobile = window.innerWidth <= (typeof MOBILE_BREAKPOINT !== 'undefined' ? MOBILE_BREAKPOINT : 650) || document.body.classList.contains('mobile-sidebar-layout');
 	const allCards = document.querySelectorAll('#card-choice-zone .card-option, .shop-card .card-option, #deck-modal-content .card-option, #golden-unlock-content .card-option');
 	allCards.forEach(card => {
 		const cols = parseInt(card.dataset.shapeCols || '0', 10);
@@ -35517,7 +35529,7 @@ body { background: transparent; }
 		const cellSize = Number.isFinite(cssCellSize) && cssCellSize > 0 ? cssCellSize : fallbackCellSize;
 		// Laat de hoogte meeschalen met de inhoud; mobile mag lager en regelbaar via JS.
 		let requestedHeight = Math.max(0, (maxRows * cellSize) + group.extra);
-		const isMobile = window.innerWidth <= (typeof MOBILE_BREAKPOINT !== 'undefined' ? MOBILE_BREAKPOINT : 650);
+		const isMobile = window.innerWidth <= (typeof MOBILE_BREAKPOINT !== 'undefined' ? MOBILE_BREAKPOINT : 650) || document.body.classList.contains('mobile-sidebar-layout');
 		const mobileCap = typeof window.mobileHandHeightCap === 'number' ? window.mobileHandHeightCap : 120;
 		const mobileFloor = typeof window.mobileHandHeightFloor === 'number' ? window.mobileHandHeightFloor : 60;
 		// Maak hand-kaarten op mobiel ~20% lager (deck-overview formaat) tenzij overschreven.
@@ -35755,7 +35767,8 @@ body { background: transparent; }
 	function scaleBoardForMobile() {
 		const board = document.getElementById('board');
 		if (!board) return;
-		const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
+		const isMobileSidebar = document.body.classList.contains('mobile-sidebar-layout');
+		const isMobile = window.innerWidth <= MOBILE_BREAKPOINT || isMobileSidebar;
 		if (!isMobile) {
 			document.documentElement.style.removeProperty('--board-scale');
 			document.body.classList.remove('board-mobile-scaled');
@@ -35780,13 +35793,22 @@ body { background: transparent; }
 		const bottomBarCss = isClassicMode ? 0 : (parseFloat(rootStyles.getPropertyValue('--bottom-bar-height')) || 0);
 		const bottomBarHeight = Math.max(bottomBarMeasured || 0, bottomBarCss || 0);
 		const mobileObjective = document.getElementById('mobile-objective-banner');
-		const objectiveHeight = mobileObjective ? mobileObjective.getBoundingClientRect().height : 0;
+		const sidebarCenter = isMobileSidebar ? document.getElementById('ml-board-center') : null;
+		const sidebarObjective = isMobileSidebar ? document.getElementById('ml-objective-top') : null;
+		const objectiveHeight = isMobileSidebar
+			? (sidebarObjective ? sidebarObjective.getBoundingClientRect().height : 0)
+			: (mobileObjective ? mobileObjective.getBoundingClientRect().height : 0);
 
-		// Provide some breathing room so we never render past the edges.
+		// Measure the actual center column in compact landscape so the board cannot
+		// disappear behind the touch sidebars.
 		const horizontalPadding = 16;
-		const verticalPadding = 24;
-		const availableWidth = Math.max(window.innerWidth - horizontalPadding, 280);
-		const availableHeight = Math.max(window.innerHeight - bottomBarHeight - objectiveHeight - verticalPadding, 280);
+		const verticalPadding = 18;
+		const availableWidth = isMobileSidebar && sidebarCenter
+			? Math.max(sidebarCenter.clientWidth - horizontalPadding, 220)
+			: Math.max(window.innerWidth - horizontalPadding, 280);
+		const availableHeight = isMobileSidebar && sidebarCenter
+			? Math.max(sidebarCenter.clientHeight - objectiveHeight - verticalPadding, 180)
+			: Math.max(window.innerHeight - bottomBarHeight - objectiveHeight - verticalPadding, 280);
 
 		const boardWidth = board.scrollWidth;
 		const boardHeight = board.scrollHeight;
@@ -35818,6 +35840,8 @@ body { background: transparent; }
 		const objective = document.getElementById('objective-zone');
 		const bonus = document.getElementById('bonus-zone');
 		const cards = document.getElementById('card-choice-zone');
+		const cardActionButtons = document.getElementById('card-action-buttons');
+		const cardControls = document.getElementById('card-controls');
 		const controls = document.getElementById('controls');
 		
 		// Find original containers
@@ -35842,6 +35866,13 @@ body { background: transparent; }
 		}
 		if (objective && origObjective && !origObjective.contains(objective)) {
 			origObjective.appendChild(objective);
+		}
+
+		// Action buttons are moved out of the card panel in desktop layouts.
+		// Always put them back before deleting the wrapper; otherwise an orientation/
+		// breakpoint change removes the buttons from the DOM together with the wrapper.
+		if (cardActionButtons && cardControls && !cardControls.contains(cardActionButtons)) {
+			cardControls.appendChild(cardActionButtons);
 		}
 		
 		// Move board back to body (before mobile-landscape-wrapper if it exists)
@@ -35915,10 +35946,11 @@ body { background: transparent; }
 	  // 1. Desktop/laptop (muis) → gebruikt normale desktop layout (sidebars of bottom)
 	  // 2. Tablet/telefoon (touch) in landscape → gebruikt compacte mobile sidebar layout
 	  
-	  // Mobile sidebar layout is ALLEEN voor kleine touch screens (phones/small tablets) in landscape.
-	  // Grote tablets (iPad) gebruiken de normale desktop layout.
-	  const useMobileSidebarLayout = isTouchDevice && !isLargeTouchScreen && effectiveLandscape && 
-	                                  width <= MOBILE_BREAKPOINT && height >= 350;
+	  // Compact touch-landscape is based on the SHORT side, not viewport width.
+	  // A modern phone can be 844x390 in landscape and must not fall into desktop mode.
+	  // Large tablets (short side >= 700px) keep the tablet/desktop layout.
+	  const isCompactTouchScreen = isTouchDevice && Math.min(width, height) < 700;
+	  const useMobileSidebarLayout = isCompactTouchScreen && effectiveLandscape && height >= 350;
 	  
 	  const useDesktopLayout = !isMobile && !useMobileSidebarLayout;
 	  // Desktop sidebar layout: landscape met voldoende breedte
@@ -36365,7 +36397,8 @@ body { background: transparent; }
 		const isLargeTouchScreen = isTouchDevice && Math.min(width, height) >= 700;
 		const ORIENTATION_EPS = 24;
 		const effectiveLandscape = (width - height) > ORIENTATION_EPS;
-		const useMobileSidebarLayout = isTouchDevice && !isLargeTouchScreen && effectiveLandscape && width <= MOBILE_BREAKPOINT && height >= 350;
+		const isCompactTouchScreen = isTouchDevice && Math.min(width, height) < 700;
+		const useMobileSidebarLayout = isCompactTouchScreen && effectiveLandscape && height >= 350;
 		if (useMobileSidebarLayout) return 'mobile-sidebar';
 		if (isMobile) return 'mobile';
 		const effectivePortrait = (height - width) > ORIENTATION_EPS;
