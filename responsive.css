@@ -1,48 +1,58 @@
 /* ========================================================================== */
-/* LOCUS 1 — GAME UI V3                                                     */
-/* Visual + responsive layer. Loaded after the legacy inline CSS.            */
-/* Board rules/colours stay intact; this file owns the surrounding game UI.   */
+/* LOCUS 1 — GAME UI V4 / "LOCUS TABLE"                                    */
+/*                                                                            */
+/* One visual system for desktop, tablet, phone portrait and phone landscape. */
+/* The colourful game zones stay the hero; the surrounding UI is a calm       */
+/* charcoal game table with tactile cards and deliberate responsive layouts.   */
 /* ========================================================================== */
 
 :root {
-  --ui-bg: #14171c;
-  --ui-bg-deep: #0f1216;
-  --ui-panel: #20252c;
-  --ui-panel-raised: #272d36;
-  --ui-panel-soft: #1a1e24;
-  --ui-line: rgba(255,255,255,.085);
-  --ui-line-strong: rgba(255,255,255,.16);
-  --ui-text: #f2f4f7;
-  --ui-muted: #9ca6b3;
-  --ui-faint: #68717e;
-  --ui-accent: #d7b65b;
-  --ui-accent-hi: #f0d27c;
-  --ui-accent-soft: rgba(215,182,91,.16);
-  --ui-focus: #8fc1ff;
-  --ui-danger: #df7378;
-  --ui-success: #72c79a;
-  --ui-radius-sm: 9px;
-  --ui-radius: 13px;
-  --ui-radius-lg: 17px;
-  --ui-shadow-panel: 0 1px 0 rgba(255,255,255,.025) inset, 0 9px 24px rgba(0,0,0,.22);
-  --ui-shadow-card: 0 1px 0 rgba(255,255,255,.075) inset, 0 2px 0 rgba(0,0,0,.48), 0 10px 22px rgba(0,0,0,.27);
-  --ui-safe-top: env(safe-area-inset-top, 0px);
-  --ui-safe-right: env(safe-area-inset-right, 0px);
-  --ui-safe-bottom: env(safe-area-inset-bottom, 0px);
-  --ui-safe-left: env(safe-area-inset-left, 0px);
+  --locus-bg: #0d1218;
+  --locus-bg-soft: #111821;
+  --locus-panel: #17202a;
+  --locus-panel-raised: #1d2732;
+  --locus-panel-deep: #121922;
+  --locus-panel-hover: #222e3a;
+  --locus-border: rgba(211, 224, 239, .10);
+  --locus-border-strong: rgba(211, 224, 239, .19);
+  --locus-border-soft: rgba(211, 224, 239, .055);
+  --locus-text: #f4f6f8;
+  --locus-muted: #9aa8b8;
+  --locus-faint: #667486;
+  --locus-gold: #dfb94f;
+  --locus-gold-hi: #f4d67b;
+  --locus-gold-soft: rgba(223, 185, 79, .15);
+  --locus-blue: #75b6ea;
+  --locus-focus: #96c9ff;
+  --locus-danger: #df777d;
+  --locus-radius-sm: 10px;
+  --locus-radius: 14px;
+  --locus-radius-lg: 18px;
+  --locus-radius-xl: 24px;
+  --locus-shadow-panel: 0 1px 0 rgba(255,255,255,.035) inset, 0 12px 30px rgba(0,0,0,.22);
+  --locus-shadow-card: 0 1px 0 rgba(255,255,255,.075) inset, 0 2px 0 rgba(0,0,0,.40), 0 12px 24px rgba(0,0,0,.28);
+  --locus-shadow-card-selected: 0 0 0 2px rgba(223,185,79,.20), 0 2px 0 rgba(0,0,0,.44), 0 17px 34px rgba(0,0,0,.36);
+  --locus-safe-top: env(safe-area-inset-top, 0px);
+  --locus-safe-right: env(safe-area-inset-right, 0px);
+  --locus-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --locus-safe-left: env(safe-area-inset-left, 0px);
+  --locus-motion-fast: 110ms;
+  --locus-motion: 170ms;
+  --locus-motion-slow: 240ms;
 }
 
 html,
 body:not(.classic-mode) {
-  background: var(--ui-bg) !important;
+  background: var(--locus-bg) !important;
 }
 
 body:not(.classic-mode) {
-  color: var(--ui-text);
+  margin: 0 !important;
   background:
-    radial-gradient(1000px 520px at 50% -270px, rgba(255,255,255,.055), transparent 72%),
-    linear-gradient(180deg, #181b21 0%, var(--ui-bg) 52%, #111419 100%) !important;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Arial, sans-serif;
+    radial-gradient(1100px 550px at 50% -270px, rgba(118, 164, 209, .08), transparent 70%),
+    linear-gradient(180deg, #111821 0%, #0d131a 47%, #0b1016 100%) !important;
+  color: var(--locus-text) !important;
+  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif !important;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -53,120 +63,142 @@ body:not(.classic-mode) *::after {
   box-sizing: border-box;
 }
 
-/* ---------- Shared UI surfaces ---------- */
+/* ========================================================================== */
+/* CORE VISUAL LANGUAGE                                                       */
+/* ========================================================================== */
+
 body:not(.classic-mode) :is(#scoreboard, #gold-zone, #bonus-zone, #card-choice-zone, #objective-zone) {
-  border: 1px solid var(--ui-line) !important;
-  background: linear-gradient(180deg, rgba(255,255,255,.025), transparent 28%), var(--ui-panel) !important;
-  color: var(--ui-text) !important;
-  border-radius: var(--ui-radius) !important;
-  box-shadow: var(--ui-shadow-panel) !important;
+  margin: 0 !important;
+  border: 1px solid var(--locus-border) !important;
+  border-radius: var(--locus-radius) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.025), transparent 27%),
+    var(--locus-panel) !important;
+  color: var(--locus-text) !important;
+  box-shadow: var(--locus-shadow-panel) !important;
 }
 
 body:not(.classic-mode) :is(#scoreboard, #gold-zone, #bonus-zone, #card-choice-zone) h2 {
-  margin: 0 0 8px !important;
-  color: var(--ui-muted) !important;
-  font-size: .70rem !important;
-  font-weight: 750 !important;
-  letter-spacing: .075em;
-  line-height: 1.1;
-  text-transform: uppercase;
+  margin: 0 0 9px !important;
+  color: var(--locus-muted) !important;
+  font-size: .68rem !important;
+  font-weight: 760 !important;
+  letter-spacing: .095em !important;
+  line-height: 1.1 !important;
+  text-transform: uppercase !important;
 }
 
-body:not(.classic-mode) button,
-body:not(.classic-mode) [role="button"] {
-  -webkit-tap-highlight-color: transparent;
+/* UI panels should not inherit the board-zone padding/margins. */
+body:not(.classic-mode) :is(#scoreboard, #gold-zone, #bonus-zone, #card-choice-zone, #objective-zone).zone {
+  padding: 0;
 }
 
-body:not(.classic-mode) button:focus-visible,
-body:not(.classic-mode) [role="button"]:focus-visible,
-body:not(.classic-mode) .card-option:focus-visible {
-  outline: 3px solid var(--ui-focus) !important;
-  outline-offset: 2px;
-}
-
-/* ---------- Menu ---------- */
+/* Menu: quiet floating control rather than another panel. */
 body:not(.classic-mode) #menu-toggle {
-  top: max(8px, var(--ui-safe-top)) !important;
-  left: max(8px, var(--ui-safe-left)) !important;
-  width: 36px !important;
-  height: 36px !important;
-  border: 1px solid var(--ui-line-strong) !important;
-  border-radius: 10px !important;
-  background: #252a31 !important;
-  box-shadow: 0 7px 18px rgba(0,0,0,.25) !important;
+  position: fixed !important;
+  top: max(12px, var(--locus-safe-top)) !important;
+  left: max(12px, var(--locus-safe-left)) !important;
+  width: 42px !important;
+  height: 42px !important;
+  padding: 10px !important;
+  border: 1px solid var(--locus-border-strong) !important;
+  border-radius: 12px !important;
+  background: rgba(25, 34, 44, .95) !important;
+  box-shadow: 0 9px 25px rgba(0,0,0,.28), 0 1px 0 rgba(255,255,255,.05) inset !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+body:not(.classic-mode) #menu-toggle span {
+  height: 2px !important;
+  border-radius: 999px;
+  background: rgba(244,246,248,.88) !important;
 }
 
 body:not(.classic-mode) #controls {
-  border: 1px solid var(--ui-line-strong) !important;
-  background: #20252c !important;
-  color: var(--ui-text) !important;
-  box-shadow: 0 20px 50px rgba(0,0,0,.42) !important;
-  border-radius: 14px !important;
+  border: 1px solid var(--locus-border-strong) !important;
+  border-radius: 16px !important;
+  background: rgba(23,32,42,.985) !important;
+  color: var(--locus-text) !important;
+  box-shadow: 0 28px 70px rgba(0,0,0,.48) !important;
 }
 
 body:not(.classic-mode) #controls button {
-  min-height: 38px;
-  border-color: var(--ui-line) !important;
-  border-radius: 9px !important;
+  min-height: 42px;
+  border: 1px solid var(--locus-border) !important;
+  border-radius: 10px !important;
 }
 
-/* ---------- Objective: belongs to the board, not a separate dashboard card ---------- */
+/* ---------- Objective / level header ---------- */
 body:not(.classic-mode) #objective-zone {
-  min-height: 46px !important;
-  padding: 7px 14px !important;
-  gap: 9px !important;
+  width: 100% !important;
+  min-height: 58px !important;
+  padding: 9px 18px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
   justify-content: center !important;
+  gap: 4px !important;
   text-align: center !important;
-  box-shadow: 0 5px 16px rgba(0,0,0,.17) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.02), transparent 35%),
+    rgba(23,32,42,.96) !important;
+  box-shadow: 0 9px 24px rgba(0,0,0,.22) !important;
 }
 
 body:not(.classic-mode) #objective-zone h2 {
   margin: 0 !important;
-  color: var(--ui-muted) !important;
-  font-size: .66rem !important;
-  font-weight: 700 !important;
-  letter-spacing: .055em;
-  text-transform: uppercase;
-  white-space: nowrap;
+  color: #76b8e8 !important;
+  font-size: .69rem !important;
+  font-weight: 800 !important;
+  letter-spacing: .10em !important;
+  line-height: 1.05 !important;
+  text-transform: uppercase !important;
 }
 
 body:not(.classic-mode) #objective-current {
-  color: var(--ui-text) !important;
-  font-size: .83rem !important;
-  font-weight: 650 !important;
+  color: var(--locus-text) !important;
+  font-size: .89rem !important;
+  font-weight: 720 !important;
   line-height: 1.25 !important;
 }
 
-body:not(.classic-mode) .objective-history {
-  color: var(--ui-muted) !important;
+body:not(.classic-mode) #objective-history {
+  margin: 0 !important;
 }
 
-/* ---------- Score / coins ---------- */
+/* ---------- Score ---------- */
 body:not(.classic-mode) #scoreboard {
-  padding: 10px !important;
+  padding: 12px !important;
 }
 
 body:not(.classic-mode) #scoreboard .score-total {
-  min-height: 38px;
-  padding: 6px 8px !important;
-  margin: 0 0 7px !important;
-  border: 1px solid var(--ui-line) !important;
-  border-radius: 9px !important;
-  background: rgba(255,255,255,.045) !important;
-  color: var(--ui-text) !important;
+  min-height: 44px !important;
+  margin: 0 0 8px !important;
+  padding: 7px 9px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  border: 1px solid var(--locus-border) !important;
+  border-radius: 10px !important;
+  background: rgba(255,255,255,.04) !important;
+  color: var(--locus-text) !important;
 }
 
 body:not(.classic-mode) #scoreboard .score-total .label {
-  color: var(--ui-muted);
-  font-size: .65rem;
-  letter-spacing: .04em;
+  color: var(--locus-muted) !important;
+  font-size: .64rem !important;
+  font-weight: 750 !important;
+  letter-spacing: .055em !important;
   text-transform: uppercase;
 }
 
 body:not(.classic-mode) #scoreboard .total-score {
-  color: #f5d77d !important;
-  font-size: 1.45rem !important;
-  font-weight: 800 !important;
+  color: var(--locus-gold-hi) !important;
+  font-size: 1.5rem !important;
+  font-weight: 850 !important;
+  line-height: 1 !important;
   font-variant-numeric: tabular-nums;
 }
 
@@ -175,268 +207,325 @@ body:not(.classic-mode) #scoreboard hr {
 }
 
 body:not(.classic-mode) #scoreboard .score-row {
-  min-height: 27px;
+  min-height: 28px !important;
   margin: 2px 0 !important;
-  padding: 4px 6px !important;
-  border: 1px solid transparent;
-  border-radius: 7px !important;
-  background: rgba(255,255,255,.025) !important;
-  color: var(--ui-text) !important;
-  font-size: .72rem !important;
-  transition: background 140ms ease, border-color 140ms ease !important;
+  padding: 5px 7px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  border: 1px solid transparent !important;
+  border-radius: 8px !important;
+  background: rgba(255,255,255,.022) !important;
+  color: var(--locus-text) !important;
+  font-size: .70rem !important;
+}
+
+body:not(.classic-mode) #scoreboard .score-row .label {
+  flex: 1 1 auto;
+  color: #dce2e8 !important;
 }
 
 body:not(.classic-mode) #scoreboard .score-row .score {
-  font-weight: 750;
+  color: #f6f7f9 !important;
+  font-weight: 780 !important;
   font-variant-numeric: tabular-nums;
 }
 
+body:not(.classic-mode) #scoreboard .score-row .color-box {
+  width: 9px !important;
+  height: 9px !important;
+  border-radius: 2px !important;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.08) inset;
+}
+
+/* ---------- Coins ---------- */
 body:not(.classic-mode) #gold-zone {
-  padding: 9px 10px !important;
-  gap: 7px !important;
+  position: relative;
+  padding: 11px !important;
+  gap: 8px !important;
 }
 
 body:not(.classic-mode) #gold-zone::after {
-  color: #f0cc68 !important;
+  color: var(--locus-gold-hi) !important;
+  font-size: .98rem !important;
+  font-weight: 820 !important;
   font-variant-numeric: tabular-nums;
 }
 
 body:not(.classic-mode) .buy-placement-btn {
-  border: 1px solid var(--ui-line-strong) !important;
-  background: rgba(255,255,255,.045) !important;
-  border-radius: 9px !important;
+  min-height: 38px !important;
+  border: 1px solid var(--locus-border-strong) !important;
+  border-radius: 10px !important;
+  background: rgba(255,255,255,.035) !important;
   box-shadow: none !important;
 }
 
-/* ---------- Physical hand cards ---------- */
+/* ---------- Bonuses ---------- */
+body:not(.classic-mode) #bonus-zone {
+  padding: 11px !important;
+}
+
+body:not(.classic-mode) #bonus-zone .bonus-hint {
+  margin: 7px 0 0 !important;
+  color: var(--locus-faint) !important;
+  font-size: .62rem !important;
+  line-height: 1.3 !important;
+}
+
+body:not(.classic-mode) .bonus-inventory {
+  gap: 6px !important;
+}
+
+body:not(.classic-mode) .bonus-badge {
+  min-width: 30px;
+  min-height: 30px;
+  border: 1px solid var(--locus-border) !important;
+  border-radius: 9px !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,.03) inset !important;
+}
+
+/* ========================================================================== */
+/* PHYSICAL HAND                                                              */
+/* ========================================================================== */
+
 body:not(.classic-mode) #card-choice-zone {
-  padding: 10px !important;
+  padding: 12px !important;
   overflow: visible !important;
 }
 
 body:not(.classic-mode) #card-controls {
-  gap: 8px !important;
+  gap: 10px !important;
 }
 
 body:not(.classic-mode) #card-options {
-  gap: 8px !important;
+  gap: 9px !important;
 }
 
 body:not(.classic-mode) #card-choice-zone .card-option {
   position: relative;
   isolation: isolate;
-  border: 1px solid rgba(255,255,255,.15) !important;
-  border-radius: 14px !important;
+  border: 1px solid rgba(214,226,240,.16) !important;
+  border-radius: 15px !important;
   background:
-    linear-gradient(180deg, rgba(255,255,255,.065) 0%, rgba(255,255,255,.018) 18%, transparent 45%),
-    #282d35 !important;
-  box-shadow: var(--ui-shadow-card) !important;
+    linear-gradient(180deg, rgba(255,255,255,.07) 0%, rgba(255,255,255,.018) 20%, transparent 47%),
+    radial-gradient(110% 80% at 50% -12%, rgba(102,142,180,.075), transparent 62%),
+    #202833 !important;
+  box-shadow: var(--locus-shadow-card) !important;
   transform-origin: 50% 90%;
-  transition: transform 150ms cubic-bezier(.2,.75,.2,1), border-color 150ms ease, box-shadow 150ms ease, opacity 150ms ease !important;
-  animation: locus-v3-card-in 190ms cubic-bezier(.2,.75,.2,1) both;
+  transition:
+    transform var(--locus-motion) cubic-bezier(.2,.72,.2,1),
+    border-color var(--locus-motion),
+    box-shadow var(--locus-motion),
+    opacity var(--locus-motion),
+    filter var(--locus-motion) !important;
+  animation: locus-card-deal 190ms cubic-bezier(.2,.75,.2,1) both;
 }
 
-body:not(.classic-mode) #card-choice-zone .card-option:nth-child(2) { animation-delay: 24ms; }
-body:not(.classic-mode) #card-choice-zone .card-option:nth-child(3) { animation-delay: 48ms; }
-body:not(.classic-mode) #card-choice-zone .card-option:nth-child(4) { animation-delay: 72ms; }
-body:not(.classic-mode) #card-choice-zone .card-option:nth-child(5) { animation-delay: 96ms; }
+body:not(.classic-mode) #card-choice-zone .card-option:nth-child(2) { animation-delay: 25ms; }
+body:not(.classic-mode) #card-choice-zone .card-option:nth-child(3) { animation-delay: 50ms; }
+body:not(.classic-mode) #card-choice-zone .card-option:nth-child(4) { animation-delay: 75ms; }
+body:not(.classic-mode) #card-choice-zone .card-option:nth-child(5) { animation-delay: 100ms; }
 
-@keyframes locus-v3-card-in {
-  from { opacity: 0; transform: translateY(7px) scale(.975); }
+@keyframes locus-card-deal {
+  from { opacity: 0; transform: translateY(8px) scale(.975); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 body:not(.classic-mode) #card-choice-zone .card-option.selected {
-  z-index: 3;
-  border-color: var(--ui-accent) !important;
-  transform: translateY(-4px) !important;
-  box-shadow: 0 0 0 2px var(--ui-accent-soft), 0 2px 0 rgba(0,0,0,.5), 0 15px 30px rgba(0,0,0,.34) !important;
+  z-index: 4;
+  border-color: var(--locus-gold) !important;
+  transform: translateY(-5px) !important;
+  box-shadow: var(--locus-shadow-card-selected) !important;
 }
 
 body:not(.classic-mode) #card-choice-zone .card-option.selection-disabled {
-  opacity: .38 !important;
-  filter: saturate(.55) grayscale(.12) !important;
+  opacity: .36 !important;
+  filter: grayscale(.20) saturate(.55) !important;
 }
 
 body:not(.classic-mode) #card-choice-zone .card-option.card-golden {
-  border-color: rgba(215,182,91,.72) !important;
-  box-shadow: 0 0 0 1px rgba(215,182,91,.09) inset, var(--ui-shadow-card) !important;
+  border-color: rgba(231,194,93,.68) !important;
+  box-shadow: 0 0 0 1px rgba(231,194,93,.09) inset, var(--locus-shadow-card) !important;
 }
 
 body:not(.classic-mode) #card-choice-zone .card-label {
-  color: var(--ui-muted) !important;
-  line-height: 1.1;
+  color: var(--locus-muted) !important;
+  font-size: .59rem !important;
+  line-height: 1.1 !important;
 }
 
-body:not(.classic-mode) #turn-counter-inline {
-  color: var(--ui-muted) !important;
-  font-size: .69rem !important;
-  font-weight: 650;
-  font-variant-numeric: tabular-nums;
-}
-
-/* ---------- Actions / bonuses ---------- */
+/* Action dock */
 body:not(.classic-mode) #card-action-buttons {
-  gap: 6px !important;
+  gap: 8px !important;
 }
 
-body:not(.classic-mode) .card-action-btn,
-body:not(.classic-mode) .deck-preview {
-  border: 1px solid var(--ui-line-strong) !important;
-  background: #282d35 !important;
-  color: var(--ui-text) !important;
-  border-radius: 10px !important;
-  box-shadow: 0 4px 11px rgba(0,0,0,.18) !important;
-  transition: filter 120ms ease, border-color 120ms ease, transform 120ms ease !important;
-}
-
-body:not(.classic-mode) .card-action-btn:disabled {
-  opacity: .35 !important;
+body:not(.classic-mode) :is(.card-action-btn, .deck-preview) {
+  border: 1px solid var(--locus-border) !important;
+  border-radius: 11px !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.035), transparent 46%), var(--locus-panel-raised) !important;
+  color: var(--locus-text) !important;
+  box-shadow: 0 5px 14px rgba(0,0,0,.19) !important;
+  transition: border-color var(--locus-motion), background var(--locus-motion), filter var(--locus-motion), transform var(--locus-motion-fast) !important;
 }
 
 body:not(.classic-mode) #new-cards-btn {
-  border-color: rgba(215,182,91,.40) !important;
-  background: linear-gradient(180deg, #343128, #292821) !important;
+  border-color: rgba(223,185,79,.46) !important;
+  background:
+    linear-gradient(180deg, rgba(255,238,179,.08), transparent 42%),
+    #312b1b !important;
+  color: var(--locus-gold-hi) !important;
+  box-shadow: 0 0 0 1px rgba(223,185,79,.055) inset, 0 7px 18px rgba(0,0,0,.23) !important;
 }
 
-body:not(.classic-mode) #bonus-zone {
-  padding: 9px !important;
-  gap: 7px !important;
+body:not(.classic-mode) :is(.card-action-btn, button, [role="button"]):focus-visible,
+body:not(.classic-mode) .card-option:focus-visible {
+  outline: 3px solid var(--locus-focus) !important;
+  outline-offset: 2px !important;
 }
 
-body:not(.classic-mode) #bonus-zone .bonus-hint {
-  margin: 0;
-  color: var(--ui-faint) !important;
-  font-size: .62rem !important;
-  line-height: 1.25;
-}
-
-body:not(.classic-mode) .bonus-inventory {
-  gap: 5px !important;
-}
-
-body:not(.classic-mode) .bonus-badge {
-  min-height: 31px;
-  border: 1px solid var(--ui-line) !important;
-  border-radius: 9px !important;
-  box-shadow: none !important;
-}
-
-/* ---------- Fine pointer only: no hover-dependent touch behavior ---------- */
 @media (hover: hover) and (pointer: fine) {
   body:not(.classic-mode) #card-choice-zone .card-option:not(.selection-disabled):hover {
-    transform: translateY(-3px);
-    border-color: rgba(255,255,255,.27) !important;
-    box-shadow: 0 1px 0 rgba(255,255,255,.09) inset, 0 2px 0 rgba(0,0,0,.5), 0 14px 28px rgba(0,0,0,.32) !important;
+    transform: translateY(-4px) !important;
+    border-color: rgba(220,231,243,.30) !important;
+    box-shadow: 0 1px 0 rgba(255,255,255,.09) inset, 0 2px 0 rgba(0,0,0,.45), 0 16px 31px rgba(0,0,0,.34) !important;
   }
   body:not(.classic-mode) #card-choice-zone .card-option.selected:hover {
-    transform: translateY(-5px) !important;
-    border-color: var(--ui-accent-hi) !important;
+    transform: translateY(-6px) !important;
+    border-color: var(--locus-gold-hi) !important;
   }
   body:not(.classic-mode) :is(.card-action-btn, .deck-preview, .buy-placement-btn, .bonus-badge):not(:disabled):hover {
     filter: brightness(1.08);
+    border-color: var(--locus-border-strong) !important;
   }
   body:not(.classic-mode) #scoreboard .score-row:hover {
     transform: none !important;
-    background: rgba(255,255,255,.055) !important;
-    border-color: var(--ui-line) !important;
-    color: var(--ui-text) !important;
+    background: rgba(255,255,255,.045) !important;
   }
 }
 
 /* ========================================================================== */
-/* DESKTOP LANDSCAPE                                                         */
+/* DESKTOP / LAPTOP — THREE-PART GAME TABLE                                   */
 /* ========================================================================== */
-@media (min-width: 801px) {
+
+@media (min-width: 1241px) {
+  body:not(.classic-mode).desktop-landscape {
+    overflow: hidden !important;
+  }
+
   body:not(.classic-mode).desktop-landscape #desktop-wrapper {
     display: grid !important;
     grid-template-areas:
-      "menu objective ."
-      "left grids right" !important;
-    grid-template-columns: clamp(158px, 11.5vw, 190px) minmax(0, 1fr) clamp(214px, 15vw, 244px) !important;
-    grid-template-rows: auto minmax(0, 1fr) !important;
-    width: min(100%, 1510px) !important;
-    height: calc(100dvh - 16px) !important;
-    margin: 0 auto !important;
-    padding: 8px max(8px, var(--ui-safe-right)) 8px max(8px, var(--ui-safe-left)) !important;
-    gap: 11px !important;
+      ". objective ."
+      "hud board hand" !important;
+    grid-template-columns: 190px max-content 292px !important;
+    grid-template-rows: auto auto !important;
+    width: max-content !important;
+    max-width: none !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: clamp(22px, 4.2vh, 62px) auto 0 !important;
+    padding: 0 !important;
+    gap: 16px 18px !important;
     align-items: start !important;
+    justify-items: stretch !important;
+    overflow: visible !important;
+  }
+
+  body:not(.classic-mode).desktop-landscape #desktop-menu {
+    position: absolute !important;
+    width: 0 !important;
+    height: 0 !important;
     overflow: visible !important;
   }
 
   body:not(.classic-mode).desktop-landscape #desktop-objective {
     grid-area: objective !important;
-    grid-column: auto !important;
-    align-self: start;
+    width: min(100%, 760px) !important;
+    justify-self: center !important;
+    align-self: end !important;
   }
 
   body:not(.classic-mode).desktop-landscape #desktop-left {
-    grid-area: left !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: none !important;
-    gap: 8px !important;
-    overflow-y: auto;
-    overflow-x: visible;
-    scrollbar-width: thin;
+    grid-area: hud !important;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 190px !important;
+    min-width: 190px !important;
+    max-width: 190px !important;
+    gap: 10px !important;
+    overflow: visible !important;
   }
 
   body:not(.classic-mode).desktop-landscape #desktop-grids {
-    grid-area: grids !important;
-    width: 100%;
-    min-width: 0;
-    min-height: 0;
+    grid-area: board !important;
+    width: max-content !important;
+    min-width: max-content !important;
+    max-width: none !important;
+    min-height: 0 !important;
     display: flex !important;
     justify-content: center !important;
     align-items: flex-start !important;
     overflow: visible !important;
   }
 
+  body:not(.classic-mode).desktop-landscape #desktop-grids #board {
+    margin: 0 !important;
+  }
+
   body:not(.classic-mode).desktop-landscape #desktop-right {
-    grid-area: right !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: none !important;
-    max-height: calc(100dvh - 20px) !important;
-    gap: 8px !important;
-    overflow-y: auto !important;
-    overflow-x: visible !important;
-    scrollbar-width: thin;
+    grid-area: hand !important;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 292px !important;
+    min-width: 292px !important;
+    max-width: 292px !important;
+    gap: 10px !important;
+    overflow: visible !important;
   }
 
   body:not(.classic-mode).desktop-landscape #desktop-bottom {
     display: none !important;
   }
 
+  body:not(.classic-mode).desktop-landscape #desktop-left #bonus-zone .bonus-hint {
+    display: none !important;
+  }
+
+  body:not(.classic-mode).desktop-landscape #desktop-left #bonus-inventory {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 5px !important;
+  }
+
   body:not(.classic-mode).desktop-landscape #desktop-right #card-choice-zone {
     width: 100% !important;
-    padding: 9px !important;
+    padding: 13px !important;
   }
 
   body:not(.classic-mode).desktop-landscape #desktop-right #card-options {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    justify-items: center;
-    align-items: stretch;
-    gap: 7px !important;
+    gap: 9px !important;
     width: 100% !important;
+    justify-items: center !important;
+    align-items: stretch !important;
     overflow: visible !important;
   }
 
   body:not(.classic-mode).desktop-landscape #desktop-right #card-options > .card-option:last-child:nth-child(odd) {
-    grid-column: 1 / -1;
-    width: min(100%, 104px) !important;
+    grid-column: 1 / -1 !important;
+    width: 122px !important;
   }
 
   body:not(.classic-mode).desktop-landscape #desktop-right .card-option {
-    width: 100% !important;
+    width: 122px !important;
     min-width: 0 !important;
-    max-width: 104px !important;
-    min-height: 116px !important;
-    height: auto !important;
-    padding: 7px !important;
+    max-width: 122px !important;
+    min-height: 136px !important;
+    height: 136px !important;
+    padding: 8px !important;
     gap: 5px !important;
-    --preview-cell: 12px;
+    --preview-cell: 13px;
   }
 
   body:not(.classic-mode).desktop-landscape #desktop-right .card-option .card-cell {
@@ -446,93 +535,156 @@ body:not(.classic-mode) .bonus-badge {
 
   body:not(.classic-mode).desktop-landscape #desktop-right #card-action-buttons {
     display: grid !important;
-    grid-template-columns: repeat(3, 42px) !important;
-    justify-content: center !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
     width: 100% !important;
-    padding: 8px 0 0 !important;
-    margin: 2px 0 0 !important;
-    border-top: 1px solid var(--ui-line);
+    padding: 10px 0 0 !important;
+    margin: 0 !important;
+    border-top: 1px solid var(--locus-border) !important;
   }
 
   body:not(.classic-mode).desktop-landscape #desktop-right :is(.card-action-btn, .deck-preview) {
-    width: 42px !important;
-    min-width: 42px !important;
-    height: 42px !important;
-    min-height: 42px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 52px !important;
+    min-height: 52px !important;
     padding: 5px !important;
   }
 
-  body:not(.classic-mode).desktop-landscape #desktop-right #bonus-zone .bonus-hint {
-    display: none !important;
+  body:not(.classic-mode).desktop-landscape #desktop-right #rotate-card-btn { order: 1; }
+  body:not(.classic-mode).desktop-landscape #desktop-right #mirror-card-btn { order: 2; }
+  body:not(.classic-mode).desktop-landscape #desktop-right #undo-inline-btn { order: 3; }
+  body:not(.classic-mode).desktop-landscape #desktop-right #bonus-shop-btn { order: 4; }
+  body:not(.classic-mode).desktop-landscape #desktop-right #deck-preview { order: 5; }
+  body:not(.classic-mode).desktop-landscape #desktop-right #new-cards-btn {
+    order: 6;
+    grid-column: 1 / -1 !important;
+    height: 48px !important;
   }
 
-  body:not(.classic-mode).desktop-landscape #desktop-right #bonus-zone .bonus-inventory {
-    display: grid !important;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+  body:not(.classic-mode).desktop-landscape #desktop-right #new-cards-btn::after {
+    content: attr(data-label) !important;
+    display: inline !important;
+    margin-left: 7px !important;
+    font-size: .69rem !important;
+    font-weight: 760 !important;
+    letter-spacing: .015em;
+  }
+
+  body:not(.classic-mode).desktop-landscape #desktop-right #new-cards-btn::before {
+    font-size: 1.08rem !important;
+  }
+
+  body:not(.classic-mode).desktop-landscape #desktop-right #bonus-zone {
+    display: none !important; /* V4: bonus panel lives in HUD rail */
   }
 }
 
-/* Short cursor laptops: preserve readable controls; let sidebars scroll. */
-@media (min-width: 801px) and (max-height: 720px) and (pointer: fine) {
+/* 4K/high-DPI keeps the same natural composition; JS upscales the table. */
+@media (min-width: 2200px) and (min-height: 1100px) {
   body:not(.classic-mode).desktop-landscape #desktop-wrapper {
-    grid-template-columns: 150px minmax(0, 1fr) 210px !important;
-    gap: 7px !important;
-    padding: 5px !important;
+    margin-top: clamp(34px, 5.5vh, 92px) !important;
   }
-  body:not(.classic-mode).desktop-landscape #objective-zone {
-    min-height: 38px !important;
-    padding-block: 5px !important;
+}
+
+/* Very short cursor screens: keep natural UI size and let the whole table scale. */
+@media (min-width: 1241px) and (max-height: 690px) and (pointer: fine) {
+  body:not(.classic-mode).desktop-landscape #desktop-wrapper {
+    margin-top: 10px !important;
+    gap: 9px 12px !important;
   }
+  body:not(.classic-mode).desktop-landscape #desktop-left { width: 176px !important; min-width: 176px !important; max-width: 176px !important; }
+  body:not(.classic-mode).desktop-landscape #desktop-right { width: 268px !important; min-width: 268px !important; max-width: 268px !important; }
   body:not(.classic-mode).desktop-landscape #desktop-right .card-option {
-    min-height: 98px !important;
-    --preview-cell: 10px;
-  }
-  body:not(.classic-mode).desktop-landscape #desktop-right #card-action-buttons {
-    grid-template-columns: repeat(3, 40px) !important;
-  }
-  body:not(.classic-mode).desktop-landscape #desktop-right :is(.card-action-btn, .deck-preview) {
-    width: 40px !important;
-    min-width: 40px !important;
-    height: 40px !important;
-    min-height: 40px !important;
+    width: 110px !important;
+    max-width: 110px !important;
+    min-height: 112px !important;
+    height: 112px !important;
+    --preview-cell: 11px;
   }
 }
 
 /* ========================================================================== */
-/* DESKTOP PORTRAIT / TABLET                                                  */
+/* TABLET / COMPACT DESKTOP — BOARD FIRST + BOTTOM DOCK                       */
 /* ========================================================================== */
-@media (min-width: 651px) {
-  body:not(.classic-mode).desktop-portrait #desktop-wrapper {
-    display: flex !important;
-    flex-direction: column !important;
-    width: 100% !important;
-    height: calc(100dvh - 12px) !important;
-    padding: 6px max(7px, var(--ui-safe-right)) 6px max(7px, var(--ui-safe-left)) !important;
-    gap: 5px !important;
+
+@media (min-width: 651px) and (max-width: 1240px),
+       (min-width: 651px) and (orientation: portrait) {
+  body:not(.classic-mode).desktop-portrait {
     overflow: hidden !important;
   }
 
+  body:not(.classic-mode).desktop-portrait #desktop-wrapper {
+    display: grid !important;
+    grid-template-areas:
+      "objective"
+      "board"
+      "dock" !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: auto minmax(0, 1fr) auto !important;
+    width: 100% !important;
+    height: 100dvh !important;
+    margin: 0 !important;
+    padding:
+      max(10px, var(--locus-safe-top))
+      max(10px, var(--locus-safe-right))
+      max(10px, var(--locus-safe-bottom))
+      max(10px, var(--locus-safe-left)) !important;
+    gap: 8px !important;
+    overflow: hidden !important;
+  }
+
+  body:not(.classic-mode).desktop-portrait #desktop-menu {
+    position: absolute !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
   body:not(.classic-mode).desktop-portrait #desktop-objective {
-    width: min(100%, 920px) !important;
-    flex: 0 0 auto;
+    grid-area: objective !important;
+    width: min(100%, 900px) !important;
+    margin: 0 auto !important;
+  }
+
+  body:not(.classic-mode).desktop-portrait #objective-zone {
+    min-height: 52px !important;
+    padding: 7px 14px !important;
   }
 
   body:not(.classic-mode).desktop-portrait #desktop-grids {
-    flex: 1 1 auto !important;
+    grid-area: board !important;
+    min-width: 0 !important;
     min-height: 0 !important;
     width: 100% !important;
-    overflow: visible !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+  }
+
+  body:not(.classic-mode).desktop-portrait #desktop-grids #board {
+    margin: 0 !important;
   }
 
   body:not(.classic-mode).desktop-portrait #desktop-bottom {
-    flex: 0 0 auto !important;
-    width: min(100%, 980px) !important;
-    display: grid !important;
-    grid-template-columns: minmax(118px, 150px) minmax(270px, 1fr) auto minmax(120px, 165px) !important;
-    gap: 7px !important;
-    align-items: stretch !important;
-    padding: 0 !important;
+    grid-area: dock !important;
+    width: min(100%, 1040px) !important;
     margin: 0 auto !important;
+    padding: 8px !important;
+    display: grid !important;
+    grid-template-columns: clamp(142px, 20vw, 180px) minmax(310px, 1fr) clamp(150px, 21vw, 190px) !important;
+    gap: 8px !important;
+    align-items: stretch !important;
+    border: 1px solid var(--locus-border) !important;
+    border-radius: 18px !important;
+    background: rgba(17,24,33,.95) !important;
+    box-shadow: 0 16px 38px rgba(0,0,0,.28), 0 1px 0 rgba(255,255,255,.025) inset !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  body:not(.classic-mode).desktop-portrait #desktop-bottom-buttons {
+    display: none !important;
   }
 
   body:not(.classic-mode).desktop-portrait #desktop-bottom-left,
@@ -541,149 +693,249 @@ body:not(.classic-mode) .bonus-badge {
     width: 100% !important;
     min-width: 0 !important;
     max-width: none !important;
-    gap: 5px !important;
+    gap: 6px !important;
   }
 
-  body:not(.classic-mode).desktop-portrait #desktop-bottom-buttons {
-    display: flex !important;
-    width: auto !important;
-    min-width: 0 !important;
-    align-items: center !important;
-    justify-content: flex-start !important;
+  /* Compact score becomes a small status block, not another tall sidebar. */
+  body:not(.classic-mode).desktop-portrait #scoreboard {
+    height: 100% !important;
+    padding: 8px !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 4px !important;
+    align-content: start !important;
   }
+
+  body:not(.classic-mode).desktop-portrait #scoreboard h2 { display: none !important; }
+  body:not(.classic-mode).desktop-portrait #scoreboard .score-total {
+    grid-column: 1 / -1 !important;
+    min-height: 34px !important;
+    margin: 0 !important;
+    padding: 5px 7px !important;
+  }
+  body:not(.classic-mode).desktop-portrait #scoreboard .total-score { font-size: 1.15rem !important; }
+  body:not(.classic-mode).desktop-portrait #scoreboard .score-row {
+    min-height: 24px !important;
+    margin: 0 !important;
+    padding: 3px 5px !important;
+    font-size: .62rem !important;
+  }
+  body:not(.classic-mode).desktop-portrait #scoreboard .score-row .label { display: none !important; }
 
   body:not(.classic-mode).desktop-portrait #card-choice-zone {
-    padding: 6px !important;
+    height: 100% !important;
+    padding: 8px !important;
   }
   body:not(.classic-mode).desktop-portrait #card-choice-zone > h2,
   body:not(.classic-mode).desktop-portrait #card-choice-zone > br {
     display: none !important;
   }
+  body:not(.classic-mode).desktop-portrait #card-controls {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+  }
   body:not(.classic-mode).desktop-portrait #card-options {
     display: flex !important;
     flex-wrap: nowrap !important;
+    align-items: stretch !important;
     justify-content: center !important;
     gap: 6px !important;
+    overflow: visible !important;
   }
   body:not(.classic-mode).desktop-portrait #card-options .card-option {
-    flex: 0 1 92px !important;
-    width: 92px !important;
-    min-width: 70px !important;
-    max-width: 104px !important;
-    min-height: 104px !important;
-    height: auto !important;
+    flex: 0 1 88px !important;
+    width: 88px !important;
+    min-width: 68px !important;
+    max-width: 94px !important;
+    min-height: 96px !important;
+    height: 96px !important;
     padding: 6px !important;
-    --preview-cell: 11px;
+    --preview-cell: 10px;
   }
   body:not(.classic-mode).desktop-portrait #card-options .card-cell {
     width: var(--preview-cell) !important;
     height: var(--preview-cell) !important;
   }
   body:not(.classic-mode).desktop-portrait #desktop-bottom-center #card-action-buttons {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    justify-content: center !important;
-    padding-top: 5px !important;
-  }
-  body:not(.classic-mode).desktop-portrait #desktop-bottom-buttons #card-action-buttons {
     display: grid !important;
-    grid-template-columns: repeat(2, 42px) !important;
+    grid-template-columns: repeat(6, minmax(38px, 1fr)) !important;
     gap: 5px !important;
-    justify-content: center !important;
-    margin: 0 !important;
-    padding: 0 !important;
+    width: 100% !important;
   }
-  body:not(.classic-mode).desktop-portrait :is(.card-action-btn, .deck-preview) {
-    width: 42px !important;
-    min-width: 42px !important;
+  body:not(.classic-mode).desktop-portrait #desktop-bottom-center :is(.card-action-btn, .deck-preview) {
+    width: 100% !important;
+    min-width: 0 !important;
     height: 42px !important;
     min-height: 42px !important;
-    padding: 5px !important;
+    padding: 4px !important;
   }
-  body:not(.classic-mode).desktop-portrait #bonus-zone .bonus-hint,
-  body:not(.classic-mode).desktop-portrait :is(#scoreboard, #gold-zone, #bonus-zone) h2 {
+
+  body:not(.classic-mode).desktop-portrait #desktop-bottom-right {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  body:not(.classic-mode).desktop-portrait #bonus-zone,
+  body:not(.classic-mode).desktop-portrait #gold-zone {
+    padding: 7px !important;
+    box-shadow: none !important;
+  }
+  body:not(.classic-mode).desktop-portrait #bonus-zone h2,
+  body:not(.classic-mode).desktop-portrait #gold-zone h2,
+  body:not(.classic-mode).desktop-portrait #bonus-zone .bonus-hint {
     display: none !important;
+  }
+  body:not(.classic-mode).desktop-portrait #bonus-inventory {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0,1fr)) !important;
+    gap: 4px !important;
+  }
+}
+
+/* Smaller portrait tablets: keep dock usable, let cards shrink before controls. */
+@media (min-width: 651px) and (max-width: 840px) and (orientation: portrait) {
+  body:not(.classic-mode).desktop-portrait #desktop-bottom {
+    grid-template-columns: 126px minmax(0, 1fr) 132px !important;
+    gap: 6px !important;
+    padding: 6px !important;
+  }
+  body:not(.classic-mode).desktop-portrait #card-options .card-option {
+    width: 74px !important;
+    max-width: 78px !important;
+    min-height: 88px !important;
+    height: 88px !important;
+    --preview-cell: 9px;
+  }
+  body:not(.classic-mode).desktop-portrait #desktop-bottom-center #card-action-buttons {
+    grid-template-columns: repeat(3, minmax(42px, 1fr)) !important;
   }
 }
 
 /* ========================================================================== */
-/* PHONE PORTRAIT                                                             */
+/* PHONE PORTRAIT — BOARD STAGE + TACTILE BOTTOM TRAY                         */
 /* ========================================================================== */
+
 @media (max-width: 650px) and (orientation: portrait) {
   :root {
-    --bottom-bar-height: clamp(196px, 28dvh, 238px) !important;
+    --bottom-bar-height: clamp(214px, 27dvh, 246px) !important;
     --bottom-bar-gap: 0px !important;
     --bottom-bar-bottom-offset: 0px !important;
     --card-hand-lift: 0px !important;
-    --hand-card-width: clamp(62px, 21vw, 82px) !important;
-    --hand-card-height: clamp(88px, 14dvh, 108px) !important;
-    --hand-card-gap: 5px !important;
   }
 
-  body:not(.classic-mode) {
+  body:not(.classic-mode).touch-portrait {
     padding: 0 !important;
     overflow: hidden !important;
   }
 
-  body:not(.classic-mode) #mobile-objective-banner {
-    left: 46px !important;
-    right: 7px !important;
-    top: max(6px, var(--ui-safe-top)) !important;
-    width: auto !important;
+  body:not(.classic-mode).touch-portrait #menu-toggle {
+    top: max(8px, var(--locus-safe-top)) !important;
+    left: max(8px, var(--locus-safe-left)) !important;
+    width: 46px !important;
+    height: 46px !important;
+    z-index: calc(var(--z-menu) + 4) !important;
+  }
+
+  body:not(.classic-mode).touch-portrait #mobile-objective-banner {
+    position: fixed !important;
+    z-index: 440 !important;
+    top: max(8px, var(--locus-safe-top)) !important;
+    left: max(62px, calc(var(--locus-safe-left) + 62px)) !important;
+    right: max(8px, var(--locus-safe-right)) !important;
+    height: 58px !important;
     padding: 0 !important;
+    margin: 0 !important;
     background: transparent !important;
+    border: 0 !important;
     box-shadow: none !important;
   }
 
-  body:not(.classic-mode) #mobile-objective-banner #objective-zone {
-    min-height: 38px !important;
-    padding: 5px 8px !important;
-    border-radius: 10px !important;
-  }
-  body:not(.classic-mode) #mobile-objective-banner #objective-zone h2 {
-    display: none !important;
-  }
-  body:not(.classic-mode) #mobile-objective-banner #objective-current {
-    font-size: .70rem !important;
-  }
-  body:not(.classic-mode) #mobile-objective-banner .objective-history {
-    display: none !important;
+  body:not(.classic-mode).touch-portrait #mobile-objective-banner #objective-zone {
+    height: 58px !important;
+    min-height: 58px !important;
+    padding: 6px 12px !important;
+    border-radius: 17px !important;
   }
 
-  body:not(.classic-mode) #bottom-bar {
+  body:not(.classic-mode).touch-portrait #mobile-objective-banner #objective-zone h2 {
+    font-size: .61rem !important;
+    letter-spacing: .075em !important;
+  }
+
+  body:not(.classic-mode).touch-portrait #mobile-objective-banner #objective-current {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: clamp(.72rem, 3.3vw, .86rem) !important;
+  }
+
+  body:not(.classic-mode).touch-portrait #mobile-portrait-stage {
     position: fixed !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    width: 100% !important;
-    height: auto !important;
-    min-height: var(--bottom-bar-height) !important;
-    max-height: min(40dvh, 270px) !important;
-    margin: 0 !important;
-    padding: 7px max(6px, var(--ui-safe-right)) max(6px, var(--ui-safe-bottom)) max(6px, var(--ui-safe-left)) !important;
-    gap: 5px !important;
-    border: 1px solid var(--ui-line-strong) !important;
-    border-width: 1px 0 0 !important;
-    border-radius: 16px 16px 0 0 !important;
-    background: rgba(20,23,28,.985) !important;
-    box-shadow: 0 -15px 34px rgba(0,0,0,.32) !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    overscroll-behavior: contain;
-    z-index: var(--z-bottom) !important;
+    z-index: 1 !important;
+    top: calc(max(8px, var(--locus-safe-top)) + 66px) !important;
+    left: max(5px, var(--locus-safe-left)) !important;
+    right: max(5px, var(--locus-safe-right)) !important;
+    bottom: calc(var(--bottom-bar-height) + max(7px, var(--locus-safe-bottom))) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    pointer-events: auto;
   }
 
-  body:not(.classic-mode) #bottom-bar-cards {
-    width: 100% !important;
+  body:not(.classic-mode).touch-portrait #mobile-portrait-stage #board {
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: scale(var(--board-scale, .5)) !important;
+    transform-origin: center center !important;
+    flex: 0 0 auto !important;
+  }
+
+  body:not(.classic-mode).touch-portrait #bottom-bar {
+    position: fixed !important;
+    z-index: var(--z-bottom) !important;
+    left: max(6px, var(--locus-safe-left)) !important;
+    right: max(6px, var(--locus-safe-right)) !important;
+    bottom: max(6px, var(--locus-safe-bottom)) !important;
+    width: auto !important;
+    min-height: var(--bottom-bar-height) !important;
+    height: var(--bottom-bar-height) !important;
+    max-height: var(--bottom-bar-height) !important;
+    margin: 0 !important;
+    padding: 8px !important;
+    display: grid !important;
+    grid-template-rows: minmax(0, 1fr) auto !important;
+    gap: 6px !important;
+    border: 1px solid var(--locus-border-strong) !important;
+    border-radius: 20px !important;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.025), transparent 20%),
+      rgba(16,23,31,.975) !important;
+    box-shadow: 0 -2px 0 rgba(255,255,255,.025) inset, 0 20px 50px rgba(0,0,0,.40) !important;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    overflow: hidden !important;
+  }
+
+  body:not(.classic-mode).touch-portrait #bottom-bar-cards {
+    min-width: 0 !important;
+    min-height: 0 !important;
     height: auto !important;
-    min-height: calc(var(--hand-card-height) + 49px) !important;
     margin: 0 !important;
     overflow: visible !important;
   }
 
-  body:not(.classic-mode) #bottom-bar #card-choice-zone {
+  body:not(.classic-mode).touch-portrait #bottom-bar #card-choice-zone {
     width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
     padding: 0 !important;
     border: 0 !important;
     border-radius: 0 !important;
@@ -691,422 +943,464 @@ body:not(.classic-mode) .bonus-badge {
     box-shadow: none !important;
   }
 
-  body:not(.classic-mode) #bottom-bar #card-choice-zone > h2,
-  body:not(.classic-mode) #bottom-bar #card-choice-zone > br {
+  body:not(.classic-mode).touch-portrait #bottom-bar #card-choice-zone > h2,
+  body:not(.classic-mode).touch-portrait #bottom-bar #card-choice-zone > br,
+  body:not(.classic-mode).touch-portrait #bottom-bar #turn-counter-inline {
     display: none !important;
   }
 
-  body:not(.classic-mode) #bottom-bar #card-controls {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 4px !important;
+  body:not(.classic-mode).touch-portrait #bottom-bar #card-controls {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: auto auto !important;
+    gap: 6px !important;
     width: 100% !important;
   }
 
-  body:not(.classic-mode) #bottom-bar #card-options {
-    display: flex !important;
-    flex: 0 0 auto !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    justify-content: center !important;
-    align-items: flex-start !important;
+  body:not(.classic-mode).touch-portrait #bottom-bar #card-options {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 6px !important;
     width: 100% !important;
-    max-width: 100% !important;
-    gap: var(--hand-card-gap) !important;
-    padding: 3px 1px 5px !important;
-    transform: none !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    scrollbar-width: none !important;
-    scroll-snap-type: x proximity;
-    touch-action: pan-x !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    touch-action: manipulation !important;
   }
-  body:not(.classic-mode) #bottom-bar #card-options::-webkit-scrollbar { display: none; }
 
-  body:not(.classic-mode) #bottom-bar #card-options .card-option {
-    flex: 0 0 var(--hand-card-width) !important;
-    width: var(--hand-card-width) !important;
-    min-width: var(--hand-card-width) !important;
-    max-width: var(--hand-card-width) !important;
-    height: var(--hand-card-height) !important;
-    min-height: var(--hand-card-height) !important;
-    max-height: var(--hand-card-height) !important;
+  body:not(.classic-mode).touch-portrait #bottom-bar .hand-scroll-btn {
+    display: none !important;
+  }
+
+  body:not(.classic-mode).touch-portrait #bottom-bar #card-options .card-option {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    min-height: clamp(86px, 11.5dvh, 104px) !important;
+    height: clamp(86px, 11.5dvh, 104px) !important;
     padding: 5px !important;
-    gap: 2px !important;
-    border-radius: 11px !important;
-    --preview-cell: clamp(8px, 2.5vw, 10px);
-    scroll-snap-align: center;
+    gap: 3px !important;
+    border-radius: 13px !important;
+    --preview-cell: clamp(7px, 2.15vw, 9px);
   }
 
-  body:not(.classic-mode) #bottom-bar #card-options .card-cell {
+  body:not(.classic-mode).touch-portrait #bottom-bar .card-option .card-cell {
     width: var(--preview-cell) !important;
     height: var(--preview-cell) !important;
   }
-  body:not(.classic-mode) #bottom-bar #card-options .card-label {
-    font-size: .47rem !important;
-    padding: 1px 3px !important;
+
+  body:not(.classic-mode).touch-portrait #bottom-bar .card-option .card-label,
+  body:not(.classic-mode).touch-portrait #bottom-bar .card-option .card-meta {
+    font-size: .46rem !important;
   }
 
-  body:not(.classic-mode) #bottom-bar #turn-counter-inline {
-    position: absolute !important;
-    top: 1px;
-    right: 2px;
-    font-size: .59rem !important;
-  }
-
-  body:not(.classic-mode) #bottom-bar #card-action-buttons {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    justify-content: center !important;
-    gap: 6px !important;
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 3px 0 0 !important;
-    border-top: 1px solid var(--ui-line);
-  }
-
-  body:not(.classic-mode) #bottom-bar :is(.card-action-btn, .deck-preview) {
-    width: 44px !important;
-    min-width: 44px !important;
-    max-width: 44px !important;
-    height: 44px !important;
-    min-height: 44px !important;
-    max-height: 44px !important;
-    padding: 5px !important;
-  }
-
-  body:not(.classic-mode) #bottom-bar .bottom-bar-footer {
-    margin: 0 !important;
-    padding: 0 !important;
-    width: 100%;
-  }
-  body:not(.classic-mode) #bottom-bar-left {
+  body:not(.classic-mode).touch-portrait #bottom-bar #card-action-buttons {
     display: grid !important;
-    grid-template-columns: minmax(0, 1fr) minmax(108px, .45fr) !important;
+    grid-template-columns: repeat(6, minmax(44px, 1fr)) !important;
     gap: 5px !important;
     width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
-  body:not(.classic-mode) #bottom-bar-bonus,
-  body:not(.classic-mode) #bottom-bar-score-coins {
-    min-width: 0;
+
+  body:not(.classic-mode).touch-portrait #bottom-bar :is(.card-action-btn, .deck-preview) {
+    width: 100% !important;
+    min-width: 44px !important;
+    height: 46px !important;
+    min-height: 46px !important;
+    padding: 4px !important;
+    border-radius: 11px !important;
   }
-  body:not(.classic-mode) #bottom-bar #bonus-zone,
-  body:not(.classic-mode) #bottom-bar #scoreboard,
-  body:not(.classic-mode) #bottom-bar #gold-zone {
-    padding: 5px !important;
-    border-radius: 9px !important;
+
+  body:not(.classic-mode).touch-portrait #bottom-bar #new-cards-btn::after,
+  body:not(.classic-mode).touch-portrait #bottom-bar .card-action-btn::after,
+  body:not(.classic-mode).touch-portrait #bottom-bar .deck-preview::after {
+    display: none !important;
+  }
+
+  body:not(.classic-mode).touch-portrait .bottom-bar-footer {
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body:not(.classic-mode).touch-portrait #bottom-bar-left {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) !important;
+    grid-template-areas: "score bonus" !important;
+    gap: 6px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    align-items: stretch !important;
+  }
+
+  body:not(.classic-mode).touch-portrait #bottom-bar-score-coins {
+    grid-area: score !important;
+    display: flex !important;
+    min-width: 72px !important;
+  }
+
+  body:not(.classic-mode).touch-portrait #bottom-bar-score {
+    width: 100% !important;
+  }
+
+  body:not(.classic-mode).touch-portrait #bottom-bar #scoreboard {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 44px !important;
+    padding: 4px !important;
+    display: flex !important;
+    align-items: stretch !important;
     box-shadow: none !important;
   }
-  body:not(.classic-mode) #bottom-bar :is(#bonus-zone, #scoreboard, #gold-zone) h2,
-  body:not(.classic-mode) #bottom-bar #bonus-zone .bonus-hint {
+
+  body:not(.classic-mode).touch-portrait #bottom-bar #scoreboard h2,
+  body:not(.classic-mode).touch-portrait #bottom-bar #scoreboard .score-row,
+  body:not(.classic-mode).touch-portrait #bottom-bar #scoreboard hr {
     display: none !important;
   }
-  body:not(.classic-mode) #bottom-bar #bonus-zone .bonus-inventory {
-    display: grid !important;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 3px !important;
+
+  body:not(.classic-mode).touch-portrait #bottom-bar #scoreboard .score-total {
+    width: 100% !important;
+    min-height: 40px !important;
+    margin: 0 !important;
+    padding: 4px 7px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 1px !important;
   }
-  body:not(.classic-mode) #bottom-bar .bonus-badge {
+
+  body:not(.classic-mode).touch-portrait #bottom-bar #scoreboard .score-total .label {
+    font-size: .48rem !important;
+  }
+
+  body:not(.classic-mode).touch-portrait #bottom-bar #scoreboard .total-score {
+    font-size: 1.05rem !important;
+  }
+
+  body:not(.classic-mode).touch-portrait #bottom-bar-bonus {
+    grid-area: bonus !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 6px !important;
     min-width: 0 !important;
+  }
+
+  body:not(.classic-mode).touch-portrait #bottom-bar #bonus-zone,
+  body:not(.classic-mode).touch-portrait #bottom-bar #gold-zone {
+    min-width: 0 !important;
+    min-height: 44px !important;
+    padding: 5px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: none !important;
+    border-radius: 11px !important;
+  }
+
+  body:not(.classic-mode).touch-portrait #bottom-bar #bonus-zone h2,
+  body:not(.classic-mode).touch-portrait #bottom-bar #gold-zone h2,
+  body:not(.classic-mode).touch-portrait #bottom-bar #bonus-zone .bonus-hint,
+  body:not(.classic-mode).touch-portrait #bottom-bar #collected-coins {
+    display: none !important;
+  }
+
+  body:not(.classic-mode).touch-portrait #bottom-bar #bonus-inventory {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    width: 100% !important;
+    gap: 4px !important;
+  }
+
+  body:not(.classic-mode).touch-portrait #bottom-bar .bonus-badge {
+    min-width: 0 !important;
+    width: 100% !important;
+    height: 36px !important;
     min-height: 36px !important;
+    padding: 2px !important;
+  }
+
+  body:not(.classic-mode).touch-portrait #bottom-bar #gold-zone {
+    min-width: 76px !important;
+    flex-direction: row !important;
+    gap: 5px !important;
+  }
+
+  body:not(.classic-mode).touch-portrait #bottom-bar #gold-zone::after {
+    font-size: .88rem !important;
+  }
+
+  body:not(.classic-mode).touch-portrait #bottom-bar .buy-placement-btn {
+    min-width: 44px !important;
+    width: 44px !important;
+    min-height: 38px !important;
+    height: 38px !important;
     padding: 3px !important;
   }
-  body:not(.classic-mode) #bottom-bar #scoreboard .score-total {
-    min-height: 28px !important;
-    margin: 0 0 3px !important;
-    padding: 3px 5px !important;
+}
+
+@media (max-width: 370px) and (orientation: portrait) {
+  :root { --bottom-bar-height: 220px !important; }
+  body:not(.classic-mode).touch-portrait #bottom-bar {
+    left: 4px !important;
+    right: 4px !important;
+    bottom: 4px !important;
+    padding: 6px !important;
   }
-  body:not(.classic-mode) #bottom-bar #scoreboard .score-total .label,
-  body:not(.classic-mode) #bottom-bar #scoreboard .score-row .label {
-    display: none !important;
+  body:not(.classic-mode).touch-portrait #bottom-bar #card-options { gap: 4px !important; }
+  body:not(.classic-mode).touch-portrait #bottom-bar #card-options .card-option {
+    min-height: 80px !important;
+    height: 80px !important;
+    padding: 4px !important;
+    --preview-cell: 7px;
   }
-  body:not(.classic-mode) #bottom-bar #scoreboard .total-score {
-    font-size: .92rem !important;
+  body:not(.classic-mode).touch-portrait #bottom-bar #card-action-buttons {
+    grid-template-columns: repeat(6, minmax(40px, 1fr)) !important;
+    gap: 3px !important;
   }
-  body:not(.classic-mode) #bottom-bar #scoreboard .score-row {
-    display: inline-flex !important;
-    width: calc(20% - 2px) !important;
-    min-height: 22px !important;
-    margin: 0 !important;
-    padding: 2px !important;
-    justify-content: center !important;
-    gap: 2px !important;
-    font-size: .57rem !important;
-  }
-  body:not(.classic-mode) #bottom-bar #scoreboard .score-row .color-box {
-    width: 7px !important;
-    height: 7px !important;
+  body:not(.classic-mode).touch-portrait #bottom-bar :is(.card-action-btn, .deck-preview) {
+    min-width: 40px !important;
+    height: 42px !important;
+    min-height: 42px !important;
   }
 }
 
-/* Tiny portrait phones: retain actions, reduce secondary decoration first. */
-@media (max-width: 360px) and (orientation: portrait) {
-  :root {
-    --bottom-bar-height: 192px !important;
-    --hand-card-width: 60px !important;
-    --hand-card-height: 84px !important;
-    --hand-card-gap: 4px !important;
-  }
-  body:not(.classic-mode) #bottom-bar { padding-inline: 4px !important; }
-  body:not(.classic-mode) #bottom-bar-left { grid-template-columns: 1fr !important; }
-  body:not(.classic-mode) #bottom-bar-score-coins { display: none !important; }
-  body:not(.classic-mode) #bottom-bar .bonus-badge { min-height: 34px !important; }
-}
+/* ========================================================================== */
+/* PHONE LANDSCAPE — BOARD + LIGHT HUD + HAND DOCK                            */
+/* ========================================================================== */
 
-/* ========================================================================== */
-/* PHONE LANDSCAPE / COMPACT TOUCH LANDSCAPE                                 */
-/* ========================================================================== */
 @media (pointer: coarse) and (orientation: landscape) and (max-height: 699px) {
   body.mobile-sidebar-layout:not(.classic-mode) {
     padding: 0 !important;
     overflow: hidden !important;
   }
 
+  body.mobile-sidebar-layout:not(.classic-mode) #menu-toggle {
+    top: max(6px, var(--locus-safe-top)) !important;
+    left: max(6px, var(--locus-safe-left)) !important;
+    width: 42px !important;
+    height: 42px !important;
+  }
+
   body.mobile-sidebar-layout:not(.classic-mode) #mobile-landscape-wrapper {
     display: grid !important;
-    grid-template-columns: clamp(90px, 13.5vw, 112px) minmax(0, 1fr) clamp(174px, 25vw, 210px) !important;
-    grid-template-rows: minmax(0, 1fr) !important;
-    grid-template-areas: "left center right" !important;
+    grid-template-columns: 86px minmax(0, 1fr) clamp(188px, 24vw, 224px) !important;
+    grid-template-rows: auto minmax(0, 1fr) !important;
+    grid-template-areas:
+      "hud objective hand"
+      "hud board hand" !important;
     width: 100dvw !important;
     height: 100dvh !important;
-    margin: 0 !important;
-    padding: max(5px, var(--ui-safe-top)) max(5px, var(--ui-safe-right)) max(5px, var(--ui-safe-bottom)) max(5px, var(--ui-safe-left)) !important;
-    gap: 5px !important;
+    gap: 6px !important;
+    padding:
+      max(6px, var(--locus-safe-top))
+      max(6px, var(--locus-safe-right))
+      max(6px, var(--locus-safe-bottom))
+      max(54px, calc(var(--locus-safe-left) + 54px)) !important;
     overflow: hidden !important;
   }
 
   body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-left {
-    grid-area: left !important;
-  }
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-board-center {
-    grid-area: center !important;
-  }
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right {
-    grid-area: right !important;
-  }
-
-  body.mobile-sidebar-layout:not(.classic-mode) :is(#ml-sidebar-left, #ml-sidebar-right) {
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: none !important;
-    height: 100% !important;
-    min-height: 0 !important;
-    gap: 5px !important;
-    padding: 0 !important;
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
-    overscroll-behavior: contain;
-    scrollbar-width: none;
-  }
-  body.mobile-sidebar-layout:not(.classic-mode) :is(#ml-sidebar-left, #ml-sidebar-right)::-webkit-scrollbar { display: none; }
-
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-board-center {
-    width: 100% !important;
-    min-width: 0 !important;
-    min-height: 0 !important;
+    grid-area: hud !important;
+    width: 86px !important;
+    min-width: 86px !important;
+    max-width: 86px !important;
     height: 100% !important;
     display: flex !important;
     flex-direction: column !important;
-    align-items: center !important;
-    justify-content: flex-start !important;
-    gap: 4px !important;
-    overflow: auto !important;
-    overscroll-behavior: contain;
+    gap: 6px !important;
+    overflow: hidden !important;
   }
 
   body.mobile-sidebar-layout:not(.classic-mode) #ml-objective-top {
+    grid-area: objective !important;
     width: 100% !important;
-    flex: 0 0 auto !important;
+    display: flex !important;
     padding: 0 !important;
-    background: transparent !important;
   }
+
   body.mobile-sidebar-layout:not(.classic-mode) #ml-objective-top #objective-zone {
-    width: 100% !important;
-    min-height: 32px !important;
-    padding: 4px 7px !important;
-    border-radius: 9px !important;
+    min-height: 46px !important;
+    height: 46px !important;
+    padding: 5px 9px !important;
+    border-radius: 13px !important;
   }
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-objective-top #objective-zone h2,
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-objective-top .objective-history {
+
+  body.mobile-sidebar-layout:not(.classic-mode) #ml-objective-top #objective-zone h2 {
     display: none !important;
   }
+
   body.mobile-sidebar-layout:not(.classic-mode) #ml-objective-top #objective-current {
-    font-size: .59rem !important;
+    font-size: clamp(.61rem, 1.65vw, .78rem) !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  body.mobile-sidebar-layout:not(.classic-mode) #ml-board-center {
+    grid-area: board !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
   }
 
   body.mobile-sidebar-layout:not(.classic-mode) #ml-board-center #board {
-    flex: 0 0 auto !important;
-    width: max-content !important;
-    max-width: none !important;
-    margin: 0 auto !important;
-    transform: scale(var(--board-scale, 1)) !important;
-    transform-origin: top center !important;
+    margin: 0 !important;
+    transform: scale(var(--board-scale, .5)) !important;
+    transform-origin: center center !important;
   }
 
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-left :is(#scoreboard, #gold-zone),
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right :is(#card-choice-zone, #bonus-zone) {
+  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right {
+    grid-area: hand !important;
     width: 100% !important;
     min-width: 0 !important;
+    max-width: none !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scrollbar-width: none;
+  }
+  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right::-webkit-scrollbar { display: none; }
+
+  /* Landscape HUD: total score + coins only. */
+  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-left #scoreboard,
+  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-left #gold-zone {
+    width: 100% !important;
+    padding: 5px !important;
+    border-radius: 11px !important;
+    box-shadow: none !important;
+  }
+  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-left #scoreboard h2,
+  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-left #scoreboard .score-row,
+  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-left #scoreboard hr,
+  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-left #gold-zone h2,
+  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-left #collected-coins {
+    display: none !important;
+  }
+  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-left #scoreboard .score-total {
+    min-height: 48px !important;
     margin: 0 !important;
-    padding: 5px !important;
-    border-radius: 9px !important;
-    box-shadow: 0 5px 14px rgba(0,0,0,.18) !important;
+    padding: 4px !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    gap: 1px !important;
   }
-
-  body.mobile-sidebar-layout:not(.classic-mode) :is(#scoreboard, #gold-zone, #bonus-zone, #card-choice-zone) h2,
-  body.mobile-sidebar-layout:not(.classic-mode) #bonus-zone .bonus-hint {
-    display: none !important;
+  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-left #scoreboard .score-total .label { font-size: .44rem !important; }
+  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-left #scoreboard .total-score { font-size: 1.08rem !important; }
+  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-left #gold-zone {
+    min-height: 54px !important;
+    justify-content: center !important;
+    gap: 4px !important;
   }
-
-  body.mobile-sidebar-layout:not(.classic-mode) #scoreboard .score-total {
-    min-height: 28px !important;
-    padding: 3px !important;
-    margin-bottom: 3px !important;
-  }
-  body.mobile-sidebar-layout:not(.classic-mode) #scoreboard .score-total .label,
-  body.mobile-sidebar-layout:not(.classic-mode) #scoreboard .score-row .label {
-    display: none !important;
-  }
-  body.mobile-sidebar-layout:not(.classic-mode) #scoreboard .total-score {
-    font-size: .92rem !important;
-  }
-  body.mobile-sidebar-layout:not(.classic-mode) #scoreboard .score-row {
-    min-height: 25px !important;
-    padding: 3px !important;
-    margin: 1px 0 !important;
-    font-size: .60rem !important;
-  }
-  body.mobile-sidebar-layout:not(.classic-mode) #scoreboard .score-row .color-box {
-    width: 9px !important;
-    height: 9px !important;
-  }
-
-  body.mobile-sidebar-layout:not(.classic-mode) #gold-zone::after {
-    font-size: .68rem !important;
-    padding: 0 !important;
-  }
-  body.mobile-sidebar-layout:not(.classic-mode) #gold-zone .buy-placement-btn {
+  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-left #gold-zone::after { font-size: .78rem !important; }
+  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-left .buy-placement-btn {
+    width: 44px !important;
     min-width: 44px !important;
-    min-height: 44px !important;
-    padding: 5px !important;
+    min-height: 36px !important;
+    height: 36px !important;
+    padding: 2px !important;
   }
 
+  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right #card-choice-zone {
+    width: 100% !important;
+    padding: 8px !important;
+    border-radius: 15px !important;
+  }
+  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right #card-choice-zone > h2,
+  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right #card-choice-zone > br,
+  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right #turn-counter-inline {
+    display: none !important;
+  }
   body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right #card-options {
     display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 5px !important;
+    grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+    gap: 6px !important;
     width: 100% !important;
-    overflow: visible !important;
   }
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right #card-options > .card-option:last-child:nth-child(odd) {
-    grid-column: 1 / -1;
-    justify-self: center;
-    width: min(100%, 84px) !important;
-  }
+  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right .hand-scroll-btn { display: none !important; }
   body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right .card-option {
     width: 100% !important;
     min-width: 0 !important;
-    max-width: 88px !important;
-    min-height: 88px !important;
-    height: 88px !important;
-    max-height: 88px !important;
-    padding: 4px !important;
-    gap: 2px !important;
-    border-radius: 10px !important;
-    --preview-cell: clamp(7px, 1.15vw, 9px);
+    max-width: none !important;
+    min-height: 90px !important;
+    height: 90px !important;
+    padding: 5px !important;
+    --preview-cell: 8px;
   }
   body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right .card-option .card-cell {
     width: var(--preview-cell) !important;
     height: var(--preview-cell) !important;
   }
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right .card-label {
-    font-size: .43rem !important;
-    padding: 1px 2px !important;
-  }
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right #turn-counter-inline {
-    font-size: .54rem !important;
+  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right .card-label,
+  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right .card-meta {
+    font-size: .45rem !important;
   }
   body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right #card-action-buttons {
     display: grid !important;
-    grid-template-columns: repeat(3, 44px) !important;
-    justify-content: center !important;
+    grid-template-columns: repeat(3, minmax(44px,1fr)) !important;
     gap: 5px !important;
-    width: 100% !important;
-    margin: 0 !important;
     padding: 6px 0 0 !important;
-    border-top: 1px solid var(--ui-line) !important;
+    border-top: 1px solid var(--locus-border) !important;
   }
   body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right :is(.card-action-btn, .deck-preview) {
-    width: 44px !important;
+    width: 100% !important;
     min-width: 44px !important;
-    max-width: 44px !important;
     height: 44px !important;
     min-height: 44px !important;
-    max-height: 44px !important;
-    padding: 5px !important;
+    padding: 3px !important;
   }
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right .bonus-inventory {
+  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right #new-cards-btn {
+    grid-column: 1 / -1 !important;
+  }
+
+  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right #bonus-zone {
+    width: 100% !important;
+    padding: 6px !important;
+    box-shadow: none !important;
+  }
+  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right #bonus-zone h2,
+  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right #bonus-zone .bonus-hint {
+    display: none !important;
+  }
+  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right #bonus-inventory {
     display: grid !important;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0,1fr)) !important;
     gap: 4px !important;
   }
   body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right .bonus-badge {
     min-width: 0 !important;
-    min-height: 44px !important;
-    padding: 4px !important;
-  }
-}
-
-/* Very short / narrow landscape phones. Never make touch targets smaller. */
-@media (pointer: coarse) and (orientation: landscape) and (max-height: 420px) {
-  body.mobile-sidebar-layout:not(.classic-mode) #mobile-landscape-wrapper {
-    grid-template-columns: 86px minmax(0, 1fr) 166px !important;
-    gap: 4px !important;
-    padding: 4px !important;
-  }
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right .card-option {
-    min-height: 78px !important;
-    height: 78px !important;
-    max-height: 78px !important;
-    --preview-cell: 7px;
+    width: 100% !important;
+    min-height: 36px !important;
+    height: 36px !important;
+    padding: 2px !important;
   }
 }
 
 /* ========================================================================== */
-/* MODALS                                                                     */
+/* TOUCH / ACCESSIBILITY                                                      */
 /* ========================================================================== */
-body:not(.classic-mode) .modal-overlay {
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
-}
-body:not(.classic-mode) .game-modal {
-  border: 1px solid var(--ui-line-strong) !important;
-  border-radius: var(--ui-radius-lg) !important;
-  background: #20252c !important;
-  color: var(--ui-text) !important;
-  box-shadow: 0 24px 70px rgba(0,0,0,.5) !important;
-}
-@media (max-width: 650px), (max-height: 600px) {
-  body:not(.classic-mode) .game-modal {
-    width: min(calc(100vw - 18px), 600px) !important;
-    max-height: calc(100dvh - 18px) !important;
-    overflow-y: auto !important;
-  }
-  body:not(.classic-mode) #controls.open {
-    max-height: calc(100dvh - 16px) !important;
-    overflow-y: auto !important;
-  }
-}
 
-/* ========================================================================== */
-/* ACCESSIBILITY / INPUT                                                      */
-/* ========================================================================== */
 @media (pointer: coarse) {
-  body:not(.classic-mode) :is(.card-action-btn, .deck-preview, .buy-placement-btn, .bonus-badge, .modal-close-btn) {
+  body:not(.classic-mode) {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body:not(.classic-mode) :is(#menu-toggle, .card-action-btn, .deck-preview, .buy-placement-btn) {
     min-width: 44px;
     min-height: 44px;
     touch-action: manipulation;
+  }
+  body:not(.classic-mode) .card-option {
+    user-select: none;
+    -webkit-user-select: none;
   }
 }
 
@@ -1114,59 +1408,44 @@ body:not(.classic-mode) .game-modal {
   body:not(.classic-mode) *,
   body:not(.classic-mode) *::before,
   body:not(.classic-mode) *::after {
+    scroll-behavior: auto !important;
     animation-duration: .01ms !important;
     animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: .01ms !important;
-    scroll-behavior: auto !important;
   }
 }
 
 @media (prefers-contrast: more) {
   body:not(.classic-mode) :is(#scoreboard, #gold-zone, #bonus-zone, #card-choice-zone, #objective-zone) {
-    border-color: rgba(255,255,255,.28) !important;
+    border-color: rgba(255,255,255,.30) !important;
   }
   body:not(.classic-mode) #card-choice-zone .card-option.selected {
     border-width: 2px !important;
   }
 }
 
-/* Very wide screens: keep game composition together rather than drifting apart. */
-@media (min-width: 2000px) {
-  body:not(.classic-mode) #desktop-wrapper {
-    max-width: 1540px !important;
-    margin-inline: auto !important;
-  }
+/* ========================================================================== */
+/* MODALS / ZOOM — SAME MATERIAL LANGUAGE                                     */
+/* ========================================================================== */
+
+body:not(.classic-mode) :is(.modal-overlay, .highscore-modal-overlay) {
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
-/* Phone footer composition: bonuses + coins together, score alongside. */
-@media (max-width: 650px) and (orientation: portrait) {
-  body:not(.classic-mode) #bottom-bar-bonus {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) auto !important;
-    gap: 5px !important;
-    align-items: stretch !important;
-  }
-  body:not(.classic-mode) #bottom-bar-bonus #gold-zone {
-    width: auto !important;
-    min-width: 62px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 3px !important;
-  }
-  body:not(.classic-mode) #bottom-bar-bonus #gold-zone::after {
-    display: block !important;
-    padding: 0 !important;
-    font-size: .68rem !important;
-  }
-  body:not(.classic-mode) #bottom-bar-bonus #gold-zone #collected-coins {
-    display: none !important;
-  }
-  body:not(.classic-mode) #bottom-bar-bonus #gold-zone .buy-placement-btn {
-    min-width: 44px !important;
-    min-height: 36px !important;
-    padding: 3px 5px !important;
-  }
+body:not(.classic-mode) :is(.game-modal, .highscore-modal, #shop-modal, #upgrade-modal, #deck-modal) {
+  border: 1px solid var(--locus-border-strong) !important;
+  border-radius: 18px !important;
+  background: var(--locus-panel) !important;
+  color: var(--locus-text) !important;
+  box-shadow: 0 30px 80px rgba(0,0,0,.52) !important;
 }
+
+body:not(.classic-mode) .zone-nav-arrow {
+  border-color: var(--locus-border-strong) !important;
+  background: rgba(22,31,40,.94) !important;
+  color: var(--locus-text) !important;
+}
+
+/* Keep print and classic-mode behaviour in their dedicated legacy paths. */

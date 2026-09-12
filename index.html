@@ -12218,7 +12218,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	/* Bonus counts: keep pill visible (desktop + mobile) */
 
 	</style>
-	<link rel="stylesheet" href="responsive.css?v=3">
+	<link rel="stylesheet" href="responsive.css?v=4">
 	<script>
     // Simple menu toggle: toggles .open on #controls and .active on #menu-toggle
     document.addEventListener('DOMContentLoaded', function() {
@@ -12327,6 +12327,8 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
   </button>
 	<button id="undo-floating-btn" onclick="undo()" title="Undo (Ctrl+Z)" aria-label="Undo" disabled>↩</button>
 	<div id="mobile-objective-banner"></div>
+	<!-- Dedicated portrait stage: keeps the board centred between header and hand. -->
+	<div id="mobile-portrait-stage" aria-hidden="true"></div>
 
 	<!-- Mobile Sidebar Layout Container (hidden by default, JS populates for mobile) -->
 	<div id="mobile-landscape-wrapper" style="display: none;">
@@ -35651,48 +35653,48 @@ body { background: transparent; }
 		const isPortrait = document.body.classList.contains('desktop-portrait');
 		const isLandscape = document.body.classList.contains('desktop-landscape');
 
-		// Desktop-landscape: scale the entire desktop wrapper so board + side UI fit together.
+		// V4 desktop-landscape: treat the full interface as one game table.
+		// Its natural width is defined by CSS (HUD + board + hand). On constrained
+		// screens we scale the complete composition down; on high-DPI / 4K screens
+		// we deliberately allow a bounded upscale so the game no longer sits tiny
+		// in the middle of a huge viewport.
 		if (isLandscape) {
 			if (boardContainer && boardContainer.id === 'desktop-grids') {
 				boardContainer.style.removeProperty('justify-content');
 			}
-			if (desktopBottom) {
-				desktopBottom.style.removeProperty('margin-top');
-			}
+			if (desktopBottom) desktopBottom.style.removeProperty('margin-top');
 			document.body.classList.remove('board-scaled');
 
-			// The body has padding: 10px on each side.
-			// Be conservative: transformed content + shadows can otherwise get clipped at the viewport edges.
 			const viewportW = document.documentElement ? document.documentElement.clientWidth : window.innerWidth;
 			const viewportH = document.documentElement ? document.documentElement.clientHeight : window.innerHeight;
-			// Margin to avoid edge clipping from shadows/rounding.
-			// Keep this modest so the left/right panels don't get unnecessarily cramped.
-			const safeMargin = 12;
-			const availableWidth = Math.max(viewportW - safeMargin, 280);
-			const availableHeight = Math.max(viewportH - safeMargin, 240);
+			const safeX = viewportW >= 2200 ? 80 : 28;
+			const safeY = viewportH >= 1300 ? 70 : 22;
+			const availableWidth = Math.max(viewportW - safeX, 320);
+			const availableHeight = Math.max(viewportH - safeY, 260);
 			const contentWidth = desktopWrapper.scrollWidth;
 			const contentHeight = desktopWrapper.scrollHeight;
 			if (!(contentWidth > 0 && contentHeight > 0)) return;
 
-			let scale = Math.min(availableWidth / contentWidth, availableHeight / contentHeight, 1);
-			const needsTabletLandscapeFit = viewportW >= 800 && viewportW <= 1450 && viewportH >= 550 && viewportH <= 850;
-			if (needsTabletLandscapeFit) {
-				scale = Math.min(scale * 0.95, 1);
-			}
-			if (scale < 0.999) {
-				// Anchor to the left so narrow screens don't waste space on the left,
-				// but center it when there is spare horizontal room after scaling.
+			const fitScale = Math.min(availableWidth / contentWidth, availableHeight / contentHeight);
+			let desiredMax = 1;
+			if (viewportW >= 3200 && viewportH >= 1500) desiredMax = 1.38;
+			else if (viewportW >= 2500 && viewportH >= 1250) desiredMax = 1.22;
+			else if (viewportW >= 2100 && viewportH >= 1100) desiredMax = 1.10;
+			let scale = Math.min(fitScale, desiredMax);
+			scale = Math.max(0.72, scale);
+
+			if (Math.abs(scale - 1) > 0.012) {
 				desktopWrapper.style.transformOrigin = 'top center';
-				const scaledWidth = contentWidth * scale;
-				// const offsetX = Math.max(0, (viewportW - scaledWidth) / 2);
 				desktopWrapper.style.transform = `scale(${scale.toFixed(4)})`;
 			} else {
 				desktopWrapper.style.removeProperty('transform');
 				desktopWrapper.style.removeProperty('transform-origin');
 			}
+			document.documentElement.style.setProperty('--locus-desktop-scale', scale.toFixed(4));
+			logLayout('scale:desktop-table', { viewportW, viewportH, contentWidth, contentHeight, fitScale, desiredMax, scale });
 			return;
 		}
-		
+
 		// Calculate sidebar widths for landscape mode
 		let rightSidebarWidth = 0;
 		if (isLandscape) {
@@ -35793,6 +35795,7 @@ body { background: transparent; }
 		const bottomBarCss = isClassicMode ? 0 : (parseFloat(rootStyles.getPropertyValue('--bottom-bar-height')) || 0);
 		const bottomBarHeight = Math.max(bottomBarMeasured || 0, bottomBarCss || 0);
 		const mobileObjective = document.getElementById('mobile-objective-banner');
+		const portraitStage = (!isMobileSidebar) ? document.getElementById('mobile-portrait-stage') : null;
 		const sidebarCenter = isMobileSidebar ? document.getElementById('ml-board-center') : null;
 		const sidebarObjective = isMobileSidebar ? document.getElementById('ml-objective-top') : null;
 		const objectiveHeight = isMobileSidebar
@@ -35803,12 +35806,17 @@ body { background: transparent; }
 		// disappear behind the touch sidebars.
 		const horizontalPadding = 16;
 		const verticalPadding = 18;
+		const portraitStageVisible = !!(portraitStage && getComputedStyle(portraitStage).display !== 'none');
 		const availableWidth = isMobileSidebar && sidebarCenter
 			? Math.max(sidebarCenter.clientWidth - horizontalPadding, 220)
-			: Math.max(window.innerWidth - horizontalPadding, 280);
+			: portraitStageVisible
+				? Math.max(portraitStage.clientWidth - horizontalPadding, 260)
+				: Math.max(window.innerWidth - horizontalPadding, 280);
 		const availableHeight = isMobileSidebar && sidebarCenter
 			? Math.max(sidebarCenter.clientHeight - objectiveHeight - verticalPadding, 180)
-			: Math.max(window.innerHeight - bottomBarHeight - objectiveHeight - verticalPadding, 280);
+			: portraitStageVisible
+				? Math.max(portraitStage.clientHeight - verticalPadding, 220)
+				: Math.max(window.innerHeight - bottomBarHeight - objectiveHeight - verticalPadding, 280);
 
 		const boardWidth = board.scrollWidth;
 		const boardHeight = board.scrollHeight;
@@ -35817,14 +35825,15 @@ body { background: transparent; }
 
 		const scaleW = availableWidth / boardWidth;
 		const scaleH = availableHeight / boardHeight;
-		// If the board is much taller than the viewport (e.g., long scrollable zones),
-		// don't let height drive the scale too small; fit to width instead.
-		const heightIsTall = boardHeight > (availableHeight * 1.15);
+		// The dedicated portrait stage has exact usable dimensions: fit both axes.
+		// In compact landscape the blue/green zones may be intentionally tall/scrollable,
+		// so width can remain the dominant fit there.
+		const heightIsTall = !portraitStageVisible && boardHeight > (availableHeight * 1.15);
 		let scale = Math.min(scaleW, heightIsTall ? 1 : scaleH, 1);
 		scale = Math.max(0.25, Math.min(scale, 1));
 		document.documentElement.style.setProperty('--board-scale', scale.toFixed(3));
 		document.body.classList.add('board-mobile-scaled');
-		logLayout('scale:mobile:set', { scale, scaleW, scaleH, heightIsTall });
+		logLayout('scale:mobile:set', { scale, scaleW, scaleH, heightIsTall, portraitStageVisible });
 	}
 
 	// Remove desktop-wrapper when switching layouts to force rebuild
@@ -35939,8 +35948,10 @@ body { background: transparent; }
 	  const isLargeTouchScreen = isTouchDevice && Math.min(width, height) >= 700;
 	  
 	  // Desktop breakpoints - voor wanneer bottom layout beter is
-	  const DESKTOP_NARROW_BREAKPOINT = 800; // Was 925, nu smaller voor meer sidebar gebruik
-	  const DESKTOP_SHORT_HEIGHT_BREAKPOINT = 500; // Was 925, nu korter - sidebars werken ook bij korte hoogte
+	  // V4 responsive architecture: below this width the interface becomes the
+	  // tablet/compact layout instead of squeezing two side rails around the board.
+	  const DESKTOP_NARROW_BREAKPOINT = 1240;
+	  const DESKTOP_SHORT_HEIGHT_BREAKPOINT = 500;
 	  
 	  // BELANGRIJK: Verschil maken tussen:
 	  // 1. Desktop/laptop (muis) → gebruikt normale desktop layout (sidebars of bottom)
@@ -36003,6 +36014,7 @@ body { background: transparent; }
 			  const bottomBarCoins = document.getElementById('bottom-bar-coins');
 			  const bottomBarScoreCoins = document.getElementById('bottom-bar-score-coins');
 		  const mobileObjective = document.getElementById('mobile-objective-banner');
+		  const mobilePortraitStage = document.getElementById('mobile-portrait-stage');
 		  
 		  // Mobile Sidebar containers
 		  const mlWrapper = document.getElementById('mobile-landscape-wrapper');
@@ -36022,6 +36034,10 @@ body { background: transparent; }
 			// Dit geldt ALLEEN voor touch devices (tablets/telefoons) in landscape mode
 			// Desktop/laptop behoudt normale layout
 			if (useMobileSidebarLayout) {
+				if (mobilePortraitStage) {
+					mobilePortraitStage.style.display = 'none';
+					mobilePortraitStage.setAttribute('aria-hidden', 'true');
+				}
 				// Zorg dat de sidebar wrapper elementen bestaan
 				if (!mlWrapper || !mlLeft || !mlCenter || !mlRight) {
 					console.warn('Mobile landscape wrapper elements not found, cannot use sidebar layout');
@@ -36063,6 +36079,15 @@ body { background: transparent; }
 				if (document.getElementById('desktop-wrapper')) {
 					cleanupDesktopWrapper();
 				}
+
+				// V4: portrait phones get a dedicated stage between the objective and the hand.
+				// This removes the large dead zone that occurred when the board was simply
+				// scaled at the top of the page while the hand stayed fixed at the bottom.
+				if (mobilePortraitStage) {
+					mobilePortraitStage.style.display = 'flex';
+					mobilePortraitStage.setAttribute('aria-hidden', 'false');
+					if (board && !mobilePortraitStage.contains(board)) mobilePortraitStage.appendChild(board);
+				}
 				
 					// Move elements to bottom bar sections
 					if (score && bottomBarScore && !bottomBarScore.contains(score)) bottomBarScore.appendChild(score);
@@ -36082,6 +36107,10 @@ body { background: transparent; }
 				if (controls && controls.parentNode !== document.body) document.body.appendChild(controls);
 				
 			} else {
+			if (mobilePortraitStage) {
+				mobilePortraitStage.style.display = 'none';
+				mobilePortraitStage.setAttribute('aria-hidden', 'true');
+			}
 			closeZoom();
 			logLayout('moveGameElements:desktop', { landscape: useDesktopLandscape, portrait: useDesktopPortrait });
 
@@ -36182,21 +36211,12 @@ body { background: transparent; }
 						bottomCenter.appendChild(cards);
 					}
 					
-					// Move action buttons below cards in portrait mode
-					// On touch devices (iPad portrait), buttons should be BELOW cards, not in separate column
+					// V4 compact/tablet layout: the hand and its immediate actions are one dock.
+					// Keeping the controls with the cards avoids a disappearing/empty button column
+					// on narrow cursor windows and makes tablet/cursor layouts consistent.
 					const actionButtons = document.getElementById('card-action-buttons');
-					if (actionButtons) {
-						// Remove from current parent first
-						if (actionButtons.parentNode) {
-							actionButtons.parentNode.removeChild(actionButtons);
-						}
-						// On touch device: add buttons BELOW cards (inside bottomCenter)
-						// On non-touch: use separate button zone (bottomButtons)
-						if (isTouchDevice && bottomCenter) {
-							bottomCenter.appendChild(actionButtons);
-						} else if (bottomButtons) {
-							bottomButtons.appendChild(actionButtons);
-						}
+					if (actionButtons && bottomCenter && !bottomCenter.contains(actionButtons)) {
+						bottomCenter.appendChild(actionButtons);
 					}
 					
 					if (bonus && bottomRight && !bottomRight.contains(bonus)) {
@@ -36231,8 +36251,10 @@ body { background: transparent; }
 						}
 					}
 					
-					if (bonus && desktopRight && !desktopRight.contains(bonus)) {
-						desktopRight.appendChild(bonus);
+					// V4: score, coins and bonuses form one supporting HUD rail.
+					// The right rail is reserved for the player's hand and immediate actions.
+					if (bonus && desktopLeft && !desktopLeft.contains(bonus)) {
+						desktopLeft.appendChild(bonus);
 					}
 				}
 						
@@ -36403,7 +36425,7 @@ body { background: transparent; }
 		if (isMobile) return 'mobile';
 		const effectivePortrait = (height - width) > ORIENTATION_EPS;
 		const isPortrait = effectivePortrait || (!effectiveLandscape && height >= width);
-		if (isPortrait || width <= 800) return 'desktop-portrait';
+		if (isPortrait || width <= 1240) return 'desktop-portrait';
 		return 'desktop-landscape';
 	}
 	
