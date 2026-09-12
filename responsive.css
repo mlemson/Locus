@@ -1588,3 +1588,329 @@ body.game-ui-v5:not(.classic-mode) :is(button,[role="button"],.card-option):focu
     border-color:rgba(255,255,255,.28) !important;
   }
 }
+
+/* ========================================================================== */
+/* LOCUS 1 — GAME UI V6 POLISH                                                */
+/* Premium-clean refinement based on concept direction: calmer hierarchy,      */
+/* subtler luxury cues, and clearer mobile zoom/scroll affordances.           */
+/* ========================================================================== */
+
+:root {
+  --locus-surface: rgba(18, 27, 38, .92);
+  --locus-surface-2: rgba(20, 31, 43, .94);
+  --locus-surface-3: rgba(24, 36, 49, .96);
+  --locus-surface-soft: rgba(17, 26, 37, .82);
+  --locus-line: rgba(219, 231, 243, .11);
+  --locus-line-strong: rgba(219, 231, 243, .19);
+  --locus-shadow-panel: 0 1px 0 rgba(255,255,255,.045) inset, 0 18px 42px rgba(0,0,0,.24);
+  --locus-shadow-raised: 0 1px 0 rgba(255,255,255,.08) inset, 0 2px 0 rgba(0,0,0,.44), 0 18px 36px rgba(0,0,0,.32);
+  --locus-shadow-modal: 0 34px 100px rgba(0,0,0,.60);
+}
+
+body.game-ui-v5:not(.classic-mode) {
+  background:
+    radial-gradient(900px 520px at 50% -260px, rgba(134, 194, 241, .10), transparent 72%),
+    radial-gradient(1200px 700px at 50% 110%, rgba(18, 42, 73, .24), transparent 70%),
+    linear-gradient(180deg, #0f1924 0%, #0c141d 43%, #081018 100%) !important;
+}
+
+body.game-ui-v5:not(.classic-mode) :is(#scoreboard, #gold-zone, #bonus-zone, #card-choice-zone, #objective-zone, .game-modal, .highscore-modal, #controls) {
+  border-color: rgba(216,228,240,.12) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.012) 24%, transparent 46%),
+    linear-gradient(180deg, rgba(244,211,118,.02), transparent 18%),
+    var(--locus-surface) !important;
+  box-shadow: var(--locus-shadow-panel) !important;
+  backdrop-filter: blur(16px) saturate(1.02);
+  -webkit-backdrop-filter: blur(16px) saturate(1.02);
+}
+
+body.game-ui-v5:not(.classic-mode) :is(#scoreboard, #gold-zone, #bonus-zone, #card-choice-zone, #objective-zone) {
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+body.game-ui-v5:not(.classic-mode) :is(#scoreboard, #gold-zone, #bonus-zone, #card-choice-zone, #objective-zone)::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent);
+  opacity: .9;
+}
+
+body.game-ui-v5:not(.classic-mode) #objective-zone {
+  min-height: 68px !important;
+  padding: 12px 20px !important;
+  border-radius: 18px !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.015) 26%, transparent 55%),
+    linear-gradient(90deg, rgba(109,169,225,.05), rgba(223,184,77,.03) 70%, transparent),
+    rgba(17,28,40,.94) !important;
+  box-shadow: 0 18px 36px rgba(0,0,0,.22), 0 1px 0 rgba(255,255,255,.04) inset !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #objective-zone h2 {
+  color: #89a9da !important;
+  letter-spacing: .18em !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #objective-current {
+  font-size: .98rem !important;
+  font-weight: 810 !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #scoreboard,
+body.game-ui-v5:not(.classic-mode) #gold-zone,
+body.game-ui-v5:not(.classic-mode) #bonus-zone,
+body.game-ui-v5:not(.classic-mode) #card-choice-zone {
+  border-radius: 18px !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #scoreboard .score-total,
+body.game-ui-v5:not(.classic-mode) #scoreboard .score-row,
+body.game-ui-v5:not(.classic-mode) .bonus-badge,
+body.game-ui-v5:not(.classic-mode) .buy-placement-btn,
+body.game-ui-v5:not(.classic-mode) :is(.card-action-btn, .deck-preview),
+body.game-ui-v5:not(.classic-mode) #controls .menu-panel-item,
+body.game-ui-v5:not(.classic-mode) .modal-close-btn,
+body.game-ui-v5:not(.classic-mode) :is(.game-modal,.highscore-modal) button:not(.card-option) {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+body.game-ui-v5:not(.classic-mode) #card-choice-zone {
+  padding: 16px !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #card-choice-zone .card-option {
+  min-height: 138px !important;
+  border-radius: 18px !important;
+  border-color: rgba(220,230,241,.16) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.08) 0%, rgba(255,255,255,.018) 20%, transparent 48%),
+    radial-gradient(120% 75% at 50% -8%, rgba(255,255,255,.065), transparent 72%),
+    linear-gradient(180deg, rgba(22,31,42,.95), rgba(20,28,38,.98)) !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 2px 0 rgba(0,0,0,.44), 0 20px 38px rgba(0,0,0,.28) !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #card-choice-zone .card-option.selected {
+  border-color: rgba(236, 202, 98, .82) !important;
+  transform: translateY(-6px) scale(1.012) !important;
+  box-shadow: 0 0 0 1px rgba(236,202,98,.18), 0 2px 0 rgba(0,0,0,.44), 0 20px 40px rgba(0,0,0,.36) !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #new-cards-btn {
+  min-height: 54px !important;
+  border-radius: 14px !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.015) 36%, transparent 100%),
+    linear-gradient(135deg, #7a6221, #4b3b15) !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 12px 24px rgba(0,0,0,.24) !important;
+}
+
+body.game-ui-v5:not(.classic-mode) :is(.card-action-btn, .deck-preview) {
+  border-radius: 13px !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.012) 38%, transparent 100%),
+    #182432 !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #controls {
+  border-radius: 22px !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.04), transparent 20%),
+    rgba(14,24,34,.985) !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #controls .menu-panel-item {
+  min-height: 56px !important;
+  border-color: rgba(214,225,237,.06) !important;
+  border-radius: 14px !important;
+  background: rgba(255,255,255,.018) !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #controls .menu-panel-item:hover {
+  background: rgba(255,255,255,.04) !important;
+  border-color: rgba(214,225,237,.12) !important;
+}
+
+body.game-ui-v5:not(.classic-mode) .zone-info-popover {
+  border-radius: 14px !important;
+  background: rgba(17,27,38,.97) !important;
+  box-shadow: 0 22px 46px rgba(0,0,0,.42) !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #deck-modal {
+  width: min(980px, calc(100vw - 36px)) !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #deck-modal-content {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(122px, 1fr)) !important;
+  gap: 14px !important;
+  align-content: start !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #deck-modal-content .card-option {
+  min-height: 156px !important;
+  height: auto !important;
+  padding: 10px 10px 28px !important;
+  border-radius: 16px !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #deck-modal-content .card-label {
+  font-size: .62rem !important;
+  letter-spacing: .03em !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #deck-modal-content .deck-modal-combo-badge,
+body.game-ui-v5:not(.classic-mode) #deck-modal-content .deck-modal-inactive-badge {
+  left: 8px !important;
+  right: 8px !important;
+  bottom: 8px !important;
+  width: auto !important;
+  border-radius: 10px !important;
+  background: rgba(11,17,24,.76) !important;
+  border: 1px solid rgba(255,255,255,.08) !important;
+  font-size: .56rem !important;
+  line-height: 1.2 !important;
+}
+
+body.game-ui-v5:not(.classic-mode) :is(.card-option,.bonus-badge,.buy-placement-btn,.card-action-btn,.deck-preview,#menu-toggle,.menu-panel-item,.zone-info-btn) {
+  touch-action: none !important;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+body.game-ui-v5:not(.classic-mode) :is(#green-zone,#blue-zone,#deck-modal-content,#blackhole-card-grid,#card-options) {
+  touch-action: pan-x pan-y !important;
+}
+
+/* Keep colored play zones slightly more tactile without transforming the hit area. */
+body.game-ui-v5:not(.classic-mode) :is(#yellow-zone,#green-zone,#blue-zone,#purple-zone,#red-zone) {
+  overflow: hidden !important;
+  box-shadow: 0 16px 34px rgba(0,0,0,.18), 0 1px 0 rgba(255,255,255,.10) inset !important;
+}
+
+body.game-ui-v5:not(.classic-mode) :is(#yellow-zone,#green-zone,#blue-zone,#purple-zone,#red-zone)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.11), transparent 18%, transparent 84%, rgba(0,0,0,.06)),
+    radial-gradient(72px 60% at 0% 50%, rgba(0,0,0,.12), transparent 72%),
+    radial-gradient(72px 60% at 100% 50%, rgba(0,0,0,.12), transparent 72%);
+  opacity: .5;
+}
+
+@media (min-width: 1241px) {
+  body.game-ui-v5:not(.classic-mode).desktop-landscape #desktop-wrapper {
+    grid-template-columns: 220px auto 378px !important;
+    column-gap: 20px !important;
+    row-gap: 16px !important;
+  }
+
+  body.game-ui-v5:not(.classic-mode).desktop-landscape #desktop-left {
+    width: 220px !important;
+  }
+
+  body.game-ui-v5:not(.classic-mode).desktop-landscape #desktop-right,
+  body.game-ui-v5:not(.classic-mode).desktop-landscape #card-choice-zone {
+    width: 378px !important;
+  }
+
+  body.game-ui-v5:not(.classic-mode).desktop-landscape #desktop-objective {
+    width: min(780px, 100%) !important;
+  }
+}
+
+@media (max-width:650px) and (orientation:portrait) {
+  :root {
+    --bottom-bar-height: clamp(256px, 30dvh, 294px) !important;
+  }
+
+  body.game-ui-v5:not(.classic-mode).touch-portrait #mobile-objective-banner #objective-zone {
+    height: 64px !important;
+    min-height: 64px !important;
+    padding: 8px 14px !important;
+    border-radius: 18px !important;
+  }
+
+  body.game-ui-v5:not(.classic-mode).touch-portrait #mobile-objective-banner #objective-current {
+    font-size: clamp(.78rem, 3.4vw, .94rem) !important;
+  }
+
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar {
+    padding: 10px !important;
+    border-radius: 24px !important;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.035), transparent 20%),
+      rgba(10,18,28,.985) !important;
+    box-shadow: 0 20px 54px rgba(0,0,0,.42), 0 1px 0 rgba(255,255,255,.045) inset !important;
+  }
+
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar #card-options .card-option {
+    border-radius: 16px !important;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.018) 20%, transparent 48%),
+      linear-gradient(180deg, rgba(22,31,42,.95), rgba(18,27,37,.98)) !important;
+  }
+
+  /* Zoomed-in zone gets subtle side curvature and shading to hint that the map continues horizontally. */
+  body.game-ui-v5:not(.classic-mode).touch-portrait.zoomed-in .zone.zoom-focus,
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout.zoomed-in .zone.zoom-focus {
+    overflow: hidden !important;
+    border-radius: 26px !important;
+    box-shadow: 0 20px 44px rgba(0,0,0,.30), 0 1px 0 rgba(255,255,255,.14) inset !important;
+  }
+
+  body.game-ui-v5:not(.classic-mode).touch-portrait.zoomed-in .zone.zoom-focus::before,
+  body.game-ui-v5:not(.classic-mode).touch-portrait.zoomed-in .zone.zoom-focus::after,
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout.zoomed-in .zone.zoom-focus::before,
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout.zoomed-in .zone.zoom-focus::after {
+    content: "";
+    position: absolute;
+    z-index: 4;
+    top: 9%;
+    bottom: 9%;
+    width: 38px;
+    pointer-events: none;
+    border-radius: 999px;
+    opacity: .88;
+  }
+
+  /* Opposite bend direction: a subtle downward-falling map edge, not an upward bulge. */
+  body.game-ui-v5:not(.classic-mode).touch-portrait.zoomed-in .zone.zoom-focus::before,
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout.zoomed-in .zone.zoom-focus::before {
+    left: -14px;
+    background:
+      radial-gradient(115% 78% at 100% 50%, rgba(255,255,255,.22), rgba(255,255,255,.05) 28%, rgba(6,12,18,0) 31%, rgba(6,12,18,.16) 58%, transparent 74%),
+      linear-gradient(180deg, transparent, rgba(0,0,0,.06) 48%, transparent);
+    box-shadow: inset -14px 0 18px rgba(255,255,255,.08), inset 10px 0 18px rgba(0,0,0,.12);
+  }
+
+  body.game-ui-v5:not(.classic-mode).touch-portrait.zoomed-in .zone.zoom-focus::after,
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout.zoomed-in .zone.zoom-focus::after {
+    right: -14px;
+    background:
+      radial-gradient(115% 78% at 0% 50%, rgba(255,255,255,.22), rgba(255,255,255,.05) 28%, rgba(6,12,18,0) 31%, rgba(6,12,18,.16) 58%, transparent 74%),
+      linear-gradient(180deg, transparent, rgba(0,0,0,.06) 48%, transparent);
+    box-shadow: inset 14px 0 18px rgba(255,255,255,.08), inset -10px 0 18px rgba(0,0,0,.12);
+  }
+
+  body.game-ui-v5:not(.classic-mode).touch-portrait.zoomed-in .zone.zoom-focus .zone-info-btn,
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout.zoomed-in .zone.zoom-focus .zone-info-btn {
+    z-index: 5 !important;
+  }
+}
+
+@media (pointer:hover) and (pointer:fine) {
+  body.game-ui-v5:not(.classic-mode) :is(.card-action-btn,.deck-preview,.buy-placement-btn,.bonus-badge):hover {
+    border-color: rgba(230,238,247,.22) !important;
+    transform: translateY(-1px);
+  }
+}
