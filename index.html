@@ -12218,7 +12218,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	/* Bonus counts: keep pill visible (desktop + mobile) */
 
 	</style>
-	<link rel="stylesheet" href="responsive.css?v=4">
+	<link rel="stylesheet" href="responsive.css?v=5">
 	<script>
     // Simple menu toggle: toggles .open on #controls and .active on #menu-toggle
     document.addEventListener('DOMContentLoaded', function() {
@@ -12253,7 +12253,8 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 			document.body.classList.toggle('classic-mode', !!enabled);
 			if (classicToggle) {
 				classicToggle.setAttribute('aria-pressed', enabled ? 'true' : 'false');
-				classicToggle.textContent = enabled ? 'Klassieke versie: aan' : 'Klassieke versie: uit';
+				const state = classicToggle.querySelector('.menu-toggle-state');
+				if (state) state.textContent = enabled ? 'Aan' : 'Uit';
 			}
 			// Mobile classic mode should run in landscape when the browser allows it.
 			try {
@@ -12302,7 +12303,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
   </script>
 </head>
 
-<body>
+<body class="game-ui-v5">
 <div class="blur-overlay"></div>
 <div id="drag-overlay"></div>
 
@@ -12379,7 +12380,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 		</div>
 		<div id="original-card-zone">
 		<div class="zone" id="card-choice-zone">
-	    <h2 id="kiesKaartTitel">Kies een kaart</h2>
+	    <h2 id="kiesKaartTitel">Jouw hand</h2>
 		<br>
 		    <div id="card-controls">
 		      <div id="card-options"></div>
@@ -12476,17 +12477,28 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 			<p class="bonus-hint">Klik op een kleur om een gratis 1×2 blok te plaatsen.</p>
 		  </div>
 		</div>
-		<div class="zone" id="controls">
-			<button onclick="undo()">Undo</button>
-			<button id="new-game-btn" type="button">Nieuw Spel</button>
-			<button id="classic-mode-toggle" type="button" aria-pressed="false">Klassieke versie: uit</button>
-			<button id="debug-mode-toggle" type="button" aria-pressed="false">Debug modus: uit</button>
-			<button id="menu-editor-btn" type="button">🛠️ Editor</button>
-			<button id="menu-open-levels-btn" type="button" onclick="showSavedLevelsModal()">Open level</button>
-			<button id="import-scenario-btn" type="button" onclick="importScenarioFile()">📤 Importeer scenario</button>
-			<!-- mobile dark-mode toggle removed: dark-only theme -->
-			<button id="menu-rules-btn" onclick="showRulesModal()">📖 Spelregels</button>
-			<button id="menu-highscore-btn" onclick="showHighScoreModal()">🏆 High Score</button>
+		<div class="zone" id="controls" aria-label="Spelmenu">
+			<div class="menu-panel-header">
+				<span class="menu-panel-kicker">LOCUS 1</span>
+				<strong class="menu-panel-title">Spelmenu</strong>
+			</div>
+			<div class="menu-panel-group" aria-label="Spel">
+				<button class="menu-panel-item" data-menu-icon="↶" onclick="undo()"><span>Undo</span><small>Laatste zet</small></button>
+				<button class="menu-panel-item" data-menu-icon="＋" id="new-game-btn" type="button"><span>Nieuw spel</span><small>Start opnieuw</small></button>
+				<button class="menu-panel-item" data-menu-icon="▦" id="menu-open-levels-btn" type="button" onclick="showSavedLevelsModal()"><span>Open level</span><small>Opgeslagen spelborden</small></button>
+			</div>
+			<div class="menu-panel-separator" aria-hidden="true"></div>
+			<div class="menu-panel-group" aria-label="Weergave en hulpmiddelen">
+				<button class="menu-panel-item menu-panel-toggle" data-menu-icon="◐" id="classic-mode-toggle" type="button" aria-pressed="false"><span>Klassieke versie</span><small class="menu-toggle-state">Uit</small></button>
+				<button class="menu-panel-item menu-panel-toggle" data-menu-icon="◇" id="debug-mode-toggle" type="button" aria-pressed="false"><span>Debug modus</span><small class="menu-toggle-state">Uit</small></button>
+			</div>
+			<div class="menu-panel-separator" aria-hidden="true"></div>
+			<div class="menu-panel-group" aria-label="Meer">
+				<button class="menu-panel-item" data-menu-icon="?" id="menu-rules-btn" onclick="showRulesModal()"><span>Spelregels</span><small>Uitleg en scoring</small></button>
+				<button class="menu-panel-item" data-menu-icon="★" id="menu-highscore-btn" onclick="showHighScoreModal()"><span>High score</span><small>Jouw beste resultaat</small></button>
+				<button class="menu-panel-item" data-menu-icon="↥" id="import-scenario-btn" type="button" onclick="importScenarioFile()"><span>Importeer scenario</span><small>Laad een bestand</small></button>
+				<button class="menu-panel-item" data-menu-icon="⌘" id="menu-editor-btn" type="button"><span>Editor</span><small>Ontwerp levels</small></button>
+			</div>
 		</div>
 		<div id="original-controls-zone">
 		  <div id="original-controls-zone-inner"></div>
@@ -12626,65 +12638,65 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 
 		<div id="rules-modal-layer" class="modal-overlay">
 			<div id="rules-modal" class="game-modal" role="dialog" aria-modal="true" aria-labelledby="rules-modal-title">
-				<h2 id="rules-modal-title">📖 Spelregels</h2>
-				
-				<div class="rules-section">
-					<h3>Hoe te spelen</h3>
-					<p><strong>Doel:</strong> Voltooi het actieve level-objectief voordat je kaarten op zijn.</p>
+				<div class="locus-modal-header rules-modal-header">
+					<div>
+						<span class="modal-kicker">Zo speel je Locus</span>
+						<h2 id="rules-modal-title">Spelregels</h2>
+					</div>
+					<button id="rules-modal-close" class="modal-close-btn" type="button" aria-label="Sluit spelregels">×</button>
 				</div>
-
-				<div class="rules-section">
-					<h3>🎴 Kaarten plaatsen</h3>
-					<ul>
-						<li>Kies een kaart uit je hand (3-4 kaarten)</li>
-						<li>Klik op een kaart om te selecteren, klik opnieuw om te deselecteren</li>
-						<li>Gebruik de draaiknop (↻) om de kaart te roteren</li>
-						<li>Sleep de kaart naar een zone en plaats de blokken</li>
-						<li>Kaarten verdwijnen na plaatsing</li>
-					</ul>
-				</div>
-
-				<div class="rules-section">
-					<h3>🎯 Zones & Scoring</h3>
-					<ul>
-						<li><strong>🟡 Geel:</strong> Vul hele kolommen voor punten (start: 10pt/kolom, groeit per level)</li>
-						<li><strong>🟢 Groen:</strong> +10pt per takje dat je voltooit</li>
-						<li><strong>🟣 Paars:</strong> +1pt per blok voor elke aangrenzende verbinding</li>
-						<li><strong>🔴 Rood:</strong> Vul alle 4 subgrids voor 10pt elk</li>
-						<li><strong>🔵 Blauw:</strong> Vul rijen voor punten (elke 4e rij = vetgedrukt)</li>
-						<li><strong>✨ Gouden kaarten:</strong> Kunnen op elke zone geplaatst worden (unlock via upgrade)</li>
-					</ul>
-				</div>
-
-				<div class="rules-section">
-					<h3><span class="coin-symbol">🪙</span> Munten & Upgrades</h3>
-					<ul>
-						<li>Verzamel munten door gouden cellen te activeren</li>
-						<li>Gebruik munten in de winkel voor nieuwe kaarten of upgrades</li>
-						<li>Upgrades: grotere hand, gouden kaarten, bonus boost, lucky draw, etc.</li>
-					</ul>
-				</div>
-
-				<div class="rules-section">
-					<h3>⚡ Bonussen</h3>
-					<ul>
-						<li>Vul rijen met symbolen om bonusblokken te verdienen</li>
-						<li>Klik op een bonus om een gratis 1×2 blok te plaatsen</li>
-						<li>Elke 3 bonuspunten = +1 munt</li>
-					</ul>
-				</div>
-
-				<div class="rules-section">
-					<h3>📱 Mobiele Bediening</h3>
-					<ul>
-						<li>Tik op een zone om in te zoomen</li>
-						<li>Gebruik ◀▶ pijlen om tussen zones te navigeren</li>
-						<li>Tik buiten de zone om uit te zoomen</li>
-					</ul>
-				</div>
-
-				<div class="modal-actions">
-					<button id="rules-modal-close">Sluiten</button>
+				<div class="rules-modal-body">
+					<div class="rules-hero">
+						<strong>Vul het speelveld slim. Bouw combinaties. Behaal het leveldoel voordat je kaarten op zijn.</strong>
+					</div>
+					<div class="rules-grid">
+						<section class="rules-section" data-rule-icon="▦">
+							<h3>Kaarten plaatsen</h3>
+							<ul>
+								<li>Kies een kaart uit je hand en plaats hem in een passende zone.</li>
+								<li>Draai of spiegel de vorm voordat je plaatst.</li>
+								<li>Na plaatsing verdwijnt de kaart uit je hand.</li>
+							</ul>
+						</section>
+						<section class="rules-section" data-rule-icon="◎">
+							<h3>Zones & scoring</h3>
+							<ul>
+								<li><strong>Geel:</strong> vul hele kolommen voor punten.</li>
+								<li><strong>Groen:</strong> voltooi takken.</li>
+								<li><strong>Paars:</strong> scoor met aangrenzende verbindingen.</li>
+								<li><strong>Rood:</strong> voltooi subgrids.</li>
+								<li><strong>Blauw:</strong> vul rijen; vetgedrukte rijen zijn speciaal.</li>
+							</ul>
+						</section>
+						<section class="rules-section" data-rule-icon="●">
+							<h3>Munten & upgrades</h3>
+							<ul>
+								<li>Activeer gouden cellen om munten te verzamelen.</li>
+								<li>Besteed munten aan kaarten, upgrades en extra mogelijkheden.</li>
+								<li>Gouden kaarten kunnen na ontgrendeling op iedere zone worden geplaatst.</li>
+							</ul>
+						</section>
+						<section class="rules-section" data-rule-icon="✦">
+							<h3>Bonussen</h3>
+							<ul>
+								<li>Verdien bonusblokken via symbolen op het bord.</li>
+								<li>Klik een beschikbare bonus aan om een extra blok te plaatsen.</li>
+								<li>Bonuspunten kunnen extra munten opleveren.</li>
+							</ul>
+						</section>
+						<section class="rules-section" data-rule-icon="↔">
+							<h3>Mobiele bediening</h3>
+							<ul>
+								<li>Tik een zone aan om hem groter te bekijken.</li>
+								<li>Navigeer met de pijlen naar de volgende zone.</li>
+								<li>Tik buiten de zone om terug te keren naar het hele bord.</li>
+							</ul>
+						</section>
+						<section class="rules-section rules-tip" data-rule-icon="!">
+							<h3>Tip</h3>
+							<p>De vijf zones hebben ieder hun eigen logica. Bekijk het info-icoon op een zone voor de precieze scoringsregel van dat level.</p>
+						</section>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -24545,7 +24557,8 @@ function getCollectedCoinCount(scores) {
 		if (toggleBtn) {
 			toggleBtn.classList.toggle('debug-active', debugMode);
 			toggleBtn.setAttribute('aria-pressed', String(debugMode));
-			toggleBtn.textContent = debugMode ? 'Debug modus: aan' : 'Debug modus: uit';
+			const debugStateLabel = toggleBtn.querySelector('.menu-toggle-state');
+			if (debugStateLabel) debugStateLabel.textContent = debugMode ? 'Aan' : 'Uit';
 		}
 		const clearBtn = document.getElementById('clear-board-btn');
 		if (clearBtn) {
@@ -35677,9 +35690,10 @@ body { background: transparent; }
 
 			const fitScale = Math.min(availableWidth / contentWidth, availableHeight / contentHeight);
 			let desiredMax = 1;
-			if (viewportW >= 3200 && viewportH >= 1500) desiredMax = 1.38;
-			else if (viewportW >= 2500 && viewportH >= 1250) desiredMax = 1.22;
-			else if (viewportW >= 2100 && viewportH >= 1100) desiredMax = 1.10;
+			if (viewportW >= 3200 && viewportH >= 1500) desiredMax = 1.72;
+			else if (viewportW >= 2500 && viewportH >= 1250) desiredMax = 1.48;
+			else if (viewportW >= 2100 && viewportH >= 1080) desiredMax = 1.24;
+			else if (viewportW >= 1800 && viewportH >= 950) desiredMax = 1.10;
 			let scale = Math.min(fitScale, desiredMax);
 			scale = Math.max(0.72, scale);
 
@@ -35712,7 +35726,8 @@ body { background: transparent; }
 		// Landscape mode: account for right sidebar
 		// Short height (<=925px): need extra room for compact bottom bar
 		const isShortHeight = window.innerHeight <= 925;
-		const bottomReserve = isPortrait ? (isShortHeight ? 150 : 160) : 70;
+		const measuredBottomReserve = (isPortrait && desktopBottom) ? Math.ceil(desktopBottom.getBoundingClientRect().height || 0) : 0;
+		const bottomReserve = isPortrait ? Math.max(measuredBottomReserve + 26, isShortHeight ? 154 : 170) : 70;
 		const horizontalPadding = isPortrait ? 40 : 40;
 		const sidebarReserve = isLandscape ? (rightSidebarWidth + 40) : 0; // sidebar + gap
 		
@@ -35813,7 +35828,7 @@ body { background: transparent; }
 				? Math.max(portraitStage.clientWidth - horizontalPadding, 260)
 				: Math.max(window.innerWidth - horizontalPadding, 280);
 		const availableHeight = isMobileSidebar && sidebarCenter
-			? Math.max(sidebarCenter.clientHeight - objectiveHeight - verticalPadding, 180)
+			? Math.max(sidebarCenter.clientHeight - verticalPadding, 180)
 			: portraitStageVisible
 				? Math.max(portraitStage.clientHeight - verticalPadding, 220)
 				: Math.max(window.innerHeight - bottomBarHeight - objectiveHeight - verticalPadding, 280);
@@ -35981,6 +35996,8 @@ body { background: transparent; }
 	  document.body.classList.toggle('mobile-sidebar-layout', useMobileSidebarLayout);
 	  document.body.classList.toggle('touch-portrait', isTouchPortrait);
 	  document.body.classList.remove('mobile-landscape'); // deprecated class
+	  const layoutName = useMobileSidebarLayout ? 'phone-landscape' : (isMobile ? 'phone-portrait' : (useDesktopPortrait ? 'compact' : 'desktop'));
+	  document.body.dataset.locusLayout = layoutName;
 	  
 	  // Desktop classes - ook voor grote tablets (iPad) zodat portrait/landscape correct werkt
 	  if (useDesktopLayout) {

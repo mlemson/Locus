@@ -1,139 +1,111 @@
 /* ========================================================================== */
-/* LOCUS 1 — GAME UI V4 / "LOCUS TABLE"                                    */
+/* LOCUS 1 — GAME UI V5 / LOCUS TABLE                                       */
 /*                                                                            */
-/* One visual system for desktop, tablet, phone portrait and phone landscape. */
-/* The colourful game zones stay the hero; the surrounding UI is a calm       */
-/* charcoal game table with tactile cards and deliberate responsive layouts.   */
+/* Goal: one deliberate game interface instead of stacked legacy panels.      */
+/* The coloured play zones stay recognisable; the surrounding UI becomes a    */
+/* calm, tactile digital board-game table.                                    */
 /* ========================================================================== */
 
 :root {
-  --locus-bg: #0d1218;
-  --locus-bg-soft: #111821;
-  --locus-panel: #17202a;
-  --locus-panel-raised: #1d2732;
-  --locus-panel-deep: #121922;
-  --locus-panel-hover: #222e3a;
-  --locus-border: rgba(211, 224, 239, .10);
-  --locus-border-strong: rgba(211, 224, 239, .19);
-  --locus-border-soft: rgba(211, 224, 239, .055);
-  --locus-text: #f4f6f8;
-  --locus-muted: #9aa8b8;
-  --locus-faint: #667486;
-  --locus-gold: #dfb94f;
-  --locus-gold-hi: #f4d67b;
-  --locus-gold-soft: rgba(223, 185, 79, .15);
-  --locus-blue: #75b6ea;
-  --locus-focus: #96c9ff;
-  --locus-danger: #df777d;
-  --locus-radius-sm: 10px;
-  --locus-radius: 14px;
-  --locus-radius-lg: 18px;
-  --locus-radius-xl: 24px;
-  --locus-shadow-panel: 0 1px 0 rgba(255,255,255,.035) inset, 0 12px 30px rgba(0,0,0,.22);
-  --locus-shadow-card: 0 1px 0 rgba(255,255,255,.075) inset, 0 2px 0 rgba(0,0,0,.40), 0 12px 24px rgba(0,0,0,.28);
-  --locus-shadow-card-selected: 0 0 0 2px rgba(223,185,79,.20), 0 2px 0 rgba(0,0,0,.44), 0 17px 34px rgba(0,0,0,.36);
+  --locus-bg-0: #091018;
+  --locus-bg-1: #0d151e;
+  --locus-bg-2: #111b26;
+  --locus-surface: #131e29;
+  --locus-surface-2: #182431;
+  --locus-surface-3: #1e2b39;
+  --locus-surface-soft: rgba(25, 38, 51, .82);
+  --locus-line: rgba(211, 226, 241, .10);
+  --locus-line-strong: rgba(211, 226, 241, .18);
+  --locus-line-hot: rgba(245, 214, 122, .46);
+  --locus-text: #f5f7f9;
+  --locus-text-2: #d5dde6;
+  --locus-muted: #93a3b4;
+  --locus-faint: #647587;
+  --locus-gold: #dfb84d;
+  --locus-gold-hi: #f3d675;
+  --locus-gold-deep: #725a1e;
+  --locus-gold-soft: rgba(223, 184, 77, .14);
+  --locus-blue-ui: #7bb9e7;
+  --locus-danger: #e37980;
+  --locus-success: #78c69a;
+  --locus-focus: #97cafa;
+  --locus-radius-xs: 8px;
+  --locus-radius-sm: 11px;
+  --locus-radius: 15px;
+  --locus-radius-lg: 20px;
+  --locus-radius-xl: 26px;
+  --locus-shadow-panel: 0 1px 0 rgba(255,255,255,.035) inset, 0 16px 38px rgba(0,0,0,.22);
+  --locus-shadow-raised: 0 1px 0 rgba(255,255,255,.075) inset, 0 2px 0 rgba(0,0,0,.48), 0 16px 30px rgba(0,0,0,.30);
+  --locus-shadow-modal: 0 34px 90px rgba(0,0,0,.56);
   --locus-safe-top: env(safe-area-inset-top, 0px);
   --locus-safe-right: env(safe-area-inset-right, 0px);
   --locus-safe-bottom: env(safe-area-inset-bottom, 0px);
   --locus-safe-left: env(safe-area-inset-left, 0px);
-  --locus-motion-fast: 110ms;
+  --locus-fast: 110ms;
   --locus-motion: 170ms;
-  --locus-motion-slow: 240ms;
+  --locus-slow: 250ms;
 }
 
 html,
-body:not(.classic-mode) {
-  background: var(--locus-bg) !important;
+body.game-ui-v5:not(.classic-mode) {
+  background: var(--locus-bg-0) !important;
 }
 
-body:not(.classic-mode) {
+body.game-ui-v5:not(.classic-mode) {
   margin: 0 !important;
-  background:
-    radial-gradient(1100px 550px at 50% -270px, rgba(118, 164, 209, .08), transparent 70%),
-    linear-gradient(180deg, #111821 0%, #0d131a 47%, #0b1016 100%) !important;
   color: var(--locus-text) !important;
   font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif !important;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  background:
+    radial-gradient(900px 520px at 50% -260px, rgba(122, 180, 226, .08), transparent 72%),
+    linear-gradient(180deg, #101923 0%, #0c141d 43%, #091018 100%) !important;
 }
 
-body:not(.classic-mode) *,
-body:not(.classic-mode) *::before,
-body:not(.classic-mode) *::after {
+body.game-ui-v5:not(.classic-mode) *,
+body.game-ui-v5:not(.classic-mode) *::before,
+body.game-ui-v5:not(.classic-mode) *::after {
   box-sizing: border-box;
 }
 
-/* ========================================================================== */
-/* CORE VISUAL LANGUAGE                                                       */
-/* ========================================================================== */
+body.game-ui-v5:not(.classic-mode) button,
+body.game-ui-v5:not(.classic-mode) [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
 
-body:not(.classic-mode) :is(#scoreboard, #gold-zone, #bonus-zone, #card-choice-zone, #objective-zone) {
+/* ---------- shared panel language ---------- */
+body.game-ui-v5:not(.classic-mode) :is(#scoreboard, #gold-zone, #bonus-zone, #card-choice-zone, #objective-zone) {
   margin: 0 !important;
-  border: 1px solid var(--locus-border) !important;
+  border: 1px solid var(--locus-line) !important;
   border-radius: var(--locus-radius) !important;
   background:
-    linear-gradient(180deg, rgba(255,255,255,.025), transparent 27%),
-    var(--locus-panel) !important;
+    linear-gradient(180deg, rgba(255,255,255,.025), transparent 26%),
+    var(--locus-surface) !important;
   color: var(--locus-text) !important;
   box-shadow: var(--locus-shadow-panel) !important;
 }
 
-body:not(.classic-mode) :is(#scoreboard, #gold-zone, #bonus-zone, #card-choice-zone) h2 {
-  margin: 0 0 9px !important;
-  color: var(--locus-muted) !important;
+body.game-ui-v5:not(.classic-mode) :is(#scoreboard, #gold-zone, #bonus-zone, #card-choice-zone, #objective-zone).zone {
+  margin: 0 !important;
+}
+
+body.game-ui-v5:not(.classic-mode) :is(#scoreboard, #gold-zone, #bonus-zone, #card-choice-zone) h2 {
+  margin: 0 0 10px !important;
+  color: #a7b6c6 !important;
   font-size: .68rem !important;
-  font-weight: 760 !important;
-  letter-spacing: .095em !important;
+  font-weight: 820 !important;
+  letter-spacing: .12em !important;
   line-height: 1.1 !important;
   text-transform: uppercase !important;
 }
 
-/* UI panels should not inherit the board-zone padding/margins. */
-body:not(.classic-mode) :is(#scoreboard, #gold-zone, #bonus-zone, #card-choice-zone, #objective-zone).zone {
-  padding: 0;
-}
+/* ========================================================================== */
+/* TOP LEVEL / OBJECTIVE                                                      */
+/* ========================================================================== */
 
-/* Menu: quiet floating control rather than another panel. */
-body:not(.classic-mode) #menu-toggle {
-  position: fixed !important;
-  top: max(12px, var(--locus-safe-top)) !important;
-  left: max(12px, var(--locus-safe-left)) !important;
-  width: 42px !important;
-  height: 42px !important;
-  padding: 10px !important;
-  border: 1px solid var(--locus-border-strong) !important;
-  border-radius: 12px !important;
-  background: rgba(25, 34, 44, .95) !important;
-  box-shadow: 0 9px 25px rgba(0,0,0,.28), 0 1px 0 rgba(255,255,255,.05) inset !important;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-body:not(.classic-mode) #menu-toggle span {
-  height: 2px !important;
-  border-radius: 999px;
-  background: rgba(244,246,248,.88) !important;
-}
-
-body:not(.classic-mode) #controls {
-  border: 1px solid var(--locus-border-strong) !important;
-  border-radius: 16px !important;
-  background: rgba(23,32,42,.985) !important;
-  color: var(--locus-text) !important;
-  box-shadow: 0 28px 70px rgba(0,0,0,.48) !important;
-}
-
-body:not(.classic-mode) #controls button {
-  min-height: 42px;
-  border: 1px solid var(--locus-border) !important;
-  border-radius: 10px !important;
-}
-
-/* ---------- Objective / level header ---------- */
-body:not(.classic-mode) #objective-zone {
-  width: 100% !important;
-  min-height: 58px !important;
-  padding: 9px 18px !important;
+body.game-ui-v5:not(.classic-mode) #objective-zone {
+  min-height: 62px !important;
+  padding: 10px 18px !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
@@ -141,1311 +113,1478 @@ body:not(.classic-mode) #objective-zone {
   gap: 4px !important;
   text-align: center !important;
   background:
-    linear-gradient(180deg, rgba(255,255,255,.02), transparent 35%),
-    rgba(23,32,42,.96) !important;
-  box-shadow: 0 9px 24px rgba(0,0,0,.22) !important;
+    linear-gradient(180deg, rgba(255,255,255,.028), transparent 36%),
+    rgba(19,30,41,.96) !important;
+  box-shadow: 0 14px 30px rgba(0,0,0,.18), 0 1px 0 rgba(255,255,255,.025) inset !important;
 }
 
-body:not(.classic-mode) #objective-zone h2 {
+body.game-ui-v5:not(.classic-mode) #objective-zone h2 {
   margin: 0 !important;
-  color: #76b8e8 !important;
-  font-size: .69rem !important;
-  font-weight: 800 !important;
-  letter-spacing: .10em !important;
-  line-height: 1.05 !important;
+  color: #8099c7 !important;
+  font-size: .67rem !important;
+  font-weight: 850 !important;
+  letter-spacing: .13em !important;
   text-transform: uppercase !important;
 }
 
-body:not(.classic-mode) #objective-current {
-  color: var(--locus-text) !important;
-  font-size: .89rem !important;
-  font-weight: 720 !important;
+body.game-ui-v5:not(.classic-mode) #objective-current {
+  margin: 0 !important;
+  color: #f7f8fa !important;
+  font-size: .91rem !important;
+  font-weight: 780 !important;
   line-height: 1.25 !important;
 }
 
-body:not(.classic-mode) #objective-history {
+body.game-ui-v5:not(.classic-mode) #objective-history {
   margin: 0 !important;
 }
 
-/* ---------- Score ---------- */
-body:not(.classic-mode) #scoreboard {
-  padding: 12px !important;
+/* ========================================================================== */
+/* HUD — SCORE / COINS / BONUSES                                              */
+/* ========================================================================== */
+
+body.game-ui-v5:not(.classic-mode) #scoreboard {
+  padding: 13px !important;
 }
 
-body:not(.classic-mode) #scoreboard .score-total {
-  min-height: 44px !important;
-  margin: 0 0 8px !important;
-  padding: 7px 9px !important;
+body.game-ui-v5:not(.classic-mode) #scoreboard .score-total {
+  min-height: 48px !important;
+  margin: 0 0 9px !important;
+  padding: 8px 10px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
   gap: 8px !important;
-  border: 1px solid var(--locus-border) !important;
-  border-radius: 10px !important;
-  background: rgba(255,255,255,.04) !important;
-  color: var(--locus-text) !important;
+  border: 1px solid var(--locus-line) !important;
+  border-radius: 11px !important;
+  background: rgba(255,255,255,.035) !important;
 }
 
-body:not(.classic-mode) #scoreboard .score-total .label {
+body.game-ui-v5:not(.classic-mode) #scoreboard .score-total .label {
   color: var(--locus-muted) !important;
-  font-size: .64rem !important;
-  font-weight: 750 !important;
-  letter-spacing: .055em !important;
-  text-transform: uppercase;
+  font-size: .67rem !important;
+  font-weight: 760 !important;
+  letter-spacing: .06em !important;
+  text-transform: uppercase !important;
 }
 
-body:not(.classic-mode) #scoreboard .total-score {
+body.game-ui-v5:not(.classic-mode) #scoreboard .total-score {
   color: var(--locus-gold-hi) !important;
-  font-size: 1.5rem !important;
-  font-weight: 850 !important;
-  line-height: 1 !important;
+  font-size: 1.55rem !important;
+  font-weight: 900 !important;
   font-variant-numeric: tabular-nums;
+  line-height: 1 !important;
 }
 
-body:not(.classic-mode) #scoreboard hr {
-  display: none !important;
-}
+body.game-ui-v5:not(.classic-mode) #scoreboard hr { display: none !important; }
 
-body:not(.classic-mode) #scoreboard .score-row {
-  min-height: 28px !important;
-  margin: 2px 0 !important;
+body.game-ui-v5:not(.classic-mode) #scoreboard .score-row {
+  min-height: 31px !important;
+  margin: 3px 0 !important;
   padding: 5px 7px !important;
   display: flex !important;
   align-items: center !important;
-  gap: 7px !important;
-  border: 1px solid transparent !important;
-  border-radius: 8px !important;
-  background: rgba(255,255,255,.022) !important;
-  color: var(--locus-text) !important;
-  font-size: .70rem !important;
-}
-
-body:not(.classic-mode) #scoreboard .score-row .label {
-  flex: 1 1 auto;
-  color: #dce2e8 !important;
-}
-
-body:not(.classic-mode) #scoreboard .score-row .score {
-  color: #f6f7f9 !important;
-  font-weight: 780 !important;
-  font-variant-numeric: tabular-nums;
-}
-
-body:not(.classic-mode) #scoreboard .score-row .color-box {
-  width: 9px !important;
-  height: 9px !important;
-  border-radius: 2px !important;
-  box-shadow: 0 0 0 1px rgba(255,255,255,.08) inset;
-}
-
-/* ---------- Coins ---------- */
-body:not(.classic-mode) #gold-zone {
-  position: relative;
-  padding: 11px !important;
   gap: 8px !important;
+  border: 1px solid transparent !important;
+  border-radius: 9px !important;
+  background: rgba(255,255,255,.020) !important;
+  color: var(--locus-text-2) !important;
+  font-size: .72rem !important;
+  transition: background var(--locus-motion), border-color var(--locus-motion) !important;
 }
 
-body:not(.classic-mode) #gold-zone::after {
-  color: var(--locus-gold-hi) !important;
-  font-size: .98rem !important;
+body.game-ui-v5:not(.classic-mode) #scoreboard .score-row:hover {
+  transform: none !important;
+  background: rgba(255,255,255,.04) !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #scoreboard .score-row .label {
+  flex: 1 1 auto !important;
+  color: #dbe2e9 !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #scoreboard .score-row .score {
+  color: #fbfcfd !important;
   font-weight: 820 !important;
   font-variant-numeric: tabular-nums;
 }
 
-body:not(.classic-mode) .buy-placement-btn {
-  min-height: 38px !important;
-  border: 1px solid var(--locus-border-strong) !important;
-  border-radius: 10px !important;
-  background: rgba(255,255,255,.035) !important;
-  box-shadow: none !important;
+body.game-ui-v5:not(.classic-mode) #scoreboard .score-row .color-box {
+  width: 9px !important;
+  height: 9px !important;
+  border-radius: 3px !important;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.08) inset;
 }
 
-/* ---------- Bonuses ---------- */
-body:not(.classic-mode) #bonus-zone {
-  padding: 11px !important;
-}
-
-body:not(.classic-mode) #bonus-zone .bonus-hint {
-  margin: 7px 0 0 !important;
-  color: var(--locus-faint) !important;
-  font-size: .62rem !important;
-  line-height: 1.3 !important;
-}
-
-body:not(.classic-mode) .bonus-inventory {
-  gap: 6px !important;
-}
-
-body:not(.classic-mode) .bonus-badge {
-  min-width: 30px;
-  min-height: 30px;
-  border: 1px solid var(--locus-border) !important;
-  border-radius: 9px !important;
-  box-shadow: 0 1px 0 rgba(255,255,255,.03) inset !important;
-}
-
-/* ========================================================================== */
-/* PHYSICAL HAND                                                              */
-/* ========================================================================== */
-
-body:not(.classic-mode) #card-choice-zone {
+body.game-ui-v5:not(.classic-mode) #gold-zone,
+body.game-ui-v5:not(.classic-mode) #bonus-zone {
   padding: 12px !important;
-  overflow: visible !important;
 }
 
-body:not(.classic-mode) #card-controls {
-  gap: 10px !important;
-}
-
-body:not(.classic-mode) #card-options {
-  gap: 9px !important;
-}
-
-body:not(.classic-mode) #card-choice-zone .card-option {
-  position: relative;
-  isolation: isolate;
-  border: 1px solid rgba(214,226,240,.16) !important;
-  border-radius: 15px !important;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.07) 0%, rgba(255,255,255,.018) 20%, transparent 47%),
-    radial-gradient(110% 80% at 50% -12%, rgba(102,142,180,.075), transparent 62%),
-    #202833 !important;
-  box-shadow: var(--locus-shadow-card) !important;
-  transform-origin: 50% 90%;
-  transition:
-    transform var(--locus-motion) cubic-bezier(.2,.72,.2,1),
-    border-color var(--locus-motion),
-    box-shadow var(--locus-motion),
-    opacity var(--locus-motion),
-    filter var(--locus-motion) !important;
-  animation: locus-card-deal 190ms cubic-bezier(.2,.75,.2,1) both;
-}
-
-body:not(.classic-mode) #card-choice-zone .card-option:nth-child(2) { animation-delay: 25ms; }
-body:not(.classic-mode) #card-choice-zone .card-option:nth-child(3) { animation-delay: 50ms; }
-body:not(.classic-mode) #card-choice-zone .card-option:nth-child(4) { animation-delay: 75ms; }
-body:not(.classic-mode) #card-choice-zone .card-option:nth-child(5) { animation-delay: 100ms; }
-
-@keyframes locus-card-deal {
-  from { opacity: 0; transform: translateY(8px) scale(.975); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-body:not(.classic-mode) #card-choice-zone .card-option.selected {
-  z-index: 4;
-  border-color: var(--locus-gold) !important;
-  transform: translateY(-5px) !important;
-  box-shadow: var(--locus-shadow-card-selected) !important;
-}
-
-body:not(.classic-mode) #card-choice-zone .card-option.selection-disabled {
-  opacity: .36 !important;
-  filter: grayscale(.20) saturate(.55) !important;
-}
-
-body:not(.classic-mode) #card-choice-zone .card-option.card-golden {
-  border-color: rgba(231,194,93,.68) !important;
-  box-shadow: 0 0 0 1px rgba(231,194,93,.09) inset, var(--locus-shadow-card) !important;
-}
-
-body:not(.classic-mode) #card-choice-zone .card-label {
-  color: var(--locus-muted) !important;
-  font-size: .59rem !important;
-  line-height: 1.1 !important;
-}
-
-/* Action dock */
-body:not(.classic-mode) #card-action-buttons {
+body.game-ui-v5:not(.classic-mode) #gold-zone {
+  display: flex !important;
+  flex-direction: column !important;
   gap: 8px !important;
 }
 
-body:not(.classic-mode) :is(.card-action-btn, .deck-preview) {
-  border: 1px solid var(--locus-border) !important;
-  border-radius: 11px !important;
-  background: linear-gradient(180deg, rgba(255,255,255,.035), transparent 46%), var(--locus-panel-raised) !important;
-  color: var(--locus-text) !important;
-  box-shadow: 0 5px 14px rgba(0,0,0,.19) !important;
-  transition: border-color var(--locus-motion), background var(--locus-motion), filter var(--locus-motion), transform var(--locus-motion-fast) !important;
+body.game-ui-v5:not(.classic-mode) #collected-coins {
+  min-height: 0 !important;
 }
 
-body:not(.classic-mode) #new-cards-btn {
-  border-color: rgba(223,185,79,.46) !important;
-  background:
-    linear-gradient(180deg, rgba(255,238,179,.08), transparent 42%),
-    #312b1b !important;
+body.game-ui-v5:not(.classic-mode) #gold-zone::after {
   color: var(--locus-gold-hi) !important;
-  box-shadow: 0 0 0 1px rgba(223,185,79,.055) inset, 0 7px 18px rgba(0,0,0,.23) !important;
+  font-size: 1rem !important;
+  font-weight: 880 !important;
+  letter-spacing: .01em;
+  font-variant-numeric: tabular-nums;
 }
 
-body:not(.classic-mode) :is(.card-action-btn, button, [role="button"]):focus-visible,
-body:not(.classic-mode) .card-option:focus-visible {
+body.game-ui-v5:not(.classic-mode) .buy-placement-btn {
+  min-height: 40px !important;
+  border: 1px solid var(--locus-line-strong) !important;
+  border-radius: 11px !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.03), transparent),
+    rgba(255,255,255,.025) !important;
+  box-shadow: none !important;
+  transition: background var(--locus-motion), border-color var(--locus-motion) !important;
+}
+
+body.game-ui-v5:not(.classic-mode) .buy-placement-btn:not(:disabled):hover {
+  background: rgba(223,184,77,.09) !important;
+  border-color: rgba(223,184,77,.28) !important;
+}
+
+body.game-ui-v5:not(.classic-mode) .bonus-inventory {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 7px !important;
+}
+
+body.game-ui-v5:not(.classic-mode) .bonus-badge {
+  min-width: 0 !important;
+  min-height: 36px !important;
+  padding: 4px !important;
+  border: 1px solid var(--locus-line) !important;
+  border-radius: 11px !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,.035) inset !important;
+  transition: transform var(--locus-fast), filter var(--locus-motion), border-color var(--locus-motion) !important;
+}
+
+body.game-ui-v5:not(.classic-mode) .bonus-badge:not(:disabled):hover {
+  transform: translateY(-1px);
+  filter: brightness(1.10);
+}
+
+body.game-ui-v5:not(.classic-mode) .bonus-badge.disabled,
+body.game-ui-v5:not(.classic-mode) .bonus-badge:disabled {
+  opacity: .62 !important;
+  filter: saturate(.68) brightness(.83);
+}
+
+body.game-ui-v5:not(.classic-mode) .bonus-count {
+  font-weight: 850 !important;
+  font-variant-numeric: tabular-nums;
+}
+
+body.game-ui-v5:not(.classic-mode) #bonus-zone .bonus-hint {
+  margin: 8px 0 0 !important;
+  color: var(--locus-faint) !important;
+  font-size: .61rem !important;
+  line-height: 1.35 !important;
+}
+
+/* ========================================================================== */
+/* HAND / CARDS                                                               */
+/* ========================================================================== */
+
+body.game-ui-v5:not(.classic-mode) #card-choice-zone {
+  padding: 14px !important;
+  overflow: visible !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #card-controls {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 12px !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #card-options {
+  display: grid !important;
+  gap: 10px !important;
+  align-items: stretch !important;
+  justify-content: center !important;
+  width: 100% !important;
+}
+
+/* 1–3 cards use a hand row; 4+ become a tidy two-column grid. */
+body.game-ui-v5:not(.classic-mode) #card-options:not(:has(.card-option:nth-child(4))) {
+  grid-template-columns: repeat(3, minmax(82px, 1fr)) !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #card-options:has(.card-option:nth-child(4)) {
+  grid-template-columns: repeat(2, minmax(94px, 1fr)) !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #card-choice-zone .card-option {
+  position: relative !important;
+  isolation: isolate;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  min-height: 132px !important;
+  padding: 10px !important;
+  border: 1px solid rgba(212,225,239,.16) !important;
+  border-radius: 16px !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.068) 0%, rgba(255,255,255,.015) 22%, transparent 44%),
+    radial-gradient(110% 65% at 50% -10%, rgba(255,255,255,.055), transparent 70%),
+    #202b37 !important;
+  box-shadow: var(--locus-shadow-raised) !important;
+  transform-origin: 50% 86%;
+  transition: transform var(--locus-motion) cubic-bezier(.2,.72,.2,1), border-color var(--locus-motion), box-shadow var(--locus-motion), opacity var(--locus-motion), filter var(--locus-motion) !important;
+  animation: locus-card-deal 210ms cubic-bezier(.2,.72,.2,1) both;
+}
+
+body.game-ui-v5:not(.classic-mode) #card-choice-zone .card-option:nth-child(2) { animation-delay: 22ms; }
+body.game-ui-v5:not(.classic-mode) #card-choice-zone .card-option:nth-child(3) { animation-delay: 44ms; }
+body.game-ui-v5:not(.classic-mode) #card-choice-zone .card-option:nth-child(4) { animation-delay: 66ms; }
+
+@keyframes locus-card-deal {
+  from { opacity: 0; transform: translateY(7px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+body.game-ui-v5:not(.classic-mode) #card-choice-zone .card-option.selected {
+  z-index: 3;
+  border-color: var(--locus-gold) !important;
+  transform: translateY(-5px) !important;
+  box-shadow: 0 0 0 2px var(--locus-gold-soft), 0 2px 0 rgba(0,0,0,.46), 0 18px 36px rgba(0,0,0,.38) !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #card-choice-zone .card-option.card-golden {
+  border-color: rgba(236,204,111,.72) !important;
+  background:
+    linear-gradient(140deg, rgba(243,214,117,.10), transparent 34%),
+    linear-gradient(180deg, rgba(255,255,255,.06), transparent 28%),
+    #242b31 !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #card-choice-zone .card-option.selection-disabled {
+  opacity: .35 !important;
+  filter: grayscale(.22) saturate(.55) !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #card-choice-zone .card-label {
+  color: #b8c4cf !important;
+  font-size: .62rem !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #card-action-buttons {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  width: 100% !important;
+  padding-top: 12px !important;
+  margin: 0 !important;
+  border-top: 1px solid var(--locus-line) !important;
+}
+
+body.game-ui-v5:not(.classic-mode) :is(.card-action-btn, .deck-preview) {
+  min-width: 0 !important;
+  min-height: 48px !important;
+  height: 48px !important;
+  padding: 7px !important;
+  border: 1px solid var(--locus-line) !important;
+  border-radius: 12px !important;
+  background: #192431 !important;
+  color: var(--locus-text-2) !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,.035) inset !important;
+  transition: background var(--locus-motion), border-color var(--locus-motion), transform var(--locus-fast) !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #new-cards-btn {
+  grid-column: 1 / -1 !important;
+  min-height: 52px !important;
+  height: 52px !important;
+  color: #fff3bd !important;
+  border-color: rgba(223,184,77,.52) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.055), transparent 38%),
+    linear-gradient(135deg, #5e4a17, #3e3214) !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,.07) inset, 0 9px 22px rgba(0,0,0,.24) !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #new-cards-btn::after {
+  content: attr(data-label);
+  margin-left: 7px;
+  font-size: .73rem;
+  font-weight: 820;
+  letter-spacing: .01em;
+}
+
+body.game-ui-v5:not(.classic-mode) #new-cards-btn::before {
+  content: attr(data-icon);
+}
+
+body.game-ui-v5:not(.classic-mode) :is(#rotate-card-btn,#mirror-card-btn,#undo-inline-btn,#bonus-shop-btn)::after {
+  content: attr(data-label);
+  display: block;
+  margin-top: 2px;
+  font-size: .53rem;
+  color: var(--locus-muted);
+  line-height: 1.05;
+}
+
+body.game-ui-v5:not(.classic-mode) #undo-inline-btn::after { content: "Undo"; }
+
+body.game-ui-v5:not(.classic-mode) .deck-preview {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+body.game-ui-v5:not(.classic-mode) .deck-count {
+  color: #f4f6f8 !important;
+  font-size: 1rem !important;
+  font-weight: 850 !important;
+  font-variant-numeric: tabular-nums;
+}
+
+body.game-ui-v5:not(.classic-mode) #turn-counter-inline {
+  display: none !important;
+}
+
+/* ========================================================================== */
+/* MENU                                                                       */
+/* ========================================================================== */
+
+body.game-ui-v5:not(.classic-mode) #menu-toggle {
+  position: fixed !important;
+  z-index: calc(var(--z-menu) + 10) !important;
+  top: max(14px, var(--locus-safe-top)) !important;
+  left: max(14px, var(--locus-safe-left)) !important;
+  width: 46px !important;
+  height: 46px !important;
+  padding: 11px !important;
+  border: 1px solid var(--locus-line-strong) !important;
+  border-radius: 13px !important;
+  background: rgba(21,31,42,.96) !important;
+  box-shadow: 0 12px 30px rgba(0,0,0,.30), 0 1px 0 rgba(255,255,255,.05) inset !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+body.game-ui-v5:not(.classic-mode) #menu-toggle span {
+  height: 2px !important;
+  border-radius: 999px !important;
+  background: rgba(248,250,252,.92) !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #controls {
+  position: fixed !important;
+  z-index: calc(var(--z-menu) + 8) !important;
+  top: max(72px, calc(var(--locus-safe-top) + 66px)) !important;
+  left: max(14px, var(--locus-safe-left)) !important;
+  width: min(340px, calc(100vw - 28px)) !important;
+  max-height: calc(100dvh - 92px - var(--locus-safe-bottom)) !important;
+  margin: 0 !important;
+  padding: 12px !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  border: 1px solid var(--locus-line-strong) !important;
+  border-radius: 19px !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.025), transparent 18%),
+    rgba(18,27,37,.985) !important;
+  box-shadow: var(--locus-shadow-modal) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+body.game-ui-v5:not(.classic-mode) #controls:not(.open) {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transform: translateY(-8px) scale(.985) !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #controls.open {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  transform: translateY(0) scale(1) !important;
+  transition: opacity var(--locus-motion), transform var(--locus-motion), visibility 0s !important;
+}
+
+body.game-ui-v5:not(.classic-mode) .menu-panel-header {
+  padding: 5px 6px 12px !important;
+  display: flex !important;
+  align-items: baseline !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+}
+
+body.game-ui-v5:not(.classic-mode) .menu-panel-kicker {
+  color: var(--locus-gold-hi) !important;
+  font-size: .60rem !important;
+  font-weight: 900 !important;
+  letter-spacing: .16em !important;
+}
+
+body.game-ui-v5:not(.classic-mode) .menu-panel-title {
+  color: var(--locus-text) !important;
+  font-size: 1.05rem !important;
+  font-weight: 800 !important;
+}
+
+body.game-ui-v5:not(.classic-mode) .menu-panel-group {
+  display: grid !important;
+  gap: 5px !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #controls .menu-panel-item {
+  position: relative !important;
+  width: 100% !important;
+  min-height: 54px !important;
+  padding: 8px 12px 8px 50px !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  grid-template-rows: auto auto !important;
+  align-items: center !important;
+  gap: 0 10px !important;
+  text-align: left !important;
+  border: 1px solid transparent !important;
+  border-radius: 12px !important;
+  background: transparent !important;
+  color: var(--locus-text) !important;
+  box-shadow: none !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #controls .menu-panel-item::before {
+  content: attr(data-menu-icon);
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  transform: translateY(-50%);
+  border: 1px solid var(--locus-line) !important;
+  border-radius: 9px;
+  background: rgba(255,255,255,.035);
+  color: #c7d1db;
+  font-size: .92rem;
+  font-weight: 800;
+}
+
+body.game-ui-v5:not(.classic-mode) #controls .menu-panel-item > span {
+  grid-column: 1;
+  color: #edf1f5 !important;
+  font-size: .79rem !important;
+  font-weight: 760 !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #controls .menu-panel-item > small {
+  grid-column: 1;
+  color: var(--locus-faint) !important;
+  font-size: .60rem !important;
+  font-weight: 600 !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #controls .menu-panel-item > .menu-toggle-state {
+  grid-column: 2 !important;
+  grid-row: 1 / 3 !important;
+  align-self: center !important;
+  padding: 4px 7px !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,.05) !important;
+  color: var(--locus-muted) !important;
+  font-size: .58rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: .05em !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #controls .menu-panel-item[aria-pressed="true"] > .menu-toggle-state {
+  background: var(--locus-gold-soft) !important;
+  color: var(--locus-gold-hi) !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #controls .menu-panel-item:hover {
+  border-color: var(--locus-line) !important;
+  background: rgba(255,255,255,.035) !important;
+}
+
+body.game-ui-v5:not(.classic-mode) .menu-panel-separator {
+  height: 1px !important;
+  margin: 8px 5px !important;
+  background: var(--locus-line) !important;
+}
+
+/* ========================================================================== */
+/* ZONE INFO — SMALL, DELIBERATE GAME TOOLTIP                                 */
+/* ========================================================================== */
+
+body.game-ui-v5:not(.classic-mode) .zone-info-btn {
+  width: 25px !important;
+  height: 25px !important;
+  border: 1px solid rgba(255,255,255,.20) !important;
+  border-radius: 999px !important;
+  background: rgba(20,28,36,.34) !important;
+  color: rgba(255,255,255,.78) !important;
+  font-size: .72rem !important;
+  font-weight: 850 !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,.12) !important;
+  backdrop-filter: blur(5px);
+}
+
+body.game-ui-v5:not(.classic-mode) .zone-info-popover {
+  left: 12px !important;
+  right: auto !important;
+  top: 43px !important;
+  width: min(310px, calc(100% - 24px)) !important;
+  height: auto !important;
+  max-height: min(210px, 46vh) !important;
+  margin: 0 !important;
+  padding: 12px 14px !important;
+  overflow: auto !important;
+  border: 1px solid rgba(234,240,246,.16) !important;
+  border-radius: 13px !important;
+  background: rgba(19,27,35,.96) !important;
+  color: #e9edf1 !important;
+  box-shadow: 0 18px 42px rgba(0,0,0,.40) !important;
+  font-size: .74rem !important;
+  line-height: 1.45 !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+body.game-ui-v5:not(.classic-mode) .zone-info-popover strong {
+  color: #fff !important;
+}
+
+/* undo legacy sticky tooltip behavior in scrollable zones */
+body.game-ui-v5:not(.classic-mode) :is(#blue-zone,#green-zone) .zone-info-popover {
+  position: absolute !important;
+}
+
+/* ========================================================================== */
+/* MODALS                                                                     */
+/* ========================================================================== */
+
+body.game-ui-v5:not(.classic-mode) :is(.modal-overlay,.highscore-modal-overlay) {
+  padding: max(18px, var(--locus-safe-top)) max(18px, var(--locus-safe-right)) max(18px, var(--locus-safe-bottom)) max(18px, var(--locus-safe-left)) !important;
+  background: rgba(4,8,13,.70) !important;
+  backdrop-filter: blur(12px) saturate(.85) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(.85) !important;
+}
+
+body.game-ui-v5:not(.classic-mode) :is(.game-modal,.highscore-modal) {
+  width: min(620px, calc(100vw - 36px)) !important;
+  max-width: 100% !important;
+  max-height: min(86dvh, 900px) !important;
+  margin: auto !important;
+  padding: 22px !important;
+  overflow: auto !important;
+  border: 1px solid var(--locus-line-strong) !important;
+  border-radius: 22px !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.03), transparent 22%),
+    #131e29 !important;
+  color: var(--locus-text) !important;
+  box-shadow: var(--locus-shadow-modal) !important;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(183,199,215,.28) transparent;
+}
+
+body.game-ui-v5:not(.classic-mode) :is(.game-modal,.highscore-modal)::-webkit-scrollbar { width: 8px; }
+body.game-ui-v5:not(.classic-mode) :is(.game-modal,.highscore-modal)::-webkit-scrollbar-track { background: transparent; }
+body.game-ui-v5:not(.classic-mode) :is(.game-modal,.highscore-modal)::-webkit-scrollbar-thumb { background: rgba(183,199,215,.22); border-radius: 99px; }
+
+body.game-ui-v5:not(.classic-mode) .locus-modal-header,
+body.game-ui-v5:not(.classic-mode) .shop-modal-header {
+  position: sticky !important;
+  z-index: 5 !important;
+  top: -22px !important;
+  margin: -22px -22px 18px !important;
+  padding: 20px 22px 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  border-bottom: 1px solid var(--locus-line) !important;
+  background: rgba(19,30,41,.96) !important;
+  backdrop-filter: blur(12px);
+}
+
+body.game-ui-v5:not(.classic-mode) .modal-kicker {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--locus-blue-ui);
+  font-size: .61rem;
+  font-weight: 850;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+body.game-ui-v5:not(.classic-mode) :is(.game-modal,.highscore-modal) h2 {
+  margin: 0 !important;
+  color: #f6f8fa !important;
+  font-size: clamp(1.15rem, 2.4vw, 1.55rem) !important;
+  font-weight: 840 !important;
+  letter-spacing: -.02em !important;
+}
+
+body.game-ui-v5:not(.classic-mode) .modal-close-btn {
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
+  min-height: 42px !important;
+  padding: 0 !important;
+  border: 1px solid var(--locus-line) !important;
+  border-radius: 12px !important;
+  background: rgba(255,255,255,.035) !important;
+  color: #d5dde5 !important;
+  font-size: 1.25rem !important;
+}
+
+body.game-ui-v5:not(.classic-mode) .modal-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+  margin-top: 18px !important;
+}
+
+body.game-ui-v5:not(.classic-mode) :is(.game-modal,.highscore-modal) button:not(.card-option) {
+  min-height: 42px;
+  padding: 8px 14px;
+  border: 1px solid var(--locus-line) !important;
+  border-radius: 11px !important;
+  background: #1a2632 !important;
+  color: #eef2f5 !important;
+}
+
+body.game-ui-v5:not(.classic-mode) :is(.game-modal,.highscore-modal) button:not(.card-option):hover {
+  background: #21303e !important;
+  border-color: var(--locus-line-strong) !important;
+}
+
+/* Rules become a wide readable board, not a narrow scroll column. */
+body.game-ui-v5:not(.classic-mode) #rules-modal {
+  width: min(920px, calc(100vw - 36px)) !important;
+  max-height: min(88dvh, 900px) !important;
+  padding: 22px !important;
+}
+
+body.game-ui-v5:not(.classic-mode) .rules-modal-body {
+  display: grid !important;
+  gap: 14px !important;
+}
+
+body.game-ui-v5:not(.classic-mode) .rules-hero {
+  padding: 14px 16px !important;
+  border: 1px solid rgba(123,185,231,.16) !important;
+  border-radius: 14px !important;
+  background: rgba(123,185,231,.055) !important;
+  color: #dfe8ef !important;
+  font-size: .83rem !important;
+  line-height: 1.45 !important;
+}
+
+body.game-ui-v5:not(.classic-mode) .rules-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+body.game-ui-v5:not(.classic-mode) .rules-section {
+  position: relative !important;
+  margin: 0 !important;
+  padding: 15px 15px 14px 52px !important;
+  border: 1px solid var(--locus-line) !important;
+  border-radius: 15px !important;
+  background: rgba(255,255,255,.022) !important;
+}
+
+body.game-ui-v5:not(.classic-mode) .rules-section::before {
+  content: attr(data-rule-icon);
+  position: absolute;
+  left: 14px;
+  top: 14px;
+  width: 27px;
+  height: 27px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--locus-line) !important;
+  border-radius: 9px;
+  background: rgba(255,255,255,.035);
+  color: var(--locus-gold-hi);
+  font-size: .82rem;
+  font-weight: 850;
+}
+
+body.game-ui-v5:not(.classic-mode) .rules-section h3 {
+  margin: 0 0 8px !important;
+  color: #f0f3f6 !important;
+  font-size: .86rem !important;
+  font-weight: 820 !important;
+}
+
+body.game-ui-v5:not(.classic-mode) .rules-section :is(p,ul) {
+  margin: 0 !important;
+  color: #b8c4cf !important;
+  font-size: .73rem !important;
+  line-height: 1.48 !important;
+}
+
+body.game-ui-v5:not(.classic-mode) .rules-section ul { padding-left: 17px !important; }
+body.game-ui-v5:not(.classic-mode) .rules-section li { margin: 3px 0 !important; }
+body.game-ui-v5:not(.classic-mode) .rules-section strong { color: #e8edf2 !important; }
+body.game-ui-v5:not(.classic-mode) .rules-tip { border-color: rgba(223,184,77,.18) !important; background: rgba(223,184,77,.045) !important; }
+
+body.game-ui-v5:not(.classic-mode) #shop-modal { width: min(1040px, calc(100vw - 36px)) !important; }
+body.game-ui-v5:not(.classic-mode) #deck-modal,
+body.game-ui-v5:not(.classic-mode) #golden-unlock-modal { width: min(900px, calc(100vw - 36px)) !important; }
+body.game-ui-v5:not(.classic-mode) #blackhole-modal { width: min(860px, calc(100vw - 36px)) !important; }
+body.game-ui-v5:not(.classic-mode) #round-modal { width: min(560px, calc(100vw - 36px)) !important; }
+body.game-ui-v5:not(.classic-mode) #saved-levels-modal .highscore-modal { width: min(720px, calc(100vw - 36px)) !important; }
+
+body.game-ui-v5:not(.classic-mode) .highscore-value {
+  color: var(--locus-gold-hi) !important;
+  font-size: clamp(2.7rem, 8vw, 4.4rem) !important;
+  line-height: 1 !important;
+}
+
+body.game-ui-v5:not(.classic-mode) .objective-toast,
+body.game-ui-v5:not(.classic-mode) .highscore-toast {
+  border: 1px solid var(--locus-line-strong) !important;
+  border-radius: 14px !important;
+  background: rgba(20,30,40,.96) !important;
+  color: var(--locus-text) !important;
+  box-shadow: 0 18px 42px rgba(0,0,0,.42) !important;
+  backdrop-filter: blur(10px);
+}
+
+/* ========================================================================== */
+/* FOCUS / POINTER / ACCESSIBILITY                                            */
+/* ========================================================================== */
+
+body.game-ui-v5:not(.classic-mode) :is(button,[role="button"],.card-option):focus-visible {
   outline: 3px solid var(--locus-focus) !important;
-  outline-offset: 2px !important;
+  outline-offset: 3px !important;
 }
 
-@media (hover: hover) and (pointer: fine) {
-  body:not(.classic-mode) #card-choice-zone .card-option:not(.selection-disabled):hover {
+@media (hover:hover) and (pointer:fine) {
+  body.game-ui-v5:not(.classic-mode) #card-choice-zone .card-option:not(.selection-disabled):hover {
     transform: translateY(-4px) !important;
-    border-color: rgba(220,231,243,.30) !important;
-    box-shadow: 0 1px 0 rgba(255,255,255,.09) inset, 0 2px 0 rgba(0,0,0,.45), 0 16px 31px rgba(0,0,0,.34) !important;
+    border-color: rgba(224,234,244,.27) !important;
+    box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 2px 0 rgba(0,0,0,.46), 0 19px 38px rgba(0,0,0,.36) !important;
   }
-  body:not(.classic-mode) #card-choice-zone .card-option.selected:hover {
+  body.game-ui-v5:not(.classic-mode) #card-choice-zone .card-option.selected:hover {
     transform: translateY(-6px) !important;
     border-color: var(--locus-gold-hi) !important;
   }
-  body:not(.classic-mode) :is(.card-action-btn, .deck-preview, .buy-placement-btn, .bonus-badge):not(:disabled):hover {
-    filter: brightness(1.08);
-    border-color: var(--locus-border-strong) !important;
+  body.game-ui-v5:not(.classic-mode) :is(.card-action-btn,.deck-preview):hover {
+    background: #22303e !important;
+    border-color: var(--locus-line-strong) !important;
   }
-  body:not(.classic-mode) #scoreboard .score-row:hover {
-    transform: none !important;
-    background: rgba(255,255,255,.045) !important;
+}
+
+@media (pointer:coarse) {
+  body.game-ui-v5:not(.classic-mode) :is(.card-action-btn,.deck-preview,.bonus-badge,.buy-placement-btn,.modal-close-btn) {
+    min-height: 44px !important;
   }
 }
 
 /* ========================================================================== */
-/* DESKTOP / LAPTOP — THREE-PART GAME TABLE                                   */
+/* DESKTOP / LARGE DESKTOP                                                    */
 /* ========================================================================== */
 
 @media (min-width: 1241px) {
-  body:not(.classic-mode).desktop-landscape {
+  body.game-ui-v5:not(.classic-mode).desktop-landscape {
     overflow: hidden !important;
   }
 
-  body:not(.classic-mode).desktop-landscape #desktop-wrapper {
+  body.game-ui-v5:not(.classic-mode).desktop-landscape #desktop-wrapper {
+    width: max-content !important;
+    max-width: none !important;
+    margin: 22px auto 0 !important;
+    padding: 0 !important;
     display: grid !important;
+    grid-template-columns: 205px auto 350px !important;
+    grid-template-rows: auto auto !important;
     grid-template-areas:
       ". objective ."
       "hud board hand" !important;
-    grid-template-columns: 190px max-content 292px !important;
-    grid-template-rows: auto auto !important;
-    width: max-content !important;
-    max-width: none !important;
-    height: auto !important;
-    min-height: 0 !important;
-    margin: clamp(22px, 4.2vh, 62px) auto 0 !important;
-    padding: 0 !important;
-    gap: 16px 18px !important;
+    column-gap: 18px !important;
+    row-gap: 14px !important;
     align-items: start !important;
-    justify-items: stretch !important;
-    overflow: visible !important;
+    transform-origin: top center !important;
   }
 
-  body:not(.classic-mode).desktop-landscape #desktop-menu {
-    position: absolute !important;
-    width: 0 !important;
-    height: 0 !important;
-    overflow: visible !important;
-  }
-
-  body:not(.classic-mode).desktop-landscape #desktop-objective {
+  body.game-ui-v5:not(.classic-mode).desktop-landscape #desktop-objective {
     grid-area: objective !important;
-    width: min(100%, 760px) !important;
+    width: min(720px, 100%) !important;
     justify-self: center !important;
-    align-self: end !important;
   }
 
-  body:not(.classic-mode).desktop-landscape #desktop-left {
+  body.game-ui-v5:not(.classic-mode).desktop-landscape #desktop-left {
     grid-area: hud !important;
-    display: flex !important;
-    flex-direction: column !important;
-    width: 190px !important;
-    min-width: 190px !important;
-    max-width: 190px !important;
+    width: 205px !important;
+    display: grid !important;
+    align-content: start !important;
     gap: 10px !important;
-    overflow: visible !important;
   }
 
-  body:not(.classic-mode).desktop-landscape #desktop-grids {
+  body.game-ui-v5:not(.classic-mode).desktop-landscape #desktop-grids {
     grid-area: board !important;
-    width: max-content !important;
-    min-width: max-content !important;
-    max-width: none !important;
-    min-height: 0 !important;
+    min-width: 0 !important;
     display: flex !important;
-    justify-content: center !important;
     align-items: flex-start !important;
-    overflow: visible !important;
+    justify-content: center !important;
   }
 
-  body:not(.classic-mode).desktop-landscape #desktop-grids #board {
-    margin: 0 !important;
-  }
-
-  body:not(.classic-mode).desktop-landscape #desktop-right {
+  body.game-ui-v5:not(.classic-mode).desktop-landscape #desktop-right {
     grid-area: hand !important;
-    display: flex !important;
-    flex-direction: column !important;
-    width: 292px !important;
-    min-width: 292px !important;
-    max-width: 292px !important;
+    width: 350px !important;
+    display: grid !important;
+    align-content: start !important;
     gap: 10px !important;
-    overflow: visible !important;
   }
 
-  body:not(.classic-mode).desktop-landscape #desktop-bottom {
-    display: none !important;
-  }
+  body.game-ui-v5:not(.classic-mode).desktop-landscape #desktop-bottom { display: none !important; }
+  body.game-ui-v5:not(.classic-mode).desktop-landscape #desktop-menu { position: absolute !important; width: 0 !important; height: 0 !important; }
 
-  body:not(.classic-mode).desktop-landscape #desktop-left #bonus-zone .bonus-hint {
-    display: none !important;
-  }
-
-  body:not(.classic-mode).desktop-landscape #desktop-left #bonus-inventory {
-    display: grid !important;
-    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-    gap: 5px !important;
-  }
-
-  body:not(.classic-mode).desktop-landscape #desktop-right #card-choice-zone {
-    width: 100% !important;
-    padding: 13px !important;
-  }
-
-  body:not(.classic-mode).desktop-landscape #desktop-right #card-options {
-    display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 9px !important;
-    width: 100% !important;
-    justify-items: center !important;
-    align-items: stretch !important;
-    overflow: visible !important;
-  }
-
-  body:not(.classic-mode).desktop-landscape #desktop-right #card-options > .card-option:last-child:nth-child(odd) {
-    grid-column: 1 / -1 !important;
-    width: 122px !important;
-  }
-
-  body:not(.classic-mode).desktop-landscape #desktop-right .card-option {
-    width: 122px !important;
-    min-width: 0 !important;
-    max-width: 122px !important;
-    min-height: 136px !important;
-    height: 136px !important;
-    padding: 8px !important;
-    gap: 5px !important;
-    --preview-cell: 13px;
-  }
-
-  body:not(.classic-mode).desktop-landscape #desktop-right .card-option .card-cell {
-    width: var(--preview-cell) !important;
-    height: var(--preview-cell) !important;
-  }
-
-  body:not(.classic-mode).desktop-landscape #desktop-right #card-action-buttons {
-    display: grid !important;
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    gap: 8px !important;
-    width: 100% !important;
-    padding: 10px 0 0 !important;
+  body.game-ui-v5:not(.classic-mode).desktop-landscape #board {
     margin: 0 !important;
-    border-top: 1px solid var(--locus-border) !important;
+    padding: 0 !important;
+    gap: 10px !important;
   }
 
-  body:not(.classic-mode).desktop-landscape #desktop-right :is(.card-action-btn, .deck-preview) {
-    width: 100% !important;
-    min-width: 0 !important;
-    height: 52px !important;
-    min-height: 52px !important;
-    padding: 5px !important;
+  body.game-ui-v5:not(.classic-mode).desktop-landscape #board > .column {
+    gap: 10px !important;
   }
 
-  body:not(.classic-mode).desktop-landscape #desktop-right #rotate-card-btn { order: 1; }
-  body:not(.classic-mode).desktop-landscape #desktop-right #mirror-card-btn { order: 2; }
-  body:not(.classic-mode).desktop-landscape #desktop-right #undo-inline-btn { order: 3; }
-  body:not(.classic-mode).desktop-landscape #desktop-right #bonus-shop-btn { order: 4; }
-  body:not(.classic-mode).desktop-landscape #desktop-right #deck-preview { order: 5; }
-  body:not(.classic-mode).desktop-landscape #desktop-right #new-cards-btn {
-    order: 6;
-    grid-column: 1 / -1 !important;
-    height: 48px !important;
+  body.game-ui-v5:not(.classic-mode).desktop-landscape #card-choice-zone {
+    width: 350px !important;
   }
 
-  body:not(.classic-mode).desktop-landscape #desktop-right #new-cards-btn::after {
-    content: attr(data-label) !important;
-    display: inline !important;
-    margin-left: 7px !important;
-    font-size: .69rem !important;
-    font-weight: 760 !important;
-    letter-spacing: .015em;
-  }
-
-  body:not(.classic-mode).desktop-landscape #desktop-right #new-cards-btn::before {
-    font-size: 1.08rem !important;
-  }
-
-  body:not(.classic-mode).desktop-landscape #desktop-right #bonus-zone {
-    display: none !important; /* V4: bonus panel lives in HUD rail */
+  body.game-ui-v5:not(.classic-mode).desktop-landscape #card-action-buttons {
+    margin-top: 0 !important;
   }
 }
 
-/* 4K/high-DPI keeps the same natural composition; JS upscales the table. */
-@media (min-width: 2200px) and (min-height: 1100px) {
-  body:not(.classic-mode).desktop-landscape #desktop-wrapper {
-    margin-top: clamp(34px, 5.5vh, 92px) !important;
+@media (min-width: 1900px) and (min-height: 950px) {
+  body.game-ui-v5:not(.classic-mode).desktop-landscape #desktop-wrapper {
+    margin-top: 30px !important;
+    column-gap: 22px !important;
+    row-gap: 16px !important;
   }
 }
 
-/* Very short cursor screens: keep natural UI size and let the whole table scale. */
-@media (min-width: 1241px) and (max-height: 690px) and (pointer: fine) {
-  body:not(.classic-mode).desktop-landscape #desktop-wrapper {
-    margin-top: 10px !important;
-    gap: 9px 12px !important;
-  }
-  body:not(.classic-mode).desktop-landscape #desktop-left { width: 176px !important; min-width: 176px !important; max-width: 176px !important; }
-  body:not(.classic-mode).desktop-landscape #desktop-right { width: 268px !important; min-width: 268px !important; max-width: 268px !important; }
-  body:not(.classic-mode).desktop-landscape #desktop-right .card-option {
-    width: 110px !important;
-    max-width: 110px !important;
-    min-height: 112px !important;
-    height: 112px !important;
-    --preview-cell: 11px;
+@media (min-width: 2800px) and (min-height: 1350px) {
+  body.game-ui-v5:not(.classic-mode).desktop-landscape #desktop-wrapper {
+    margin-top: 44px !important;
   }
 }
 
 /* ========================================================================== */
-/* TABLET / COMPACT DESKTOP — BOARD FIRST + BOTTOM DOCK                       */
+/* COMPACT / TABLET / NARROW DESKTOP                                          */
 /* ========================================================================== */
 
 @media (min-width: 651px) and (max-width: 1240px),
        (min-width: 651px) and (orientation: portrait) {
-  body:not(.classic-mode).desktop-portrait {
+  body.game-ui-v5:not(.classic-mode).desktop-portrait {
     overflow: hidden !important;
   }
 
-  body:not(.classic-mode).desktop-portrait #desktop-wrapper {
-    display: grid !important;
-    grid-template-areas:
-      "objective"
-      "board"
-      "dock" !important;
-    grid-template-columns: minmax(0, 1fr) !important;
-    grid-template-rows: auto minmax(0, 1fr) auto !important;
-    width: 100% !important;
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #desktop-wrapper {
+    width: 100vw !important;
     height: 100dvh !important;
     margin: 0 !important;
-    padding:
-      max(10px, var(--locus-safe-top))
-      max(10px, var(--locus-safe-right))
-      max(10px, var(--locus-safe-bottom))
-      max(10px, var(--locus-safe-left)) !important;
+    padding: 10px !important;
+    display: grid !important;
+    grid-template-columns: minmax(0,1fr) !important;
+    grid-template-rows: auto minmax(0,1fr) auto !important;
+    grid-template-areas: "objective" "board" "dock" !important;
     gap: 8px !important;
     overflow: hidden !important;
   }
 
-  body:not(.classic-mode).desktop-portrait #desktop-menu {
-    position: absolute !important;
-    width: 0 !important;
-    height: 0 !important;
-  }
-
-  body:not(.classic-mode).desktop-portrait #desktop-objective {
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #desktop-objective {
     grid-area: objective !important;
-    width: min(100%, 900px) !important;
-    margin: 0 auto !important;
+    width: min(760px, calc(100% - 88px)) !important;
+    justify-self: center !important;
   }
 
-  body:not(.classic-mode).desktop-portrait #objective-zone {
-    min-height: 52px !important;
-    padding: 7px 14px !important;
-  }
-
-  body:not(.classic-mode).desktop-portrait #desktop-grids {
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #desktop-grids {
     grid-area: board !important;
     min-width: 0 !important;
     min-height: 0 !important;
-    width: 100% !important;
     display: flex !important;
-    align-items: center !important;
+    align-items: flex-start !important;
     justify-content: center !important;
     overflow: hidden !important;
   }
 
-  body:not(.classic-mode).desktop-portrait #desktop-grids #board {
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #desktop-grids #board {
     margin: 0 !important;
+    padding: 0 !important;
   }
 
-  body:not(.classic-mode).desktop-portrait #desktop-bottom {
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #desktop-bottom {
     grid-area: dock !important;
-    width: min(100%, 1040px) !important;
+    width: min(100%, 1100px) !important;
+    min-height: 164px !important;
+    max-height: 205px !important;
     margin: 0 auto !important;
     padding: 8px !important;
     display: grid !important;
-    grid-template-columns: clamp(142px, 20vw, 180px) minmax(310px, 1fr) clamp(150px, 21vw, 190px) !important;
+    grid-template-columns: 170px minmax(0,1fr) 190px !important;
     gap: 8px !important;
-    align-items: stretch !important;
-    border: 1px solid var(--locus-border) !important;
-    border-radius: 18px !important;
-    background: rgba(17,24,33,.95) !important;
-    box-shadow: 0 16px 38px rgba(0,0,0,.28), 0 1px 0 rgba(255,255,255,.025) inset !important;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--locus-line-strong) !important;
+    border-radius: 19px !important;
+    background: rgba(13,21,30,.96) !important;
+    box-shadow: 0 18px 44px rgba(0,0,0,.28) !important;
   }
 
-  body:not(.classic-mode).desktop-portrait #desktop-bottom-buttons {
-    display: none !important;
-  }
-
-  body:not(.classic-mode).desktop-portrait #desktop-bottom-left,
-  body:not(.classic-mode).desktop-portrait #desktop-bottom-center,
-  body:not(.classic-mode).desktop-portrait #desktop-bottom-right {
-    width: 100% !important;
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #desktop-bottom-left,
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #desktop-bottom-center,
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #desktop-bottom-right {
     min-width: 0 !important;
-    max-width: none !important;
-    gap: 6px !important;
+    min-height: 0 !important;
   }
 
-  /* Compact score becomes a small status block, not another tall sidebar. */
-  body:not(.classic-mode).desktop-portrait #scoreboard {
-    height: 100% !important;
-    padding: 8px !important;
-    display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 4px !important;
-    align-content: start !important;
-  }
-
-  body:not(.classic-mode).desktop-portrait #scoreboard h2 { display: none !important; }
-  body:not(.classic-mode).desktop-portrait #scoreboard .score-total {
-    grid-column: 1 / -1 !important;
-    min-height: 34px !important;
-    margin: 0 !important;
-    padding: 5px 7px !important;
-  }
-  body:not(.classic-mode).desktop-portrait #scoreboard .total-score { font-size: 1.15rem !important; }
-  body:not(.classic-mode).desktop-portrait #scoreboard .score-row {
-    min-height: 24px !important;
-    margin: 0 !important;
-    padding: 3px 5px !important;
-    font-size: .62rem !important;
-  }
-  body:not(.classic-mode).desktop-portrait #scoreboard .score-row .label { display: none !important; }
-
-  body:not(.classic-mode).desktop-portrait #card-choice-zone {
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #scoreboard {
     height: 100% !important;
     padding: 8px !important;
   }
-  body:not(.classic-mode).desktop-portrait #card-choice-zone > h2,
-  body:not(.classic-mode).desktop-portrait #card-choice-zone > br {
-    display: none !important;
+
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #scoreboard h2 { display:none !important; }
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #scoreboard .score-total { min-height: 35px !important; margin-bottom: 4px !important; }
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #scoreboard .score-row { min-height: 22px !important; margin: 1px 0 !important; padding: 3px 5px !important; font-size: .61rem !important; }
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #scoreboard .score-row .label { display:none !important; }
+
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #card-choice-zone {
+    height: 100% !important;
+    padding: 8px !important;
   }
-  body:not(.classic-mode).desktop-portrait #card-controls {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 6px !important;
-  }
-  body:not(.classic-mode).desktop-portrait #card-options {
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    align-items: stretch !important;
-    justify-content: center !important;
-    gap: 6px !important;
-    overflow: visible !important;
-  }
-  body:not(.classic-mode).desktop-portrait #card-options .card-option {
-    flex: 0 1 88px !important;
-    width: 88px !important;
-    min-width: 68px !important;
-    max-width: 94px !important;
-    min-height: 96px !important;
-    height: 96px !important;
-    padding: 6px !important;
-    --preview-cell: 10px;
-  }
-  body:not(.classic-mode).desktop-portrait #card-options .card-cell {
-    width: var(--preview-cell) !important;
-    height: var(--preview-cell) !important;
-  }
-  body:not(.classic-mode).desktop-portrait #desktop-bottom-center #card-action-buttons {
-    display: grid !important;
-    grid-template-columns: repeat(6, minmax(38px, 1fr)) !important;
+
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #card-choice-zone > :is(h2,br) { display:none !important; }
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #card-controls { grid-template-columns: minmax(0,1fr) auto !important; gap: 7px !important; height: 100% !important; }
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #card-options { display:flex !important; flex-wrap:nowrap !important; gap:6px !important; align-items:center !important; justify-content:center !important; overflow:hidden !important; }
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #card-options .card-option { flex: 0 1 92px !important; width:92px !important; min-width:72px !important; max-width:98px !important; min-height:108px !important; height:108px !important; padding:6px !important; --preview-cell: 10px; }
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #card-options .card-cell { width:var(--preview-cell) !important; height:var(--preview-cell) !important; }
+
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #desktop-bottom-center #card-action-buttons {
+    width: 138px !important;
+    min-width: 138px !important;
+    height: 100% !important;
+    padding: 0 0 0 7px !important;
+    border-top: 0 !important;
+    border-left: 1px solid var(--locus-line) !important;
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+    align-content: center !important;
     gap: 5px !important;
-    width: 100% !important;
-  }
-  body:not(.classic-mode).desktop-portrait #desktop-bottom-center :is(.card-action-btn, .deck-preview) {
-    width: 100% !important;
-    min-width: 0 !important;
-    height: 42px !important;
-    min-height: 42px !important;
-    padding: 4px !important;
   }
 
-  body:not(.classic-mode).desktop-portrait #desktop-bottom-right {
-    display: flex !important;
-    flex-direction: column !important;
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #desktop-bottom-center #new-cards-btn { grid-column:1/-1 !important; }
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #desktop-bottom-center :is(.card-action-btn,.deck-preview) { min-height:42px !important; height:42px !important; }
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #desktop-bottom-center #new-cards-btn::after,
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #desktop-bottom-center :is(#rotate-card-btn,#mirror-card-btn,#undo-inline-btn)::after { display:none !important; }
+
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #desktop-bottom-right {
+    display:grid !important;
+    grid-template-rows:auto auto !important;
+    gap:6px !important;
   }
-  body:not(.classic-mode).desktop-portrait #bonus-zone,
-  body:not(.classic-mode).desktop-portrait #gold-zone {
-    padding: 7px !important;
-    box-shadow: none !important;
-  }
-  body:not(.classic-mode).desktop-portrait #bonus-zone h2,
-  body:not(.classic-mode).desktop-portrait #gold-zone h2,
-  body:not(.classic-mode).desktop-portrait #bonus-zone .bonus-hint {
-    display: none !important;
-  }
-  body:not(.classic-mode).desktop-portrait #bonus-inventory {
-    display: grid !important;
-    grid-template-columns: repeat(5, minmax(0,1fr)) !important;
-    gap: 4px !important;
-  }
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #bonus-zone,
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #gold-zone { padding:8px !important; box-shadow:none !important; }
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #bonus-zone h2,
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #gold-zone h2,
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #bonus-zone .bonus-hint { display:none !important; }
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #bonus-inventory { gap:4px !important; }
 }
 
-/* Smaller portrait tablets: keep dock usable, let cards shrink before controls. */
-@media (min-width: 651px) and (max-width: 840px) and (orientation: portrait) {
-  body:not(.classic-mode).desktop-portrait #desktop-bottom {
-    grid-template-columns: 126px minmax(0, 1fr) 132px !important;
-    gap: 6px !important;
-    padding: 6px !important;
+@media (min-width:651px) and (max-width:860px) {
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #desktop-bottom {
+    grid-template-columns: 132px minmax(0,1fr) 145px !important;
+    min-height: 150px !important;
   }
-  body:not(.classic-mode).desktop-portrait #card-options .card-option {
-    width: 74px !important;
-    max-width: 78px !important;
-    min-height: 88px !important;
-    height: 88px !important;
-    --preview-cell: 9px;
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #card-options .card-option {
+    width:76px !important; max-width:80px !important; min-height:96px !important; height:96px !important; --preview-cell:9px;
   }
-  body:not(.classic-mode).desktop-portrait #desktop-bottom-center #card-action-buttons {
-    grid-template-columns: repeat(3, minmax(42px, 1fr)) !important;
-  }
+  body.game-ui-v5:not(.classic-mode).desktop-portrait #desktop-bottom-center #card-action-buttons { width:110px !important; min-width:110px !important; }
 }
 
 /* ========================================================================== */
-/* PHONE PORTRAIT — BOARD STAGE + TACTILE BOTTOM TRAY                         */
+/* PHONE PORTRAIT                                                             */
 /* ========================================================================== */
 
-@media (max-width: 650px) and (orientation: portrait) {
+@media (max-width:650px) and (orientation:portrait) {
   :root {
-    --bottom-bar-height: clamp(214px, 27dvh, 246px) !important;
+    --bottom-bar-height: clamp(250px, 29dvh, 286px) !important;
     --bottom-bar-gap: 0px !important;
     --bottom-bar-bottom-offset: 0px !important;
     --card-hand-lift: 0px !important;
   }
 
-  body:not(.classic-mode).touch-portrait {
+  body.game-ui-v5:not(.classic-mode).touch-portrait {
     padding: 0 !important;
     overflow: hidden !important;
   }
 
-  body:not(.classic-mode).touch-portrait #menu-toggle {
-    top: max(8px, var(--locus-safe-top)) !important;
-    left: max(8px, var(--locus-safe-left)) !important;
-    width: 46px !important;
-    height: 46px !important;
-    z-index: calc(var(--z-menu) + 4) !important;
+  body.game-ui-v5:not(.classic-mode).touch-portrait #menu-toggle {
+    top: max(8px,var(--locus-safe-top)) !important;
+    left: max(8px,var(--locus-safe-left)) !important;
+    width:48px !important;
+    height:48px !important;
   }
 
-  body:not(.classic-mode).touch-portrait #mobile-objective-banner {
-    position: fixed !important;
-    z-index: 440 !important;
-    top: max(8px, var(--locus-safe-top)) !important;
-    left: max(62px, calc(var(--locus-safe-left) + 62px)) !important;
-    right: max(8px, var(--locus-safe-right)) !important;
-    height: 58px !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    background: transparent !important;
-    border: 0 !important;
-    box-shadow: none !important;
+  body.game-ui-v5:not(.classic-mode).touch-portrait #mobile-objective-banner {
+    position:fixed !important;
+    z-index:440 !important;
+    top:max(8px,var(--locus-safe-top)) !important;
+    left:max(64px,calc(var(--locus-safe-left) + 64px)) !important;
+    right:max(8px,var(--locus-safe-right)) !important;
+    height:62px !important;
+    margin:0 !important;
+    padding:0 !important;
+    background:transparent !important;
   }
 
-  body:not(.classic-mode).touch-portrait #mobile-objective-banner #objective-zone {
-    height: 58px !important;
-    min-height: 58px !important;
-    padding: 6px 12px !important;
-    border-radius: 17px !important;
+  body.game-ui-v5:not(.classic-mode).touch-portrait #mobile-objective-banner #objective-zone {
+    height:62px !important;
+    min-height:62px !important;
+    padding:7px 12px !important;
+    border-radius:17px !important;
   }
 
-  body:not(.classic-mode).touch-portrait #mobile-objective-banner #objective-zone h2 {
-    font-size: .61rem !important;
-    letter-spacing: .075em !important;
+  body.game-ui-v5:not(.classic-mode).touch-portrait #mobile-objective-banner #objective-zone h2 { font-size:.60rem !important; }
+  body.game-ui-v5:not(.classic-mode).touch-portrait #mobile-objective-banner #objective-current {
+    max-width:100% !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    white-space:nowrap !important;
+    font-size:clamp(.74rem,3.25vw,.90rem) !important;
   }
 
-  body:not(.classic-mode).touch-portrait #mobile-objective-banner #objective-current {
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: clamp(.72rem, 3.3vw, .86rem) !important;
+  /* Critical V5 fix: board is absolutely centred by its visual centre.          */
+  /* Flex centring an oversized unscaled board caused only the blue strip to     */
+  /* remain visible on phones. Transform scaling does not alter layout width.    */
+  body.game-ui-v5:not(.classic-mode).touch-portrait #mobile-portrait-stage {
+    position:fixed !important;
+    z-index:1 !important;
+    top:calc(max(8px,var(--locus-safe-top)) + 72px) !important;
+    left:max(5px,var(--locus-safe-left)) !important;
+    right:max(5px,var(--locus-safe-right)) !important;
+    bottom:calc(var(--bottom-bar-height) + max(8px,var(--locus-safe-bottom))) !important;
+    min-width:0 !important;
+    min-height:0 !important;
+    display:block !important;
+    overflow:hidden !important;
   }
 
-  body:not(.classic-mode).touch-portrait #mobile-portrait-stage {
-    position: fixed !important;
-    z-index: 1 !important;
-    top: calc(max(8px, var(--locus-safe-top)) + 66px) !important;
-    left: max(5px, var(--locus-safe-left)) !important;
-    right: max(5px, var(--locus-safe-right)) !important;
-    bottom: calc(var(--bottom-bar-height) + max(7px, var(--locus-safe-bottom))) !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    min-height: 0 !important;
-    overflow: hidden !important;
-    pointer-events: auto;
+  body.game-ui-v5:not(.classic-mode).touch-portrait #mobile-portrait-stage #board {
+    position:absolute !important;
+    left:50% !important;
+    top:50% !important;
+    right:auto !important;
+    bottom:auto !important;
+    margin:0 !important;
+    padding:0 !important;
+    transform:translate(-50%,-50%) scale(var(--board-scale,.5)) !important;
+    transform-origin:center center !important;
+    flex:none !important;
   }
 
-  body:not(.classic-mode).touch-portrait #mobile-portrait-stage #board {
-    position: relative !important;
-    left: auto !important;
-    top: auto !important;
-    right: auto !important;
-    bottom: auto !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    transform: scale(var(--board-scale, .5)) !important;
-    transform-origin: center center !important;
-    flex: 0 0 auto !important;
-  }
+  body.game-ui-v5:not(.classic-mode).touch-portrait #board > .column:last-child { display:none !important; }
+  body.game-ui-v5:not(.classic-mode).touch-portrait #original-card-zone:empty { display:none !important; }
 
-  body:not(.classic-mode).touch-portrait #bottom-bar {
-    position: fixed !important;
-    z-index: var(--z-bottom) !important;
-    left: max(6px, var(--locus-safe-left)) !important;
-    right: max(6px, var(--locus-safe-right)) !important;
-    bottom: max(6px, var(--locus-safe-bottom)) !important;
-    width: auto !important;
-    min-height: var(--bottom-bar-height) !important;
-    height: var(--bottom-bar-height) !important;
-    max-height: var(--bottom-bar-height) !important;
-    margin: 0 !important;
-    padding: 8px !important;
-    display: grid !important;
-    grid-template-rows: minmax(0, 1fr) auto !important;
-    gap: 6px !important;
-    border: 1px solid var(--locus-border-strong) !important;
-    border-radius: 20px !important;
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar {
+    position:fixed !important;
+    z-index:var(--z-bottom) !important;
+    left:max(7px,var(--locus-safe-left)) !important;
+    right:max(7px,var(--locus-safe-right)) !important;
+    bottom:max(7px,var(--locus-safe-bottom)) !important;
+    width:auto !important;
+    height:var(--bottom-bar-height) !important;
+    min-height:var(--bottom-bar-height) !important;
+    max-height:var(--bottom-bar-height) !important;
+    margin:0 !important;
+    padding:9px !important;
+    display:grid !important;
+    grid-template-rows:minmax(0,1fr) auto !important;
+    gap:7px !important;
+    border:1px solid var(--locus-line-strong) !important;
+    border-radius:21px !important;
     background:
-      linear-gradient(180deg, rgba(255,255,255,.025), transparent 20%),
-      rgba(16,23,31,.975) !important;
-    box-shadow: 0 -2px 0 rgba(255,255,255,.025) inset, 0 20px 50px rgba(0,0,0,.40) !important;
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    overflow: hidden !important;
+      linear-gradient(180deg,rgba(255,255,255,.025),transparent 18%),
+      rgba(13,21,30,.985) !important;
+    box-shadow:0 18px 50px rgba(0,0,0,.40),0 1px 0 rgba(255,255,255,.035) inset !important;
+    backdrop-filter:blur(15px);
+    -webkit-backdrop-filter:blur(15px);
+    overflow:hidden !important;
   }
 
-  body:not(.classic-mode).touch-portrait #bottom-bar-cards {
-    min-width: 0 !important;
-    min-height: 0 !important;
-    height: auto !important;
-    margin: 0 !important;
-    overflow: visible !important;
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar-cards {
+    min-width:0 !important;
+    min-height:0 !important;
+    height:auto !important;
+    margin:0 !important;
+    overflow:hidden !important;
   }
 
-  body:not(.classic-mode).touch-portrait #bottom-bar #card-choice-zone {
-    width: 100% !important;
-    height: 100% !important;
-    min-height: 0 !important;
-    padding: 0 !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar #card-choice-zone {
+    width:100% !important;
+    height:100% !important;
+    padding:0 !important;
+    border:0 !important;
+    border-radius:0 !important;
+    background:transparent !important;
+    box-shadow:none !important;
   }
 
-  body:not(.classic-mode).touch-portrait #bottom-bar #card-choice-zone > h2,
-  body:not(.classic-mode).touch-portrait #bottom-bar #card-choice-zone > br,
-  body:not(.classic-mode).touch-portrait #bottom-bar #turn-counter-inline {
-    display: none !important;
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar #card-choice-zone > :is(h2,br),
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar #turn-counter-inline { display:none !important; }
+
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar #card-controls {
+    height:100% !important;
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) !important;
+    grid-template-rows:minmax(0,1fr) 46px !important;
+    gap:6px !important;
   }
 
-  body:not(.classic-mode).touch-portrait #bottom-bar #card-controls {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) !important;
-    grid-template-rows: auto auto !important;
-    gap: 6px !important;
-    width: 100% !important;
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar #card-options {
+    display:grid !important;
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+    gap:6px !important;
+    width:100% !important;
+    min-width:0 !important;
+    height:100% !important;
+    margin:0 !important;
+    padding:0 !important;
+    align-items:stretch !important;
+    overflow:hidden !important;
+    touch-action:manipulation !important;
   }
 
-  body:not(.classic-mode).touch-portrait #bottom-bar #card-options {
-    display: grid !important;
-    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    gap: 6px !important;
-    width: 100% !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    overflow: visible !important;
-    touch-action: manipulation !important;
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar #card-options:not(:has(.card-option:nth-child(4))) {
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
   }
 
-  body:not(.classic-mode).touch-portrait #bottom-bar .hand-scroll-btn {
-    display: none !important;
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar .hand-scroll-btn { display:none !important; }
+
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar #card-options .card-option {
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+    min-height:0 !important;
+    height:100% !important;
+    padding:6px !important;
+    border-radius:14px !important;
+    --preview-cell:clamp(8px,2.35vw,11px);
   }
 
-  body:not(.classic-mode).touch-portrait #bottom-bar #card-options .card-option {
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: none !important;
-    min-height: clamp(86px, 11.5dvh, 104px) !important;
-    height: clamp(86px, 11.5dvh, 104px) !important;
-    padding: 5px !important;
-    gap: 3px !important;
-    border-radius: 13px !important;
-    --preview-cell: clamp(7px, 2.15vw, 9px);
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar #card-options .card-cell {
+    width:var(--preview-cell) !important;
+    height:var(--preview-cell) !important;
+  }
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar #card-options .card-label { display:none !important; }
+
+  /* Phone actions form one explicit game-control row below the hand. */
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar #card-action-buttons {
+    width:100% !important;
+    height:46px !important;
+    padding:5px 0 0 !important;
+    margin:0 !important;
+    display:grid !important;
+    grid-template-columns:1.45fr repeat(4,minmax(44px,1fr)) !important;
+    gap:5px !important;
+    border-top:1px solid var(--locus-line) !important;
+    border-left:0 !important;
   }
 
-  body:not(.classic-mode).touch-portrait #bottom-bar .card-option .card-cell {
-    width: var(--preview-cell) !important;
-    height: var(--preview-cell) !important;
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar :is(.card-action-btn,.deck-preview) {
+    width:100% !important;
+    min-width:44px !important;
+    height:41px !important;
+    min-height:41px !important;
+    padding:4px !important;
   }
 
-  body:not(.classic-mode).touch-portrait #bottom-bar .card-option .card-label,
-  body:not(.classic-mode).touch-portrait #bottom-bar .card-option .card-meta {
-    font-size: .46rem !important;
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar #new-cards-btn { grid-column:auto !important; min-height:41px !important; height:41px !important; }
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar #bonus-shop-btn { display:none !important; }
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar #new-cards-btn::after,
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar :is(#rotate-card-btn,#mirror-card-btn,#undo-inline-btn)::after { display:none !important; }
+
+  body.game-ui-v5:not(.classic-mode).touch-portrait .bottom-bar-footer {
+    min-width:0 !important;
+    min-height:0 !important;
+    margin:0 !important;
+    padding:0 !important;
   }
 
-  body:not(.classic-mode).touch-portrait #bottom-bar #card-action-buttons {
-    display: grid !important;
-    grid-template-columns: repeat(6, minmax(44px, 1fr)) !important;
-    gap: 5px !important;
-    width: 100% !important;
-    padding: 0 !important;
-    margin: 0 !important;
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar-left {
+    display:grid !important;
+    grid-template-rows:auto auto !important;
+    gap:6px !important;
+    min-width:0 !important;
   }
 
-  body:not(.classic-mode).touch-portrait #bottom-bar :is(.card-action-btn, .deck-preview) {
-    width: 100% !important;
-    min-width: 44px !important;
-    height: 46px !important;
-    min-height: 46px !important;
-    padding: 4px !important;
-    border-radius: 11px !important;
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar-bonus {
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) 154px !important;
+    gap:6px !important;
+    min-width:0 !important;
   }
 
-  body:not(.classic-mode).touch-portrait #bottom-bar #new-cards-btn::after,
-  body:not(.classic-mode).touch-portrait #bottom-bar .card-action-btn::after,
-  body:not(.classic-mode).touch-portrait #bottom-bar .deck-preview::after {
-    display: none !important;
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar :is(#bonus-zone,#gold-zone,#scoreboard) {
+    padding:7px !important;
+    border-radius:13px !important;
+    box-shadow:none !important;
   }
 
-  body:not(.classic-mode).touch-portrait .bottom-bar-footer {
-    min-width: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar :is(#bonus-zone,#gold-zone) h2,
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar #bonus-zone .bonus-hint { display:none !important; }
 
-  body:not(.classic-mode).touch-portrait #bottom-bar-left {
-    display: grid !important;
-    grid-template-columns: auto minmax(0, 1fr) !important;
-    grid-template-areas: "score bonus" !important;
-    gap: 6px !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    align-items: stretch !important;
-  }
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar #bonus-inventory { height:100% !important; align-items:stretch !important; gap:4px !important; }
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar .bonus-badge { min-height:42px !important; }
 
-  body:not(.classic-mode).touch-portrait #bottom-bar-score-coins {
-    grid-area: score !important;
-    display: flex !important;
-    min-width: 72px !important;
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar #gold-zone {
+    display:grid !important;
+    grid-template-columns:auto 1fr !important;
+    grid-template-rows:auto auto !important;
+    align-items:center !important;
+    gap:3px 6px !important;
   }
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar #collected-coins { grid-column:1 !important; grid-row:1 !important; }
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar #buy-placement-container { grid-column:2 !important; grid-row:1 / 3 !important; }
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar #gold-zone::after { grid-column:1 !important; grid-row:2 !important; font-size:.86rem !important; }
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar .buy-placement-btn { min-height:44px !important; }
 
-  body:not(.classic-mode).touch-portrait #bottom-bar-score {
-    width: 100% !important;
+  /* Score collapses into one slim row instead of a second large panel. */
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar #scoreboard {
+    min-height:48px !important;
+    display:grid !important;
+    grid-template-columns:92px repeat(5,minmax(0,1fr)) !important;
+    gap:4px !important;
+    align-items:center !important;
   }
-
-  body:not(.classic-mode).touch-portrait #bottom-bar #scoreboard {
-    width: 100% !important;
-    height: 100% !important;
-    min-height: 44px !important;
-    padding: 4px !important;
-    display: flex !important;
-    align-items: stretch !important;
-    box-shadow: none !important;
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar #scoreboard h2,
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar #scoreboard hr { display:none !important; }
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar #scoreboard .score-total,
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar #scoreboard .score-row {
+    min-height:38px !important;
+    height:38px !important;
+    margin:0 !important;
+    padding:4px 6px !important;
+    border-radius:10px !important;
   }
-
-  body:not(.classic-mode).touch-portrait #bottom-bar #scoreboard h2,
-  body:not(.classic-mode).touch-portrait #bottom-bar #scoreboard .score-row,
-  body:not(.classic-mode).touch-portrait #bottom-bar #scoreboard hr {
-    display: none !important;
-  }
-
-  body:not(.classic-mode).touch-portrait #bottom-bar #scoreboard .score-total {
-    width: 100% !important;
-    min-height: 40px !important;
-    margin: 0 !important;
-    padding: 4px 7px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 1px !important;
-  }
-
-  body:not(.classic-mode).touch-portrait #bottom-bar #scoreboard .score-total .label {
-    font-size: .48rem !important;
-  }
-
-  body:not(.classic-mode).touch-portrait #bottom-bar #scoreboard .total-score {
-    font-size: 1.05rem !important;
-  }
-
-  body:not(.classic-mode).touch-portrait #bottom-bar-bonus {
-    grid-area: bonus !important;
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) auto !important;
-    gap: 6px !important;
-    min-width: 0 !important;
-  }
-
-  body:not(.classic-mode).touch-portrait #bottom-bar #bonus-zone,
-  body:not(.classic-mode).touch-portrait #bottom-bar #gold-zone {
-    min-width: 0 !important;
-    min-height: 44px !important;
-    padding: 5px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    box-shadow: none !important;
-    border-radius: 11px !important;
-  }
-
-  body:not(.classic-mode).touch-portrait #bottom-bar #bonus-zone h2,
-  body:not(.classic-mode).touch-portrait #bottom-bar #gold-zone h2,
-  body:not(.classic-mode).touch-portrait #bottom-bar #bonus-zone .bonus-hint,
-  body:not(.classic-mode).touch-portrait #bottom-bar #collected-coins {
-    display: none !important;
-  }
-
-  body:not(.classic-mode).touch-portrait #bottom-bar #bonus-inventory {
-    display: grid !important;
-    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-    width: 100% !important;
-    gap: 4px !important;
-  }
-
-  body:not(.classic-mode).touch-portrait #bottom-bar .bonus-badge {
-    min-width: 0 !important;
-    width: 100% !important;
-    height: 36px !important;
-    min-height: 36px !important;
-    padding: 2px !important;
-  }
-
-  body:not(.classic-mode).touch-portrait #bottom-bar #gold-zone {
-    min-width: 76px !important;
-    flex-direction: row !important;
-    gap: 5px !important;
-  }
-
-  body:not(.classic-mode).touch-portrait #bottom-bar #gold-zone::after {
-    font-size: .88rem !important;
-  }
-
-  body:not(.classic-mode).touch-portrait #bottom-bar .buy-placement-btn {
-    min-width: 44px !important;
-    width: 44px !important;
-    min-height: 38px !important;
-    height: 38px !important;
-    padding: 3px !important;
-  }
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar #scoreboard .score-total .label { font-size:.58rem !important; }
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar #scoreboard .total-score { font-size:1.22rem !important; }
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar #scoreboard .score-row { justify-content:center !important; gap:4px !important; font-size:.62rem !important; }
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar #scoreboard .score-row .label { display:none !important; }
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar #scoreboard .score-row .color-box { width:9px !important; height:9px !important; }
 }
 
-@media (max-width: 370px) and (orientation: portrait) {
-  :root { --bottom-bar-height: 220px !important; }
-  body:not(.classic-mode).touch-portrait #bottom-bar {
-    left: 4px !important;
-    right: 4px !important;
-    bottom: 4px !important;
-    padding: 6px !important;
+@media (max-width:380px) and (orientation:portrait) {
+  :root { --bottom-bar-height: 244px !important; }
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar-bonus { grid-template-columns:minmax(0,1fr) 132px !important; }
+  body.game-ui-v5:not(.classic-mode).touch-portrait #bottom-bar #scoreboard { grid-template-columns:78px repeat(5,minmax(0,1fr)) !important; }
+}
+
+/* ========================================================================== */
+/* PHONE LANDSCAPE                                                            */
+/* ========================================================================== */
+
+@media (pointer:coarse) and (orientation:landscape) and (max-height:560px) {
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout {
+    padding:0 !important;
+    overflow:hidden !important;
   }
-  body:not(.classic-mode).touch-portrait #bottom-bar #card-options { gap: 4px !important; }
-  body:not(.classic-mode).touch-portrait #bottom-bar #card-options .card-option {
-    min-height: 80px !important;
-    height: 80px !important;
-    padding: 4px !important;
-    --preview-cell: 7px;
+
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #mobile-landscape-wrapper {
+    position:fixed !important;
+    inset:0 !important;
+    width:100dvw !important;
+    height:100dvh !important;
+    padding:max(6px,var(--locus-safe-top)) max(6px,var(--locus-safe-right)) max(6px,var(--locus-safe-bottom)) max(6px,var(--locus-safe-left)) !important;
+    display:grid !important;
+    grid-template-columns:118px minmax(0,1fr) 226px !important;
+    grid-template-rows:minmax(0,1fr) !important;
+    gap:7px !important;
+    overflow:hidden !important;
   }
-  body:not(.classic-mode).touch-portrait #bottom-bar #card-action-buttons {
-    grid-template-columns: repeat(6, minmax(40px, 1fr)) !important;
-    gap: 3px !important;
+
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #ml-sidebar-left {
+    min-width:0 !important;
+    min-height:0 !important;
+    display:grid !important;
+    align-content:start !important;
+    gap:6px !important;
+    overflow-y:auto !important;
+    scrollbar-width:none;
   }
-  body:not(.classic-mode).touch-portrait #bottom-bar :is(.card-action-btn, .deck-preview) {
-    min-width: 40px !important;
-    height: 42px !important;
-    min-height: 42px !important;
+
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #ml-board-center {
+    position:relative !important;
+    min-width:0 !important;
+    min-height:0 !important;
+    overflow:hidden !important;
+  }
+
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #ml-objective-top {
+    position:absolute !important;
+    z-index:6 !important;
+    top:0 !important;
+    left:0 !important;
+    right:0 !important;
+    height:48px !important;
+    display:block !important;
+  }
+
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #ml-objective-top #objective-zone {
+    min-height:48px !important;
+    height:48px !important;
+    padding:5px 9px !important;
+    border-radius:13px !important;
+  }
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #ml-objective-top #objective-zone h2 { display:none !important; }
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #ml-objective-top #objective-current { font-size:.67rem !important; white-space:nowrap !important; overflow:hidden !important; text-overflow:ellipsis !important; }
+
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #ml-board-center #board {
+    position:absolute !important;
+    left:50% !important;
+    top:calc(50% + 24px) !important;
+    margin:0 !important;
+    padding:0 !important;
+    transform:translate(-50%,-50%) scale(var(--board-scale,.5)) !important;
+    transform-origin:center center !important;
+  }
+
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #board > .column:last-child { display:none !important; }
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #original-card-zone:empty { display:none !important; }
+
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #ml-sidebar-right {
+    min-width:0 !important;
+    min-height:0 !important;
+    display:grid !important;
+    grid-template-rows:minmax(0,1fr) auto !important;
+    gap:6px !important;
+    overflow:hidden !important;
+  }
+
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout :is(#scoreboard,#gold-zone,#bonus-zone,#card-choice-zone) {
+    padding:7px !important;
+    border-radius:13px !important;
+  }
+
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout :is(#scoreboard,#gold-zone,#bonus-zone,#card-choice-zone) h2,
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #bonus-zone .bonus-hint { display:none !important; }
+
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #scoreboard .score-total { min-height:36px !important; margin-bottom:3px !important; padding:4px 5px !important; }
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #scoreboard .total-score { font-size:1.1rem !important; }
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #scoreboard .score-row { min-height:23px !important; margin:1px 0 !important; padding:2px 4px !important; font-size:.57rem !important; }
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #scoreboard .score-row .label { display:none !important; }
+
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #gold-zone { gap:4px !important; }
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #gold-zone::after { font-size:.76rem !important; }
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout .buy-placement-btn { min-height:44px !important; }
+
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #ml-sidebar-right #card-choice-zone {
+    min-height:0 !important;
+    overflow:hidden !important;
+  }
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #ml-sidebar-right #card-controls {
+    height:100% !important;
+    grid-template-rows:minmax(0,1fr) auto !important;
+    gap:6px !important;
+  }
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #ml-sidebar-right #card-options {
+    display:grid !important;
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:5px !important;
+    align-content:center !important;
+  }
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #ml-sidebar-right #card-options:not(:has(.card-option:nth-child(4))) { grid-template-columns:repeat(3,minmax(0,1fr)) !important; }
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #ml-sidebar-right .card-option {
+    min-height:82px !important;
+    height:82px !important;
+    padding:5px !important;
+    --preview-cell:8px;
+  }
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #ml-sidebar-right .card-cell { width:var(--preview-cell) !important; height:var(--preview-cell) !important; }
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #ml-sidebar-right .card-label { display:none !important; }
+
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #ml-sidebar-right #card-action-buttons {
+    grid-template-columns:repeat(5,minmax(0,1fr)) !important;
+    gap:4px !important;
+    padding-top:5px !important;
+  }
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #ml-sidebar-right #new-cards-btn { grid-column:auto !important; min-height:44px !important; height:44px !important; }
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #ml-sidebar-right :is(.card-action-btn,.deck-preview) { min-width:44px !important; min-height:44px !important; height:44px !important; padding:4px !important; }
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #ml-sidebar-right #new-cards-btn::after,
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #ml-sidebar-right :is(#rotate-card-btn,#mirror-card-btn,#undo-inline-btn)::after { display:none !important; }
+
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #bonus-zone { padding:6px !important; }
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #bonus-inventory { gap:4px !important; }
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout .bonus-badge { min-height:38px !important; }
+}
+
+@media (pointer:coarse) and (orientation:landscape) and (max-height:410px) {
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #mobile-landscape-wrapper {
+    grid-template-columns:104px minmax(0,1fr) 205px !important;
+    gap:5px !important;
+  }
+  body.game-ui-v5:not(.classic-mode).mobile-sidebar-layout #ml-sidebar-right .card-option { min-height:72px !important; height:72px !important; --preview-cell:7px; }
+}
+
+/* ========================================================================== */
+/* ZOOM / FOCUS                                                               */
+/* ========================================================================== */
+
+@media (min-width:651px) {
+  body.game-ui-v5:not(.classic-mode).zoomed-in .zone.zoom-focus {
+    width:min(92vw,1100px) !important;
+    height:min(76dvh,860px) !important;
+    min-width:0 !important;
+    min-height:0 !important;
+    max-width:none !important;
+    max-height:none !important;
+    margin:0 !important;
+    overflow:auto !important;
+    position:fixed !important;
+    top:50% !important;
+    left:50% !important;
+    transform:translate(-50%,-50%) !important;
+    z-index:1000 !important;
+    border-radius:20px !important;
+    box-shadow:0 32px 90px rgba(0,0,0,.52) !important;
   }
 }
 
 /* ========================================================================== */
-/* PHONE LANDSCAPE — BOARD + LIGHT HUD + HAND DOCK                            */
+/* MOTION / CONTRAST                                                          */
 /* ========================================================================== */
 
-@media (pointer: coarse) and (orientation: landscape) and (max-height: 699px) {
-  body.mobile-sidebar-layout:not(.classic-mode) {
-    padding: 0 !important;
-    overflow: hidden !important;
-  }
-
-  body.mobile-sidebar-layout:not(.classic-mode) #menu-toggle {
-    top: max(6px, var(--locus-safe-top)) !important;
-    left: max(6px, var(--locus-safe-left)) !important;
-    width: 42px !important;
-    height: 42px !important;
-  }
-
-  body.mobile-sidebar-layout:not(.classic-mode) #mobile-landscape-wrapper {
-    display: grid !important;
-    grid-template-columns: 86px minmax(0, 1fr) clamp(188px, 24vw, 224px) !important;
-    grid-template-rows: auto minmax(0, 1fr) !important;
-    grid-template-areas:
-      "hud objective hand"
-      "hud board hand" !important;
-    width: 100dvw !important;
-    height: 100dvh !important;
-    gap: 6px !important;
-    padding:
-      max(6px, var(--locus-safe-top))
-      max(6px, var(--locus-safe-right))
-      max(6px, var(--locus-safe-bottom))
-      max(54px, calc(var(--locus-safe-left) + 54px)) !important;
-    overflow: hidden !important;
-  }
-
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-left {
-    grid-area: hud !important;
-    width: 86px !important;
-    min-width: 86px !important;
-    max-width: 86px !important;
-    height: 100% !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 6px !important;
-    overflow: hidden !important;
-  }
-
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-objective-top {
-    grid-area: objective !important;
-    width: 100% !important;
-    display: flex !important;
-    padding: 0 !important;
-  }
-
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-objective-top #objective-zone {
-    min-height: 46px !important;
-    height: 46px !important;
-    padding: 5px 9px !important;
-    border-radius: 13px !important;
-  }
-
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-objective-top #objective-zone h2 {
-    display: none !important;
-  }
-
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-objective-top #objective-current {
-    font-size: clamp(.61rem, 1.65vw, .78rem) !important;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-board-center {
-    grid-area: board !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    min-height: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    overflow: hidden !important;
-  }
-
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-board-center #board {
-    margin: 0 !important;
-    transform: scale(var(--board-scale, .5)) !important;
-    transform-origin: center center !important;
-  }
-
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right {
-    grid-area: hand !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: none !important;
-    height: 100% !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 6px !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    scrollbar-width: none;
-  }
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right::-webkit-scrollbar { display: none; }
-
-  /* Landscape HUD: total score + coins only. */
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-left #scoreboard,
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-left #gold-zone {
-    width: 100% !important;
-    padding: 5px !important;
-    border-radius: 11px !important;
-    box-shadow: none !important;
-  }
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-left #scoreboard h2,
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-left #scoreboard .score-row,
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-left #scoreboard hr,
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-left #gold-zone h2,
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-left #collected-coins {
-    display: none !important;
-  }
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-left #scoreboard .score-total {
-    min-height: 48px !important;
-    margin: 0 !important;
-    padding: 4px !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-    gap: 1px !important;
-  }
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-left #scoreboard .score-total .label { font-size: .44rem !important; }
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-left #scoreboard .total-score { font-size: 1.08rem !important; }
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-left #gold-zone {
-    min-height: 54px !important;
-    justify-content: center !important;
-    gap: 4px !important;
-  }
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-left #gold-zone::after { font-size: .78rem !important; }
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-left .buy-placement-btn {
-    width: 44px !important;
-    min-width: 44px !important;
-    min-height: 36px !important;
-    height: 36px !important;
-    padding: 2px !important;
-  }
-
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right #card-choice-zone {
-    width: 100% !important;
-    padding: 8px !important;
-    border-radius: 15px !important;
-  }
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right #card-choice-zone > h2,
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right #card-choice-zone > br,
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right #turn-counter-inline {
-    display: none !important;
-  }
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right #card-options {
-    display: grid !important;
-    grid-template-columns: repeat(2, minmax(0,1fr)) !important;
-    gap: 6px !important;
-    width: 100% !important;
-  }
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right .hand-scroll-btn { display: none !important; }
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right .card-option {
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: none !important;
-    min-height: 90px !important;
-    height: 90px !important;
-    padding: 5px !important;
-    --preview-cell: 8px;
-  }
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right .card-option .card-cell {
-    width: var(--preview-cell) !important;
-    height: var(--preview-cell) !important;
-  }
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right .card-label,
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right .card-meta {
-    font-size: .45rem !important;
-  }
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right #card-action-buttons {
-    display: grid !important;
-    grid-template-columns: repeat(3, minmax(44px,1fr)) !important;
-    gap: 5px !important;
-    padding: 6px 0 0 !important;
-    border-top: 1px solid var(--locus-border) !important;
-  }
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right :is(.card-action-btn, .deck-preview) {
-    width: 100% !important;
-    min-width: 44px !important;
-    height: 44px !important;
-    min-height: 44px !important;
-    padding: 3px !important;
-  }
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right #new-cards-btn {
-    grid-column: 1 / -1 !important;
-  }
-
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right #bonus-zone {
-    width: 100% !important;
-    padding: 6px !important;
-    box-shadow: none !important;
-  }
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right #bonus-zone h2,
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right #bonus-zone .bonus-hint {
-    display: none !important;
-  }
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right #bonus-inventory {
-    display: grid !important;
-    grid-template-columns: repeat(5, minmax(0,1fr)) !important;
-    gap: 4px !important;
-  }
-  body.mobile-sidebar-layout:not(.classic-mode) #ml-sidebar-right .bonus-badge {
-    min-width: 0 !important;
-    width: 100% !important;
-    min-height: 36px !important;
-    height: 36px !important;
-    padding: 2px !important;
+@media (prefers-reduced-motion:reduce) {
+  body.game-ui-v5:not(.classic-mode) *,
+  body.game-ui-v5:not(.classic-mode) *::before,
+  body.game-ui-v5:not(.classic-mode) *::after {
+    scroll-behavior:auto !important;
+    animation-duration:.01ms !important;
+    animation-delay:0ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;
   }
 }
 
-/* ========================================================================== */
-/* TOUCH / ACCESSIBILITY                                                      */
-/* ========================================================================== */
-
-@media (pointer: coarse) {
-  body:not(.classic-mode) {
-    -webkit-tap-highlight-color: transparent;
-  }
-  body:not(.classic-mode) :is(#menu-toggle, .card-action-btn, .deck-preview, .buy-placement-btn) {
-    min-width: 44px;
-    min-height: 44px;
-    touch-action: manipulation;
-  }
-  body:not(.classic-mode) .card-option {
-    user-select: none;
-    -webkit-user-select: none;
+@media (prefers-contrast:more) {
+  body.game-ui-v5:not(.classic-mode) :is(#scoreboard,#gold-zone,#bonus-zone,#card-choice-zone,#objective-zone,.game-modal,#controls) {
+    border-color:rgba(255,255,255,.28) !important;
   }
 }
-
-@media (prefers-reduced-motion: reduce) {
-  body:not(.classic-mode) *,
-  body:not(.classic-mode) *::before,
-  body:not(.classic-mode) *::after {
-    scroll-behavior: auto !important;
-    animation-duration: .01ms !important;
-    animation-delay: 0ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: .01ms !important;
-  }
-}
-
-@media (prefers-contrast: more) {
-  body:not(.classic-mode) :is(#scoreboard, #gold-zone, #bonus-zone, #card-choice-zone, #objective-zone) {
-    border-color: rgba(255,255,255,.30) !important;
-  }
-  body:not(.classic-mode) #card-choice-zone .card-option.selected {
-    border-width: 2px !important;
-  }
-}
-
-/* ========================================================================== */
-/* MODALS / ZOOM — SAME MATERIAL LANGUAGE                                     */
-/* ========================================================================== */
-
-body:not(.classic-mode) :is(.modal-overlay, .highscore-modal-overlay) {
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-}
-
-body:not(.classic-mode) :is(.game-modal, .highscore-modal, #shop-modal, #upgrade-modal, #deck-modal) {
-  border: 1px solid var(--locus-border-strong) !important;
-  border-radius: 18px !important;
-  background: var(--locus-panel) !important;
-  color: var(--locus-text) !important;
-  box-shadow: 0 30px 80px rgba(0,0,0,.52) !important;
-}
-
-body:not(.classic-mode) .zone-nav-arrow {
-  border-color: var(--locus-border-strong) !important;
-  background: rgba(22,31,40,.94) !important;
-  color: var(--locus-text) !important;
-}
-
-/* Keep print and classic-mode behaviour in their dedicated legacy paths. */
