@@ -1,0 +1,80 @@
+diff --git a/responsive.css b/responsive.css
+--- a/responsive.css
++++ b/responsive.css
+@@
++@import url("./styles/locus-ui-v2.css");
++
+ /* Wide desktop centering */
+ @media (min-width: 2000px) {
+   body #desktop-wrapper {
+
+diff --git a/index.html b/index.html
+--- a/index.html
++++ b/index.html
+@@
+-	  // Mobile sidebar layout is ALLEEN voor kleine touch screens (phones/small tablets) in landscape.
+-	  // Grote tablets (iPad) gebruiken de normale desktop layout.
+-	  const useMobileSidebarLayout = isTouchDevice && !isLargeTouchScreen && effectiveLandscape && 
+-	                                  width <= MOBILE_BREAKPOINT && height >= 350;
++	  // Compact touch landscape must be based on the SHORT side, not viewport width.
++	  // A normal phone can be 844x390 in landscape: width > 650 does not make it desktop.
++	  // Large tablets still use the normal desktop/tablet layout.
++	  const isCompactTouchScreen = isTouchDevice && Math.min(width, height) < 700;
++	  const useMobileSidebarLayout = isCompactTouchScreen && effectiveLandscape && height >= 350;
+@@
+-		const isMobile = width <= MOBILE_BREAKPOINT;
+-		const isTouchDevice = isCoarsePointer();
+-		const isLargeTouchScreen = isTouchDevice && Math.min(width, height) >= 700;
++		const isMobile = width <= MOBILE_BREAKPOINT;
++		const isTouchDevice = isCoarsePointer();
++		const isLargeTouchScreen = isTouchDevice && Math.min(width, height) >= 700;
+ 		const ORIENTATION_EPS = 24;
+ 		const effectiveLandscape = (width - height) > ORIENTATION_EPS;
+-		const useMobileSidebarLayout = isTouchDevice && !isLargeTouchScreen && effectiveLandscape && width <= MOBILE_BREAKPOINT && height >= 350;
++		const isCompactTouchScreen = isTouchDevice && Math.min(width, height) < 700;
++		const useMobileSidebarLayout = isCompactTouchScreen && effectiveLandscape && height >= 350;
+ 		if (useMobileSidebarLayout) return 'mobile-sidebar';
+@@
+ 	function getUniqueRotations(shape) {
+ 		const rotations = [];
+ 		const seen = new Set();
+ 		let current = cloneShape(shape);
+@@
+ 		return rotations;
+ 	}
++
++	// Every orientation that can actually be created by the player's controls.
++	// Keeping this in one helper prevents playability warnings from disagreeing
++	// with rotate/mirror behavior.
++	function getUniquePlayableTransforms(shape) {
++		const transforms = [];
++		const seen = new Set();
++		const variants = [
++			cloneShape(shape),
++			mirrorShape(cloneShape(shape))
++		];
++		variants.forEach(variant => {
++			getUniqueRotations(variant).forEach(rotation => {
++				const key = JSON.stringify(rotation);
++				if (seen.has(key)) return;
++				seen.add(key);
++				transforms.push(rotation.map(row => row.slice()));
++			});
++		});
++		return transforms;
++	}
+
+ 	function cardHasPlayablePlacement(card) {
+@@
+-		const rotations = getUniqueRotations(card.matrix);
++		const rotations = getUniquePlayableTransforms(card.matrix);
+@@
+-		  const levelUnlocks = UNLOCK_PROGRESSION.getLevelUnlocks(upcomingLevel, currentWorld);
++		  // currentWorld still describes the level we just completed here.
++		  // Derive the world from the UPCOMING level so boundary unlocks
++		  // (20→21 and 30→31) cannot be skipped.
++		  const upcomingWorldInfo = (typeof getWorldAndSubLevel === 'function')
++			? getWorldAndSubLevel(upcomingLevel)
++			: { world: currentWorld };
++		  const upcomingWorld = Number(upcomingWorldInfo?.world || currentWorld || 1);
++		  const levelUnlocks = UNLOCK_PROGRESSION.getLevelUnlocks(upcomingLevel, upcomingWorld);
