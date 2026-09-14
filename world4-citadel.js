@@ -910,3 +910,40 @@
     getSaveState, restoreSaveState, cleanup, renderHud, activeCellCount, ruinComplete, coreComplete
   };
 })();
+
+/* WORLD4_DEMO_MENU_20260914 */
+(function installWorld4DemoMenu(){
+  'use strict';
+  const DEMO_LEVEL = 31;
+  function closeMenu(){
+    const controls = document.getElementById('controls');
+    const toggle = document.getElementById('menu-toggle');
+    controls?.classList.remove('open');
+    toggle?.classList.remove('active');
+    toggle?.setAttribute('aria-expanded','false');
+  }
+  function startDemo(){
+    if (typeof window.startLevel !== 'function') return;
+    window.startLevel(DEMO_LEVEL);
+    closeMenu();
+  }
+  function install(){
+    const controls = document.getElementById('controls');
+    if (!controls || document.getElementById('world4-demo-btn')) return;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.id = 'world4-demo-btn';
+    btn.className = 'control-btn';
+    btn.setAttribute('aria-label','Start Wereld 4 demo');
+    btn.innerHTML = '<span aria-hidden="true">◇</span><strong>Wereld 4 demo</strong><small>Start direct bij wereld 4.1</small>';
+    btn.addEventListener('click', startDemo);
+    const buttons = Array.from(controls.querySelectorAll(':scope > button'));
+    const anchor = buttons.find(el => /open level/i.test(el.textContent || '')) || buttons.find(el => /nieuw spel/i.test(el.textContent || ''));
+    if (anchor && anchor.parentNode === controls) anchor.insertAdjacentElement('afterend', btn);
+    else controls.appendChild(btn);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, {once:true});
+  else install();
+  new MutationObserver(install).observe(document.documentElement,{childList:true,subtree:true});
+})();
+
