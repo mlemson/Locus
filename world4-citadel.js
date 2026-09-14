@@ -459,6 +459,116 @@
       const current = document.getElementById('objective-current');
       if (current) current.innerHTML = `<strong>Doel:</strong> ${escapeHtml(cfg.primaryText)} <span class="w4-objective-progress">${escapeHtml(primaryProgressText(currentLevelNumber(), scores))}</span>`;
     } catch (_) {}
+    updateFocusHighlights(scores);
+  }
+
+  function describeDoorCell(cell, cfg = getLevelConfig()) {
+    const doorId = String(cell?.dataset?.doorId || '');
+    const spec = cfg?.doors?.find(d => String(d.id) === doorId);
+    const zoneColor = String(spec?.zone || cell?.dataset?.w4Ink || cell?.dataset?.doorColor || '').toLowerCase();
+    const zoneLabel = COLOR_LABEL[zoneColor] || zoneColor;
+    const label = zoneLabel ? `${zoneLabel} poort` : 'Poort';
+    if (cell?.classList?.contains('door-open')) return `${label} — geopend`;
+    if (cell?.classList?.contains('door-armed')) return `${label} — klaar om te openen`;
+    return `${label} — gesloten`;
+  }
+
+  function updateSpecialTitles(cfg = getLevelConfig()) {
+    if (!cfg || !isWorld4()) return;
+    document.querySelectorAll('.cell.key-cell[data-key-color]').forEach(cell => {
+      const color = String(cell.dataset.keyColor || '').toLowerCase();
+      const label = COLOR_LABEL[color] || color || 'Onbekend';
+      const used = cell.dataset.keyConsumed === 'true' || isKeyUsed(color);
+      const text = used
+        ? `${label} sleutel — al gebruikt`
+        : `${label} sleutel — activeer om de ${label.toLowerCase()} poort te ontgrendelen`;
+      cell.title = text;
+      cell.setAttribute('aria-label', text);
+    });
+    document.querySelectorAll('.cell.door-cell[data-door-id]').forEach(cell => {
+      const text = describeDoorCell(cell, cfg);
+      cell.title = text;
+      cell.setAttribute('aria-label', text);
+    });
+    document.querySelectorAll('.cell.w4-ruin-required').forEach(cell => {
+      const done = cell.classList.contains('active');
+      const text = done ? 'Ruïnesteen — hersteld' : 'Ruïnesteen — vul deze tegel';
+      cell.title = text;
+      cell.setAttribute('aria-label', text);
+    });
+    document.querySelectorAll('.cell.w4-ruin-forbidden').forEach(cell => {
+      const text = 'Puin — deze cel telt niet mee';
+      cell.title = text;
+      cell.setAttribute('aria-label', text);
+    });
+    const core = document.querySelector('.cell.w4-citadel-core');
+    if (core) {
+      const unlocked = core.classList.contains('w4-core-unlocked');
+      const text = unlocked ? 'Citadelkern — activeer deze cel' : 'Citadelkern — open eerst alle poorten';
+      core.title = text;
+      core.setAttribute('aria-label', text);
+    }
+  }
+
+  function markFocusTargets(selector, extraClass = 'w4-focus-target') {
+    try { document.querySelectorAll(selector).forEach(el => el.classList.add(extraClass)); } catch (_) {}
+  }
+
+  function clearFocusHighlights() {
+    document.querySelectorAll('.w4-focus-target,.w4-focus-region').forEach(el => {
+      el.classList.remove('w4-focus-target','w4-focus-region');
+    });
+  }
+
+  function updateFocusHighlights(scores = runtime.lastScores || getScoresFallback()) {
+    if (!isWorld4()) return;
+    const cfg = getLevelConfig();
+    clearFocusHighlights();
+    updateSpecialTitles(cfg);
+    if (!cfg) return;
+    const phases = cfg.phases || [];
+    const phase = phases[Math.min(runtime.phase, Math.max(0, phases.length - 1))];
+    document.body.dataset.w4PhaseType = phase?.type || '';
+    if (!phase || phaseComplete(phase, scores)) return;
+    switch (phase.type) {
+      case 'key': {
+        const color = String(phase.color || '').toLowerCase();
+        markFocusTargets(`.cell.key-cell[data-key-color="${cssEscape(color)}"][data-key-consumed="false"]`);
+        break;
+      }
+      case 'door': {
+        const doorId = String(phase.doorId || '');
+        const doorSelector = `.cell.door-cell[data-door-id="${cssEscape(doorId)}"]`;
+        markFocusTargets(doorSelector);
+        markFocusTargets(`.cell[data-locked-door-id="${cssEscape(doorId)}"]`, 'w4-focus-region');
+        const spec = cfg.doors?.find(d => String(d.id) === doorId);
+        const keyColor = String(spec?.keyColor || spec?.zone || '').toLowerCase();
+        if (keyColor && !isKeyUsed(keyColor)) {
+          markFocusTargets(`.cell.key-cell[data-key-color="${cssEscape(keyColor)}"][data-key-consumed="false"]`);
+        }
+        break;
+      }
+      case 'ruin': {
+        document.querySelectorAll('.cell.w4-ruin-required:not(.active)').forEach(el => el.classList.add('w4-focus-target'));
+        document.querySelectorAll('.cell.w4-ruin-forbidden').forEach(el => el.classList.add('w4-focus-region'));
+        break;
+      }
+      case 'core': {
+        const core = document.querySelector('.cell.w4-citadel-core');
+        if (core) core.classList.add('w4-focus-target');
+        break;
+      }
+      case 'colorVisible': {
+        const revealDoor = (cfg.doors || []).find(d => Array.isArray(d.revealOnOpen) && d.revealOnOpen.map(x => String(x).toLowerCase()).includes(String(phase.color || '').toLowerCase()));
+        if (revealDoor) {
+          markFocusTargets(`.cell.door-cell[data-door-id="${cssEscape(revealDoor.id)}"]`);
+          markFocusTargets(`.cell[data-locked-door-id="${cssEscape(revealDoor.id)}"]`, 'w4-focus-region');
+        }
+        break;
+      }
+      default:
+        break;
+    }
   }
 
   function escapeHtml(s) {

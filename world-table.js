@@ -253,13 +253,20 @@
       tab.hidden = zone.style.display === 'none';
       tab.setAttribute('aria-pressed', String(key === focused));
     }
-    const reference = frames.get('purple');
-    const referenceGrid = reference.zone.querySelector('.grid');
-    const viewport = reference.zone.clientWidth ? reference.zone : frames.get(focused).zone;
+    const isWorld4Theme = document.body.classList.contains('world-4');
+    let reference = frames.get('purple');
+    if (isWorld4Theme && (!reference || reference.zone.style.display === 'none')) {
+      reference = frames.get(focused) || visible[0]?.[1] || reference;
+    }
+    const referenceGrid = reference?.zone?.querySelector('.grid') || frames.get(focused)?.zone?.querySelector('.grid');
+    const viewport = reference?.zone?.clientWidth ? reference.zone : (frames.get(focused)?.zone || reference?.zone);
     const cols = Number(referenceGrid?.dataset.cols) || 10;
     const rows = Number(referenceGrid?.dataset.rows) || 10;
-    const cell = Math.floor(Math.max(14, Math.min(phone ? 44 : 34,
-      (viewport.clientWidth - 28) / cols - 2, (viewport.clientHeight - 50) / rows - 2)));
+    const chromeX = isWorld4Theme ? 22 : 28;
+    const chromeY = isWorld4Theme ? 42 : 50;
+    const maxCell = phone ? (isWorld4Theme ? 46 : 44) : (isWorld4Theme ? 36 : 34);
+    const cell = Math.floor(Math.max(14, Math.min(maxCell,
+      (viewport.clientWidth - chromeX) / cols - 2, (viewport.clientHeight - chromeY) / rows - 2)));
     document.body.style.setProperty('--table-cell-size', `${cell}px`);
     const menuButton = $('menu-toggle').getBoundingClientRect();
     $('controls').style.setProperty('--table-menu-top', `${menuButton.bottom + 8}px`);
