@@ -1,0 +1,38 @@
+LOCUS CONSISTENT BUILD VALIDATION — 2026-09-14
+
+Static consistency checks
+- index.html references exactly:
+  responsive.css?v=20260914-final1
+  styles/world-table.css?v=20260914-final1
+  styles/world4-citadel.css?v=20260914-final1
+  js/world-table.js?v=20260914-final1
+  js/world4-citadel.js?v=20260914-final1
+- All five referenced files are present at those exact relative paths in this ZIP.
+- No .bak world-table file is included in the deploy overlay.
+- js/world-table.js and js/world4-citadel.js pass `node --check`.
+
+Mobile cell sizing
+- world-table.js uses a minimum 14-column/14-row reference on phone layouts.
+- Runtime mobile emulation at 390x844 produced:
+  World 1: 22px cells
+  World 2: 22px cells
+  World 3: 22px cells
+- This removes the old behavior where World 1's smaller 9x9 purple grid inflated all cells.
+
+Touch scrolling
+- Modern table zones use `touch-action: pan-x pan-y` and `overflow:auto`.
+- Custom table drag-pan exits immediately for touch/pen and remains mouse-only.
+- Legacy table sizing/drag-scroll path exits when LocusTable is enabled.
+- Hidden mobile frames have `display:none !important`, so stacked hidden zones cannot intercept touch.
+- Runtime touch emulation on a scrollable green zone:
+  vertical swipe: scrollTop 120 -> ~326
+  horizontal swipe: scrollLeft 100 -> ~309
+  active/placed cells during the swipe: 0
+
+World 4 generation
+- The newer denser/challenging generation is in index.html.
+- Yellow, purple and red generation functions occur once each (no duplicate generation implementation).
+- Verification screenshots for 4.1, 4.4, 4.7 and 4.10 are included under /verification.
+
+Deployment warning
+- Treat the six code/style files in this ZIP as ONE version. Do not combine index.html from this build with older js/world-table.js or styles/world-table.css.
