@@ -1,6 +1,7 @@
 name: Inspect World 4 generation
 
 on:
+  workflow_dispatch:
   push:
     paths:
       - '.github/workflows/inspect-world4-generation.yml'
@@ -23,11 +24,18 @@ jobs:
               r'function\s+startNewRun\s*\(',
               r'startNewRun\s*=\s*',
               r'function\s+resetScoreState\s*\(',
+              r'function\s+saveGameState\s*\(',
+              r'function\s+loadGameState\s*\(',
+              r'lastRoundWasSuccess',
               r'latestScoreSnapshot',
+              r'game\s*over',
+              r'gameOver',
               r'updateBonusInventoryUI',
               r'bonusInventory',
               r'bonusCounts',
               r'bonusBlocks',
+              r'function\s+\w*Bonus\w*\s*\(',
+              r'bonus\w*\s*=\s*',
               r'bonus-badge',
               r'Math\.random\(\)[^\n\r]{0,200}bonus',
               r'bonus[^\n\r]{0,120}Math\.random\(\)',
