@@ -12256,6 +12256,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	<link rel="stylesheet" href="world4-citadel.css?v=20260914-polish2">
 	<script src="world-table.js?v=20260914-touch2"></script>
 	<script src="world4-citadel.js?v=20260914-polish2"></script>
+	<script src="world4-polish.js?v=20260914-polish2"></script>
 	<script>
     // Simple menu toggle: toggles .open on #controls and .active on #menu-toggle
     document.addEventListener('DOMContentLoaded', function() {
@@ -15578,7 +15579,23 @@ let shopLevel2Used = false;
 
 		function refreshObjectiveDrivenBonusBias() {
 			try {
-				const chances = computeObjectiveDrivenBonusColorChances();
+				let chances = computeObjectiveDrivenBonusColorChances();
+				try {
+					const info = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(currentLevel) : null;
+					if (Number(info?.world) === 4) {
+						const normalize = c => ({ geel:'yellow', yellow:'yellow', rood:'red', red:'red', groen:'green', green:'green', paars:'purple', purple:'purple', blauw:'blue', blue:'blue' }[String(c||'').toLowerCase()] || null);
+						let raw = [];
+						try { if (typeof world4AllowedColors !== 'undefined' && Array.isArray(world4AllowedColors)) raw = world4AllowedColors.slice(); } catch (_) {}
+						if (!raw.length) {
+							try { raw = window.LocusWorld4?.getLevelConfig?.(currentLevel)?.startColors?.slice?.() || []; } catch (_) {}
+						}
+						const allowed = new Set(raw.map(normalize).filter(Boolean));
+						if (allowed.size) {
+							const source = Array.isArray(chances) ? chances : BONUS_ORDER.map(color => ({ color, weight:1 }));
+							chances = source.filter(entry => allowed.has(String(entry.color || '').toLowerCase()));
+						}
+					}
+				} catch (_) {}
 				if (typeof window !== 'undefined') {
 					window.__objectiveBonusColorChances = Array.isArray(chances) ? chances : null;
 				}
@@ -16641,10 +16658,26 @@ let shopLevel2Used = false;
 		updateBonusInventoryUI();
 	}
 
+	function getEligibleBonusUpgradeColors() {
+		let pool = BONUS_ORDER.filter(key => BONUS_COLOR_CONFIG[key]);
+		try {
+			const info = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(currentLevel) : null;
+			if (Number(info?.world) === 4) {
+				const zoneIds = { yellow:'yellow-zone', red:'red-zone', green:'green-zone', purple:'purple-zone', blue:'blue-zone' };
+				const visible = pool.filter(key => {
+					const zone = document.getElementById(zoneIds[key]);
+					if (!zone || zone.hidden) return false;
+					const style = getComputedStyle(zone);
+					return zone.style.display !== 'none' && style.display !== 'none';
+				});
+				if (visible.length) pool = visible;
+			}
+		} catch (_) {}
+		return pool.filter(key => !isBonusUpgraded(key));
+	}
+
 	function grantRandomBonusUpgrade({ silent = false } = {}) {
-		const available = BONUS_ORDER
-			.filter(key => BONUS_COLOR_CONFIG[key])
-			.filter(key => !isBonusUpgraded(key));
+		const available = getEligibleBonusUpgradeColors();
 		if (!available.length) {
 			if (!silent) {
 				const fallback = offerFreeRandomLevel2UpgradeFromBonusShop();
@@ -16688,9 +16721,7 @@ let shopLevel2Used = false;
 	}
 
 	function openRandomFreeBonusUpgradeModal() {
-		const available = BONUS_ORDER
-			.filter(key => BONUS_COLOR_CONFIG[key])
-			.filter(key => !isBonusUpgraded(key));
+		const available = getEligibleBonusUpgradeColors();
 		if (!available.length) {
 			showObjectiveToast('✨ Alle bonus upgrades zijn al actief.');
 			return null;
@@ -28340,32 +28371,50 @@ function resetWorldLayoutStyles() {
 
 	function getWorld4PurpleProfile(subLevel = 1) {
 		const n = Math.max(1, Math.min(10, Number(subLevel) || 1));
-		const sizes = [16,17,16,18,17,18,18,19,20,21];
-		const size = sizes[n - 1];
-		const c = Math.floor(size / 2);
-		const motifs = [
-			[[c,c],[c-3,c],[c+3,c],[c,c-3],[c,c+3],[c-1,c-1],[c+1,c+1]],
-			[[2,2],[2,size-3],[size-3,2],[size-3,size-3],[c,c],[c-3,c],[c+3,c]],
-			[[c-4,c-4],[c-2,c-2],[c,c],[c+2,c+2],[c+4,c+4],[c-4,c+4],[c+4,c-4]],
-			[[c-4,c+4],[c-2,c+2],[c,c],[c+2,c-2],[c+4,c-4],[c-4,c-4],[c+4,c+4]],
-			[[c-4,c],[c-3,c-3],[c,c-4],[c+3,c-3],[c+4,c],[c+3,c+3],[c,c+4],[c-3,c+3],[c,c]],
-			[[2,c],[c,2],[size-3,c],[c,size-3],[c,c],[c-3,c],[c+3,c],[c,c-3],[c,c+3]],
-			[[3,3],[3,c],[3,size-4],[c,3],[c,c],[c,size-4],[size-4,3],[size-4,c],[size-4,size-4],[c-3,c],[c+3,c]],
-			[[1,c],[c,1],[size-2,c],[c,size-2],[c-4,c-4],[c+4,c+4],[c-4,c+4],[c+4,c-4],[c,c]],
-			[[2,2],[2,size-3],[size-3,2],[size-3,size-3],[c-4,c],[c+4,c],[c,c-4],[c,c+4],[c,c],[c-2,c-2],[c+2,c+2]],
-			[[1,1],[1,size-2],[size-2,1],[size-2,size-2],[c-5,c],[c+5,c],[c,c-5],[c,c+5],[c,c],[c-3,c-3],[c+3,c+3]]
+		// World 4 purple deliberately changes aspect ratio per level. It keeps the
+		// familiar connection scoring, but no longer reads as one repeated square.
+		const dimensions = [
+			[14,19],[17,15],[15,20],[18,16],[16,21],
+			[19,17],[17,22],[20,18],[18,23],[21,19]
 		];
-		return { size, fixedBoldCells:motifs[n-1], name:['kruis','vierposten','diagonaal','tegenddiagonaal','ring','assen','negenhof','kompas','vesting','kernplein'][n-1] };
+		const [rows, cols] = dimensions[n - 1];
+		const cy = Math.floor(rows / 2), cx = Math.floor(cols / 2);
+		const dy = Math.max(3, Math.floor(rows * .22));
+		const dx = Math.max(3, Math.floor(cols * .22));
+		const clamp = ([r,c]) => [Math.max(1, Math.min(rows - 2, r)), Math.max(1, Math.min(cols - 2, c))];
+		const motifs = [
+			[[cy,cx],[cy-dy,cx],[cy+dy,cx],[cy,cx-dx],[cy,cx+dx],[cy-1,cx-1],[cy+1,cx+1]],
+			[[2,2],[2,cols-3],[rows-3,2],[rows-3,cols-3],[cy,cx],[cy-dy,cx],[cy+dy,cx]],
+			[[cy-dy,cx-dx],[cy-2,cx-2],[cy,cx],[cy+2,cx+2],[cy+dy,cx+dx],[cy-dy,cx+dx],[cy+dy,cx-dx]],
+			[[cy-dy,cx+dx],[cy-2,cx+2],[cy,cx],[cy+2,cx-2],[cy+dy,cx-dx],[cy-dy,cx-dx],[cy+dy,cx+dx]],
+			[[cy-dy,cx],[cy-2,cx-dx],[cy,cx-dx],[cy+2,cx-dx],[cy+dy,cx],[cy+2,cx+dx],[cy,cx+dx],[cy-2,cx+dx],[cy,cx]],
+			[[2,cx],[cy,2],[rows-3,cx],[cy,cols-3],[cy,cx],[cy-dy,cx],[cy+dy,cx],[cy,cx-dx],[cy,cx+dx]],
+			[[3,3],[3,cx],[3,cols-4],[cy,3],[cy,cx],[cy,cols-4],[rows-4,3],[rows-4,cx],[rows-4,cols-4]],
+			[[1,cx],[cy,1],[rows-2,cx],[cy,cols-2],[cy-dy,cx-dx],[cy+dy,cx+dx],[cy-dy,cx+dx],[cy+dy,cx-dx],[cy,cx]],
+			[[2,2],[2,cols-3],[rows-3,2],[rows-3,cols-3],[cy-dy,cx],[cy+dy,cx],[cy,cx-dx],[cy,cx+dx],[cy,cx]],
+			[[1,1],[1,cols-2],[rows-2,1],[rows-2,cols-2],[cy-dy,cx],[cy+dy,cx],[cy,cx-dx],[cy,cx+dx],[cy,cx],[cy-2,cx-2],[cy+2,cx+2]]
+		];
+		const seen = new Set();
+		const fixedBoldCells = motifs[n - 1].map(clamp).filter(([r,c]) => {
+			const key = `${r},${c}`;
+			if (seen.has(key)) return false;
+			seen.add(key);
+			return true;
+		});
+		return {
+			rows, cols, size:Math.max(rows, cols), fixedBoldCells,
+			name:['kruis','vierposten','diagonaal','tegenddiagonaal','ring','assen','negenhof','kompas','vesting','kernplein'][n-1]
+		};
 	}
 
 	function applyWorld4PurpleGeneration(subLevel = 1) {
 		const p = getWorld4PurpleProfile(subLevel);
 		window.purpleGridConfig = {
-			world3:true, world4:true, size:p.size, generationName:p.name,
+			world3:true, world4:true, size:p.size, rows:p.rows, cols:p.cols, generationName:p.name,
 			outerRingBonusPerBold:22 + Math.min(16, subLevel * 2), innerRingBonus:true,
 			innerRingBonusPerBold:12 + Math.min(12, subLevel)
 		};
-		withWorld4Seed(0x4200 + subLevel * 131, () => createGrid('purple-grid', p.size, p.size, {
+		withWorld4Seed(0x4200 + subLevel * 131, () => createGrid('purple-grid', p.rows, p.cols, {
 			goldCells:true, symbols:true,
 			minSymbols:12 + subLevel, maxSymbols:15 + subLevel,
 			coinChance:0.06, maxCoins:9 + Math.min(9,subLevel),
@@ -28467,16 +28516,16 @@ function resetWorldLayoutStyles() {
 	function getWorld4GreenProfile(subLevel = 1) {
 		const n=Math.max(1,Math.min(10,Number(subLevel)||1));
 		return [
-			{rows:28,cols:30,growth:150,split:.24,name:'boomgaard'},
-			{rows:32,cols:26,growth:165,split:.30,name:'smalle-tuin'},
-			{rows:30,cols:34,growth:185,split:.34,name:'waaier'},
-			{rows:36,cols:28,growth:205,split:.38,name:'doolhof'},
-			{rows:32,cols:36,growth:220,split:.42,name:'kruidentuin'},
-			{rows:38,cols:30,growth:240,split:.44,name:'terrassen'},
-			{rows:34,cols:38,growth:255,split:.48,name:'ruinetuin'},
-			{rows:40,cols:32,growth:270,split:.50,name:'binnenpark'},
-			{rows:36,cols:40,growth:290,split:.53,name:'vestinggroen'},
-			{rows:42,cols:36,growth:310,split:.56,name:'citadeltuin'}
+			{rows:34,cols:36,growth:220,split:.24,name:'boomgaard'},
+			{rows:38,cols:32,growth:240,split:.30,name:'smalle-tuin'},
+			{rows:36,cols:40,growth:270,split:.34,name:'waaier'},
+			{rows:42,cols:34,growth:295,split:.38,name:'doolhof'},
+			{rows:38,cols:42,growth:320,split:.42,name:'kruidentuin'},
+			{rows:44,cols:36,growth:350,split:.44,name:'terrassen'},
+			{rows:40,cols:44,growth:380,split:.48,name:'ruinetuin'},
+			{rows:46,cols:38,growth:410,split:.50,name:'binnenpark'},
+			{rows:42,cols:46,growth:440,split:.53,name:'vestinggroen'},
+			{rows:48,cols:42,growth:475,split:.56,name:'citadeltuin'}
 		][n-1];
 	}
 
@@ -28595,8 +28644,8 @@ function resetWorldLayoutStyles() {
 		}
 
 		// Use the nicer 4.2-style glyphs (emoji) for immediate readability.
-		const ICON_KEY = '<span class="key-glyph" aria-hidden="true">🗝️</span>';
-		const ICON_DOOR = '<span class="door-glyph" aria-hidden="true">🚪</span>';
+		const ICON_KEY = '<span class="key-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="8.5" r="3.5"></circle><path d="M10.2 11.2 20 21"></path><path d="m15.7 16.7 2.1-2.1"></path><path d="m18.1 19.1 2-2"></path></svg></span>';
+		const ICON_DOOR = '<span class="door-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="10" rx="2.5"></rect><path d="M8 10V7.5a4 4 0 0 1 8 0V10"></path><path d="M12 14v2.5"></path></svg></span>';
 
 		function isStampableCell(cell) {
 			if (!cell) return false;
@@ -31335,6 +31384,12 @@ function isWorld4CardAllowed(cardData) {
 	  // Reset coinsAwardedFromScore
 	  if (typeof coinsAwardedFromScore !== 'undefined') coinsAwardedFromScore = 0;
 	  
+	// A genuinely new run must not inherit score/progression caches from the failed run.
+	resetScoreState();
+	resetObjectives();
+	latestScoreSnapshot = { yellow:0, red:0, green:0, purple:0, blue:0, bonus:0, total:0 };
+	lastRoundWasSuccess = false;
+	lastRoundFailureReason = null;
 	const startLevelNum = (typeof isTutorialCompleted === 'function' && isTutorialCompleted()) ? 1 : 0;
 	startLevel(startLevelNum);
 	if (startLevelNum === 0) {

@@ -820,7 +820,7 @@
         } else if (!cell.querySelector('.key-symbol')) {
           const sym = document.createElement('span');
           sym.className = 'key-symbol';
-          sym.innerHTML = '<span class="key-glyph" aria-hidden="true">🗝️</span>';
+          sym.innerHTML = '<span class="key-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="8.5" r="3.5"></circle><path d="M10.2 11.2 20 21"></path><path d="m15.7 16.7 2.1-2.1"></path><path d="m18.1 19.1 2-2"></path></svg></span>';
           cell.appendChild(sym);
         }
       });
