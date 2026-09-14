@@ -1,0 +1,37 @@
+/* World 4 polish: compact-board centering + shop contrast. Loaded by world4-citadel.js. */
+body.table-ui #table-app#table-app .table-zone-frame:is([data-zone="purple"],[data-zone="yellow"]) > .zone {
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:safe center !important;
+  justify-content:safe center !important;
+}
+body.table-ui #table-app#table-app .table-zone-frame:is([data-zone="purple"],[data-zone="yellow"]) > .zone > .grid {
+  flex:0 0 auto !important;
+  margin:0 !important;
+}
+body.table-ui #table-app#table-app .table-zone-frame:is([data-zone="purple"],[data-zone="yellow"]) .zone-info-btn {
+  position:absolute !important;
+  top:8px !important;
+  right:8px !important;
+  left:auto !important;
+  float:none !important;
+  margin:0 !important;
+}
+body:not(.classic-mode) #shop-modal {
+  color:#eaf3fa !important;
+  background:linear-gradient(155deg,#182d3f 0%,#102231 52%,#0d1b27 100%) !important;
+  border-color:rgba(169,211,241,.20) !important;
+}
+body:not(.classic-mode) #shop-modal :is(h1,h2,h3,h4,.shop-title,.shop-card-title,.card-title,strong) { color:#f5f9fc !important; }
+body:not(.classic-mode) #shop-modal :is(p,small,.shop-description,.card-description,.description,.subtitle,.hint) { color:#c4d5e2 !important; }
+body:not(.classic-mode) #shop-modal :is(button,[role="button"]) { color:#edf6fc !important; }
+body:not(.classic-mode) #shop-modal :is(button,[role="button"]) :is(span,strong,small,p) { color:inherit !important; }
+body:not(.classic-mode) #shop-modal :is(.shop-card,.shop-option,.shop-choice,.choice-card,.card-option,.shop-offer,[data-shop-item]) {
+  color:#e9f2f8 !important;
+  background:linear-gradient(150deg,rgba(38,66,87,.92),rgba(22,43,59,.96)) !important;
+  border-color:rgba(176,214,240,.18) !important;
+  box-shadow:inset 0 1px rgba(255,255,255,.05),0 8px 20px rgba(0,0,0,.13) !important;
+}
+body:not(.classic-mode) #shop-modal :is(.price,.cost,.shop-price,.shop-cost,[data-price]) { color:#f3d879 !important; font-weight:750 !important; }
+body:not(.classic-mode) #shop-modal :is(.muted,.secondary,.shop-meta,.card-meta) { color:#a8bdcc !important; }
+body:not(.classic-mode) #shop-modal :disabled { color:#7890a2 !important; opacity:.72 !important; }
