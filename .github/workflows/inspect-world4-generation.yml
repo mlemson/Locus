@@ -13,14 +13,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Show exact gameplay snippets
+      - name: Show exact World 4 and reset snippets
         shell: python
         run: |
           from pathlib import Path
-          import re
-          s = Path('index.html').read_text(encoding='utf-8')
-          lines = s.splitlines()
+
+          targets = ['index.html', 'world4-citadel.js', 'world4-citadel.css', 'world4-polish.css']
           needles = [
+            'function getWorld4PurpleShape',
+            'function getWorld4GreenShape',
+            'function getWorld4YellowShape',
+            'function getWorld4Blue',
+            'generationVersion',
             'function startNewRun()',
             'function resetScoreState(',
             'lastRoundWasSuccess',
@@ -29,17 +33,31 @@ jobs:
             'Math.random()',
             'gameOver',
             'GAME OVER',
+            'key-symbol',
+            'door-glyph',
+            'door-cell',
+            'random bonus',
           ]
-          printed=set()
-          for needle in needles:
-            print(f'\n===== NEEDLE: {needle} =====')
-            for i,line in enumerate(lines):
-              if needle.lower() not in line.lower():
+
+          for filename in targets:
+            p = Path(filename)
+            if not p.exists():
+              continue
+            s = p.read_text(encoding='utf-8')
+            lines = s.splitlines()
+            print(f'\n\n######## {filename} ########')
+            printed = set()
+            for needle in needles:
+              matches = [i for i,line in enumerate(lines) if needle.lower() in line.lower()]
+              if not matches:
                 continue
-              lo=max(0,i-25); hi=min(len(lines),i+80)
-              key=(lo,hi)
-              if key in printed: continue
-              printed.add(key)
-              print(f'\n--- lines {lo+1}-{hi} (match {i+1}) ---')
-              for n in range(lo,hi):
-                print(f'{n+1:06d}: {lines[n]}')
+              print(f'\n===== NEEDLE: {needle} =====')
+              for i in matches[:12]:
+                lo=max(0,i-28); hi=min(len(lines),i+95)
+                key=(lo,hi)
+                if key in printed:
+                  continue
+                printed.add(key)
+                print(f'\n--- lines {lo+1}-{hi} (match {i+1}) ---')
+                for n in range(lo,hi):
+                  print(f'{n+1:06d}: {lines[n]}')
