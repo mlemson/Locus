@@ -1,0 +1,337 @@
+name: Apply World 4 polish
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-world4-polish.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Patch World 4
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          index_path = Path('index.html')
+          s = index_path.read_text(encoding='utf-8')
+
+          def must_replace(text, old, new, label, count=1):
+            found = text.count(old)
+            if found < count:
+              raise SystemExit(f'{label}: expected at least {count}, found {found}')
+            return text.replace(old, new, count)
+
+          # 1) Purple: stop using a square-only profile. World 4 now alternates portrait/landscape
+          #    citadel courts, while preserving the existing purple scoring mechanics.
+          purple_re = re.compile(r"\tfunction getWorld4PurpleProfile\(subLevel = 1\) \{.*?\n\tfunction getWorld4BlueProfile", re.S)
+          purple_new = r'''	function getWorld4PurpleProfile(subLevel = 1) {
+		const n = Math.max(1, Math.min(10, Number(subLevel) || 1));
+		const dimensions = [
+			[14,19],[17,15],[15,20],[18,16],[16,21],
+			[19,17],[17,22],[20,18],[18,23],[21,19]
+		];
+		const [rows, cols] = dimensions[n - 1];
+		const cy = Math.floor(rows / 2), cx = Math.floor(cols / 2);
+		const dy = Math.max(3, Math.floor(rows * .22));
+		const dx = Math.max(3, Math.floor(cols * .22));
+		const clamp = ([r,c]) => [Math.max(1, Math.min(rows-2, r)), Math.max(1, Math.min(cols-2, c))];
+		const motifs = [
+			[[cy,cx],[cy-dy,cx],[cy+dy,cx],[cy,cx-dx],[cy,cx+dx],[cy-1,cx-1],[cy+1,cx+1]],
+			[[2,2],[2,cols-3],[rows-3,2],[rows-3,cols-3],[cy,cx],[cy-dy,cx],[cy+dy,cx]],
+			[[cy-dy,cx-dx],[cy-2,cx-2],[cy,cx],[cy+2,cx+2],[cy+dy,cx+dx],[cy-dy,cx+dx],[cy+dy,cx-dx]],
+			[[cy-dy,cx+dx],[cy-2,cx+2],[cy,cx],[cy+2,cx-2],[cy+dy,cx-dx],[cy-dy,cx-dx],[cy+dy,cx+dx]],
+			[[cy-dy,cx],[cy-2,cx-dx],[cy,cx-dx],[cy+2,cx-dx],[cy+dy,cx],[cy+2,cx+dx],[cy,cx+dx],[cy-2,cx+dx],[cy,cx]],
+			[[2,cx],[cy,2],[rows-3,cx],[cy,cols-3],[cy,cx],[cy-dy,cx],[cy+dy,cx],[cy,cx-dx],[cy,cx+dx]],
+			[[3,3],[3,cx],[3,cols-4],[cy,3],[cy,cx],[cy,cols-4],[rows-4,3],[rows-4,cx],[rows-4,cols-4]],
+			[[1,cx],[cy,1],[rows-2,cx],[cy,cols-2],[cy-dy,cx-dx],[cy+dy,cx+dx],[cy-dy,cx+dx],[cy+dy,cx-dx],[cy,cx]],
+			[[2,2],[2,cols-3],[rows-3,2],[rows-3,cols-3],[cy-dy,cx],[cy+dy,cx],[cy,cx-dx],[cy,cx+dx],[cy,cx]],
+			[[1,1],[1,cols-2],[rows-2,1],[rows-2,cols-2],[cy-dy,cx],[cy+dy,cx],[cy,cx-dx],[cy,cx+dx],[cy,cx],[cy-2,cx-2],[cy+2,cx+2]]
+		];
+		const seen = new Set();
+		const fixedBoldCells = motifs[n-1].map(clamp).filter(([r,c]) => {
+			const key = `${r},${c}`;
+			if (seen.has(key)) return false;
+			seen.add(key); return true;
+		});
+		return { rows, cols, size:Math.max(rows, cols), fixedBoldCells, name:['kruis','vierposten','diagonaal','tegenddiagonaal','ring','assen','negenhof','kompas','vesting','kernplein'][n-1] };
+	}
+
+	function applyWorld4PurpleGeneration(subLevel = 1) {
+		const p = getWorld4PurpleProfile(subLevel);
+		window.purpleGridConfig = {
+			world3:true, world4:true, size:p.size, rows:p.rows, cols:p.cols, generationName:p.name,
+			outerRingBonusPerBold:22 + Math.min(16, subLevel * 2), innerRingBonus:true,
+			innerRingBonusPerBold:12 + Math.min(12, subLevel)
+		};
+		withWorld4Seed(0x4200 + subLevel * 131, () => createGrid('purple-grid', p.rows, p.cols, {
+			goldCells:true, symbols:true,
+			minSymbols:12 + subLevel, maxSymbols:15 + subLevel,
+			coinChance:0.06, maxCoins:9 + Math.min(9,subLevel),
+			randomBoldCount:Math.min(28,10 + subLevel * 2), randomBoldMinEdgeDistance:2,
+			avoidAdjacentBold:true, fixedBoldCells:p.fixedBoldCells, outerRingShade:true,
+			trapChance:0, maxTraps:0, blackHoleChance:0
+		}));
+		const zone=document.getElementById('purple-zone'); if(zone) zone.dataset.w4Generation=p.name;
+	}
+
+	function getWorld4BlueProfile'''
+          s, n = purple_re.subn(purple_new, s, count=1)
+          if n != 1: raise SystemExit(f'purple profile replacement failed: {n}')
+
+          # 2) Green: larger World 4 gardens / root networks.
+          green_re = re.compile(r"\tfunction getWorld4GreenProfile\(subLevel = 1\) \{.*?\n\t\}", re.S)
+          green_new = r'''	function getWorld4GreenProfile(subLevel = 1) {
+		const n=Math.max(1,Math.min(10,Number(subLevel)||1));
+		return [
+			{rows:34,cols:36,growth:220,split:.24,name:'boomgaard'},
+			{rows:38,cols:32,growth:240,split:.30,name:'smalle-tuin'},
+			{rows:36,cols:40,growth:270,split:.34,name:'waaier'},
+			{rows:42,cols:34,growth:295,split:.38,name:'doolhof'},
+			{rows:38,cols:42,growth:320,split:.42,name:'kruidentuin'},
+			{rows:44,cols:36,growth:350,split:.44,name:'terrassen'},
+			{rows:40,cols:44,growth:380,split:.48,name:'ruinetuin'},
+			{rows:46,cols:38,growth:410,split:.50,name:'binnenpark'},
+			{rows:42,cols:46,growth:440,split:.53,name:'vestinggroen'},
+			{rows:48,cols:42,growth:475,split:.56,name:'citadeltuin'}
+		][n-1];
+	}'''
+          s, n = green_re.subn(green_new, s, count=1)
+          if n != 1: raise SystemExit(f'green profile replacement failed: {n}')
+
+          # 3) Modern vector key + lock instead of emoji key/door.
+          key_svg = '<span class="key-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="8.5" r="3.5"></circle><path d="M10.2 11.2 20 21"></path><path d="m15.7 16.7 2.1-2.1"></path><path d="m18.1 19.1 2-2"></path></svg></span>'
+          lock_svg = '<span class="door-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="10" rx="2.5"></rect><path d="M8 10V7.5a4 4 0 0 1 8 0V10"></path><path d="M12 14v2.5"></path></svg></span>'
+          s = must_replace(s, 'const ICON_KEY = \'<span class="key-glyph" aria-hidden="true">🗝️</span>\';', "const ICON_KEY = '" + key_svg + "';", 'index key icon')
+          s = must_replace(s, 'const ICON_DOOR = \'<span class="door-glyph" aria-hidden="true">🚪</span>\';', "const ICON_DOOR = '" + lock_svg + "';", 'index door icon')
+
+          # 4) New run/game-over reset: clear real score/progression state, not just scoreboard text.
+          reset_anchor = "\tconst startLevelNum = (typeof isTutorialCompleted === 'function' && isTutorialCompleted()) ? 1 : 0;"
+          reset_block = """\t// A genuinely new run must not inherit score/progression caches from the failed run.\n\tresetScoreState();\n\tresetObjectives();\n\tlatestScoreSnapshot = { yellow:0, red:0, green:0, purple:0, blue:0, bonus:0, total:0 };\n\tlastRoundWasSuccess = false;\n\tlastRoundFailureReason = null;\n\tconst startLevelNum = (typeof isTutorialCompleted === 'function' && isTutorialCompleted()) ? 1 : 0;"""
+          s = must_replace(s, reset_anchor, reset_block, 'new-run reset')
+
+          # 5) World 4 bonus-symbol bias: if only some colors are active, random bonus colors
+          #    are restricted to those colors. Objective bias is retained inside that pool.
+          bias_line = "\t\t\t\tconst chances = computeObjectiveDrivenBonusColorChances();"
+          bias_new = """\t\t\t\tlet chances = computeObjectiveDrivenBonusColorChances();\n\t\t\t\ttry {\n\t\t\t\t\tconst info = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(currentLevel) : null;\n\t\t\t\t\tif (Number(info?.world) === 4) {\n\t\t\t\t\t\tconst normalize = c => ({ geel:'yellow', yellow:'yellow', rood:'red', red:'red', groen:'green', green:'green', paars:'purple', purple:'purple', blauw:'blue', blue:'blue' }[String(c||'').toLowerCase()] || null);\n\t\t\t\t\t\tlet raw = [];\n\t\t\t\t\t\ttry { if (typeof world4AllowedColors !== 'undefined' && Array.isArray(world4AllowedColors)) raw = world4AllowedColors.slice(); } catch (_) {}\n\t\t\t\t\t\tif (!raw.length) {\n\t\t\t\t\t\t\ttry { raw = window.LocusWorld4?.getLevelConfig?.(currentLevel)?.startColors?.slice?.() || []; } catch (_) {}\n\t\t\t\t\t\t}\n\t\t\t\t\t\tconst allowed = new Set(raw.map(normalize).filter(Boolean));\n\t\t\t\t\t\tif (allowed.size) {\n\t\t\t\t\t\t\tconst source = Array.isArray(chances) ? chances : BONUS_ORDER.map(color => ({ color, weight:1 }));\n\t\t\t\t\t\t\tchances = source.filter(entry => allowed.has(String(entry.color || '').toLowerCase()));\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t} catch (_) {}"""
+          s = must_replace(s, bias_line, bias_new, 'World4 bonus symbol pool')
+
+          # Shop/free random bonus upgrades should follow visible active World 4 colors too.
+          grant_anchor = '\tfunction grantRandomBonusUpgrade({ silent = false } = {}) {'
+          helper = r'''	function getEligibleBonusUpgradeColors() {
+		let pool = BONUS_ORDER.filter(key => BONUS_COLOR_CONFIG[key]);
+		try {
+			const info = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(currentLevel) : null;
+			if (Number(info?.world) === 4) {
+				const zoneIds = { yellow:'yellow-zone', red:'red-zone', green:'green-zone', purple:'purple-zone', blue:'blue-zone' };
+				const visible = pool.filter(key => {
+					const zone = document.getElementById(zoneIds[key]);
+					if (!zone || zone.hidden) return false;
+					const style = getComputedStyle(zone);
+					return zone.style.display !== 'none' && style.display !== 'none';
+				});
+				if (visible.length) pool = visible;
+			}
+		} catch (_) {}
+		return pool.filter(key => !isBonusUpgraded(key));
+	}
+
+	function grantRandomBonusUpgrade({ silent = false } = {}) {'''
+          s = must_replace(s, grant_anchor, helper, 'eligible bonus helper')
+          old_pool = """\t\tconst available = BONUS_ORDER\n\t\t\t.filter(key => BONUS_COLOR_CONFIG[key])\n\t\t\t.filter(key => !isBonusUpgraded(key));"""
+          if s.count(old_pool) < 2: raise SystemExit(f'bonus upgrade pools: expected >=2, got {s.count(old_pool)}')
+          s = s.replace(old_pool, "\t\tconst available = getEligibleBonusUpgradeColors();", 2)
+
+          # Cache bust World 4 assets and load the tiny polish helper after citadel logic.
+          s = re.sub(r'world4-citadel\.css\?v=[^"\']+', 'world4-citadel.css?v=20260914-polish2', s)
+          s = re.sub(r'world4-citadel\.js\?v=[^"\']+', 'world4-citadel.js?v=20260914-polish2', s)
+          if 'world4-polish.js?v=20260914-polish2' not in s:
+            pat = re.compile(r'(<script[^>]+src=["\']world4-citadel\.js\?v=[^"\']+["\'][^>]*></script>)')
+            s, n = pat.subn(r'\1\n\t<script src="world4-polish.js?v=20260914-polish2"></script>', s, count=1)
+            if n != 1: raise SystemExit('could not insert world4-polish.js script tag')
+
+          index_path.write_text(s, encoding='utf-8')
+
+          # Patch external World4 restore/runtime emoji too.
+          js_path = Path('world4-citadel.js')
+          js = js_path.read_text(encoding='utf-8')
+          js = js.replace('<span class="key-glyph" aria-hidden="true">🗝️</span>', key_svg)
+          js = js.replace('<span class="door-glyph" aria-hidden="true">🚪</span>', lock_svg)
+          js_path.write_text(js, encoding='utf-8')
+
+          # True center-middle for purple/yellow; explicit high-contrast shop cards + vector glyph sizing.
+          css_path = Path('world4-polish.css')
+          css = css_path.read_text(encoding='utf-8')
+          old_center = """body.table-ui #table-app#table-app .table-zone-frame:is([data-zone='purple'], [data-zone='yellow']) > .zone {\n  display: grid !important;\n  place-items: safe center !important;\n  align-content: safe center !important;\n  justify-content: safe center !important;\n}"""
+          new_center = """body.table-ui #table-app#table-app .table-zone-frame:is([data-zone='purple'], [data-zone='yellow']) > .zone {\n  display: grid !important;\n  place-items: center !important;\n  align-content: center !important;\n  justify-content: center !important;\n}"""
+          css = must_replace(css, old_center, new_center, 'purple/yellow true centering')
+          extra = r'''
+
+/* 2026-09-14 World 4 polish 2 */
+body.world-4 .cell.key-cell .key-glyph,
+body.world-4 .cell.door-cell .door-glyph {
+  width: 100%;
+  height: 100%;
+  display: grid !important;
+  place-items: center !important;
+  color: currentColor;
+}
+body.world-4 .cell.key-cell .key-glyph svg,
+body.world-4 .cell.door-cell .door-glyph svg {
+  width: min(72%, 18px) !important;
+  height: min(72%, 18px) !important;
+  display: block;
+  overflow: visible;
+}
+body.world-4 .cell.door-cell.door-open .door-glyph svg { opacity: .62; }
+
+body:not(.classic-mode) #shop-modal :is(.shop-bonus-card,.shop-card-option,.shop-upgrade-card,.shop-freeplace-card,.shop-card,.upgrade-card) {
+  color: #edf6fc !important;
+}
+body:not(.classic-mode) #shop-modal :is(.shop-bonus-card,.shop-card-option,.shop-upgrade-card,.shop-freeplace-card,.shop-card,.upgrade-card) :is(span,p,small,strong,b) {
+  color: inherit !important;
+}
+body:not(.classic-mode) #shop-modal :is(.shop-bonus-card,.shop-card-option,.shop-upgrade-card,.shop-freeplace-card,.shop-card,.upgrade-card) button {
+  color: #f5fbff !important;
+  font-weight: 700;
+}
+'''
+          if '2026-09-14 World 4 polish 2' not in css:
+            css += extra
+          css_path.write_text(css, encoding='utf-8')
+
+          cit_css = Path('world4-citadel.css')
+          cc = cit_css.read_text(encoding='utf-8')
+          cc = re.sub(r'world4-polish\.css\?v=[^"\')]+', 'world4-polish.css?v=20260914-polish2', cc)
+          cit_css.write_text(cc, encoding='utf-8')
+
+          # Center overflow explicitly after a World 4 level is built. CSS alone falls back to
+          # top-left when content is scrollable; this keeps both purple and yellow in the middle.
+          Path('world4-polish.js').write_text(r'''(function installWorld4Polish(){
+  'use strict';
+  if (window.__world4PolishInstalled) return;
+  window.__world4PolishInstalled = true;
+
+  function isWorld4Level(level) {
+    const n = Number(level);
+    return n >= 31 && n <= 40;
+  }
+
+  function centerZone(id) {
+    const zone = document.getElementById(id);
+    if (!zone) return;
+    const x = Math.max(0, (zone.scrollWidth - zone.clientWidth) / 2);
+    const y = Math.max(0, (zone.scrollHeight - zone.clientHeight) / 2);
+    zone.scrollLeft = x;
+    zone.scrollTop = y;
+  }
+
+  function centerPurpleYellow() {
+    if (!document.body.classList.contains('world-4')) return;
+    centerZone('purple-zone');
+    centerZone('yellow-zone');
+  }
+
+  function scheduleCentering() {
+    [0, 80, 220, 500, 900].forEach(ms => setTimeout(() => requestAnimationFrame(centerPurpleYellow), ms));
+  }
+
+  const wrapStartLevel = () => {
+    if (typeof window.startLevel !== 'function' || window.startLevel.__world4PolishWrapped) return false;
+    const original = window.startLevel;
+    function wrappedStartLevel(level, ...rest) {
+      const result = original.call(this, level, ...rest);
+      if (isWorld4Level(level)) scheduleCentering();
+      return result;
+    }
+    wrappedStartLevel.__world4PolishWrapped = true;
+    wrappedStartLevel.__original = original;
+    window.startLevel = wrappedStartLevel;
+    return true;
+  };
+
+  if (!wrapStartLevel()) {
+    const timer = setInterval(() => { if (wrapStartLevel()) clearInterval(timer); }, 50);
+    setTimeout(() => clearInterval(timer), 5000);
+  }
+  window.addEventListener('resize', () => { if (document.body.classList.contains('world-4')) scheduleCentering(); }, { passive:true });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', scheduleCentering, { once:true });
+  else scheduleCentering();
+})();
+''', encoding='utf-8')
+
+      - name: JavaScript syntax check
+        run: |
+          node --check world4-citadel.js
+          node --check world4-polish.js
+
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start local site
+        run: |
+          python3 -m http.server 8000 >/tmp/locus-http.log 2>&1 &
+          echo $! > /tmp/locus-http.pid
+          sleep 2
+
+      - name: Capture fresh World 4 screenshots
+        run: |
+          cat > /tmp/capture-world4.cjs <<'NODE'
+          const { chromium } = require('playwright');
+          const path = require('path');
+          (async () => {
+            const browser = await chromium.launch({headless:true});
+            async function shot(level, file, viewport, mobile=false) {
+              const ctx = await browser.newContext({ viewport, isMobile:mobile, hasTouch:mobile, deviceScaleFactor:1 });
+              const page = await ctx.newPage();
+              const errors=[];
+              page.on('pageerror', e => errors.push(String(e)));
+              await page.goto('http://127.0.0.1:8000/index.html', {waitUntil:'domcontentloaded'});
+              await page.waitForFunction(() => typeof window.startLevel === 'function', null, {timeout:15000});
+              await page.evaluate((n) => window.startLevel(n), level);
+              await page.waitForTimeout(1400);
+              await page.evaluate(() => {
+                document.querySelectorAll('[id$="-modal-layer"], .modal-layer').forEach(el => el.classList.remove('show','active','open'));
+                if (typeof window.dispatchEvent === 'function') window.dispatchEvent(new Event('resize'));
+              });
+              await page.waitForTimeout(900);
+              const state = await page.evaluate(() => ({
+                world4: document.body.classList.contains('world-4'),
+                purple: document.querySelectorAll('#purple-grid .cell').length,
+                green: document.querySelectorAll('#green-grid .cell').length,
+                yellow: document.querySelectorAll('#yellow-grid .cell').length,
+                keySvg: !!document.querySelector('.key-cell .key-glyph svg'),
+                doorSvg: !!document.querySelector('.door-cell .door-glyph svg')
+              }));
+              console.log(file, state, errors);
+              if (!state.world4 || !state.purple || !state.green || !state.yellow) throw new Error('World4 board did not render: '+JSON.stringify(state));
+              await page.screenshot({path:file, fullPage:false});
+              await ctx.close();
+            }
+            await shot(31, 'world4-latest-41-desktop.png', {width:1600,height:1000});
+            await shot(34, 'world4-latest-44-desktop.png', {width:1600,height:1000});
+            await shot(31, 'world4-latest-41-mobile.png', {width:430,height:932}, true);
+            await browser.close();
+          })().catch(err => { console.error(err); process.exit(1); });
+          NODE
+          node /tmp/capture-world4.cjs
+
+      - name: Commit changes and screenshots
+        run: |
+          rm -f _world4_inspect.txt _inspect_generation.txt _inspect_reset.txt _inspect_bonus.txt _inspect_icons.txt _inspect_run.txt _inspect_symbols.txt
+          rm -f .github/workflows/inspect-world4-generation.yml
+          rm -f .github/workflows/apply-world4-polish.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Polish World 4 generation, icons, centering and reset"
+          git push
