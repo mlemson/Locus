@@ -12237,6 +12237,8 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 
 	</style>
 	<link rel="stylesheet" href="responsive.css?v=5">
+	<link rel="stylesheet" href="styles/world-table.css?v=2">
+	<script src="js/world-table.js?v=2"></script>
 	<script>
     // Simple menu toggle: toggles .open on #controls and .active on #menu-toggle
     document.addEventListener('DOMContentLoaded', function() {
@@ -12501,7 +12503,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 				<strong class="menu-panel-title">Spelmenu</strong>
 			</div>
 			<div class="menu-panel-group" aria-label="Spel">
-				<button class="menu-panel-item" data-menu-icon="↶" onclick="undo()"><span>Undo</span><small>Laatste zet</small></button>
+				<button id="undo-menu-btn" class="menu-panel-item" data-menu-icon="↶" onclick="undo()"><span>Undo</span><small>Laatste zet</small></button>
 				<button class="menu-panel-item" data-menu-icon="＋" id="new-game-btn" type="button"><span>Nieuw spel</span><small>Start opnieuw</small></button>
 				<button class="menu-panel-item" data-menu-icon="▦" id="menu-open-levels-btn" type="button" onclick="showSavedLevelsModal()"><span>Open level</span><small>Opgeslagen spelborden</small></button>
 			</div>
@@ -18185,6 +18187,7 @@ let shopLevel2Used = false;
 	// Sync zone heights: make green and blue zones at least as tall as purple+yellow combined.
 	// Returns true if sync ran, false if skipped (e.g., hidden layout).
 	function syncZoneHeights() {
+		if (window.LocusTable?.enabled()) return true;
 		// World 4 uses a fixed 3-zone layout (yellow/green/blue); don't force World 2/3 height syncing.
 		try {
 			const info = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(currentLevel) : null;
@@ -18375,6 +18378,7 @@ let shopLevel2Used = false;
 	}
 
 	function openZoom(zone) {
+		if (window.LocusTable?.enabled()) { window.LocusTable.focus(zone); return; }
 		// NOTE: Mobile zone zoom is enabled; only the placement zoom-lens is disabled elsewhere.
 		if (!zone || excludedZones.includes(zone.id)) return;
 		// Never allow zooming a hidden zone.
@@ -21388,16 +21392,112 @@ let shopLevel2Used = false;
 
 
   // ---------- Undo / Clear ----------
-  /** Update disabled state of the floating undo button. */
-  function updateUndoButton() {
-	const btn = document.getElementById('undo-floating-btn');
+  let undoInlineAllowUndoAt = 0;
+  let undoInlineRestoreTimer = null;
+
+  function scheduleUndoInlineRestore(delay = 220) {
+	const ms = Math.max(0, Number(delay) || 0);
+	undoInlineAllowUndoAt = Date.now() + ms;
+	if (undoInlineRestoreTimer) clearTimeout(undoInlineRestoreTimer);
+	undoInlineRestoreTimer = setTimeout(() => {
+		undoInlineRestoreTimer = null;
+		updateUndoButton();
+	}, ms + 20);
+	updateUndoButton();
+  }
+
+  function runInlineCancelAction() {
+	if (activeBonusPlacement) {
+		cancelActiveBonusPlacement({ updateInventory: true, hidePreview: true });
+	} else if (draggedBlock || document.body?.classList.contains('dragging') || document.body?.classList.contains('is-pointer-dragging')) {
+		cleanupDragState({ clearBonus: false, hidePreview: true });
+		hideFloatingPreview();
+		removeCardControlButtons();
+	} else if (selectedCardElement) {
+		selectCard(selectedCardElement); // toggle off
+	}
+	closeZoom();
+	scheduleUndoInlineRestore(220);
+  }
+
+  function syncInlineUndoButton(btn, placementInProgress, canUndo, undoDelayActive) {
 	if (!btn) return;
-	const canUndo = (cardPlacementHistory && cardPlacementHistory.length > 0) ||
-	                (historyStack && historyStack.length > 0);
+	if (placementInProgress) {
+		btn.dataset.actionMode = 'cancel';
+		btn.classList.add('is-cancel-mode');
+		btn.innerHTML = '×';
+		btn.title = 'Annuleer blok';
+		btn.setAttribute('aria-label', 'Annuleer blok');
+		btn.disabled = false;
+		btn.setAttribute('aria-disabled', 'false');
+		return;
+	}
+	btn.dataset.actionMode = 'undo';
+	btn.classList.remove('is-cancel-mode');
+	btn.innerHTML = '↩';
+	btn.title = undoDelayActive ? 'Undo komt zo terug' : 'Undo (Ctrl+Z)';
+	btn.setAttribute('aria-label', 'Undo');
 	btn.disabled = !canUndo;
+	btn.setAttribute('aria-disabled', String(!canUndo));
+  }
+
+  /** Keep every undo entry point in sync with the same history. */
+  function updateUndoButton() {
+	const placementInProgress = !!(
+		draggedBlock ||
+		activeBonusPlacement ||
+		document.body?.classList.contains('dragging') ||
+		document.body?.classList.contains('is-pointer-dragging')
+	);
+	const undoDelayActive = !placementInProgress && Date.now() < undoInlineAllowUndoAt;
+	const hasHistory = !!(
+		(cardPlacementHistory && cardPlacementHistory.length > 0) ||
+		(historyStack && historyStack.length > 0)
+	);
+	const canUndo = !placementInProgress && !undoDelayActive && hasHistory;
+	['undo-floating-btn', 'undo-menu-btn'].forEach(id => {
+		const btn = document.getElementById(id);
+		if (btn) {
+			btn.disabled = !canUndo;
+			btn.setAttribute('aria-disabled', String(!canUndo));
+		}
+	});
+	syncInlineUndoButton(document.getElementById('undo-inline-btn'), placementInProgress, canUndo, undoDelayActive);
+  }
+
+  const inlineUndoBtn = document.getElementById('undo-inline-btn');
+  if (inlineUndoBtn && !inlineUndoBtn.dataset.cancelHookInstalled) {
+	inlineUndoBtn.dataset.cancelHookInstalled = 'true';
+	inlineUndoBtn.addEventListener('click', function(ev) {
+		if (inlineUndoBtn.dataset.actionMode === 'cancel') {
+			ev.preventDefault();
+			ev.stopPropagation();
+			ev.stopImmediatePropagation();
+			runInlineCancelAction();
+			return false;
+		}
+		if (Date.now() < undoInlineAllowUndoAt) {
+			ev.preventDefault();
+			ev.stopPropagation();
+			ev.stopImmediatePropagation();
+			updateUndoButton();
+			return false;
+		}
+	}, true);
   }
 
   function undo(){
+	if (Date.now() < undoInlineAllowUndoAt) {
+		updateUndoButton();
+		return;
+	}
+	// Also guard keyboard/menu calls; a disabled button alone is not enough.
+	if (draggedBlock || activeBonusPlacement ||
+		document.body?.classList.contains('dragging') ||
+		document.body?.classList.contains('is-pointer-dragging')) {
+		updateUndoButton();
+		return;
+	}
 	const lastPlacement = cardPlacementHistory.length ? cardPlacementHistory[cardPlacementHistory.length - 1] : null;
 	const lastToggle = historyStack.length ? historyStack[historyStack.length - 1] : null;
 	const placementSeq = lastPlacement?.sequence ?? -Infinity;
@@ -21538,6 +21638,8 @@ let shopLevel2Used = false;
 	// helper: start dragging visuals (hide cursor globally)
 	function startGlobalDragVisuals() {
 	  document.body.classList.add('dragging', 'is-pointer-dragging');
+	  // A held block owns the current interaction; undo must wait.
+	  try { updateUndoButton(); } catch (_) {}
 
 	  // Sla inline stijl op en zet inline cursor: none (overruled bijna alles)
 	  const html = document.documentElement;
@@ -21566,6 +21668,8 @@ let shopLevel2Used = false;
 	  else body.style.removeProperty('cursor');
 
 	  _origCursorHtml = _origCursorBody = null;
+	  // Re-enable undo immediately when the drag has ended/cancelled (if history exists).
+	  try { updateUndoButton(); } catch (_) {}
 	}
   
   
@@ -22286,6 +22390,12 @@ document.addEventListener('pointermove', ev => {
 
 	function cleanupDragState({ clearBonus = false, updateInventory = false, hidePreview = false } = {}) {
 		const overlay = document.getElementById('drag-overlay');
+		const hadInteractiveDrag = !!(
+			draggedBlock ||
+			activeBonusPlacement ||
+			document.body?.classList.contains('dragging') ||
+			document.body?.classList.contains('is-pointer-dragging')
+		);
 		endPointerDragTracking();
 		desktopHoverDragActive = false;
 		suppressDesktopDropUntil = 0;
@@ -22341,6 +22451,11 @@ document.addEventListener('pointermove', ev => {
 		stopGlobalDragVisuals();
 		if (!selectedCardElement && !activeBonusPlacement && rotateButton) {
 		  rotateButton.disabled = true;
+		}
+		if (hadInteractiveDrag) {
+			scheduleUndoInlineRestore(220);
+		} else {
+			updateUndoButton();
 		}
 	}
 
@@ -22532,6 +22647,7 @@ document.addEventListener('pointermove', ev => {
 	}
 
 	function getActualCellSize(root = null) {
+		if (window.LocusTable?.enabled()) return window.LocusTable.cellSize(root);
 		// Bereken de werkelijke cel-grootte op basis van een cel in het opgegeven root
 		// (of het globale speelveld als geen root gegeven). Dit houdt rekening met
 		// board/zone scaling and any DOM lifts performed during mobile zoom.
@@ -22615,7 +22731,7 @@ document.addEventListener('pointermove', ev => {
 		// If a zoomed zone is active, measure cell size from that zone so
 		// the draggable matches the zoomed-in cells exactly. Otherwise
 		// measure from the default board.
-		const measuredRoot = (document.body.classList.contains('zoomed-in') && typeof activeZoomZone !== 'undefined' && activeZoomZone) ? activeZoomZone : null;
+		const measuredRoot = window.LocusTable?.enabled() ? window.LocusTable.zoneForColor(color) : ((document.body.classList.contains('zoomed-in') && typeof activeZoomZone !== 'undefined' && activeZoomZone) ? activeZoomZone : null);
 		cellSize = getActualCellSize(measuredRoot);
 		cellSizeStr = `${cellSize}px`;
 	} else {
@@ -24402,6 +24518,7 @@ function getCollectedCoinCount(scores) {
 	  if (!goldZone) return;
 	  const activeCoins = getSpendableCoinCount();
 	  goldZone.setAttribute('data-coin-text', `${activeCoins}`);
+	  goldZone.setAttribute('aria-label', `Munten: ${activeCoins}`);
 	  updateShopCoinDisplay();
 	  updateBuyPlacementButton();
 	}
@@ -28763,6 +28880,7 @@ function resetWorldLayoutStyles() {
 	
 	// Reset zone groottes naar originele World 1 CSS waardes
 	function resetZoneSizesForWorld1() {
+		if (window.LocusTable?.enabled()) { window.LocusTable.schedule(); return; }
 	  const yellowZone = document.getElementById('yellow-zone');
 	  const purpleZone = document.getElementById('purple-zone');
 	  const blueZone = document.getElementById('blue-zone');
@@ -29599,6 +29717,7 @@ function resetWorldLayoutStyles() {
 	}
 
 	function adjustZoneSizesForWorld2() {
+		if (window.LocusTable?.enabled()) { window.LocusTable.schedule(); return; }
 	  // Mobile zoom: sizing is handled by CSS to keep all zoomed zones uniform across worlds.
 	  // IMPORTANT: Inline styles override CSS, so we must clear any previously-set widths/heights while zoomed.
 	  try {
@@ -31517,7 +31636,9 @@ document.addEventListener('pointerdown', ev => {
 				// Maak buttons zichtbaar. For touch-initiated bonus drags we may delay
 				// the mirror button until release (activeBonusPlacement.delayedControls).
 				rotateBtn.classList.add('visible');
-				cancelBtn.classList.add('visible');
+				cancelBtn.classList.remove('visible');
+				cancelBtn.disabled = true;
+				cancelBtn.style.display = 'none';
 				const isDelayingMirror = !!(activeBonusPlacement && activeBonusPlacement.delayedControls && isTouchDevice);
 				const showMirror = !isBonusDrag && !isDelayingMirror;
 				if (showMirror) {
@@ -31568,7 +31689,6 @@ document.addEventListener('pointerdown', ev => {
 			const bottomVal = `${bottomPx}px`;
 			// Fixed order so buttons never “swap”: cancel, rotate, mirror
 			const visibleBtns = [];
-			if (cancelBtn) visibleBtns.push(cancelBtn);
 			if (rotateBtn) visibleBtns.push(rotateBtn);
 			if (mirrorBtn && mirrorBtn.classList.contains('visible') && !mirrorBtn.dataset.delayed) visibleBtns.push(mirrorBtn);
 
@@ -32305,19 +32425,20 @@ function showFloatingPreview(shape, color, options = {}) {
 	// ========================================
 	// TAP-TO-PLACE VOOR TOUCH DEVICES
 	// ========================================
-	document.addEventListener('click', (e) => {
+	function handleTouchCellPlacement(e) {
 		/*
 			EN:
 			- WHY: On touch devices, allow “tap a cell to place the selected card” instead of dragging.
-			- STATE: requires `floatingPreviewActive` + `selectedShape` + `selectedColor`.
+			- STATE: requires a selected card (table UI) or floating preview, shape and color.
 			- OVERRIDE/DUPLICATE RISK: This is a global document click handler and can conflict with:
 			  - zoom close click handler
 			  - menu close click handler
 			  - per-cell click toggles (e.g. debug mode)
 			  Use `stopPropagation()` carefully.
 		*/
-		// Alleen actief als we een kaart geselecteerd hebben EN floating preview zichtbaar is
-		if (!floatingPreviewActive || !selectedShape || !selectedColor) return;
+		// De tafellayout gebruikt de geselecteerde handkaart zonder zwevend voorbeeld.
+		const tableSelection = window.LocusTable?.enabled() && selectedCardElement && !draggedBlock;
+		if ((!floatingPreviewActive && !tableSelection) || !selectedShape || !selectedColor) return;
 		
 		// Check of we op een cell klikken
 		const cell = e.target.closest('.cell');
@@ -32339,6 +32460,9 @@ function showFloatingPreview(shape, color, options = {}) {
 		const baseX = parseInt(cell.dataset.x, 10) || 0;
 		const baseY = parseInt(cell.dataset.y, 10) || 0;
 
+		// Check color as well as shape before committing a touch placement.
+		const targetColor = zone.dataset.color || zone.closest('[data-color]')?.dataset.color;
+		if (selectedColor.name !== 'multikleur' && selectedColor.name !== targetColor) return;
 		// Check of plaatsing valid is
 		if (canPlace(zone, baseX, baseY, selectedShape)) {
 			const coinSnapshotBefore = getCoinStateSnapshot();
@@ -32354,7 +32478,6 @@ function showFloatingPreview(shape, color, options = {}) {
 				// Voer na-plaatsing logica uit
 				if (rotateButton) rotateButton.disabled = true;
 				if (mirrorButton) mirrorButton.disabled = true;
-				updateTurnState();
 			}
 		} else {
 			// Visual feedback dat plaatsing invalid is
@@ -32362,7 +32485,8 @@ function showFloatingPreview(shape, color, options = {}) {
 			// showPreview(zone, selectedShape, baseX, baseY, false);
 			// setTimeout(() => clearPreview(zone), 300;
 		}
-	}, true); // Use capture phase zodat we voor andere handlers triggeren
+	}
+	document.addEventListener('click', handleTouchCellPlacement, true);
 
 	// ========================================
 	// ZONE INFO POPOVERS ("i" linksboven)
@@ -32736,6 +32860,11 @@ function showFloatingPreview(shape, color, options = {}) {
 		const wrapper = document.createElement('div');
 		wrapper.className = 'board';
 		playColumns.forEach(col => wrapper.appendChild(col.cloneNode(true)));
+		// Layout chrome is not part of an exported/printed game board.
+		wrapper.querySelectorAll('.table-zone-frame').forEach(frame => {
+			const zone = frame.querySelector(':scope > .zone');
+			if (zone) frame.replaceWith(zone); else frame.remove();
+		});
 		if (noBonuses) stripBoardForLowInk(wrapper);
 		return wrapper.outerHTML;
 	}
@@ -35591,6 +35720,7 @@ body { background: transparent; }
 	}
 
 	function applyMobileHandFitForFiveCards() {
+		if (window.LocusTable?.enabled()) { window.LocusTable.fitCards(); return; }
 		const bottomBar = document.getElementById('bottom-bar');
 		if (!bottomBar) return;
 		const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
@@ -35640,6 +35770,7 @@ body { background: transparent; }
 	}
 
 	function scaleBoardForDesktop() {
+		if (window.LocusTable?.enabled()) { window.LocusTable.schedule(); return; }
 		const board = document.getElementById('board');
 		if (!board) return;
 		const boardContainer = board.parentElement;
@@ -35800,6 +35931,7 @@ body { background: transparent; }
 	}
 
 	function scaleBoardForMobile() {
+		if (window.LocusTable?.enabled()) { window.LocusTable.schedule(); return; }
 		const board = document.getElementById('board');
 		if (!board) return;
 		const isMobileSidebar = document.body.classList.contains('mobile-sidebar-layout');
@@ -35943,6 +36075,7 @@ body { background: transparent; }
 	}
 
 	function runZoneSizingOnce() {
+		if (window.LocusTable?.enabled()) { window.LocusTable.schedule(); return; }
 		if (!zoneSizingNeedsRun) return;
 		zoneSizingNeedsRun = false;
 		try {
@@ -35964,6 +36097,8 @@ body { background: transparent; }
 	}
 
 	function moveGameElements() {
+		if (window.LocusTable?.enabled()) { window.LocusTable.layout(); return; }
+		window.LocusTable?.suspend();
 	  const width = window.innerWidth;
 	  const height = window.innerHeight;
 	  const isMobile = width <= MOBILE_BREAKPOINT;
@@ -36324,6 +36459,7 @@ body { background: transparent; }
 	}
 
 	function autoCenterScrollableZones() {
+		if (window.LocusTable?.enabled()) { window.LocusTable.schedule(); return; }
 		// Do not auto-center while zoomed-in; it causes jumps on mobile.
 		if (document.body.classList.contains('zoomed-in')) return;
 	  // Only auto-center when the user hasn't scrolled yet (prevents fighting the player).
@@ -36465,6 +36601,8 @@ body { background: transparent; }
 	}
 	
 	function reflowLayout() {
+		if (window.LocusTable?.enabled()) { window.LocusTable.layout(); return; }
+		window.LocusTable?.suspend();
 		if (layoutReflowInProgress) return;
 		layoutReflowInProgress = true;
 		logLayout('reflowLayout:start');
@@ -36588,7 +36726,7 @@ body { background: transparent; }
 		const h = Math.round((window.innerHeight || 0) / 20) * 20;
 		// Include layout mode in key so orientation changes trigger reflow even at same dimensions
 		const currentMode = getCurrentLayoutMode();
-		const key = `${w}x${h}:${currentMode}`;
+		const key = `${w}x${h}:${currentMode}:${document.body.classList.contains('classic-mode') ? 'classic' : 'modern'}`;
 
 		if (layoutReflowInProgress) {
 			// Avoid stacking identical requests while a reflow is active.

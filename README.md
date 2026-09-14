@@ -1,135 +1,70 @@
-# Locus 1 — visual + responsive makeover v2
+# Locus 1 — wereld op tafel
 
-Deze set hoort uitsluitend bij **Locus 1**.
+De vijf kleurgebieden vormen één rustig speelbord op een donkerblauwe tafel.
+De bestaande spelregels, levels, kaarten, punten, munten en bonussen blijven
+in `index.html`. De nieuwe weergave gebruikt dezelfde spelelementen en handlers.
 
-## Richting
+## Indeling en bediening
 
-De nieuwe UI is bewust geen generieke "AI app"-look.
+- Desktop: compacte score links, speelwereld centraal en hand rechts.
+- Tablet: speelwereld boven, hand en compacte status onderaan.
+- Telefoon: één kleurgebied tegelijk, kleurknoppen boven het bord, hand en status
+  binnen handbereik. Liggend staan hand en status naast het bord.
+- Grote kaarten verschuiven met één vinger, muissleep, trackpad, muiswiel of
+  pijltjestoetsen op het speelgebied. Randknoppen verschuiven 36% van het venster.
+  Fades en pijlen verschijnen alleen waar nog kaart buiten beeld ligt.
+- Selecteer een kaart, draai/spiegel met de handknoppen en tik op een geldige cel.
+  Slepen om het gebied te bekijken plaatst geen kaart. De × bovenaan annuleert
+  een selectie; Undo draait de laatste plaatsing terug.
+- Het menu biedt de klassieke weergave. De wissel hergebruikt het bestaande bord.
 
-De stijl is:
-- donker en digitaal;
-- rustig en modern;
-- subtiele fysieke kaartkwaliteit;
-- weinig glas/neon;
-- zones/bord blijven inhoudelijk herkenbaar;
-- kaarten, knoppen en modals krijgen diepte door normale CSS-belichting en schaduw;
-- animatie ondersteunt actie en hiërarchie, niet decoratie.
+Het subtiele perspectief zit in de decoratieve achtergrond van het complete
+speelveld: 97% breed bovenaan, 100% onderaan (98,5% op telefoon). De klikbare grids
+blijven vlak, zodat hun coördinaten en hitboxes niet vervormen.
 
-## Twee concrete mobiele problemen die hiermee worden aangepakt
+## Correcties celmaat en uitlijning
 
-### 1. Landscape-telefoon wordt als desktop gezien
+Alle vijf gebieden gebruiken nu dezelfde celmaat, berekend vanuit paars.
+Sleepblokken gebruiken diezelfde maat. Groene startcellen behouden hun donkere
+rand; eindcellen hebben weer een herkenbare donkergroene vulling. Symbolen en
+portalen staan in het midden en muntjes schalen mee (58% van de celbreedte).
+Het menu volgt de rechterrand van de menuknop.
 
-De bestaande layout gebruikt onder andere:
-
-```js
-width <= MOBILE_BREAKPOINT // MOBILE_BREAKPOINT = 650
-```
-
-voor de compacte touch-landscape-layout.
-
-Een telefoon van bijvoorbeeld 844×390 heeft in landscape een breedte boven 650
-en kan daardoor in de desktop-layout terechtkomen. De patch bepaalt compact
-touch-landscape voortaan op basis van de **korte zijde**:
-
-```js
-const isCompactTouchScreen =
-    isTouchDevice && Math.min(width, height) < 700;
-```
-
-Grote tablets blijven dus groot-tablet/desktop-layout gebruiken.
-
-### 2. Bottom bar en kaartmaat spreken elkaar tegen
-
-In de huidige mobiele CSS komt een bottom bar van ongeveer 110–115 px voor,
-terwijl een andere regel mobiele kaarten tot minimaal 180 px hoog maakt. Dat is
-een structurele clipping-bron.
-
-De nieuwe CSS reserveert een realistische handhoogte en schaalt de kaarten binnen
-die ruimte. Bij kleinere telefoons wordt eerst tekst/decoratie compacter, niet
-de touch target.
+De browsertests controleren deze maten, markeringen, uitlijning en menupositie
+op alle acht schermformaten.
 
 ## Bestanden
 
-- `styles/locus-ui-v2.css`
-  - volledige visuele makeover;
-  - cursor/touch apart;
-  - phone portrait;
-  - compact touch landscape;
-  - tablets;
-  - laptops/desktops;
-  - safe areas;
-  - reduced motion;
-  - high contrast.
+- `index.html`: spel en gerichte integratiepunten voor de tafellayout.
+- `js/world-table.js`: indeling, kleurfocus, panherkenning en randindicatoren.
+- `styles/world-table.css`: de nieuwe, op `body.table-ui` begrensde stijllaag.
+- `responsive.css`: bestaande stijlen, onder meer voor klassieke weergave.
+- `editor.html`, `editor.js`, `editor.css`: bestaande leveleditor.
+- `tests/world-table.cjs`: browsercontroles tegen de echte game.
+- `TEST_MATRIX.md`: uitgebreide handmatige acceptatiematrix.
 
-- `locus1-v2.patch`
-  - import van stylesheet;
-  - landscape-phone detectiefix;
-  - mirrored-playability bugfix;
-  - world-unlock bugfix.
+De site is statisch en vereist geen build. Serveer de map met een lokale
+webserver of GitHub Pages. Nieuwe layoutcorrecties horen in de aparte CSS/JS,
+niet als extra mobiele uitzonderingen in de inline stijlen.
 
-- `TEST_MATRIX.md`
-  - schermformaten en interacties die vóór livegang gecontroleerd moeten worden.
+## Controles uitvoeren
 
-## Integratie
-
-Plaats:
-
-```text
-styles/locus-ui-v2.css
+```sh
+npm install
+npx playwright install chromium
+npm test
 ```
 
-in de repo.
+Voor een reeds geïnstalleerde Chromium kan `CHROMIUM_EXECUTABLE` het pad aangeven.
+Met `SCREENSHOT_DIR=test-results` bewaart de test screenshots.
 
-Voeg bovenaan `responsive.css` toe:
+De automatische controle omvat acht schermformaten (320×568 tot 1920×1080),
+paneelgrenzen en overlap, primaire knoppen van minimaal 44 px, touchselectie,
+rotatie, spiegelen, kleurvalidatie, pan zonder plaatsing, randindicatoren,
+oriëntatiewissels, plaatsing en Undo, schone editor-export, wereldvarianten,
+save/load, klassieke weergave en muispan. Normale saves starten volgens het
+bestaande spelgedrag het opgeslagen level opnieuw met een nieuwe hand.
 
-```css
-@import url("./styles/locus-ui-v2.css");
-```
-
-Daarna de wijzigingen uit `locus1-v2.patch` toepassen op `index.html`.
-
-## Belangrijk bij de visuele refactor
-
-Niet meer nieuwe mobiele uitzonderingen onderaan `index.html` toevoegen.
-Nieuwe visuele correcties horen in `styles/locus-ui-v2.css`.
-
-Wanneer deze laag stabiel is, is de volgende structurele stap:
-
-1. legacy inline CSS letterlijk naar `styles/game-legacy.css`;
-2. pure shape/geometry helpers naar `js/geometry.js`;
-3. placement validators naar `js/placement-rules.js`;
-4. pas daarna cards/progression/persistence;
-5. responsive DOM-reparenting als laatste.
-
-## Kaartanimatie
-
-Nieuwe kaarten krijgen een korte deal-in van ongeveer 220 ms.
-Geselecteerde kaarten liften enkele pixels.
-
-Op cursorapparaten bestaat hover.
-Op touch bestaat géén hover-afhankelijk gedrag.
-
-`prefers-reduced-motion` schakelt animatie praktisch uit.
-
-## Touchdoelen
-
-Primaire compacte touchcontrols zijn minimaal 44×44 px.
-
-Op een zeer klein scherm wordt liever:
-- tekst kleiner of verborgen;
-- een paneel scrollbaar;
-- het bord scrollbaar;
-
-dan dat een belangrijke actieknop naar 22 px wordt teruggeschaald.
-
-## Waarom geen horizontale swipe-hand als eerste versie?
-
-Locus gebruikt touch ook voor het oppakken/plaatsen van spelvormen.
-Een horizontaal scrollgebaar op exact hetzelfde kaartoppervlak kan daardoor
-pointer-events en draggedrag met elkaar laten concurreren.
-
-Daarom probeert v2 eerst de hand responsief binnen de beschikbare breedte te
-plaatsen. Als de maximale handgrootte later structureel groter wordt dan in deze
-versie, moet de handinteractie zelf bewust worden aangepast (bijvoorbeeld
-tap-select + apart plaatsen in plaats van drag-from-card) vóór native swipen
-wordt aangezet.
+Chromium met touch-emulatie is automatisch getest. De overige browsers en echte
+apparaten uit `TEST_MATRIX.md` blijven handmatige controles; de volledige matrix
+is geen claim dat al die scenario's automatisch zijn afgedekt.

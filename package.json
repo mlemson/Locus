@@ -1,0 +1,7 @@
+{
+  "name": "locus",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": { "test": "node tests/world-table.cjs" },
+  "devDependencies": { "playwright": "1.62.1" }
+}

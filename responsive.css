@@ -1914,3 +1914,87 @@ body.game-ui-v5:not(.classic-mode) :is(#yellow-zone,#green-zone,#blue-zone,#purp
     transform: translateY(-1px);
   }
 }
+
+
+/* ========================================================================== */
+/* 2026-09-14 — Deck overview + interaction polish                            */
+/* ========================================================================== */
+
+/* The menu undo entry follows the same disabled state as the HUD undo button. */
+body.game-ui-v5:not(.classic-mode) #undo-menu-btn:disabled {
+  opacity: .42 !important;
+  cursor: default !important;
+  pointer-events: none !important;
+}
+
+/* Bonus-card explanation: use a real readable popover instead of allowing the
+   text to collapse to the width of a narrow deck card. */
+body.game-ui-v5:not(.classic-mode) #deck-modal-content .deck-modal-card.show-meta,
+body.game-ui-v5:not(.classic-mode) #deck-modal-content .deck-modal-card.card-echo-tooltip-active {
+  overflow: visible !important;
+  z-index: 30 !important;
+}
+
+body.game-ui-v5:not(.classic-mode) #deck-modal-content .card-echo-tooltip {
+  width: min(230px, calc(100vw - 56px)) !important;
+  max-width: none !important;
+  padding: 10px 12px !important;
+  font-size: .8rem !important;
+  line-height: 1.35 !important;
+  text-align: center !important;
+}
+
+@media (max-width: 650px) {
+  /* Three compact cards fit comfortably on a phone instead of two oversized
+     columns with a large empty gutter. */
+  body.game-ui-v5:not(.classic-mode) #deck-modal-content {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    padding: 0 2px 8px !important;
+  }
+
+  body.game-ui-v5:not(.classic-mode) #deck-modal-content .card-option {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    min-height: 136px !important;
+    height: 136px !important;
+    padding: 8px 5px 24px !important;
+  }
+
+  /* On phones the readable popover sits over the card; outer-column rules
+     below keep it inside the deck viewport. */
+  body.game-ui-v5:not(.classic-mode) #deck-modal-content .card-echo-tooltip {
+    width: min(210px, calc(100vw - 56px)) !important;
+    top: 50% !important;
+    left: 50% !important;
+    right: auto !important;
+    font-size: .78rem !important;
+    transform: translate(-50%, -50%) translateY(6px) !important;
+    z-index: 40 !important;
+  }
+
+  body.game-ui-v5:not(.classic-mode) #deck-modal-content .card-bonus-echo.show-meta .card-echo-tooltip,
+  body.game-ui-v5:not(.classic-mode) #deck-modal-content .card-bonus-echo.card-echo-tooltip-active .card-echo-tooltip {
+    transform: translate(-50%, -50%) translateY(0) !important;
+  }
+
+  /* Keep the 210px tooltip inside the scroll viewport for the outer columns. */
+  body.game-ui-v5:not(.classic-mode) #deck-modal-content .deck-modal-card:nth-child(3n + 1) .card-echo-tooltip {
+    left: 0 !important;
+    transform: translate(0, -50%) translateY(6px) !important;
+  }
+  body.game-ui-v5:not(.classic-mode) #deck-modal-content .deck-modal-card:nth-child(3n + 1).show-meta .card-echo-tooltip,
+  body.game-ui-v5:not(.classic-mode) #deck-modal-content .deck-modal-card:nth-child(3n + 1).card-echo-tooltip-active .card-echo-tooltip {
+    transform: translate(0, -50%) translateY(0) !important;
+  }
+  body.game-ui-v5:not(.classic-mode) #deck-modal-content .deck-modal-card:nth-child(3n) .card-echo-tooltip {
+    left: auto !important;
+    right: 0 !important;
+    transform: translate(0, -50%) translateY(6px) !important;
+  }
+  body.game-ui-v5:not(.classic-mode) #deck-modal-content .deck-modal-card:nth-child(3n).show-meta .card-echo-tooltip,
+  body.game-ui-v5:not(.classic-mode) #deck-modal-content .deck-modal-card:nth-child(3n).card-echo-tooltip-active .card-echo-tooltip {
+    transform: translate(0, -50%) translateY(0) !important;
+  }
+}
