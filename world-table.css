@@ -1,0 +1,411 @@
+/* One layout owner for the modern game. Legacy/classic styling remains separate.
+   The repeated app ID intentionally outranks the legacy !important selectors. */
+@media screen {
+body.table-ui { display:block !important; margin:0 !important; padding:0 !important; width:100% !important; height:100dvh !important; min-height:0 !important; overflow:hidden !important; background:radial-gradient(ellipse at 48% 22%, #183249 0, #0c1926 45%, #080f19 100%) !important; color:#e5edf5; font-family:Inter, system-ui, sans-serif; }
+body.table-ui #table-app#table-app, body.table-ui #table-app#table-app * { box-sizing:border-box; }
+body.table-ui #table-app#table-app { --table-gap:clamp(10px,1.3vw,22px); display:grid; grid-template-columns:150px minmax(0,1fr) 250px; grid-template-rows:76px minmax(0,1fr); grid-template-areas:'header header header' 'status world hand'; gap:var(--table-gap); width:min(100%,1800px); height:100dvh; padding:18px 24px 30px; margin:0 auto; }
+body.table-ui #table-app#table-app[hidden], body.table-ui #table-app#table-app [hidden] { display:none !important; }
+body.table-ui #table-header { grid-area:header; display:flex; align-items:center; gap:24px; min-width:0; border-bottom:1px solid #b6d7fa16; padding-bottom:14px; }
+body.table-ui #table-brand { display:flex; align-items:center; gap:12px; min-width:190px; letter-spacing:.28em; font-size:23px; font-weight:650; }
+body.table-ui #table-brand small { display:block; margin-top:5px; font-size:9px; color:#8ca9bd; letter-spacing:.12em; font-weight:400; }
+body.table-ui .table-mark { color:#adceea; font-size:32px; }
+body.table-ui #table-objective { flex:1; min-width:0; }
+body.table-ui #table-tools { display:flex; align-items:center; gap:8px; }
+body.table-ui #table-app#table-app #menu-toggle, body.table-ui #table-app#table-app .table-tool { position:relative !important; inset:auto !important; transform:none !important; display:flex !important; flex-direction:column; align-items:center; justify-content:center; flex-shrink:0; width:44px !important; height:44px !important; min-width:44px; border:1px solid #91b8dc30; border-radius:12px; color:#c8deef; background:#152a3c !important; box-shadow:inset 0 1px #ffffff09; font-size:20px; cursor:pointer; }
+body.table-ui #table-app#table-app #objective-zone { display:flex !important; flex-direction:column; justify-content:center; width:100% !important; height:auto !important; min-height:52px !important; max-height:none !important; padding:8px 18px !important; margin:0 !important; background:transparent !important; border:0 !important; box-shadow:none !important; text-align:center; }
+body.table-ui #table-app#table-app #objective-zone h2, body.table-ui #objective-history { display:none !important; }
+body.table-ui #table-app#table-app #objective-current { font-size:14px !important; line-height:1.5 !important; color:#e7f0f8 !important; }
+body.table-ui #table-status { grid-area:status; display:flex; flex-direction:column; gap:14px; min-width:0; overflow:auto; scrollbar-width:none; }
+body.table-ui #table-hand { grid-area:hand; min-width:0; overflow:auto; scrollbar-width:none; }
+body.table-ui #table-app#table-app :is(#scoreboard,#gold-zone,#bonus-zone,#card-choice-zone) { width:100% !important; min-width:0 !important; max-width:none !important; height:auto !important; min-height:0 !important; max-height:none !important; margin:0 !important; padding:14px !important; background:linear-gradient(145deg,#1b3043c9,#102031e6) !important; border:1px solid #aacfed20 !important; border-radius:16px !important; box-shadow:inset 0 1px #ffffff06,0 8px 22px #00000016 !important; overflow:visible !important; }
+body.table-ui #table-app#table-app :is(#scoreboard,#gold-zone,#bonus-zone,#card-choice-zone) h2 { font-size:10px !important; letter-spacing:.15em; text-transform:uppercase; font-weight:600; color:#a7c2d8 !important; padding:0 !important; margin:0 0 14px !important; text-align:left !important; }
+body.table-ui #table-app#table-app .score-total { display:flex !important; align-items:center; justify-content:space-between; padding:10px 0 !important; margin:0 0 10px !important; background:transparent !important; border-bottom:1px solid #c1dfff14; }
+body.table-ui #table-app#table-app .total-score { color:#f6d579 !important; font-size:28px !important; }
+body.table-ui #table-app#table-app #scoreboard hr { display:none; }
+body.table-ui #table-app#table-app .score-row { display:flex !important; gap:8px !important; padding:9px 0 !important; margin:0 !important; background:transparent !important; border:none !important; font-size:12px !important; }
+body.table-ui #table-app#table-app .score-row .score { margin-left:auto; }
+body.table-ui #table-app#table-app .color-box { width:9px !important; height:9px !important; border-radius:3px; box-shadow:none !important; }
+body.table-ui #table-app#table-app #gold-zone { display:flex !important; flex-wrap:wrap; align-items:center; gap:10px; }
+body.table-ui #table-app#table-app #gold-zone h2 { flex:0 0 100%; margin-bottom:0 !important; }
+body.table-ui #table-app#table-app #collected-coins { font-size:22px !important; margin:0 !important; padding:0 !important; min-height:0 !important; }
+body.table-ui #table-app#table-app #buy-placement-container { margin:0 0 0 auto !important; }
+body.table-ui #table-app#table-app .buy-placement-btn { min-width:44px !important; min-height:44px !important; }
+body.table-ui #table-app#table-app #bonus-inventory { display:flex !important; flex-wrap:wrap; gap:6px !important; margin:0 !important; }
+body.table-ui #table-app#table-app .bonus-badge { min-width:44px !important; min-height:44px !important; padding:4px !important; }
+body.table-ui #table-app#table-app .bonus-hint { display:none !important; }
+body.table-ui #table-world { grid-area:world; min-width:0; min-height:0; display:flex; flex-direction:column; position:relative; }
+body.table-ui #table-stage { flex:1; min-height:0; min-width:0; position:relative; padding:16px 10px 12px; isolation:isolate; }
+/* 3% narrower at the top; only the tabletop is projected. Interactive coordinates stay flat. */
+body.table-ui #table-stage::before { content:''; position:absolute; z-index:-1; inset:0 -3px -7px; clip-path:polygon(1.5% 0,98.5% 0,100% 100%,0 100%); border-radius:24px; background:linear-gradient(170deg,#b4d2ef20,#28425a60 7%,#152c3f55 70%,#5a78924a); box-shadow:inset 0 -5px 0 #050c16b3; pointer-events:none; }
+body.table-ui #table-app#table-app #board { display:grid !important; grid-template-columns:minmax(0,1fr) minmax(0,1.12fr) minmax(160px,.76fr) !important; grid-template-rows:repeat(2,minmax(0,1fr)) !important; grid-template-areas:'purple green blue' 'yellow red blue' !important; gap:14px !important; position:relative !important; inset:auto !important; transform:none !important; zoom:1 !important; margin:0 !important; padding:0 !important; width:100% !important; height:100% !important; min-width:0 !important; min-height:0 !important; max-width:none !important; max-height:none !important; overflow:visible !important; background:none !important; border:0 !important; box-shadow:none !important; opacity:1 !important; visibility:visible !important; }
+body.table-ui #table-app#table-app #board > .column { display:contents !important; }
+body.table-ui:not(.table-phone) #table-app#table-app #board[data-visible-zones="3"] { grid-template-areas:var(--table-active-areas) !important; grid-template-columns:repeat(3,minmax(0,1fr)) !important; grid-template-rows:minmax(0,1fr) !important; }
+body.table-ui #table-app#table-app #board > .column > :not(.table-zone-frame) { display:none !important; }
+body.table-ui #table-app#table-app .table-zone-frame { position:relative; min-width:0; min-height:0; overflow:hidden; border-radius:16px; border:1px solid color-mix(in srgb,var(--zone-tint),transparent 25%); background:var(--zone-tint); box-shadow:0 7px 16px #0003,inset 0 1px #ffffff50; }
+body.table-ui .table-zone-frame[data-zone=purple] { grid-area:purple; }
+body.table-ui .table-zone-frame[data-zone=yellow] { grid-area:yellow; }
+body.table-ui .table-zone-frame[data-zone=green] { grid-area:green; }
+body.table-ui .table-zone-frame[data-zone=red] { grid-area:red; }
+body.table-ui .table-zone-frame[data-zone=blue] { grid-area:blue; }
+body.table-ui #table-app#table-app .table-zone-frame > .zone { position:absolute !important; inset:0 !important; width:100% !important; height:100% !important; min-width:0 !important; max-width:none !important; min-height:0 !important; max-height:none !important; margin:0 !important; padding:34px 14px 16px !important; border:0 !important; border-radius:0 !important; box-shadow:inset 0 0 30px #10243112 !important; background:linear-gradient(155deg,#ffffff1f,transparent 48%,#122c3e12),var(--zone-tint) !important; overflow:auto !important; scrollbar-width:none !important; overscroll-behavior:contain; touch-action:none !important; transform:none !important; }
+body.table-ui #table-app#table-app .table-zone-frame > .zone::-webkit-scrollbar { display:none; }
+body.table-ui #table-app#table-app .table-zone-frame > .zone::before, body.table-ui #table-app#table-app .table-zone-frame > .zone::after { display:none !important; }
+body.table-ui #table-app#table-app .table-zone-frame .grid { margin:0 auto !important; padding:0 !important; max-width:none !important; max-height:none !important; flex-shrink:0 !important; transform:none !important; }
+body.table-ui #table-app#table-app .table-zone-frame .cell { width:var(--cell-size) !important; height:var(--cell-size) !important; min-width:var(--cell-size) !important; min-height:var(--cell-size) !important; border-radius:5px !important; box-shadow:inset 0 1px 0 #ffffff55,0 1px 1px #1a294914; }
+body.table-ui #table-app#table-app .table-zone-frame .cell:not(.active):not(.void-cell):not(.bold-cell):not(.black-hole-cell):not(.trap-cell) { background-color:color-mix(in srgb,var(--zone-tint),white 53%); border-color:#ffffff24; }
+body.table-ui #table-app#table-app .table-zone-frame .root-cell { border:2px solid transparent !important; background-clip:padding-box; }
+body.table-ui #table-app#table-app .table-zone-frame .void-cell { visibility:hidden !important; box-shadow:none; }
+body.table-ui #table-app#table-app .table-zone-frame .cell.active { box-shadow:inset 0 0 0 2px #14324e45,0 1px 2px #0002; }
+body.table-ui #table-app#table-app .table-zone-frame .bold-cell { outline-offset:-2px !important; }
+body.table-ui #table-app#table-app #red-zone { display:grid; grid-template-columns:repeat(2,max-content) !important; grid-auto-rows:max-content !important; gap:14px !important; justify-content:safe center !important; align-content:safe center !important; }
+/* Red contains several real subgrids. Keep the info control out of CSS-grid flow so
+   centering applies to the red maps themselves, not to the overlay chrome. */
+body.table-ui #table-app#table-app .table-zone-frame[data-zone=red] #red-zone > .zone-info-btn { position:absolute !important; top:8px !important; right:8px !important; left:auto !important; margin:0 !important; float:none !important; }
+body.table-ui #table-app#table-app #red-zone > [data-subgrid] { position:relative !important; flex:none !important; min-width:0 !important; min-height:0 !important; margin:0 !important; padding:0 !important; border:0 !important; box-shadow:none !important; background:transparent !important; border-radius:8px !important; overflow:visible !important; }
+body.table-ui #table-app#table-app .table-zone-label { position:absolute; top:9px; left:14px; z-index:12; font-size:10px; font-weight:750; letter-spacing:.14em; text-transform:uppercase; color:#152c48b3; pointer-events:none; }
+body.table-ui #table-app#table-app .zone-info-btn { position:sticky !important; float:right; top:0 !important; right:0 !important; margin:-29px -8px 0 0 !important; width:28px !important; height:28px !important; min-width:28px !important; min-height:28px !important; z-index:14 !important; font-size:12px !important; }
+body.table-ui #table-app#table-app .zone-info-popover { z-index:50 !important; max-width:min(280px,100%) !important; }
+body.table-ui #table-app#table-app .table-edge { position:absolute; display:flex; justify-content:center; align-items:center; z-index:20; width:44px; height:44px; padding:0; margin:0; border:0; border-radius:50%; background:#102c4278; color:#fff; font-size:32px; box-shadow:0 2px 12px #18304b1a; cursor:pointer; }
+body.table-ui #table-app#table-app .table-edge-left { left:0; top:calc(50% - 22px); }
+body.table-ui #table-app#table-app .table-edge-right { right:0; top:calc(50% - 22px); }
+body.table-ui #table-app#table-app .table-edge-top { top:0; left:calc(50% - 22px); }
+body.table-ui #table-app#table-app .table-edge-bottom { bottom:0; left:calc(50% - 22px); }
+body.table-ui #table-app#table-app .table-zone-frame::after { content:''; position:absolute; inset:0; z-index:11; pointer-events:none; --left:transparent; --right:transparent; --top:transparent; --bottom:transparent; background:linear-gradient(90deg,var(--left),transparent 11%,transparent 89%,var(--right)),linear-gradient(0deg,var(--bottom),transparent 12%,transparent 88%,var(--top)); }
+body.table-ui #table-app#table-app .more-left::after { --left:#12304466; }
+body.table-ui #table-app#table-app .more-right::after { --right:#12304466; }
+body.table-ui #table-app#table-app .more-top::after { --top:#12304455; }
+body.table-ui #table-app#table-app .more-bottom::after { --bottom:#12304455; }
+body.table-ui #table-app#table-app .table-scrollable { cursor:grab; }
+body.table-ui #table-app#table-app .table-panning { cursor:grabbing; user-select:none; }
+body.table-ui #table-app#table-app #card-choice-zone > br { display:none; }
+body.table-ui #table-app#table-app #card-controls { display:flex !important; flex-direction:column !important; align-items:stretch !important; gap:16px !important; width:100% !important; padding:0 !important; }
+body.table-ui #table-app#table-app #card-options { display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:10px !important; width:100% !important; min-width:0 !important; max-width:none !important; height:auto !important; padding:4px !important; margin:0 !important; overflow:visible !important; transform:none !important; }
+body.table-ui #table-app#table-app #card-options .card-option { display:flex !important; align-items:center !important; justify-content:center !important; flex-direction:column !important; position:relative !important; flex:none !important; width:100% !important; min-width:0 !important; max-width:none !important; height:132px !important; min-height:0 !important; max-height:none !important; padding:10px !important; margin:0 !important; border:1px solid #b5cee833 !important; border-radius:13px !important; background:linear-gradient(155deg,#294156,#142738) !important; box-shadow:inset 0 1px #ffffff0d,0 4px 8px #0002 !important; transform:none !important; }
+body.table-ui #table-app#table-app #card-options .card-option.selected { border-color:#f2d27c !important; background:linear-gradient(155deg,#514c36,#293236) !important; box-shadow:0 0 0 2px #edd28420,0 5px 15px #0003 !important; }
+body.table-ui #table-app#table-app .card-pattern { transform:none !important; margin:0 !important; gap:2px !important; }
+body.table-ui #table-app#table-app .card-cell { width:var(--preview-cell) !important; height:var(--preview-cell) !important; min-width:0 !important; min-height:0 !important; border-radius:3px !important; }
+body.table-ui #table-app#table-app :is(.card-label,.card-shape-label,.card-type-label) { font-size:10px !important; }
+body.table-ui #table-app#table-app .hand-scroll-btn { display:none !important; }
+body.table-ui #table-app#table-app #card-action-buttons { display:grid !important; grid-template-columns:repeat(3,minmax(0,1fr)) !important; gap:8px !important; position:static !important; width:100% !important; min-width:0 !important; margin:0 !important; padding:0 !important; transform:none !important; }
+body.table-ui #table-app#table-app :is(.card-action-btn,.deck-preview) { position:relative !important; inset:auto !important; width:100% !important; height:52px !important; min-width:44px !important; min-height:44px !important; margin:0 !important; padding:4px !important; border:1px solid #b7d5f125 !important; border-radius:10px !important; background:linear-gradient(#23394b,#192c3d) !important; box-shadow:inset 0 1px #ffffff08 !important; transform:none !important; color:#d7e6f3 !important; }
+body.table-ui #table-app#table-app #new-cards-btn { grid-column:1 / -1 !important; background:linear-gradient(140deg,#aa8a3e,#6e5424) !important; border-color:#eaca7766 !important; color:#fff4d4 !important; }
+body.table-ui #table-app#table-app #turn-counter-inline { position:static !important; grid-column:1 / -1 !important; order:10; text-align:center; color:#96b2c9; font-size:11px !important; padding:8px !important; }
+body.table-ui #table-app#table-app :is(button,[role=button]):focus-visible, body.table-ui #table-app#table-app .zone:focus-visible { outline:3px solid #e6f1fc !important; outline-offset:-3px; }
+body.table-ui #table-tabs, body.table-ui .table-score-details { display:none; }
+body.table-ui :is(#bottom-bar,#mobile-portrait-stage,#mobile-objective-banner,#mobile-landscape-wrapper,#desktop-wrapper,#undo-floating-btn) { display:none !important; }
+body.table-ui #controls { z-index:3000 !important; }
+/* The hand remains the visual preview; reuse its controls for touch placement. */
+body.table-ui #floating-preview, body.table-ui .card-control-btn { display:none !important; }
+body.table-ui #table-app#table-app #table-cancel:disabled { opacity:.32; }
+
+body.table-ui #table-app#table-app #collected-coins { display:none !important; }
+body.table-ui #table-app#table-app #gold-zone::before { content:'● ' attr(data-coin-text); display:block !important; color:#f4cd62; font-size:22px; font-weight:700; position:static !important; background:none !important; width:auto !important; height:auto !important; }
+body.table-ui #table-app#table-app #gold-zone::after { display:none !important; }
+body.table-ui #table-app#table-app #table-status > .zone { flex-shrink:0 !important; }
+body.table-ui #table-app#table-app .table-zone-frame > .zone:not(#red-zone) { display:block !important; }
+body.table-ui #table-app#table-app .table-zone-frame .grid:not(:has(.root-cell)) { width:max-content !important; gap:2px !important; }
+body.table-ui #table-app#table-app :is(#rotate-card-btn,#mirror-card-btn,#undo-inline-btn,#new-cards-btn) { display:flex !important; flex-direction:column; align-items:center; justify-content:center; }
+body.table-ui #table-app#table-app #undo-inline-btn.is-cancel-mode { background:linear-gradient(155deg,#5a2a2a,#2e1717) !important; border-color:#d07c7c !important; color:#fff2f2 !important; }
+body.table-ui #table-app#table-app :is(#rotate-card-btn,#mirror-card-btn,#new-cards-btn)::before { content:attr(data-icon); display:block !important; font-size:22px; }
+body.table-ui #table-app#table-app :is(#rotate-card-btn,#mirror-card-btn,#new-cards-btn)::after { content:attr(data-label); display:block !important; font-size:10px; margin:2px 0 0; letter-spacing:0; }
+body.table-ui #table-app#table-app .card-action-btn:disabled { opacity:.4 !important; }
+body.table-ui #table-app#table-app #card-action-buttons { border:0 !important; }
+body.table-ui #table-app#table-app #card-action-buttons > :is(button,.deck-preview) { max-width:none !important; width:100% !important; }
+body.table-ui #table-app#table-app #gold-zone h2 { order:-1; width:100% !important; flex-basis:100% !important; }
+body.table-ui #table-app#table-app #buy-placement-container { width:44px !important; min-width:44px !important; max-width:44px !important; padding:0 !important; margin:0 0 0 auto !important; }
+body.table-ui #table-app#table-app #buy-placement-btn { width:44px !important; min-width:44px !important; max-width:44px !important; height:44px !important; margin:0 !important; padding:0 !important; }
+body.table-ui #table-app#table-app #buy-placement-btn > span { display:none !important; }
+body.table-ui #table-app#table-app #buy-placement-btn::before { content:'+'; display:block; color:#dbeaf5; font-size:26px; }
+body.table-ui #table-app#table-app .table-zone-frame .zone-info-btn { position:absolute !important; float:none; top:5px !important; right:5px !important; left:auto !important; margin:0 !important; }
+body.table-ui #table-app#table-app #gold-zone { display:grid !important; grid-template-columns:minmax(0,1fr) 44px !important; grid-template-rows:auto 44px !important; gap:8px !important; align-items:center !important; }
+body.table-ui #table-app#table-app #gold-zone h2 { grid-column:1 / -1; grid-row:1; margin:0 !important; }
+body.table-ui #table-app#table-app #gold-zone::before { grid-column:1; grid-row:2; font-size:22px; }
+body.table-ui #table-app#table-app #buy-placement-container { grid-column:2; grid-row:2; }
+body.table-ui #table-app#table-app #table-level { text-align:center; color:#90b7d5; letter-spacing:.12em; text-transform:uppercase; font-size:10px; line-height:1.5; }
+body.table-ui #table-app#table-app #objective-zone { min-height:0 !important; padding:4px 12px !important; }
+body.table-ui #table-app#table-app :is(#rotate-card-btn,#mirror-card-btn)::after { content:attr(data-label); font-size:9px; }
+body.table-ui #table-app#table-app #rotate-card-btn { font-size:0 !important; }
+body.table-ui #table-app#table-app #mirror-card-btn { font-size:0 !important; }
+@media (min-width:1600px) {
+  body.table-ui #table-app#table-app { grid-template-columns:170px minmax(0,1fr) 290px; padding:24px 36px 40px; }
+  body.table-ui #table-app#table-app #card-options .card-option { height:156px !important; }
+}
+@media (min-width:600px) and (max-width:1240px) and (min-height:600px) {
+  body.table-ui #table-app#table-app { grid-template-columns:minmax(0,1fr); grid-template-rows:64px minmax(0,1fr) auto; grid-template-areas:'header' 'world' 'hand'; gap:10px; padding:12px 18px 18px; }
+  body.table-ui #table-brand { min-width:140px; font-size:19px; }
+  body.table-ui #table-brand small { display:none; }
+  body.table-ui #table-hand { padding-left:180px; position:relative; min-height:186px; }
+  body.table-ui #table-status { position:absolute; left:18px; bottom:18px; width:170px; max-height:190px; z-index:2; gap:6px; }
+  body.table-ui #table-app#table-app #scoreboard .score-row { display:none !important; }
+  body.table-ui #table-app#table-app #scoreboard h2, body.table-ui #table-app#table-app #gold-zone h2, body.table-ui #table-app#table-app #bonus-zone h2 { display:none !important; }
+  body.table-ui #table-app#table-app .score-total { margin:0 !important; padding:0 !important; border:0; }
+  body.table-ui #table-app#table-app :is(#scoreboard,#gold-zone,#bonus-zone) { padding:8px !important; }
+  body.table-ui #table-app#table-app #bonus-inventory { flex-wrap:nowrap; gap:2px !important; overflow:auto; }
+  body.table-ui #table-app#table-app .bonus-badge { flex-shrink:0; }
+  body.table-ui #table-app#table-app #card-controls { display:grid !important; grid-template-columns:minmax(0,1fr) 190px !important; gap:12px !important; }
+  body.table-ui #table-app#table-app #card-options { grid-template-columns:repeat(3,minmax(0,1fr)) !important; align-content:start; }
+  body.table-ui #table-app#table-app #card-options .card-option { height:94px !important; }
+  body.table-ui #table-app#table-app #card-options:has(> :nth-child(4)) { grid-template-columns:repeat(5,minmax(0,1fr)) !important; }
+  body.table-ui #table-app#table-app #card-choice-zone h2 { margin-bottom:8px !important; }
+  body.table-ui #table-app#table-app #turn-counter-inline { padding:0 !important; }
+  body.table-ui #table-app#table-app .table-score-details { display:block; font-size:10px; padding:4px; min-height:30px; color:#aec8dc; background:#183044; border:0; border-radius:8px; }
+  body.table-ui #table-app#table-app.table-scores-open #scoreboard .score-row { display:flex !important; }
+}
+/* Phones use a focused, switchable map. Cards and primary actions stay in reach. */
+body.table-ui.table-phone #table-app#table-app { grid-template-columns:minmax(0,1fr); grid-template-rows:60px minmax(0,1fr) auto auto; grid-template-areas:'header' 'world' 'hand' 'status'; gap:8px; padding:max(8px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left)); }
+body.table-ui.table-phone #table-header { gap:6px; padding:0; border:0; }
+body.table-ui.table-phone #table-brand { display:none; }
+body.table-ui.table-phone #table-app#table-app #objective-zone { padding:4px !important; min-height:44px !important; }
+body.table-ui.table-phone #table-app#table-app #objective-current { font-size:12px !important; }
+body.table-ui.table-phone #table-tools { gap:4px; }
+body.table-ui.table-phone #table-tabs { display:flex; gap:4px; padding:0 0 6px; }
+body.table-ui.table-phone #table-app#table-app .table-tab { flex:1; min-width:0; min-height:44px; padding:6px 2px; border:1px solid #a8d3ee20; border-radius:10px; color:var(--zone-tint); background:#18304780; font-size:11px; font-weight:600; cursor:pointer; }
+body.table-ui.table-phone #table-app#table-app .table-tab[aria-pressed=true] { background:color-mix(in srgb,var(--zone-tint),#142332 78%); border-color:var(--zone-tint); box-shadow:inset 0 -2px var(--zone-tint); }
+body.table-ui.table-phone #table-stage { padding:6px 2px; }
+body.table-ui.table-phone #table-stage::before { clip-path:polygon(.75% 0,99.25% 0,100% 100%,0 100%); }
+body.table-ui.table-phone #table-app#table-app #board { display:flex !important; }
+body.table-ui.table-phone #table-app#table-app .table-zone-frame { flex:1; width:100%; }
+body.table-ui.table-phone #table-app#table-app .table-zone-frame > .zone { padding-top:36px !important; }
+body.table-ui.table-phone #table-app#table-app .zone-info-btn { min-width:44px !important; min-height:44px !important; width:44px !important; height:44px !important; }
+body.table-ui.table-phone #table-app#table-app #card-choice-zone { padding:8px !important; border-radius:14px !important; }
+body.table-ui.table-phone #table-app#table-app #card-choice-zone h2 { display:none !important; }
+body.table-ui.table-phone #table-app#table-app #card-controls { gap:6px !important; }
+body.table-ui.table-phone #table-app#table-app #card-options { grid-template-columns:repeat(3,minmax(0,1fr)) !important; gap:6px !important; padding:2px !important; }
+body.table-ui.table-phone #table-app#table-app #card-options:has(> :nth-child(4)) { grid-template-columns:repeat(5,minmax(0,1fr)) !important; }
+body.table-ui.table-phone #table-app#table-app #card-options .card-option { height:86px !important; padding:6px !important; border-radius:10px !important; }
+body.table-ui.table-phone #table-app#table-app #card-action-buttons { grid-template-columns:1.8fr repeat(4,minmax(44px,1fr)) !important; gap:5px !important; }
+body.table-ui.table-phone #table-app#table-app #new-cards-btn { grid-column:auto !important; }
+body.table-ui.table-phone #table-app#table-app :is(.card-action-btn,.deck-preview) { height:48px !important; }
+body.table-ui.table-phone #table-app#table-app .card-action-btn::after { font-size:9px !important; }
+body.table-ui.table-phone #table-app#table-app #turn-counter-inline { display:none !important; }
+body.table-ui.table-phone #table-status { position:relative; display:grid; grid-template-columns:70px minmax(0,1fr) 100px; grid-template-areas:'score bonus coins'; overflow:visible; gap:5px; }
+body.table-ui.table-phone #table-app#table-app #scoreboard { grid-area:score; }
+body.table-ui.table-phone #table-app#table-app #bonus-zone { grid-area:bonus; }
+body.table-ui.table-phone #table-app#table-app #gold-zone { grid-area:coins; flex-wrap:nowrap; gap:4px; }
+body.table-ui.table-phone #table-app#table-app #table-status :is(#scoreboard,#gold-zone,#bonus-zone) { padding:5px !important; border-radius:10px !important; }
+body.table-ui.table-phone #table-app#table-app #table-status h2, body.table-ui.table-phone #table-app#table-app .score-row { display:none !important; }
+body.table-ui.table-phone #table-app#table-app .score-total { margin:0 !important; padding:0 !important; height:44px; border:0; gap:4px; }
+body.table-ui.table-phone #table-app#table-app .score-total .label { font-size:9px; }
+body.table-ui.table-phone #table-app#table-app :is(.total-score,#collected-coins) { font-size:18px !important; }
+body.table-ui.table-phone #table-app#table-app #bonus-inventory { flex-wrap:nowrap !important; gap:2px !important; overflow:auto; scrollbar-width:none; justify-content:space-between; }
+body.table-ui.table-phone #table-app#table-app .bonus-badge { flex:0 0 34px; width:34px !important; min-width:32px !important; max-width:34px !important; }
+body.table-ui.table-phone #table-app#table-app .table-score-details { display:block; position:absolute; inset:0 auto 0 0; width:70px; height:100%; opacity:0; z-index:3; cursor:pointer; }
+body.table-ui.table-phone #table-app#table-app.table-scores-open #scoreboard { position:absolute; bottom:0; left:0; width:160px !important; z-index:30; padding:12px !important; background:#132b3f !important; }
+body.table-ui.table-phone #table-app#table-app.table-scores-open #scoreboard .score-row { display:flex !important; }
+body.table-ui.table-phone #table-app#table-app.table-scores-open .table-score-details { z-index:31; }
+body.table-ui.table-landscape #table-app#table-app { grid-template-columns:minmax(0,1fr) 250px; grid-template-rows:52px minmax(0,1fr) 58px; grid-template-areas:'header header' 'world hand' 'world status'; }
+body.table-ui.table-landscape #table-app#table-app #table-brand { display:flex; }
+body.table-ui.table-landscape #table-app#table-app #table-header { gap:16px; }
+body.table-ui.table-landscape #table-app#table-app #table-status { grid-template-columns:60px minmax(0,1fr) 86px; }
+body.table-ui.table-landscape #table-app#table-app #card-action-buttons { grid-template-columns:repeat(4,minmax(44px,1fr)) !important; }
+body.table-ui.table-landscape #table-app#table-app #new-cards-btn { grid-column:1 / -1 !important; }
+@media (max-height:700px) and (orientation:portrait) {
+  body.table-ui.table-phone #table-app#table-app { grid-template-rows:52px minmax(0,1fr) auto auto; gap:4px; }
+  body.table-ui.table-phone #table-app#table-app #card-options .card-option { height:64px !important; }
+}
+@media (prefers-reduced-motion:reduce) {
+  body.table-ui #table-app#table-app * { animation:none !important; transition:none !important; scroll-behavior:auto !important; }
+}
+body.table-ui.table-phone #table-app#table-app #gold-zone { grid-template-rows:44px !important; gap:3px !important; }
+body.table-ui.table-phone #table-app#table-app #gold-zone::before, body.table-ui.table-phone #table-app#table-app #buy-placement-container { grid-row:1; }
+body.table-ui.table-phone #table-app#table-app #gold-zone::before { font-size:16px; white-space:nowrap; }
+@media (min-width:600px) and (max-width:1240px) and (min-height:600px) {
+  body.table-ui #table-app#table-app #gold-zone { grid-template-rows:44px !important; }
+  body.table-ui #table-app#table-app #gold-zone::before, body.table-ui #table-app#table-app #buy-placement-container { grid-row:1; }
+  body.table-ui #table-app#table-app #table-status { height:180px; max-height:none; overflow:visible; }
+  body.table-ui #table-app#table-app #table-status > .zone { padding:5px !important; }
+  body.table-ui #table-app#table-app .score-total { height:44px !important; min-height:44px !important; }
+  body.table-ui #table-app#table-app .table-score-details { position:absolute; top:0; left:0; width:100%; height:56px; min-height:44px; opacity:0; z-index:3; cursor:pointer; }
+  body.table-ui #table-app#table-app.table-scores-open #scoreboard { position:absolute; bottom:0; left:0; z-index:4; background:#142c40 !important; }
+  body.table-ui #table-app#table-app.table-scores-open .table-score-details { height:100%; z-index:5; }
+  body.table-ui #table-app#table-app #card-controls { grid-template-columns:minmax(0,1fr) 160px !important; }
+  body.table-ui #table-app#table-app #new-cards-btn::before { font-size:19px; }
+  body.table-ui #table-app#table-app #new-cards-btn::after { font-size:10px; }
+}
+body.table-ui.table-phone #table-app#table-app #scoreboard .score-total .label { display:none !important; }
+body.table-ui.table-phone #table-app#table-app #scoreboard .score-total::before { content:'★'; color:#e7c970; font-size:16px; }
+body.table-ui.table-phone #table-app#table-app #scoreboard .score-total { justify-content:center !important; gap:7px !important; }
+body.table-ui #table-app#table-app #rotate-card-btn::after { content:'Draaien'; }
+body.table-ui #table-app#table-app #mirror-card-btn::after { content:'Spiegelen'; }
+body.table-ui.table-phone #table-app#table-app :is(#rotate-card-btn,#mirror-card-btn,#undo-inline-btn)::after { display:none !important; }
+@media (min-width:600px) and (max-width:1240px) and (min-height:600px) {
+  body.table-ui #table-app#table-app :is(#rotate-card-btn,#mirror-card-btn,#undo-inline-btn)::after { display:none !important; }
+}
+}
+
+/* Keep cell geometry and markers consistent across all five maps. */
+body.table-ui #table-app#table-app .table-zone-frame .cell,
+body.table-ui #table-app#table-app .table-zone-frame .root-cell,
+body.table-ui #table-app#table-app #green-grid .root-cell:not(.void-cell) {
+  width:var(--table-cell-size,var(--cell-size)) !important;
+  height:var(--table-cell-size,var(--cell-size)) !important;
+  min-width:var(--table-cell-size,var(--cell-size)) !important;
+  min-height:var(--table-cell-size,var(--cell-size)) !important;
+  max-width:var(--table-cell-size,var(--cell-size)) !important;
+  max-height:var(--table-cell-size,var(--cell-size)) !important;
+  box-sizing:border-box !important;
+}
+body.table-ui #table-app#table-app .table-zone-frame .cell.active { transform:none !important; }
+body.table-ui #table-app#table-app #green-grid .root-cell:not(.void-cell) { transform:none !important; }
+body.table-ui #table-app#table-app .table-zone-frame .cell > .symbol {
+  margin:auto !important;
+}
+body.table-ui #table-app#table-app .table-zone-frame .cell > .symbol:not(.mega-bonus-symbol):not(.upgrade-shop-symbol) {
+  position:relative !important;
+  inset:auto !important;
+  top:auto !important;
+  right:auto !important;
+  bottom:auto !important;
+  left:auto !important;
+}
+body.table-ui #table-app#table-app .table-zone-frame .cell > .symbol.trap-symbol {
+  transform:rotate(45deg) scale(.75) !important;
+}
+body.table-ui #table-app#table-app .table-zone-frame .cell > :is(.portal-symbol,.door-symbol,.key-symbol),
+body.table-ui #table-app#table-app .table-zone-frame .cell > :is(.mega-bonus-symbol,.upgrade-shop-symbol) {
+  position:absolute !important;
+  top:50% !important;
+  left:50% !important;
+  right:auto !important;
+  bottom:auto !important;
+  margin:0 !important;
+}
+body.table-ui #table-app#table-app .table-zone-frame .cell > :is(.portal-symbol,.door-symbol,.key-symbol) {
+  transform:translate(-50%,-50%) !important;
+}
+body.table-ui #table-app#table-app .table-zone-frame .gold-cell::after {
+  top:50% !important;
+  left:50% !important;
+  right:auto !important;
+  bottom:auto !important;
+  transform:translate(-50%,-50%) !important;
+}
+
+/* Remove the old extra cancel button above; the undo slot becomes the cancel action while dragging. */
+body.table-ui #table-app#table-app #table-cancel { display:none !important; }
+
+/* Undo/cancel button styling in the action row. */
+body.table-ui #table-app#table-app #undo-inline-btn {
+  font-size:24px !important;
+  line-height:1 !important;
+  font-weight:700 !important;
+}
+body.table-ui #table-app#table-app #undo-inline-btn::after {
+  content:'' !important;
+  display:none !important;
+}
+body.table-ui #table-app#table-app #undo-inline-btn.is-cancel-mode {
+  background:linear-gradient(155deg,#5a2a2a,#2e1717) !important;
+  border-color:#d07c7c !important;
+  color:#fff2f2 !important;
+  font-size:30px !important;
+  font-weight:800 !important;
+}
+
+/* Tidy centering in the side panels and card previews on desktop/tablet. */
+body.table-ui #table-app#table-app .score-row { align-items:center !important; }
+body.table-ui #table-app#table-app #bonus-inventory {
+  justify-content:center !important;
+  align-items:center !important;
+}
+body.table-ui #table-app#table-app .bonus-badge {
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+body.table-ui #table-app#table-app #card-options .card-option {
+  gap:10px !important;
+}
+body.table-ui #table-app#table-app #card-options .card-pattern {
+  display:grid !important;
+  place-content:center !important;
+  justify-content:center !important;
+}
+body.table-ui #table-app#table-app #card-options .card-option > :is(.card-label,.card-type-label,.card-shape-label) {
+  width:100%;
+  text-align:center;
+}
+
+/* The popup follows the actual header button, including centered desktop layouts. */
+body.table-ui #controls#controls { position:fixed !important; left:auto !important; right:var(--table-menu-right,10px) !important; top:var(--table-menu-top,70px) !important; bottom:auto !important; transform:none !important; margin:0 !important; width:min(320px,calc(100vw - 20px)) !important; min-width:0 !important; max-height:calc(100dvh - var(--table-menu-top,70px) - 10px) !important; overflow-y:auto !important; }
+
+
+/* Fine-tune remaining alignment details after the shared layout pass. */
+body.table-ui #table-app#table-app .table-zone-frame[data-zone=blue] > .zone {
+  width:100% !important;
+}
+body.table-ui #table-app#table-app #bonus-inventory .bonus-badge {
+  justify-content:center !important;
+}
+body.table-ui #table-app#table-app #bonus-inventory .bonus-badge .bonus-count {
+  margin-left:0 !important;
+}
+body.table-ui #table-app#table-app #green-zone .cell.bold-cell,
+body.table-ui #table-app#table-app #green-zone .cell.bold-cell.active {
+  border:2px solid #2f5f34 !important;
+}
+body.table-ui #table-app#table-app #green-zone .cell.end-cell {
+  background:#a7d6aa !important;
+  border-color:#7db083 !important;
+}
+body.table-ui #table-app#table-app #green-zone .cell.end-cell.active {
+  background:#81b884 !important;
+  border-color:#5f9663 !important;
+}
+body.table-ui #table-app#table-app #green-zone .cell.start-cell.active {
+  background:var(--cell-green-active) !important;
+  border-color:var(--cell-green-active-border) !important;
+}
+
+
+/* Final visual polish: make green start/end markers clearly visible and center desktop bonus counts. */
+body.table-ui #table-app#table-app #red-zone .cell,
+body.table-ui #table-app#table-app #red-zone .root-cell {
+  width:var(--table-cell-size,var(--cell-size)) !important;
+  height:var(--table-cell-size,var(--cell-size)) !important;
+  min-width:var(--table-cell-size,var(--cell-size)) !important;
+  min-height:var(--table-cell-size,var(--cell-size)) !important;
+}
+body.table-ui #table-app#table-app #green-zone .cell.bold-cell:not(.void-cell) {
+  border:2px solid #2f5f34 !important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.30) !important;
+}
+body.table-ui #table-app#table-app #green-zone .cell.bold-cell:not(.void-cell):not(.active) {
+  background:#cfe8d1 !important;
+}
+body.table-ui #table-app#table-app #green-zone .cell.bold-cell.active {
+  background:#8ac28d !important;
+  border-color:#2a5930 !important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.30) !important;
+}
+body.table-ui #table-app#table-app #green-zone .cell.end-cell:not(.void-cell):not(.active) {
+  background:#7db083 !important;
+  border-color:#5f9663 !important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.24) !important;
+}
+body.table-ui #table-app#table-app #green-zone .cell.end-cell.active {
+  background:#5f9663 !important;
+  border-color:#447249 !important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.18) !important;
+}
+@media (min-width: 651px) {
+  body.table-ui #table-app#table-app #bonus-inventory .bonus-badge {
+    position:relative !important;
+    padding:0 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+  }
+  body.table-ui #table-app#table-app #bonus-inventory .bonus-badge .bonus-count {
+    position:absolute !important;
+    left:50% !important;
+    top:50% !important;
+    transform:translate(-50%,-50%) !important;
+    margin:0 !important;
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    text-align:center !important;
+    line-height:1 !important;
+  }
+}

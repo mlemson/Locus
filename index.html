@@ -12238,7 +12238,9 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	</style>
 	<link rel="stylesheet" href="responsive.css?v=5">
 	<link rel="stylesheet" href="styles/world-table.css?v=2">
+	<link rel="stylesheet" href="styles/world4-citadel.css?v=1">
 	<script src="js/world-table.js?v=2"></script>
+	<script src="js/world4-citadel.js?v=1"></script>
 	<script>
     // Simple menu toggle: toggles .open on #controls and .active on #menu-toggle
     document.addEventListener('DOMContentLoaded', function() {
@@ -14799,226 +14801,78 @@ let shopLevel2Used = false;
 			}
 		]
 		,
-		// WORLD 4 OBJECTIVES (Levels 31-40) - Deuren & sleutels + actieve zones
-		31: [
-			{
-				id: 'level-31-first-key',
-				description: 'Level 31: Ontgrendel 1 deurkleur.',
-				short: 'Level 31',
-				check: () => {
-					try { return (window.world4UnlockedColors instanceof Set) && window.world4UnlockedColors.size >= 1; } catch (e) { return false; }
-				}
-			},
-			{
-				id: 'level-31-active-total',
-				description: 'Level 31: Scoor 520 punten in de actieve zones.',
-				short: 'Level 31',
-				check: scores => getWorld4ActiveScoreTotal(scores) >= 520
-			},
-			{
-				id: 'level-31-open-door',
-				description: 'Level 31: Open 1 deur.',
-				short: 'Level 31',
-				check: () => countWorld4OpenDoors() >= 1
-			}
-		],
-		32: [
-			{
-				id: 'level-32-two-keys',
-				description: 'Level 32: Ontgrendel 2 deurkleuren.',
-				short: 'Level 32',
-				check: () => {
-					try { return (window.world4UnlockedColors instanceof Set) && window.world4UnlockedColors.size >= 2; } catch (e) { return false; }
-				}
-			},
-			{
-				id: 'level-32-active-total',
-				description: 'Level 32: Scoor 560 punten in de actieve zones.',
-				short: 'Level 32',
-				check: scores => getWorld4ActiveScoreTotal(scores) >= 560
-			},
-			{
-				id: 'level-32-open-door',
-				description: 'Level 32: Open 1 deur.',
-				short: 'Level 32',
-				check: () => countWorld4OpenDoors() >= 1
-			}
-		],
-		33: [
-			{
-				id: 'level-33-open-doors',
-				description: 'Level 33: Open 2 deuren.',
-				short: 'Level 33',
-				check: () => countWorld4OpenDoors() >= 2
-			},
-			{
-				id: 'level-33-two-active-colors',
-				description: 'Level 33: Scoor 220 punten in 2 actieve kleuren.',
-				short: 'Level 33',
-				check: scores => countWorld4ActiveColorsAtLeast(scores, 220) >= 2,
-				progress: scores => `${Math.min(2, countWorld4ActiveColorsAtLeast(scores, 220))}/2`
-			},
-			{
-				id: 'level-33-active-total',
-				description: 'Level 33: Scoor 620 punten in de actieve zones.',
-				short: 'Level 33',
-				check: scores => getWorld4ActiveScoreTotal(scores) >= 620
-			}
-		],
-		34: [
-			{
-				id: 'level-34-three-keys',
-				description: 'Level 34: Ontgrendel 3 deurkleuren.',
-				short: 'Level 34',
-				check: () => {
-					try { return (window.world4UnlockedColors instanceof Set) && window.world4UnlockedColors.size >= 3; } catch (e) { return false; }
-				}
-			},
-			{
-				id: 'level-34-coins',
-				description: 'Level 34: Verzamel 28+ munten.',
-				short: 'Level 34',
-				check: scores => getCollectedCoinCount(scores) >= 28,
-				progress: scores => {
-					const collected = Math.max(0, Math.min(28, getCollectedCoinCount(scores)));
-					return `${collected}/28`;
-				}
-			},
-			{
-				id: 'level-34-active-total',
-				description: 'Level 34: Scoor 680 punten in de actieve zones.',
-				short: 'Level 34',
-				check: scores => getWorld4ActiveScoreTotal(scores) >= 680
-			}
-		],
-		35: [
-			{
-				id: 'level-35-open-doors',
-				description: 'Level 35: Open 2 deuren.',
-				short: 'Level 35',
-				check: () => countWorld4OpenDoors() >= 2
-			},
-			{
-				id: 'level-35-one-color',
-				description: 'Level 35: Scoor 260 punten in 1 actieve kleur.',
-				short: 'Level 35',
-				check: scores => countWorld4ActiveColorsAtLeast(scores, 260) >= 1
-			},
-			{
-				id: 'level-35-active-total',
-				description: 'Level 35: Scoor 740 punten in de actieve zones.',
-				short: 'Level 35',
-				check: scores => getWorld4ActiveScoreTotal(scores) >= 740
-			}
-		],
-		36: [
-			{
-				id: 'level-36-three-keys',
-				description: 'Level 36: Ontgrendel 3 deurkleuren.',
-				short: 'Level 36',
-				check: () => {
-					try { return (window.world4UnlockedColors instanceof Set) && window.world4UnlockedColors.size >= 3; } catch (e) { return false; }
-				}
-			},
-			{
-				id: 'level-36-open-doors',
-				description: 'Level 36: Open 3 deuren.',
-				short: 'Level 36',
-				check: () => countWorld4OpenDoors() >= 3
-			},
-			{
-				id: 'level-36-active-total',
-				description: 'Level 36: Scoor 780 punten in de actieve zones.',
-				short: 'Level 36',
-				check: scores => getWorld4ActiveScoreTotal(scores) >= 780
-			}
-		],
-		37: [
-			{
-				id: 'level-37-two-active-colors',
-				description: 'Level 37: Scoor 280 punten in 2 actieve kleuren.',
-				short: 'Level 37',
-				check: scores => countWorld4ActiveColorsAtLeast(scores, 280) >= 2,
-				progress: scores => `${Math.min(2, countWorld4ActiveColorsAtLeast(scores, 280))}/2`
-			},
-			{
-				id: 'level-37-open-doors',
-				description: 'Level 37: Open 3 deuren.',
-				short: 'Level 37',
-				check: () => countWorld4OpenDoors() >= 3
-			},
-			{
-				id: 'level-37-active-total',
-				description: 'Level 37: Scoor 820 punten in de actieve zones.',
-				short: 'Level 37',
-				check: scores => getWorld4ActiveScoreTotal(scores) >= 820
-			}
-		],
-		38: [
-			{
-				id: 'level-38-active-total',
-				description: 'Level 38: Scoor 850 punten in de actieve zones.',
-				short: 'Level 38',
-				check: scores => getWorld4ActiveScoreTotal(scores) >= 850
-			},
-			{
-				id: 'level-38-open-doors',
-				description: 'Level 38: Open 3 deuren.',
-				short: 'Level 38',
-				check: () => countWorld4OpenDoors() >= 3
-			},
-			{
-				id: 'level-38-activation',
-				description: 'Level 38: Activeer 70% van de actieve zones.',
-				short: 'Level 38',
-				check: () => getWorld4ActiveZoneCompletionRatio() >= 0.70
-			}
-		],
-		39: [
-			{
-				id: 'level-39-activation',
-				description: 'Level 39: Activeer 75% van de actieve zones.',
-				short: 'Level 39',
-				check: () => getWorld4ActiveZoneCompletionRatio() >= 0.75
-			},
-			{
-				id: 'level-39-active-total',
-				description: 'Level 39: Scoor 880 punten in de actieve zones.',
-				short: 'Level 39',
-				check: scores => getWorld4ActiveScoreTotal(scores) >= 880
-			},
-			{
-				id: 'level-39-open-doors',
-				description: 'Level 39: Open 3 deuren.',
-				short: 'Level 39',
-				check: () => countWorld4OpenDoors() >= 3
-			}
-		],
-		40: [
-			{
-				id: 'level-40-world4-finale',
-				description: 'Level 40: Wereld 4 finale! Scoor 920 punten in de actieve zones.',
-				short: 'Level 40',
-				check: scores => getWorld4ActiveScoreTotal(scores) >= 920
-			},
-			{
-				id: 'level-40-activation',
-				description: 'Level 40: Activeer 80% van de actieve zones.',
-				short: 'Level 40',
-				check: () => getWorld4ActiveZoneCompletionRatio() >= 0.80
-			},
-			{
-				id: 'level-40-open-doors',
-				description: 'Level 40: Open 3 deuren en ontgrendel 3 deurkleuren.',
-				short: 'Level 40',
-				check: () => {
-					try {
-						const unlockedOk = (window.world4UnlockedColors instanceof Set) && window.world4UnlockedColors.size >= 3;
-						return unlockedOk && countWorld4OpenDoors() >= 3;
-					} catch (e) { return false; }
-				}
-			}
-		]
+		// WORLD 4 OBJECTIVES (Levels 31-40) — deterministic Citadel campaign.
+		// Each level has one required primary objective; optional stars are handled by LocusWorld4.
+		31: [{
+			id:'level-31-world4-primary',
+			description:'Level 31: Vind de sleutel, open de blauwe poort en scoor 120 punten.',
+			short:'De eerste sleutel',
+			check:scores => !!window.LocusWorld4?.isPrimaryComplete?.(31, scores),
+			progress:scores => window.LocusWorld4?.primaryProgressText?.(31, scores) || ''
+		}],
+		32: [{
+			id:'level-32-world4-primary',
+			description:'Level 32: Open het afgesloten gebied en scoor 150 punten.',
+			short:'Achter de poort',
+			check:scores => !!window.LocusWorld4?.isPrimaryComplete?.(32, scores),
+			progress:scores => window.LocusWorld4?.primaryProgressText?.(32, scores) || ''
+		}],
+		33: [{
+			id:'level-33-world4-primary',
+			description:'Level 33: Open beide poorten en scoor 165 punten.',
+			short:'Twee sloten',
+			check:scores => !!window.LocusWorld4?.isPrimaryComplete?.(33, scores),
+			progress:scores => window.LocusWorld4?.primaryProgressText?.(33, scores) || ''
+		}],
+		34: [{
+			id:'level-34-world4-primary',
+			description:'Level 34: Vind 2 sleutels, open 2 deuren en scoor 180 punten.',
+			short:'De ketting',
+			check:scores => !!window.LocusWorld4?.isPrimaryComplete?.(34, scores),
+			progress:scores => window.LocusWorld4?.primaryProgressText?.(34, scores) || ''
+		}],
+		35: [{
+			id:'level-35-world4-primary',
+			description:'Level 35: Open de nauwe route en scoor 195 punten.',
+			short:'Nauwe doorgang',
+			check:scores => !!window.LocusWorld4?.isPrimaryComplete?.(35, scores),
+			progress:scores => window.LocusWorld4?.primaryProgressText?.(35, scores) || ''
+		}],
+		36: [{
+			id:'level-36-world4-primary',
+			description:'Level 36: Open de drie verzegelde gebieden en scoor 210 punten.',
+			short:'Verzegelde gebieden',
+			check:scores => !!window.LocusWorld4?.isPrimaryComplete?.(36, scores),
+			progress:scores => window.LocusWorld4?.primaryProgressText?.(36, scores) || ''
+		}],
+		37: [{
+			id:'level-37-world4-primary',
+			description:'Level 37: Herstel de ruïne, open de poorten en scoor 220 punten.',
+			short:'De ruïne',
+			check:scores => !!window.LocusWorld4?.isPrimaryComplete?.(37, scores),
+			progress:scores => window.LocusWorld4?.primaryProgressText?.(37, scores) || ''
+		}],
+		38: [{
+			id:'level-38-world4-primary',
+			description:'Level 38: Ontgrendel de verborgen rode wijk en scoor 240 punten.',
+			short:'Verborgen wijk',
+			check:scores => !!window.LocusWorld4?.isPrimaryComplete?.(38, scores),
+			progress:scores => window.LocusWorld4?.primaryProgressText?.(38, scores) || ''
+		}],
+		39: [{
+			id:'level-39-world4-primary',
+			description:'Level 39: Open de drie voorpoorten en scoor 280 punten.',
+			short:'Voorpoort van de Citadel',
+			check:scores => !!window.LocusWorld4?.isPrimaryComplete?.(39, scores),
+			progress:scores => window.LocusWorld4?.primaryProgressText?.(39, scores) || ''
+		}],
+		40: [{
+			id:'level-40-world4-primary',
+			description:'Level 40: Open de 3 poorten, activeer de citadelkern en scoor 350 punten.',
+			short:'De Citadel',
+			check:scores => !!window.LocusWorld4?.isPrimaryComplete?.(40, scores),
+			progress:scores => window.LocusWorld4?.primaryProgressText?.(40, scores) || ''
+		}]
 	};
 
 	// Generate objectives array with random selection per level
@@ -20940,6 +20794,7 @@ let shopLevel2Used = false;
 	latestScoreSnapshot = scoreSnapshot;
 	updateObjectives(scoreSnapshot);
 	highlightAchievedObjectiveScores(scoreSnapshot);
+	try { window.LocusWorld4?.onScoreUpdated?.(scoreSnapshot); } catch (_) {}
   }
 	
 	
@@ -21507,7 +21362,7 @@ let shopLevel2Used = false;
 	if (placementSeq >= toggleSeq) {
 	  const placement = cardPlacementHistory.pop();
 	  if (!placement) return;
-	  const { cells = [], coinSnapshotBefore = [], handIndex = 0, cardState, cardRef, bonuses = [], isBonusPlacement = false, bonusKey = null, bonusSpent = false } = placement;
+	  const { cells = [], coinSnapshotBefore = [], handIndex = 0, cardState, cardRef, bonuses = [], isBonusPlacement = false, bonusKey = null, bonusSpent = false, world4Before = null } = placement;
 	  cells.forEach(cell => {
 		if (!cell) return;
 		cell.classList.remove('active', 'preview-allowed', 'preview-denied', 'edge-cell');
@@ -21546,6 +21401,7 @@ let shopLevel2Used = false;
 		});
 		updateBonusInventoryUI();
 	  }
+	  try { if (world4Before) window.LocusWorld4?.restorePrePlacementState?.(world4Before); } catch (_) {}
 	  updateScore();
 	  recomputeBonusEchoSequenceState();
 	  if (isBonusPlacement) {
@@ -21558,6 +21414,7 @@ let shopLevel2Used = false;
 		updateDrawButtonState();
 		recomputeTurnCardFlags();
 		applyTurnCardLocks();
+		try { if (window.LocusWorld4?.isWorld4?.()) saveGameState(); } catch (_) {}
 		return;
 	  }
 	  const discardIdx = cardState ? discardPile.findIndex(card => card.id === cardState.id) : -1;
@@ -21597,6 +21454,7 @@ let shopLevel2Used = false;
 	  recomputeTurnCardFlags();
 	  applyTurnCardLocks();
 	  updateUndoButton();
+	  try { if (window.LocusWorld4?.isWorld4?.()) saveGameState(); } catch (_) {}
 	  return;
 	}
 
@@ -23092,6 +22950,15 @@ function clearElPos(el) {
 			return null;
 		  }
 
+			// World 4 special puzzle cells (ruin rubble / locked Citadel core).
+			try {
+				if (window.LocusWorld4?.isCellBlocked?.(target)) {
+					if (isOptional) continue;
+					window.lastPlacementFailure = { zoneId: zone?.id || null, reason: 'world4-special-blocked', x: baseX + x, y: baseY + y };
+					return null;
+				}
+			} catch (_) {}
+
 			// World 4 (and scenarios): door-gated regions are unreachable until the door is opened.
 			try {
 				const worldInfo = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(currentLevel) : null;
@@ -23694,6 +23561,10 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	  
 	  const placements = [];
 	  const bonuses = [];
+	  // Snapshot World 4 gate/star state before any cell toggles so undo can truly
+	  // rewind keys, doors, revealed areas and challenge counters.
+	  let world4Before = null;
+	  try { world4Before = window.LocusWorld4?.capturePrePlacementState?.() || null; } catch (_) {}
 	  const previousPlacementId = currentPlacementId;
 	  placementSequence += 1;
 	  currentPlacementId = `placement-${placementSequence}`;
@@ -23743,7 +23614,8 @@ function optionalCellsTouchActive(zone, pendingCells) {
 		zoneId: zone.id,
 		cells: placements,
 		bonuses,
-		scoreDelta: scoreAfter - scoreBefore
+		scoreDelta: scoreAfter - scoreBefore,
+		world4Before
 	};
 }
 
@@ -24136,6 +24008,14 @@ const XL_6_SHAPES = BASE_SHAPES.xl6;
 
 	function getWorld4ActiveColorsForLevel(level) {
 		const lvl = Math.max(1, Number(level) || 1);
+		// World 4 is a designed campaign: use its explicit start palette when available.
+		try {
+			const cfg = window.LocusWorld4?.getLevelConfig?.(lvl);
+			if (cfg && Array.isArray(cfg.startColors) && cfg.startColors.length) {
+				return cfg.startColors.slice();
+			}
+		} catch (_) {}
+		// Fallback keeps older/custom World 4 levels compatible.
 		if (world4ActiveColorsByLevel.has(lvl)) {
 			return world4ActiveColorsByLevel.get(lvl).slice();
 		}
@@ -26659,7 +26539,8 @@ function getCollectedCoinCount(scores) {
 			coinSnapshotBefore: coinSnapshot,
 			bonuses: Array.isArray(placementResult.bonuses) ? placementResult.bonuses.slice() : [],
 			sequence: actionId,
-			bonusSpent: true
+			bonusSpent: true,
+			world4Before: placementResult.world4Before || null
 		});
 		updateUndoButton();
 		updateDrawButtonState();
@@ -26681,13 +26562,16 @@ function getCollectedCoinCount(scores) {
 		coinSnapshotBefore: coinSnapshot,
 		bonuses: Array.isArray(placementResult.bonuses) ? placementResult.bonuses.slice() : [],
 		sequence: actionId,
-		bonusSpent: consumed
+		bonusSpent: consumed,
+		world4Before: placementResult.world4Before || null
 	  });
 	  updateUndoButton();
 	if (consumed) {
 		updateBonusInventoryUI();
+		try { window.LocusWorld4?.onBonusUsed?.(colorKey); } catch (_) {}
 	}
 	  updateDrawButtonState();
+	  try { if (window.LocusWorld4?.isWorld4?.()) saveGameState(); } catch (_) {}
 	  try {
 		document.dispatchEvent(new CustomEvent('locus:tutorial-bonus-placed', { detail: { bonusKey: colorKey } }));
 	  } catch (_) {}
@@ -26864,6 +26748,9 @@ function getCollectedCoinCount(scores) {
 		newHand.push(drawPile.shift());
 	  }
 	  finalizeHandDraw(newHand);
+	  try {
+		if (!isLoadingGame && window.LocusWorld4?.isWorld4?.()) saveGameState();
+	  } catch (_) {}
 	}
 
 	function consumeCard(cardId) {
@@ -27102,8 +26989,10 @@ function getCollectedCoinCount(scores) {
 		bonusEchoPointsAdded,
 		bonusEchoExtraTurnGranted,
 		bonusEchoColorKey,
-		bonusEchoBonusesGranted
+		bonusEchoBonusesGranted,
+		world4Before: placementResult.world4Before || null
 	});
+	try { window.LocusWorld4?.onCardPlayed?.(playedCard, placementResult); } catch (_) {}
 	updateUndoButton();
 	try {
 		document.dispatchEvent(new CustomEvent('locus:tutorial-card-placed', { detail: { placement: placementResult } }));
@@ -27121,6 +27010,7 @@ function getCollectedCoinCount(scores) {
 	  // Rebuild the hand after removing the card so availability + button states refresh correctly
 	  renderCurrentHand();
 	  applyTurnCardLocks();
+	  try { if (window.LocusWorld4?.isWorld4?.()) saveGameState(); } catch (_) {}
 	}
 
 	function clearBoardPreserveCoins() {
@@ -27363,6 +27253,8 @@ function getCollectedCoinCount(scores) {
 	let objectiveCleared = true;
 	if (loadedCustom) {
 		try { objectiveCleared = !!loadedCustom.check(); } catch (e) { objectiveCleared = false; }
+	} else if (window.LocusWorld4?.isWorld4?.()) {
+		try { objectiveCleared = !!window.LocusWorld4.isPrimaryComplete(currentLevel, latestScoreSnapshot); } catch (_) { objectiveCleared = false; }
 	} else {
 		objectiveCleared = activeObjective ? isObjectiveCompleted(activeObjective.id) : true;
 	}
@@ -27408,6 +27300,12 @@ function getCollectedCoinCount(scores) {
 			const objDesc = (loadedCustom && loadedCustom.description) ? loadedCustom.description : (activeObjective.short || activeObjective.description);
 			summaryHTML += `<div class="modal-summary-line"><strong>Doel</strong><span>${objDesc} - ${statusLabel}</span></div>`;
 		}
+		try {
+			if (window.LocusWorld4?.isWorld4?.()) {
+				if (effectiveSuccess) window.LocusWorld4.commitStars?.(latestScoreSnapshot);
+				summaryHTML += window.LocusWorld4.buildRoundStarsHTML?.(effectiveSuccess, latestScoreSnapshot) || '';
+			}
+		} catch (_) {}
 		roundModalSummary.innerHTML = summaryHTML;
 	}
 	  if (roundModalNext) {
@@ -28695,8 +28593,8 @@ function resetWorldLayoutStyles() {
 			return cell;
 		}
 
-		// Place doors/keys for active colors only.
-		// Each door locks a larger region in the SAME active zone, until its matching key is used.
+		// Place doors/keys. The designed World 4 campaign uses explicit chains;
+		// custom/legacy World 4 boards retain the older deterministic fallback.
 		const activeZonesByColor = {
 			geel: yellowZone,
 			groen: greenZone,
@@ -28706,72 +28604,99 @@ function resetWorldLayoutStyles() {
 		};
 		const subLevel = Number(worldInfo?.subLevel || 1);
 		const rng = world4Mulberry32(0xC0FFEE ^ (Number(level) || 1));
-		const doorCount = Math.max(1, Math.min(activeColors.length, (subLevel <= 2 ? 1 : (subLevel <= 5 ? 2 : 3))));
-		const doorColors = shuffleWithRng(activeColors.slice(), rng).slice(0, doorCount);
-		const lockRegionCount = subLevel >= 6 ? 2 : 1;
-
+		const campaignConfig = (() => { try { return window.LocusWorld4?.getLevelConfig?.(level) || null; } catch (_) { return null; } })();
 		const placedDoors = [];
-		doorColors.forEach((doorColor, idx) => {
-			const zone = activeZonesByColor[doorColor];
-			if (!zone) return;
-			const doorId = `w4:door:${doorColor}:${idx + 1}`;
-			const placement = buildDoorPlacementForZone(zone, doorColor, idx, doorCount, subLevel);
-			const doorCell = placeDoor(zone, placement.x, placement.y, doorId, doorColor);
-			if (!doorCell) return;
-			try { lockRegions(zone, doorId, placement.regions || [], lockRegionCount); } catch (e) {}
-			placedDoors.push({ doorColor, doorId, zone });
-		});
 
 		const pickKeyCellBehindDoor = (doorId) => {
 			try {
-				const locked = Array.from(document.querySelectorAll(`.cell[data-locked-door-id="${doorId}"]`));
-				const viable = locked.filter(c => c && !c.classList.contains('door-cell') && !c.classList.contains('key-cell'));
+				const locked = Array.from(document.querySelectorAll(`.cell[data-locked-door-id="${String(doorId)}"]`));
+				const viable = locked.filter(c => c && !c.classList.contains('door-cell') && !c.classList.contains('key-cell') && !c.classList.contains('bold-cell'));
 				if (!viable.length) return null;
 				const idx = Math.floor(rng() * viable.length);
 				return viable[idx] || null;
-			} catch (e) {
-				return null;
-			}
+			} catch (e) { return null; }
 		};
 
-		const pickZoneKeyAnchor = (zone) => {
+		const pickZoneKeyAnchor = (zone, anchor = null) => {
 			const metrics = getZoneMetricsSafe(zone);
 			const minX = Number(metrics?.minX ?? 1);
 			const maxX = Number(metrics?.maxX ?? 8);
 			const minY = Number(metrics?.minY ?? 1);
 			const maxY = Number(metrics?.maxY ?? 8);
-			const x = minX + Math.max(1, Math.round((maxX - minX) * 0.15));
-			const y = minY + Math.max(1, Math.round((maxY - minY) * 0.15));
+			const fx = Array.isArray(anchor) ? Number(anchor[0]) : 0.15;
+			const fy = Array.isArray(anchor) ? Number(anchor[1]) : 0.15;
+			const x = minX + Math.max(0, Math.round((maxX - minX) * (Number.isFinite(fx) ? fx : 0.15)));
+			const y = minY + Math.max(0, Math.round((maxY - minY) * (Number.isFinite(fy) ? fy : 0.15)));
 			return { x, y };
 		};
 
-		// Place keys; later keys can be hidden behind earlier doors for a larger progression.
-		placedDoors.forEach((d, i) => {
-			const targetDoorColor = d.doorColor;
-			let placed = false;
-			if (subLevel >= 4 && i > 0) {
-				const prev = placedDoors[i - 1];
-				const lockedCell = prev ? pickKeyCellBehindDoor(prev.doorId) : null;
-				if (lockedCell) {
-					const keyCell = placeKeyOnCell(lockedCell, targetDoorColor);
-					if (keyCell) placed = true;
+		if (campaignConfig && Array.isArray(campaignConfig.doors)) {
+			const specs = campaignConfig.doors;
+			specs.forEach((spec, idx) => {
+				const zone = activeZonesByColor[String(spec.zone || '').toLowerCase()];
+				if (!zone) return;
+				const doorId = String(spec.id || `w4:${level}:door:${idx + 1}`);
+				const placement = buildDoorPlacementForZone(zone, spec.zone, idx, specs.length, subLevel);
+				if (Array.isArray(spec.doorAnchor)) {
+					const c = pickZoneKeyAnchor(zone, spec.doorAnchor);
+					placement.x = c.x; placement.y = c.y;
 				}
-			}
-			if (placed) return;
-			// Otherwise, place in a different active zone.
-			const candidateZones = activeColors
-				.filter(c => c !== targetDoorColor)
-				.map(c => activeZonesByColor[c])
-				.filter(Boolean);
-			const fallbackZones = activeColors.map(c => activeZonesByColor[c]).filter(Boolean);
-			const zones = candidateZones.length ? candidateZones : fallbackZones;
-			for (let zi = 0; zi < zones.length && !placed; zi++) {
-				const z = zones[(zi + i) % zones.length];
-				const coord = pickZoneKeyAnchor(z);
-				const keyCell = placeKey(z, coord.x, coord.y, targetDoorColor);
-				if (keyCell) placed = true;
-			}
-		});
+				const keyColor = String(spec.keyColor || spec.zone || '').toLowerCase();
+				const doorCell = placeDoor(zone, placement.x, placement.y, doorId, keyColor);
+				if (!doorCell) return;
+				try { lockRegions(zone, doorId, placement.regions || [], Math.max(1, Number(spec.lockRegions || 1))); } catch (e) {}
+				placedDoors.push({ doorColor:keyColor, doorId, zone, spec });
+			});
+
+			// Keys may live in another zone or, in later levels, behind an earlier door.
+			specs.forEach((spec, idx) => {
+				const targetColor = String(spec.keyColor || spec.zone || '').toLowerCase();
+				let placed = false;
+				if (spec.keyBehind) {
+					const lockedCell = pickKeyCellBehindDoor(String(spec.keyBehind));
+					if (lockedCell && placeKeyOnCell(lockedCell, targetColor)) placed = true;
+				}
+				if (!placed) {
+					const keyZone = activeZonesByColor[String(spec.keyZone || campaignConfig.startColors?.[idx % Math.max(1, campaignConfig.startColors?.length || 1)] || spec.zone || '').toLowerCase()];
+					if (keyZone) {
+						const c = pickZoneKeyAnchor(keyZone, spec.keyAnchor);
+						if (placeKey(keyZone, c.x, c.y, targetColor)) placed = true;
+					}
+				}
+			});
+		} else {
+			const doorCount = Math.max(1, Math.min(activeColors.length, (subLevel <= 2 ? 1 : (subLevel <= 5 ? 2 : 3))));
+			const doorColors = shuffleWithRng(activeColors.slice(), rng).slice(0, doorCount);
+			const lockRegionCount = subLevel >= 6 ? 2 : 1;
+			doorColors.forEach((doorColor, idx) => {
+				const zone = activeZonesByColor[doorColor];
+				if (!zone) return;
+				const doorId = `w4:door:${doorColor}:${idx + 1}`;
+				const placement = buildDoorPlacementForZone(zone, doorColor, idx, doorCount, subLevel);
+				const doorCell = placeDoor(zone, placement.x, placement.y, doorId, doorColor);
+				if (!doorCell) return;
+				try { lockRegions(zone, doorId, placement.regions || [], lockRegionCount); } catch (e) {}
+				placedDoors.push({ doorColor, doorId, zone });
+			});
+			placedDoors.forEach((d, i) => {
+				const targetDoorColor = d.doorColor;
+				let placed = false;
+				if (subLevel >= 4 && i > 0) {
+					const prev = placedDoors[i - 1];
+					const lockedCell = prev ? pickKeyCellBehindDoor(prev.doorId) : null;
+					if (lockedCell && placeKeyOnCell(lockedCell, targetDoorColor)) placed = true;
+				}
+				if (placed) return;
+				const candidateZones = activeColors.filter(c => c !== targetDoorColor).map(c => activeZonesByColor[c]).filter(Boolean);
+				const fallbackZones = activeColors.map(c => activeZonesByColor[c]).filter(Boolean);
+				const zones = candidateZones.length ? candidateZones : fallbackZones;
+				for (let zi = 0; zi < zones.length && !placed; zi++) {
+					const z = zones[(zi + i) % zones.length];
+					const coord = pickZoneKeyAnchor(z);
+					if (placeKey(z, coord.x, coord.y, targetDoorColor)) placed = true;
+				}
+			});
+		}
 
 		// World 4 upgrade: start with 1 unlocked door color (starter key).
 		try {
@@ -28785,6 +28710,7 @@ function resetWorldLayoutStyles() {
 		// Refresh UI after World 4 gating updates.
 		try { updateBonusInventoryUI(); } catch (e) {}
 		try { renderCurrentHand(); } catch (e) {}
+		try { window.LocusWorld4?.afterBoardBuilt?.(level, { placedDoors }); } catch (e) { console.warn('World 4 campaign UI failed', e); }
 	}
 
 	// WORLD 1: Originele grid layout (levels 1-10)
@@ -30169,6 +30095,10 @@ function resetWorldLayoutStyles() {
 	  lastRoundFailureReason = null;
 	  const { world: levelWorld } = getWorldAndSubLevel(currentLevel);
 	  const world4Active = Number(levelWorld) === 4;
+	  // World 4 campaign runtime is level-scoped. Never reset it while reconstructing a saved run.
+	  if (world4Active && !isLoadingGame) {
+		try { window.LocusWorld4?.resetRuntime?.(level); } catch (_) {}
+	  }
 	  // World 3 red progression resets per level (but should not reset during load).
 	  if (!isLoadingGame) {
 		world3RedStage = 1;
@@ -30239,6 +30169,17 @@ function resetWorldLayoutStyles() {
 	  if (rotateButton) rotateButton.disabled = true;
 	  try { document.body.classList.add('board-loading'); } catch (_) {}
 	  rebuildGameBoards();
+	  // During a World 4 resume the deterministic board starts from its configured palette.
+	  // Reapply the saved discovered palette before restoring/filtering the saved deck.
+	  if (world4Active && isLoadingGame) {
+		try {
+		  const pendingW4 = window.__pendingWorld4State || null;
+		  if (pendingW4 && Array.isArray(pendingW4.allowedColors) && pendingW4.allowedColors.length) {
+			setWorld4AllowedColors(pendingW4.allowedColors);
+			window.LocusWorld4?.applyZoneVisibility?.(pendingW4.allowedColors);
+		  }
+		} catch (_) {}
+	  }
 	  // World 2: place a single bonus-upgrade shop event on the board.
 	  placeBonusUpgradeFieldEvent_World2();
 	  
@@ -30277,7 +30218,7 @@ function resetWorldLayoutStyles() {
 			const allowed = window.scenarioAllowedColors;
 			drawPile = (drawPile || []).filter(c => c && (allowed.includes((c.color && c.color.name) || '') || (c.color && c.color.name) === 'multikleur'));
 		}
-		// World 4: keep only allowed colors in the draw pile when restrictions are active.
+		// World 4 resume: saved draw pile already represents the discovered palette; only guard against stale disallowed cards.
 		if (world4Active && Array.isArray(world4AllowedColors) && world4AllowedColors.length) {
 			drawPile = (drawPile || []).filter(card => isWorld4CardAllowed(card));
 		}
@@ -30298,9 +30239,14 @@ function resetWorldLayoutStyles() {
 			const allowed = window.scenarioAllowedColors;
 			drawPile = drawPile.filter(c => c && (allowed.includes((c.color && c.color.name) || '') || (c.color && c.color.name) === 'multikleur'));
 		}
-		// World 4: keep the draw pile limited to the current allowed palette.
+		// World 4: keep hidden-color cards in reserve instead of deleting them.
+		// They are shuffled back into the draw pile when that color/area is discovered.
 		if (world4Active && Array.isArray(world4AllowedColors) && world4AllowedColors.length) {
-			drawPile = drawPile.filter(card => isWorld4CardAllowed(card));
+			try {
+			  drawPile = window.LocusWorld4?.partitionDeckForAllowedColors?.(drawPile, world4AllowedColors) || drawPile.filter(card => isWorld4CardAllowed(card));
+			} catch (_) {
+			  drawPile = drawPile.filter(card => isWorld4CardAllowed(card));
+			}
 		}
 		discardPile = [];
 		currentHand = [];
@@ -30410,6 +30356,8 @@ function resetWorldLayoutStyles() {
 		  currentObjectiveId: currentObjectiveId,
 		  completedObjectives: [...completedObjectives],
 		  completedObjectiveIds: Array.from(completedObjectiveIds || []),
+		  // World 4 campaign state (phases, discovered areas, gates, stars/challenge stats, reserved cards).
+		  world4State: (() => { try { return window.LocusWorld4?.getSaveState?.() || null; } catch (_) { return null; } })(),
 		  
 		  // Deck
 		  ownedDeckBlueprints: ownedDeckBlueprints.map(bp => ({
@@ -30505,6 +30453,7 @@ function setWorld4AllowedColors(colors) {
 
 function clearWorld4Locks() {
 	try {
+		try { window.LocusWorld4?.cleanup?.(); } catch (_) {}
 		world4UnlockedColors = new Set();
 		window.world4UnlockedColors = world4UnlockedColors;
 		// Restore zone visibility (World 4 gating might have hidden some)
@@ -30534,6 +30483,17 @@ function clearWorld4Locks() {
 function isWorld4ColorUnlocked(color) {
 	const key = String(color || '').toLowerCase();
 	return world4UnlockedColors instanceof Set && world4UnlockedColors.has(key);
+}
+
+function setWorld4UnlockedColors(colors) {
+	try {
+		world4UnlockedColors = new Set((Array.isArray(colors) ? colors : []).map(c => String(c || '').toLowerCase()).filter(Boolean));
+		window.world4UnlockedColors = world4UnlockedColors;
+		document.querySelectorAll('.cell.door-cell[data-door-color]').forEach(cell => {
+			const c = String(cell.dataset.doorColor || '').toLowerCase();
+			cell.classList.toggle('door-armed', world4UnlockedColors.has(c) && !cell.classList.contains('door-open'));
+		});
+	} catch (_) {}
 }
 
 function unlockWorld4Color(color) {
@@ -30570,6 +30530,7 @@ function unlockWorld4Color(color) {
 	} catch (e) {}
 	try { if (typeof renderCurrentHand === 'function') renderCurrentHand(); } catch (e) {}
 	try { if (typeof updateBonusInventoryUI === 'function') updateBonusInventoryUI(); } catch (e) {}
+	try { window.LocusWorld4?.onKeyActivated?.(key); } catch (_) {}
 }
 
 function isWorld4DoorOpen(doorId) {
@@ -30597,7 +30558,8 @@ function openWorld4Door(doorId) {
 		door = Array.from(document.querySelectorAll('.cell.door-cell')).find(el => String(el.dataset.doorId || '') === id) || null;
 	}
 	if (!door) return;
-	if (!door.classList.contains('door-open')) {
+	const wasOpen = door.classList.contains('door-open');
+	if (!wasOpen) {
 		door.classList.add('door-open');
 		door.classList.remove('door-armed');
 		try { showObjectiveToast('🚪 Deur geopend!'); } catch (e) {}
@@ -30618,6 +30580,9 @@ function openWorld4Door(doorId) {
 			cell.classList.remove('locked-behind-door');
 		});
 	} catch (e) {}
+	if (!wasOpen) {
+		try { window.LocusWorld4?.onDoorOpened?.(id); } catch (_) {}
+	}
 }
 
 function isWorld4CardAllowed(cardData) {
@@ -30640,6 +30605,7 @@ function isWorld4CardAllowed(cardData) {
 		  return false;
 		}
 		const savedBonusEchoState = gameState.bonusEchoState ? { ...gameState.bonusEchoState } : null;
+		const savedWorld4State = gameState.world4State || null;
 		const savedPreLevelStarterPicksDone = (typeof gameState.preLevelStarterPicksDone === 'boolean') ? gameState.preLevelStarterPicksDone : null;
 		const savedStarterPicksDoneByWorld = (gameState && gameState.starterPicksDoneByWorld && typeof gameState.starterPicksDoneByWorld === 'object')
 			? gameState.starterPicksDoneByWorld
@@ -30925,7 +30891,9 @@ function isWorld4CardAllowed(cardData) {
 		  };
 		}
 		
-		const resumeDeckState = !!isCustomBoardSave;
+		const isWorld4Resume = !!(!isCustomBoardSave && currentLevel >= 31 && currentLevel <= 40 && savedWorld4State && Number(savedWorld4State.level) === Number(currentLevel));
+		const resumeDeckState = !!isCustomBoardSave || isWorld4Resume;
+		try { window.__pendingWorld4State = isWorld4Resume ? savedWorld4State : null; } catch (_) {}
 		if (resumeDeckState) {
 			// Prepareer saved deck state voor gebruik in startLevel
 			savedDeckState = {
@@ -30994,6 +30962,12 @@ function isWorld4CardAllowed(cardData) {
 				}
 			} catch (e) { console.error('Failed to restore custom board after startLevel', e); }
 		}
+		if (isWorld4Resume) {
+			try {
+				window.LocusWorld4?.restoreSaveState?.(savedWorld4State);
+			} catch (e) { console.error('Failed to restore World 4 campaign state', e); }
+		}
+		try { window.__pendingWorld4State = null; } catch (_) {}
 		if (savedBonusEchoState) {
 			try {
 				colorScoreBonuses = { ...colorScoreBonuses, ...(savedBonusEchoState.colorScoreBonuses || {}) };
