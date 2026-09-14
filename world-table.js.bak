@@ -221,7 +221,7 @@
     if (!enabled()) { suspend(); return; }
     if (!app) create();
     app.hidden = false;
-    phone = innerWidth <= 640 || Math.min(innerWidth, innerHeight) < 600;
+    phone = Math.min(innerWidth, innerHeight) < 600;
     document.body.classList.add('table-ui');
     document.body.classList.toggle('table-phone', phone);
     document.body.classList.toggle('table-landscape', phone && innerWidth > innerHeight);
@@ -249,16 +249,7 @@
     // Resolve visibility first: all zones share the size that fits purple, even
     // when another color is focused on a phone and purple itself has no box.
     for (const [key, {zone, frame, tab}] of frames) {
-      const isHidden = zone.style.display === 'none' || (phone && key !== focused);
-      frame.hidden = isHidden;
-      frame.style.display = isHidden ? 'none' : (phone ? 'block' : '');
-      if (phone && !isHidden) {
-        frame.style.width = '100%';
-        frame.style.minWidth = '0';
-      } else {
-        frame.style.removeProperty('width');
-        frame.style.removeProperty('min-width');
-      }
+      frame.hidden = zone.style.display === 'none' || (phone && key !== focused);
       tab.hidden = zone.style.display === 'none';
       tab.setAttribute('aria-pressed', String(key === focused));
     }

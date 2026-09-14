@@ -152,22 +152,20 @@ body.table-ui #table-app#table-app #mirror-card-btn { font-size:0 !important; }
   body.table-ui #table-app#table-app.table-scores-open #scoreboard .score-row { display:flex !important; }
 }
 /* Phones use a focused, switchable map. Cards and primary actions stay in reach. */
-body.table-ui.table-phone #table-app#table-app { grid-template-columns:minmax(0,1fr); grid-template-rows:auto minmax(0,1fr) auto auto; grid-template-areas:'header' 'world' 'hand' 'status'; gap:8px; padding:max(8px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left)); }
-body.table-ui.table-phone #table-header { display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-areas:'objective tools'; align-items:start; gap:8px; padding:0; border:0; min-width:0; }
+body.table-ui.table-phone #table-app#table-app { grid-template-columns:minmax(0,1fr); grid-template-rows:60px minmax(0,1fr) auto auto; grid-template-areas:'header' 'world' 'hand' 'status'; gap:8px; padding:max(8px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left)); }
+body.table-ui.table-phone #table-header { gap:6px; padding:0; border:0; }
 body.table-ui.table-phone #table-brand { display:none; }
-body.table-ui.table-phone #table-objective { min-width:0; }
-body.table-ui.table-phone #table-app#table-app #objective-zone { padding:4px 2px !important; min-height:44px !important; align-items:center; text-align:center; }
-body.table-ui.table-phone #table-app#table-app #objective-current { display:block !important; width:100% !important; font-size:12px !important; line-height:1.3 !important; white-space:normal !important; text-wrap:balance; }
-body.table-ui.table-phone #table-tools { justify-self:end; gap:4px; }
-body.table-ui.table-phone #table-tabs { display:flex; gap:6px; padding:0 0 8px; }
-body.table-ui.table-phone #table-app#table-app .table-tab { flex:1 1 0; min-width:0; min-height:44px; padding:6px 2px; border:1px solid #a8d3ee20; border-radius:10px; color:var(--zone-tint); background:#18304780; font-size:11px; font-weight:600; cursor:pointer; }
+body.table-ui.table-phone #table-app#table-app #objective-zone { padding:4px !important; min-height:44px !important; }
+body.table-ui.table-phone #table-app#table-app #objective-current { font-size:12px !important; }
+body.table-ui.table-phone #table-tools { gap:4px; }
+body.table-ui.table-phone #table-tabs { display:flex; gap:4px; padding:0 0 6px; }
+body.table-ui.table-phone #table-app#table-app .table-tab { flex:1; min-width:0; min-height:44px; padding:6px 2px; border:1px solid #a8d3ee20; border-radius:10px; color:var(--zone-tint); background:#18304780; font-size:11px; font-weight:600; cursor:pointer; }
 body.table-ui.table-phone #table-app#table-app .table-tab[aria-pressed=true] { background:color-mix(in srgb,var(--zone-tint),#142332 78%); border-color:var(--zone-tint); box-shadow:inset 0 -2px var(--zone-tint); }
-body.table-ui.table-phone #table-world { min-width:0; }
-body.table-ui.table-phone #table-stage { min-width:0; width:100%; padding:6px 2px; }
+body.table-ui.table-phone #table-stage { padding:6px 2px; }
 body.table-ui.table-phone #table-stage::before { clip-path:polygon(.75% 0,99.25% 0,100% 100%,0 100%); }
-body.table-ui.table-phone #table-app#table-app #board { display:grid !important; grid-template-columns:minmax(0,1fr) !important; grid-template-areas:'focused' !important; width:100% !important; min-width:0 !important; height:100% !important; }
-body.table-ui.table-phone #table-app#table-app .table-zone-frame { grid-area:focused; display:block !important; width:100% !important; min-width:0 !important; max-width:none !important; min-height:0 !important; }
-body.table-ui.table-phone #table-app#table-app .table-zone-frame > .zone { width:100% !important; min-width:0 !important; padding-top:36px !important; }
+body.table-ui.table-phone #table-app#table-app #board { display:flex !important; }
+body.table-ui.table-phone #table-app#table-app .table-zone-frame { flex:1; width:100%; }
+body.table-ui.table-phone #table-app#table-app .table-zone-frame > .zone { padding-top:36px !important; }
 body.table-ui.table-phone #table-app#table-app .zone-info-btn { min-width:44px !important; min-height:44px !important; width:44px !important; height:44px !important; }
 body.table-ui.table-phone #table-app#table-app #card-choice-zone { padding:8px !important; border-radius:14px !important; }
 body.table-ui.table-phone #table-app#table-app #card-choice-zone h2 { display:none !important; }
@@ -202,7 +200,7 @@ body.table-ui.table-landscape #table-app#table-app #table-status { grid-template
 body.table-ui.table-landscape #table-app#table-app #card-action-buttons { grid-template-columns:repeat(4,minmax(44px,1fr)) !important; }
 body.table-ui.table-landscape #table-app#table-app #new-cards-btn { grid-column:1 / -1 !important; }
 @media (max-height:700px) and (orientation:portrait) {
-  body.table-ui.table-phone #table-app#table-app { gap:4px; }
+  body.table-ui.table-phone #table-app#table-app { grid-template-rows:52px minmax(0,1fr) auto auto; gap:4px; }
   body.table-ui.table-phone #table-app#table-app #card-options .card-option { height:64px !important; }
 }
 @media (prefers-reduced-motion:reduce) {

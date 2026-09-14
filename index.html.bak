@@ -28253,33 +28253,21 @@ function resetWorldLayoutStyles() {
 		const shapes = [
 			{
 				name: 'kroon',
-				pattern: [4, 6, 8, 10, 12, 14, 14, 12, 10, 12, 14, 12, 10, 8, 6],
-				offsets: [5, 4, 3, 2, 1, 0, 0, 1, 2, 1, 0, 1, 2, 3, 4],
-				boldCells: [[6, 6], [6, 7], [7, 6], [7, 7]]
-			},
-			{
-				name: 'schild',
-				pattern: [6, 8, 10, 12, 14, 14, 14, 12, 12, 10, 8, 6, 4],
-				offsets: [4, 3, 2, 1, 0, 0, 0, 1, 1, 2, 3, 4, 5],
+				pattern: [4, 6, 8, 10, 12, 14, 12, 10, 12, 10, 8, 6, 4],
+				offsets: [5, 4, 3, 2, 1, 0, 1, 2, 1, 2, 3, 4, 5],
 				boldCells: [[5, 6], [5, 7], [6, 6], [6, 7]]
 			},
 			{
+				name: 'schild',
+				pattern: [6, 8, 10, 12, 12, 12, 10, 8, 6],
+				offsets: [3, 2, 1, 0, 0, 0, 1, 2, 3],
+				boldCells: [[4, 5], [4, 6], [3, 6], [5, 6]]
+			},
+			{
 				name: 'zandloper',
-				pattern: [4, 6, 8, 10, 12, 10, 8, 6, 8, 10, 12, 10, 8, 6, 4],
-				offsets: [5, 4, 3, 2, 1, 2, 3, 4, 3, 2, 1, 2, 3, 4, 5],
-				boldCells: [[7, 6], [7, 7], [6, 6], [8, 7]]
-			},
-			{
-				name: 'poort',
-				pattern: [6, 8, 10, 12, 12, 10, 8, 8, 10, 12, 12, 10, 8],
-				offsets: [4, 3, 2, 1, 1, 2, 3, 3, 2, 1, 1, 2, 3],
-				boldCells: [[6, 5], [6, 6], [6, 7], [7, 6]]
-			},
-			{
-				name: 'citadel',
-				pattern: [4, 6, 8, 10, 12, 14, 12, 10, 8, 10, 12, 10, 8, 6, 4],
-				offsets: [5, 4, 3, 2, 1, 0, 1, 2, 3, 2, 1, 2, 3, 4, 5],
-				boldCells: [[7, 5], [7, 6], [7, 7], [8, 6]]
+				pattern: [4, 6, 8, 10, 8, 6, 4, 6, 8, 10, 8, 6, 4],
+				offsets: [4, 3, 2, 1, 2, 3, 4, 3, 2, 1, 2, 3, 4],
+				boldCells: [[6, 5], [6, 6], [5, 5], [7, 6]]
 			}
 		];
 		const idx = Math.max(0, (Number(subLevel || 1) - 1) % shapes.length);
@@ -28293,8 +28281,8 @@ function resetWorldLayoutStyles() {
 		const yellowCols = Math.max(
 			...yellowShape.pattern.map((len, i) => (Number(len) || 0) + (Number(yellowShape.offsets[i]) || 0))
 		);
-		const yellowPointsArray = [12, 18, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128];
-		const yellowColumnPoints = yellowShape.pattern.map((_, idx) => yellowPointsArray[idx] || (56 + (idx - 6) * 8));
+		const yellowPointsArray = [12, 18, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112];
+		const yellowColumnPoints = yellowShape.pattern.map((_, idx) => yellowPointsArray[idx] || (48 + (idx - 5) * 8));
 		window.yellowGridConfig = {
 			rows: yellowRows,
 			cols: yellowCols,
@@ -28307,16 +28295,16 @@ function resetWorldLayoutStyles() {
 			pointsPerRow: 0,
 			pointsPerColumn: 0,
 			scoreMode: 'rings',
-			ringMinPoints: 16,
-			ringMaxPoints: 84
+			ringMinPoints: 14,
+			ringMaxPoints: 72
 		};
 		createGrid('yellow-grid', yellowRows, yellowCols, {
 			goldCells: true,
 			symbols: true,
-			minSymbols: 11,
-			maxSymbols: 14,
-			coinChance: 0.13,
-			maxCoins: 18,
+			minSymbols: 10,
+			maxSymbols: 12,
+			coinChance: 0.12,
+			maxCoins: 16,
 			rowLengths: yellowShape.pattern,
 			rowOffsets: yellowShape.offsets,
 			fixedBoldCells: yellowShape.boldCells,
@@ -28354,85 +28342,13 @@ function resetWorldLayoutStyles() {
 		}
 	}
 
-	function applyWorld4PurpleGeneration(subLevel = 1) {
-		const size = Number(subLevel || 1) >= 6 ? 15 : 14;
-		const center = Math.floor(size / 2);
-		const fixedBoldCells = [
-			[0, 0], [0, size - 1], [size - 1, 0], [size - 1, size - 1],
-			[center, center - 3], [center, center + 3], [center - 3, center], [center + 3, center],
-			[center, center], [center - 1, center], [center, center - 1], [center + 1, center]
-		];
-		window.purpleGridConfig = {
-			world3: true,
-			size,
-			outerRingBonusPerBold: 22 + Math.min(10, Number(subLevel || 1) * 2),
-			innerRingBonus: true,
-			innerRingBonusPerBold: 12 + Math.min(10, Number(subLevel || 1))
-		};
-		createGrid('purple-grid', size, size, {
-			goldCells: true,
-			symbols: true,
-			minSymbols: 15 + Math.min(4, Math.floor(Number(subLevel || 1) / 2)),
-			maxSymbols: 18 + Math.min(4, Math.floor(Number(subLevel || 1) / 2)),
-			coinChance: 0.08,
-			maxCoins: 10 + Math.min(6, Number(subLevel || 1)),
-			randomBoldCount: Math.min(20, 12 + Number(subLevel || 1)),
-			avoidAdjacentBold: true,
-			fixedBoldCells,
-			trapChance: 0,
-			maxTraps: 0,
-			blackHoleChance: 0
-		});
-	}
-
-	function getWorld4RedProfiles(subLevel = 1) {
-		const t = Math.max(0, Number(subLevel || 1) - 1);
-		return [
-			{ id:'red-grid1', width:5, height:5, growth:18 + t, targetCells:10 + Math.min(2, t), targetPoints:22 + t * 2 },
-			{ id:'red-grid2', width:6, height:5, growth:20 + t, targetCells:13 + Math.min(3, t), targetPoints:30 + t * 2 },
-			{ id:'red-grid3', width:6, height:6, growth:22 + t, targetCells:15 + Math.min(4, t), targetPoints:40 + t * 2 },
-			{ id:'red-grid4', width:7, height:6, growth:24 + t, targetCells:18 + Math.min(5, t), targetPoints:52 + t * 2 },
-			{ id:'red-grid5', width:7 + (t >= 4 ? 1 : 0), height:6 + (t >= 5 ? 1 : 0), growth:26 + t, targetCells:20 + Math.min(5, t), targetPoints:64 + t * 2 },
-			{ id:'red-grid6', width:8 + (t >= 6 ? 1 : 0), height:7 + (t >= 7 ? 1 : 0), growth:29 + t, targetCells:24 + Math.min(6, t), targetPoints:78 + t * 2 }
-		];
-	}
-
-	function applyWorld4RedGeneration(subLevel = 1) {
-		const redZone = document.getElementById('red-zone');
-		if (!redZone) return;
-		const visibleCount = Number(subLevel || 1) >= 7 ? 6 : (Number(subLevel || 1) >= 4 ? 5 : 4);
-		const profiles = getWorld4RedProfiles(subLevel);
-		redZone.dataset.w4RedCount = String(visibleCount);
-		profiles.forEach((cfg, index) => {
-			const grid = document.getElementById(cfg.id);
-			if (!grid) return;
-			if (index >= visibleCount) {
-				grid.style.display = 'none';
-				grid.innerHTML = '';
-				delete grid.dataset.redTargetPoints;
-				delete grid.dataset.rows;
-				delete grid.dataset.cols;
-				return;
-			}
-			grid.style.display = '';
-			generateRoots(cfg.id, cfg.width, cfg.height, cfg.growth, 0.34, 0.03, 2 + (index % 2), 2 + Math.floor(index / 2), 2, true, 0.0, 0, 0, {
-				targetCells: cfg.targetCells,
-				targetPoints: cfg.targetPoints,
-				showPointsLabel: true
-			});
-		});
-	}
-
 	function rebuildGameBoards_World4() {
 		// Reuse World 3 generator for consistent field layout
 		rebuildGameBoards_World3();
 		try {
 			const info = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(currentLevel) : null;
-			const subLevel = Number(info?.subLevel || 1);
-			applyWorld4YellowGeneration(subLevel);
-			applyWorld4PurpleGeneration(subLevel);
-			applyWorld4RedGeneration(subLevel);
-		} catch (e) { console.warn('World 4 generation failed', e); }
+			applyWorld4YellowGeneration(Number(info?.subLevel || 1));
+		} catch (e) { console.warn('World 4 yellow generation failed', e); }
 		try { applyWorld4LocksForLevel(currentLevel); } catch (e) { console.warn('World 4 locks failed', e); }
 		try { requestAnimationFrame(() => requestAnimationFrame(() => applyInitialZoneAnchorsForCurrentLevel({ force: true }))); } catch (_) {}
 	}
