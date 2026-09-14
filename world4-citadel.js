@@ -842,7 +842,7 @@
     }));
     const gates = captureBoardGateState();
     return {
-      version:1, level:currentLevelNumber(), activeCells,
+      version:1, generationVersion:window.__world4GenerationVersion || 2, level:currentLevelNumber(), activeCells,
       runtime:{ phase:runtime.phase, stats:clone(runtime.stats), lastScores:clone(runtime.lastScores) },
       allowedColors:gates?.allowedColors || allowedColors(), unlockedColors:gates?.unlockedColors || [],
       openDoors:(gates?.doorState || []).filter(d => d.open).map(d => d.id),

@@ -48,6 +48,14 @@ body.table-ui .table-zone-frame[data-zone=green] { grid-area:green; }
 body.table-ui .table-zone-frame[data-zone=red] { grid-area:red; }
 body.table-ui .table-zone-frame[data-zone=blue] { grid-area:blue; }
 body.table-ui #table-app#table-app .table-zone-frame > .zone { position:absolute !important; inset:0 !important; width:100% !important; height:100% !important; min-width:0 !important; max-width:none !important; min-height:0 !important; max-height:none !important; margin:0 !important; padding:34px 14px 16px !important; border:0 !important; border-radius:0 !important; box-shadow:inset 0 0 30px #10243112 !important; background:linear-gradient(155deg,#ffffff1f,transparent 48%,#122c3e12),var(--zone-tint) !important; overflow:auto !important; scrollbar-width:none !important; overscroll-behavior:contain; touch-action:pan-x pan-y !important; -webkit-overflow-scrolling:touch; scroll-behavior:auto !important; transform:none !important; }
+/* Descendants must allow the same native gesture as their scroll container. */
+body.table-ui #table-app#table-app .table-zone-frame :is(.grid,.cell,.root-cell) { touch-action:pan-x pan-y !important; }
+@media (pointer:coarse) {
+  /* Edge arrows remain cues; swipes pass through them to the actual map. */
+  body.table-ui #table-app#table-app .table-edge { pointer-events:none; width:28px; height:28px; font-size:24px; opacity:.65; }
+  body.table-ui #table-app#table-app :is(.table-edge-left,.table-edge-right) { top:calc(50% - 14px); }
+  body.table-ui #table-app#table-app :is(.table-edge-top,.table-edge-bottom) { left:calc(50% - 14px); }
+}
 body.table-ui #table-app#table-app .table-zone-frame > .zone::-webkit-scrollbar { display:none; }
 body.table-ui #table-app#table-app .table-zone-frame > .zone::before, body.table-ui #table-app#table-app .table-zone-frame > .zone::after { display:none !important; }
 body.table-ui #table-app#table-app .table-zone-frame .grid { margin:0 auto !important; padding:0 !important; max-width:none !important; max-height:none !important; flex-shrink:0 !important; transform:none !important; }

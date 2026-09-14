@@ -52,25 +52,16 @@
 				};
 				const blockPageScroll = (e) => {
 					if (!e) return;
+					if (document.body?.classList.contains('table-ui') && e.target?.closest?.('.table-zone-frame > .zone')) return;
 					if (isDraggingUiGesture()) {
 						safePreventDefault(e);
 						return;
 					}
 					if (!canScroll(e.target)) safePreventDefault(e);
 				};
-				let touchMoveQueued = false;
-				let lastTouchEvent = null;
-				const throttledBlockPageScroll = (e) => {
-					lastTouchEvent = e;
-					if (touchMoveQueued) return;
-					touchMoveQueued = true;
-					requestAnimationFrame(() => {
-						touchMoveQueued = false;
-						if (lastTouchEvent) blockPageScroll(lastTouchEvent);
-					});
-				};
+				// preventDefault must run during dispatch, never in an animation frame.
 				window.addEventListener('touchmove', blockPinch, { passive: false });
-				window.addEventListener('touchmove', throttledBlockPageScroll, { passive: false });
+				window.addEventListener('touchmove', blockPageScroll, { passive: false });
 				window.addEventListener('gesturestart', e => safePreventDefault(e));
 				window.addEventListener('gesturechange', e => safePreventDefault(e));
 				window.addEventListener('gestureend', e => safePreventDefault(e));
@@ -12261,10 +12252,10 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 
 	</style>
 	<link rel="stylesheet" href="responsive.css?v=20260914-final1">
-	<link rel="stylesheet" href="styles/world-table.css?v=20260914-final1">
-	<link rel="stylesheet" href="styles/world4-citadel.css?v=20260914-final1">
-	<script src="js/world-table.js?v=20260914-final1"></script>
-	<script src="js/world4-citadel.js?v=20260914-final1"></script>
+	<link rel="stylesheet" href="world-table.css?v=20260914-touch2">
+	<link rel="stylesheet" href="world4-citadel.css?v=20260914-touch2">
+	<script src="world-table.js?v=20260914-touch2"></script>
+	<script src="world4-citadel.js?v=20260914-touch2"></script>
 	<script>
     // Simple menu toggle: toggles .open on #controls and .active on #menu-toggle
     document.addEventListener('DOMContentLoaded', function() {
@@ -21277,6 +21268,7 @@ let shopLevel2Used = false;
 	const board = document.querySelector('.board');
 
 	board.addEventListener('touchend', function(e) {
+	  if (window.LocusTable?.enabled()) return;
 	  const currentTime = new Date().getTime();
 	  const tapLength = currentTime - lastTap;
 	  if (tapLength < 300 && tapLength > 0) {
@@ -28275,7 +28267,7 @@ function resetWorldLayoutStyles() {
 		}
 	}
 
-	function getWorld4YellowShape(subLevel = 1) {
+	function getWorld4YellowShape(subLevel = 1, generationVersion = 2) {
 		// Ten deliberately different silhouettes. World 4 should feel authored rather
 		// than like World 3 with doors stamped on top of it. These variants are also
 		// intentionally denser/larger so the yellow citadel occupies more of the board.
@@ -28296,7 +28288,9 @@ function resetWorldLayoutStyles() {
 		const maxWidth = Math.max(...raw.pattern) + 2;
 		const offsets = raw.pattern.map((len, i) => {
 			const base = Math.floor((maxWidth - len) / 2);
-			return Math.max(0, base + Number(raw.drift?.[i] || 0));
+			// Small terraces shift the outline without cutting holes through playable rows.
+			const terrace = generationVersion >= 2 ? Math.round(Math.sin(i*.48 + idx*.7) * (idx >= 3 ? 2 : 1)) : 0;
+			return Math.max(0, base + Number(raw.drift?.[i] || 0) + terrace);
 		});
 		const midRow = Math.floor(raw.pattern.length / 2);
 		const candidateRows = [midRow, midRow - 1, midRow + 1, midRow - 2, midRow + 2].filter(r => r >= 0 && r < raw.pattern.length);
@@ -28309,7 +28303,7 @@ function resetWorldLayoutStyles() {
 	}
 
 	function applyWorld4YellowGeneration(subLevel = 1) {
-		const yellowShape = getWorld4YellowShape(subLevel);
+		const yellowShape = getWorld4YellowShape(subLevel, window.__world4GenerationVersion || 2);
 		if (!yellowShape) return;
 		const yellowRows = yellowShape.pattern.length;
 		const yellowCols = Math.max(...yellowShape.pattern.map((len, i) => (Number(len) || 0) + (Number(yellowShape.offsets[i]) || 0)));
@@ -28389,7 +28383,7 @@ function resetWorldLayoutStyles() {
 		return { rows, cols, splitCount:n<3?0:n<6?1:2, name:['sluiproute','boog','eerste-gracht','slangenpad','dubbele-bocht','tweede-gracht','slinger','tweesprong','binnenwater','slotgracht'][n-1] };
 	}
 
-	function buildWorld4BlueRiver(subLevel = 1) {
+	function buildWorld4BlueRiverLegacy(subLevel = 1) {
 		const p=getWorld4BlueProfile(subLevel), rng=world4Mulberry32(0x4300 + subLevel * 173);
 		const lengths=[], offsets=[], voidCells=new Set();
 		let width=3, offset=Math.max(0,Math.floor((p.cols-width)/2));
@@ -28422,8 +28416,43 @@ function resetWorldLayoutStyles() {
 		return { ...p, lengths, offsets, voidCells };
 	}
 
+	function buildWorld4BlueRiver(subLevel = 1, generationVersion = 2) {
+		if (generationVersion < 2) return buildWorld4BlueRiverLegacy(subLevel);
+		const p = getWorld4BlueProfile(subLevel);
+		const rng = world4Mulberry32(0x4300 + subLevel * 173);
+		const phase = rng() * Math.PI * 2;
+		const lengths = [], offsets = [], voidCells = new Set();
+		const splitWindows = [];
+		if (p.splitCount >= 1) splitWindows.push([Math.floor(p.rows*.28), Math.floor(p.rows*.28)+10+subLevel]);
+		if (p.splitCount >= 2) splitWindows.push([Math.floor(p.rows*.62), Math.min(p.rows-5, Math.floor(p.rows*.62)+9+Math.floor(subLevel/2))]);
+		let previousCenter = Math.floor(p.cols / 2);
+		for (let y = 0; y < p.rows; y++) {
+			// Broad, continuous bends with periodic pools, instead of a noisy random walk.
+			const bend = Math.sin(y*.16 + phase) * (p.cols*.25) + Math.sin(y*.065 - phase)*1.3;
+			const target = Math.round((p.cols-1)/2 + bend);
+			const center = Math.max(2, Math.min(p.cols-3, previousCenter + Math.sign(target-previousCenter)));
+			previousCenter = center;
+			const width = 3 + (Math.sin(y*.24 + phase) > .55 ? 1 : 0);
+			const trunkStart = Math.max(0, Math.min(p.cols-width, center-Math.floor(width/2)));
+			let rowStart = trunkStart, rowEnd = trunkStart + width;
+			const win = splitWindows.find(([a,b]) => y >= a && y <= b);
+			if (win) {
+				const [a,b] = win, progress = (y-a)/(b-a);
+				// Two three-cell channels open around an island and reunite at both ends.
+				const gap = Math.min(3, Math.floor(Math.sin(progress*Math.PI)*4));
+				const forkWidth = 6 + gap;
+				rowStart = Math.max(0, Math.min(p.cols-forkWidth, center-Math.floor(forkWidth/2)));
+				rowEnd = rowStart + forkWidth;
+				for (let x = rowStart+3; x < rowStart+3+gap; x++) voidCells.add(x+','+y);
+			}
+			lengths.push(rowEnd-rowStart);
+			offsets.push(rowStart);
+		}
+		return {...p, lengths, offsets, voidCells};
+	}
+
 	function applyWorld4BlueGeneration(subLevel = 1) {
-		const b=buildWorld4BlueRiver(subLevel);
+		const b=buildWorld4BlueRiver(subLevel, window.__world4GenerationVersion || 2);
 		window.blueGridConfig={ world4:true, generationName:b.name, rows:b.rows, cols:b.cols };
 		withWorld4Seed(0x4310 + subLevel * 179, () => createGrid('blue-grid', b.rows, b.cols, {
 			boldBottom:true, goldCells:true, symbols:true,
@@ -29775,6 +29804,7 @@ function resetWorldLayoutStyles() {
 		let pendingDy = 0;
 
 		zoneEl.addEventListener('pointerdown', (e) => {
+			if (window.LocusTable?.enabled()) return; // The table owns mouse pan; touch stays native.
 			if (e.button !== undefined && e.button !== 0) return; // left button only
 			if (e.pointerType === 'touch') return; // allow native touch scrolling/swiping on mobile
 			// Don't hijack pointer drags while placing a block.
@@ -30280,6 +30310,9 @@ function resetWorldLayoutStyles() {
 	  lastRoundFailureReason = null;
 	  const { world: levelWorld } = getWorldAndSubLevel(currentLevel);
 	  const world4Active = Number(levelWorld) === 4;
+	  // Existing saved coordinates must be reconstructed with their original generator.
+	  if (world4Active) window.__world4GenerationVersion = isLoadingGame && window.__pendingWorld4State
+		? (Number(window.__pendingWorld4State.generationVersion) || 1) : 2;
 	  // World 4 campaign runtime is level-scoped. Never reset it while reconstructing a saved run.
 	  if (world4Active && !isLoadingGame) {
 		try { window.LocusWorld4?.resetRuntime?.(level); } catch (_) {}

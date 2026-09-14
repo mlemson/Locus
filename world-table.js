@@ -126,49 +126,65 @@
     zone.classList.toggle('table-scrollable', Object.values(edges).some(Boolean));
   }
   function bindPan(zone) {
-    // IMPORTANT: touch/pen are deliberately not handled here. The browser already
-    // provides smooth 2D scrolling, direction locking and momentum for overflow:auto.
-    // The previous table handler also listened to touch pointer events while legacy
-    // scroll-memory code listened to the same gesture; on iOS/iPadOS that produced
-    // cancelled/sticky pans. Mouse drag-to-pan remains useful on desktop.
+    // Observe touch intent without moving the viewport or capturing the pointer.
+    // Native overflow owns touch/pen momentum; only mouse drags scroll in JS.
     let gesture = null;
+    const reset = () => {
+      gesture = null;
+      zone.classList.remove('table-panning');
+      zone.dataset.dragScrolling = 'false';
+    };
     zone.addEventListener('pointerdown', e => {
       if (!enabled() || e.button !== 0 || e.target.closest('button,.zone-info-popover')) return;
-      if (e.pointerType === 'touch' || e.pointerType === 'pen') return;
       if (typeof draggedBlock !== 'undefined' && draggedBlock) return;
-      if (typeof draggedShape !== 'undefined' && draggedShape) return;
-      if (typeof activeBonusPlacement !== 'undefined' && activeBonusPlacement) return;
       if (gesture) return;
-      gesture = {id:e.pointerId, x:e.clientX, y:e.clientY, left:zone.scrollLeft, top:zone.scrollTop, moved:false};
+      suppressedUntil = 0;
+      gesture = {id:e.pointerId, x:e.clientX, y:e.clientY,
+        left:zone.scrollLeft, top:zone.scrollTop, moved:false,
+        native:e.pointerType === 'touch' || e.pointerType === 'pen'};
+      // Legacy cells activate on pointerdown. Defer activation until a real tap,
+      // without preventDefault: the browser must still be allowed to start a pan.
+      e.stopImmediatePropagation();
     }, true);
     zone.addEventListener('pointermove', e => {
       if (!gesture || gesture.id !== e.pointerId) return;
       const dx = e.clientX - gesture.x, dy = e.clientY - gesture.y;
       if (!gesture.moved && Math.hypot(dx, dy) < 7) return;
       gesture.moved = true;
-      zone.dataset.dragScrolling = 'true'; zone.classList.add('table-panning');
+      zone.dataset.dragScrolling = 'true';
+      if (gesture.native) return;
+      zone.classList.add('table-panning');
       if (!zone.hasPointerCapture(e.pointerId)) zone.setPointerCapture(e.pointerId);
-      zone.scrollLeft = gesture.left - dx; zone.scrollTop = gesture.top - dy;
+      zone.scrollLeft = gesture.left - dx;
+      zone.scrollTop = gesture.top - dy;
       if (e.cancelable) e.preventDefault();
       e.stopImmediatePropagation();
     }, true);
     const end = e => {
       if (!gesture || gesture.id !== e.pointerId) return;
-      if (gesture.moved || e.type === 'pointercancel') {
+      // pointercancel is the normal hand-off to the browser's native scroller.
+      const moved = gesture.moved || e.type === 'pointercancel' ||
+        Math.hypot(e.clientX - gesture.x, e.clientY - gesture.y) >= 7;
+      if (moved) {
         suppressedUntil = performance.now() + 400;
-        if (e.cancelable) e.preventDefault();
         e.stopImmediatePropagation();
       } else if (typeof debugMode !== 'undefined' && debugMode) {
         const cell = e.target.closest('.cell');
         if (cell) toggleCell(cell, cell.dataset.zoneId);
+        suppressedUntil = performance.now() + 400;
+        e.stopImmediatePropagation();
+      } else if (gesture.native) {
+        // One tap, one placement: the compatibility click is suppressed below.
+        suppressedUntil = performance.now() + 400;
+        if (typeof handleTouchCellPlacement === 'function') handleTouchCellPlacement(e);
         e.stopImmediatePropagation();
       }
-      gesture = null; zone.classList.remove('table-panning');
-      zone.dataset.dragScrolling = 'false';
+      if (!gesture.native && zone.hasPointerCapture(e.pointerId)) zone.releasePointerCapture(e.pointerId);
+      reset();
     };
     zone.addEventListener('pointerup', end, true);
     zone.addEventListener('pointercancel', end, true);
-    zone.addEventListener('lostpointercapture', () => { gesture = null; zone.classList.remove('table-panning'); });
+    zone.addEventListener('lostpointercapture', reset);
   }
   // Registered before the game's document click handler, so a pan can never place a card.
   document.addEventListener('click', e => {
@@ -243,6 +259,32 @@
     const desiredLeft = ((minC + maxC) / 2) - (zone.clientWidth / 2);
     zone.scrollLeft = Math.max(0, Math.min(maxLeft, desiredLeft));
   }
+  function citadelLayout(keys, subLevel) {
+    // Keep long routes tall, with the other districts alternating around them.
+    // Every named CSS area stays rectangular so no cells or hitboxes are clipped.
+    const spine = ['blue','green'].find(key => keys.includes(key)) || keys[keys.length - 1];
+    const districts = keys.filter(key => key !== spine);
+    if (!spine || !districts.length) return null;
+    const turn = (Math.max(1, Number(subLevel) || 1) - 1) % districts.length;
+    const rest = districts.slice(turn).concat(districts.slice(0, turn));
+    let rows, columns;
+    if (keys.length === 3) {
+      rows = [[rest[0],rest[0],spine],[rest[1],rest[1],spine]];
+      columns = '1fr 1fr 1.25fr';
+    } else if (keys.length === 4) {
+      rows = [[rest[0],rest[0],spine],[rest[1],rest[2],spine]];
+      columns = '1fr 1fr 1.1fr';
+    } else if (keys.length === 5) {
+      rows = [[rest[0],rest[0],spine,rest[1],rest[1]],
+              [rest[2],rest[2],spine,rest[3],rest[3]]];
+      columns = '1fr 1fr 1.5fr 1fr 1fr';
+    } else return null;
+    if (subLevel % 2 === 0) {
+      rows = rows.map(row => row.slice().reverse());
+      columns = columns.split(' ').reverse().join(' ');
+    }
+    return {areas:rows.map(row => '"' + row.join(' ') + '"').join(' '), columns};
+  }
   function layout() {
     if (!enabled()) { suspend(); return; }
     if (!app) create();
@@ -265,6 +307,8 @@
       const text = `Wereld ${info.world} · Level ${info.world}.${info.subLevel}`;
       if (levelLabel.textContent !== text) levelLabel.textContent = text;
     }
+    move($('world4-phase-bar'), $('table-world'));
+    move($('world4-citadel-core-badge'), $('table-stage'));
     move($('card-action-buttons'), $('card-controls'));
     move($('controls'), document.body);
     for (const {zone, frame} of frames.values()) if (zone.parentNode !== frame) move(zone, frame);
@@ -272,6 +316,17 @@
     if (!visible.some(([k]) => k === focused)) focused = visible[0]?.[0] || 'purple';
     $('board').dataset.visibleZones = String(visible.length);
     $('board').style.setProperty('--table-active-areas', `"${visible.map(([key]) => key).join(' ')}"`);
+    const worldInfo = typeof currentLevel !== 'undefined' && typeof getWorldAndSubLevel === 'function'
+      ? getWorldAndSubLevel(currentLevel) : null;
+    const citadel = worldInfo?.world === 4 ? citadelLayout(visible.map(([key]) => key), worldInfo.subLevel) : null;
+    $('board').toggleAttribute('data-table-citadel', !!citadel);
+    if (citadel) {
+      $('board').style.setProperty('--citadel-areas', citadel.areas);
+      $('board').style.setProperty('--citadel-columns', citadel.columns);
+    } else {
+      $('board').style.removeProperty('--citadel-areas');
+      $('board').style.removeProperty('--citadel-columns');
+    }
     // Resolve visibility first: all zones share the size that fits purple, even
     // when another color is focused on a phone and purple itself has no box.
     for (const [key, {zone, frame, tab}] of frames) {
