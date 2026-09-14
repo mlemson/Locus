@@ -20,8 +20,6 @@ const { chromium } = require('playwright');
     await page.goto('http://127.0.0.1:8000/index.html', { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => typeof window.startLevel === 'function', null, { timeout: 15000 });
     await page.evaluate(n => {
-      // World-start starter pick modals intentionally interrupt direct level jumps.
-      // Mark them completed so this screenshot really renders the requested World 4 level.
       starterPicksDoneByWorld = {'1':true,'2':true,'3':true,'4':true};
       preLevelStarterPicksDone = true;
       preLevelStarterPicksInProgress = false;
@@ -48,9 +46,12 @@ const { chromium } = require('playwright');
       const purpleGrid = document.getElementById('purple-grid');
       const greenGrid = document.getElementById('green-grid');
       const gridBox = el => el ? el.getBoundingClientRect() : null;
+      const visible = el => !!el && !el.hidden && getComputedStyle(el).display !== 'none' && el.getBoundingClientRect().width > 0;
       return {
         currentLevel: typeof currentLevel !== 'undefined' ? currentLevel : null,
         world4: document.body.classList.contains('world-4'),
+        purpleVisible: visible(purple),
+        yellowVisible: visible(yellow),
         purpleCells: document.querySelectorAll('#purple-grid .cell').length,
         greenCells: document.querySelectorAll('#green-grid .cell').length,
         yellowCells: document.querySelectorAll('#yellow-grid .cell').length,
@@ -64,14 +65,17 @@ const { chromium } = require('playwright');
     });
 
     console.log(file, JSON.stringify(state), 'pageErrors=', JSON.stringify(pageErrors));
-    if (state.currentLevel !== level || !state.purpleCells || !state.greenCells || !state.yellowCells) {
+    if (state.currentLevel !== level || !state.world4 || !state.greenCells) {
       throw new Error('Requested World 4 board did not render: ' + JSON.stringify(state));
     }
-    if (state.purpleSize && state.purpleSize.w === state.purpleSize.h) {
-      throw new Error('Purple is unexpectedly square: ' + JSON.stringify(state.purpleSize));
+    if (state.purpleVisible && state.purpleSize && state.purpleSize.w === state.purpleSize.h) {
+      throw new Error('Visible purple grid is unexpectedly square: ' + JSON.stringify(state.purpleSize));
     }
-    if (level >= 34 && (!state.keySvg || !state.doorSvg)) {
-      throw new Error('Vector key/lock did not render by 4.4: ' + JSON.stringify(state));
+    if (!state.keySvg || !state.doorSvg) {
+      throw new Error('Vector key/lock did not render: ' + JSON.stringify(state));
+    }
+    if (pageErrors.length) {
+      throw new Error('Runtime page errors: ' + JSON.stringify(pageErrors));
     }
 
     await page.screenshot({ path: file, fullPage: false });
