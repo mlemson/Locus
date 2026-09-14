@@ -14,19 +14,33 @@ const { chromium } = require('playwright');
     const pageErrors = [];
     page.on('pageerror', err => pageErrors.push(String(err)));
 
+    await page.addInitScript(() => {
+      localStorage.setItem('locus_tutorial_v1_done', '1');
+    });
     await page.goto('http://127.0.0.1:8000/index.html', { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => typeof window.startLevel === 'function', null, { timeout: 15000 });
-    await page.evaluate(n => window.startLevel(n), level);
-    await page.waitForTimeout(1700);
+    await page.evaluate(n => {
+      // World-start starter pick modals intentionally interrupt direct level jumps.
+      // Mark them completed so this screenshot really renders the requested World 4 level.
+      starterPicksDoneByWorld = {'1':true,'2':true,'3':true,'4':true};
+      preLevelStarterPicksDone = true;
+      preLevelStarterPicksInProgress = false;
+      document.querySelectorAll('.modal-overlay,[id$="-modal-layer"],.modal-layer').forEach(el => {
+        el.classList.remove('show','active','open');
+        if (el.style) el.style.display = 'none';
+      });
+      startLevel(n);
+    }, level);
+    await page.waitForTimeout(1900);
 
     await page.evaluate(() => {
-      document.querySelectorAll('[id$="-modal-layer"], .modal-layer').forEach(el => {
+      document.querySelectorAll('.modal-overlay,[id$="-modal-layer"],.modal-layer').forEach(el => {
         el.classList.remove('show', 'active', 'open');
         if (el.style) el.style.display = 'none';
       });
       window.dispatchEvent(new Event('resize'));
     });
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(1100);
 
     const state = await page.evaluate(() => {
       const purple = document.getElementById('purple-zone');
@@ -35,6 +49,7 @@ const { chromium } = require('playwright');
       const greenGrid = document.getElementById('green-grid');
       const gridBox = el => el ? el.getBoundingClientRect() : null;
       return {
+        currentLevel: typeof currentLevel !== 'undefined' ? currentLevel : null,
         world4: document.body.classList.contains('world-4'),
         purpleCells: document.querySelectorAll('#purple-grid .cell').length,
         greenCells: document.querySelectorAll('#green-grid .cell').length,
@@ -49,14 +64,14 @@ const { chromium } = require('playwright');
     });
 
     console.log(file, JSON.stringify(state), 'pageErrors=', JSON.stringify(pageErrors));
-    if (!state.world4 || !state.purpleCells || !state.greenCells || !state.yellowCells) {
-      throw new Error('World 4 board did not render: ' + JSON.stringify(state));
-    }
-    if (!state.keySvg || !state.doorSvg) {
-      throw new Error('Vector key/lock did not render: ' + JSON.stringify(state));
+    if (state.currentLevel !== level || !state.purpleCells || !state.greenCells || !state.yellowCells) {
+      throw new Error('Requested World 4 board did not render: ' + JSON.stringify(state));
     }
     if (state.purpleSize && state.purpleSize.w === state.purpleSize.h) {
       throw new Error('Purple is unexpectedly square: ' + JSON.stringify(state.purpleSize));
+    }
+    if (level >= 34 && (!state.keySvg || !state.doorSvg)) {
+      throw new Error('Vector key/lock did not render by 4.4: ' + JSON.stringify(state));
     }
 
     await page.screenshot({ path: file, fullPage: false });
