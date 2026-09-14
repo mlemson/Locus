@@ -1794,6 +1794,21 @@ body.game-ui-v5:not(.classic-mode) :is(#yellow-zone,#green-zone,#blue-zone,#purp
   box-shadow: 0 16px 34px rgba(0,0,0,.18), 0 1px 0 rgba(255,255,255,.10) inset !important;
 }
 
+body.game-ui-v5:not(.classic-mode) :is(#green-zone,#blue-zone,#yellow-zone) {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+body.game-ui-v5.touch-portrait:not(.classic-mode) :is(#green-zone,#blue-zone,#yellow-zone),
+body.game-ui-v5.mobile-sidebar-layout:not(.classic-mode) :is(#green-zone,#blue-zone,#yellow-zone) {
+  overflow: auto !important;
+}
+
+body.game-ui-v5.world-1.touch-portrait:not(.classic-mode),
+body.game-ui-v5.world-1.mobile-sidebar-layout:not(.classic-mode) {
+  --cell-size: 22px;
+}
+
 body.game-ui-v5:not(.classic-mode) :is(#yellow-zone,#green-zone,#blue-zone,#purple-zone,#red-zone)::after {
   content: "";
   position: absolute;
@@ -1997,4 +2012,33 @@ body.game-ui-v5:not(.classic-mode) #deck-modal-content .card-echo-tooltip {
   body.game-ui-v5:not(.classic-mode) #deck-modal-content .deck-modal-card:nth-child(3n).card-echo-tooltip-active .card-echo-tooltip {
     transform: translate(0, -50%) translateY(0) !important;
   }
+}
+
+
+/* Mobile polish for the start-cards picker */
+body.game-ui-v5.touch-portrait:not(.classic-mode) #preworld-pick-modal .preworld-modal,
+body.game-ui-v5.mobile-sidebar-layout:not(.classic-mode) #preworld-pick-modal .preworld-modal {
+  width: min(94vw, 560px);
+  max-height: min(88vh, 920px);
+  padding: 20px 16px 18px;
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(22, 34, 51, 0.96), rgba(8, 20, 36, 0.98));
+  box-shadow: 0 18px 48px rgba(0, 6, 28, 0.58);
+}
+body.game-ui-v5.touch-portrait:not(.classic-mode) #preworld-pick-modal .preworld-grid,
+body.game-ui-v5.mobile-sidebar-layout:not(.classic-mode) #preworld-pick-modal .preworld-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+body.game-ui-v5.touch-portrait:not(.classic-mode) #preworld-pick-modal .card-option,
+body.game-ui-v5.mobile-sidebar-layout:not(.classic-mode) #preworld-pick-modal .card-option {
+  min-height: 132px;
+  border-radius: 18px;
+}
+body.game-ui-v5.touch-portrait:not(.classic-mode) #preworld-pick-modal .preworld-footer,
+body.game-ui-v5.mobile-sidebar-layout:not(.classic-mode) #preworld-pick-modal .preworld-footer {
+  position: sticky;
+  bottom: 0;
+  padding-top: 14px;
+  background: linear-gradient(180deg, rgba(8, 20, 36, 0), rgba(8, 20, 36, 0.98) 28%);
 }

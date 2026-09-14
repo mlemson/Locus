@@ -9164,6 +9164,26 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	  outline-color: rgba(90, 200, 140, 0.9);
 	}
 
+	body.world-4 .cell.locked-behind-door {
+	  background: linear-gradient(135deg, rgba(35, 44, 58, 0.48), rgba(18, 24, 34, 0.24));
+	  border-color: rgba(110, 128, 154, 0.45);
+	  filter: saturate(0.82) brightness(0.96);
+	}
+	body.world-4 .cell.locked-behind-door::after {
+	  background: repeating-linear-gradient(45deg, rgba(255,255,255,0.08) 0, rgba(255,255,255,0.08) 6px, rgba(0,0,0,0) 6px, rgba(0,0,0,0) 12px);
+	}
+	body.world-4 #yellow-zone .cell.active,
+	body.world-4 #green-zone .cell.active,
+	body.world-4 #blue-zone .cell.active,
+	body.world-4 #purple-zone .cell.active,
+	body.world-4 #red-zone .cell.active {
+	  box-shadow: 0 0 0 1px rgba(255,255,255,0.22), 0 4px 10px rgba(8, 18, 36, 0.18);
+	}
+	body.world-4 .cell.key-cell .key-symbol .key-glyph,
+	body.world-4 .cell.door-cell .door-symbol .door-glyph {
+	  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.28));
+	}
+
 	/* Hover effect op cellen */
 	.cell:hover {
 	  background: #31343b;
@@ -17936,8 +17956,8 @@ let shopLevel2Used = false;
 	function getZoneScrollMemory(zoneId) {
 		if (!ZONE_SCROLL_MEMORY[zoneId]) {
 			ZONE_SCROLL_MEMORY[zoneId] = {
-				normal: { left: 0, top: 0, initialized: false, userSet: false },
-				zoom: { left: 0, top: 0, initialized: false, userSet: false }
+				normal: { left: 0, top: 0, initialized: false, userSet: false, level: currentLevel },
+				zoom: { left: 0, top: 0, initialized: false, userSet: false, level: currentLevel }
 			};
 		}
 		return ZONE_SCROLL_MEMORY[zoneId];
@@ -17996,6 +18016,7 @@ let shopLevel2Used = false;
 			mem[mode].left = zoneEl.scrollLeft;
 			mem[mode].top = zoneEl.scrollTop;
 			mem[mode].initialized = true;
+			mem[mode].level = currentLevel;
 			if (zoneId === 'green-zone' && hasUserIntent) mem[mode].userSet = true;
 		});
 		zoneEl.addEventListener('scroll', onZoneScroll, { passive: true });
@@ -18009,8 +18030,9 @@ let shopLevel2Used = false;
 			zoneEl.dataset.suppressScrollSave = 'true';
 			try {
 				clampZoneScroll(zoneEl);
-				if (zoneEl.id === 'green-zone' && !(mem[mode] && mem[mode].userSet)) {
-					if (mem[mode] && mem[mode].initialized) {
+				const sameLevelMemory = !!(mem[mode] && mem[mode].initialized && Number(mem[mode].level) === Number(currentLevel));
+				if (zoneEl.id === 'green-zone' && !(mem[mode] && mem[mode].userSet && sameLevelMemory)) {
+					if (sameLevelMemory) {
 						zoneEl.scrollLeft = mem[mode].left || 0;
 						zoneEl.scrollTop = mem[mode].top || 0;
 						clampZoneScroll(zoneEl);
@@ -18020,8 +18042,9 @@ let shopLevel2Used = false;
 						mem[mode].left = zoneEl.scrollLeft;
 						mem[mode].top = zoneEl.scrollTop;
 						mem[mode].initialized = true;
+						mem[mode].level = currentLevel;
 					}
-				} else if (mem[mode].initialized) {
+				} else if (sameLevelMemory) {
 					zoneEl.scrollLeft = mem[mode].left || 0;
 					zoneEl.scrollTop = mem[mode].top || 0;
 					clampZoneScroll(zoneEl);
@@ -18031,12 +18054,14 @@ let shopLevel2Used = false;
 					mem[mode].left = zoneEl.scrollLeft;
 					mem[mode].top = zoneEl.scrollTop;
 					mem[mode].initialized = true;
+					mem[mode].level = currentLevel;
 				}
 			} finally {
 				setTimeout(() => { zoneEl.dataset.suppressScrollSave = 'false'; }, 0);
 			}
 		});
 	}
+
 
 	// Sync zone heights: make green and blue zones at least as tall as purple+yellow combined.
 	// Returns true if sync ran, false if skipped (e.g., hidden layout).
@@ -28325,6 +28350,7 @@ function resetWorldLayoutStyles() {
 			applyWorld4YellowGeneration(Number(info?.subLevel || 1));
 		} catch (e) { console.warn('World 4 yellow generation failed', e); }
 		try { applyWorld4LocksForLevel(currentLevel); } catch (e) { console.warn('World 4 locks failed', e); }
+		try { requestAnimationFrame(() => requestAnimationFrame(() => applyInitialZoneAnchorsForCurrentLevel({ force: true }))); } catch (_) {}
 	}
 
 	function applyWorld4LocksForLevel(level) {
@@ -28845,6 +28871,14 @@ function resetWorldLayoutStyles() {
 		greenZone.style.overflowY = '';
 		greenZone.style.overflowX = '';
 	  }
+
+	  const isPhoneLike = window.innerWidth <= MOBILE_BREAKPOINT || document.body.classList.contains('mobile-sidebar-layout');
+	  if (isPhoneLike) {
+		if (yellowZone) yellowZone.style.height = 'min(420px, 58vh)';
+		if (blueZone) blueZone.style.width = 'min(180px, 34vw)';
+		if (greenZone) greenZone.style.maxHeight = 'min(420px, 58vh)';
+	  }
+	  try { requestAnimationFrame(() => applyInitialZoneAnchorsForCurrentLevel({ force: true })); } catch (_) {}
 	}
 
 
@@ -29592,6 +29626,7 @@ function resetWorldLayoutStyles() {
 
 		zoneEl.addEventListener('pointerdown', (e) => {
 			if (e.button !== undefined && e.button !== 0) return; // left button only
+			if (e.pointerType === 'touch') return; // allow native touch scrolling/swiping on mobile
 			// Don't hijack pointer drags while placing a block.
 			if (typeof draggedBlock !== 'undefined' && draggedBlock) return;
 			if (typeof draggedShape !== 'undefined' && draggedShape) return;
@@ -36068,6 +36103,7 @@ body { background: transparent; }
 		// One-time deferred sync to catch sizing set in rAF inside adjustZoneSizesForWorld2.
 		try { requestAnimationFrame(() => { try { syncZoneHeights(); } catch (_) {} }); } catch (_) {}
 		try { scheduleGreenCenter({ force: false, allowZoom: false, fallback: true, fallbackDelay: 140 }); } catch (_) {}
+		try { requestAnimationFrame(() => applyInitialZoneAnchorsForCurrentLevel({ force: false })); } catch (_) {}
 	}
 
 	function moveGameElements() {
@@ -36430,6 +36466,51 @@ body { background: transparent; }
 	  }
 	  container.scrollLeft = Math.max(0, targetLeft);
 	  container.scrollTop = Math.max(0, targetTop);
+	}
+
+	function resetYellowStartScroll(yellowZone) {
+		if (!yellowZone) return;
+		yellowZone.scrollLeft = 0;
+		yellowZone.scrollTop = Math.max(0, yellowZone.scrollHeight - yellowZone.clientHeight);
+	}
+
+	function resetStaticZoneStartScroll(zoneEl) {
+		if (!zoneEl) return;
+		zoneEl.scrollLeft = 0;
+		zoneEl.scrollTop = 0;
+	}
+
+	function applyInitialZoneAnchorsForCurrentLevel(options = {}) {
+		if (window.LocusTable?.enabled()) { window.LocusTable.schedule(); return; }
+		const opts = (options && typeof options === 'object') ? options : {};
+		const force = !!opts.force;
+		const worldInfo = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(currentLevel) : null;
+		const world = Number(worldInfo?.world || 1);
+		const isPhoneLike = window.innerWidth <= MOBILE_BREAKPOINT || document.body.classList.contains('mobile-sidebar-layout');
+		try {
+			if (world === 1 && isPhoneLike) {
+				const yellowZone = document.getElementById('yellow-zone');
+				if (yellowZone) restoreOrAnchorZoneScroll(yellowZone, resetYellowStartScroll);
+			}
+			const blueZone = document.getElementById('blue-zone');
+			if (blueZone && (world === 1 || world === 2 || world === 3 || world === 4)) {
+				if (force) resetZoneScrollMemory('blue-zone');
+				restoreOrAnchorZoneScroll(blueZone, resetBlueZoomScroll);
+			}
+			const greenZone = document.getElementById('green-zone');
+			if (greenZone && (world === 1 || world === 2 || world === 3 || world === 4)) {
+				if (force) resetZoneScrollMemory('green-zone');
+				scheduleGreenCenter({ force: true, allowZoom: false, fallback: true, fallbackDelay: 160 });
+			}
+			if (world === 4) {
+				['yellow-zone', 'purple-zone', 'red-zone'].forEach(id => {
+					const zone = document.getElementById(id);
+					if (!zone) return;
+					try { zone.__userScrollIntent = false; } catch (_) {}
+					resetStaticZoneStartScroll(zone);
+				});
+			}
+		} catch (_) {}
 	}
 
 	function autoCenterScrollableZones() {
