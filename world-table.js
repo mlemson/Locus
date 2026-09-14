@@ -126,15 +126,20 @@
     zone.classList.toggle('table-scrollable', Object.values(edges).some(Boolean));
   }
   function bindPan(zone) {
+    // IMPORTANT: touch/pen are deliberately not handled here. The browser already
+    // provides smooth 2D scrolling, direction locking and momentum for overflow:auto.
+    // The previous table handler also listened to touch pointer events while legacy
+    // scroll-memory code listened to the same gesture; on iOS/iPadOS that produced
+    // cancelled/sticky pans. Mouse drag-to-pan remains useful on desktop.
     let gesture = null;
     zone.addEventListener('pointerdown', e => {
       if (!enabled() || e.button !== 0 || e.target.closest('button,.zone-info-popover')) return;
-      // The game's piece drag owns its pointer. A selected touch card can still pan.
+      if (e.pointerType === 'touch' || e.pointerType === 'pen') return;
       if (typeof draggedBlock !== 'undefined' && draggedBlock) return;
+      if (typeof draggedShape !== 'undefined' && draggedShape) return;
+      if (typeof activeBonusPlacement !== 'undefined' && activeBonusPlacement) return;
       if (gesture) return;
       gesture = {id:e.pointerId, x:e.clientX, y:e.clientY, left:zone.scrollLeft, top:zone.scrollTop, moved:false};
-      // Delay debug cell activation and pan until pointer intent is known.
-      e.stopImmediatePropagation();
     }, true);
     zone.addEventListener('pointermove', e => {
       if (!gesture || gesture.id !== e.pointerId) return;
@@ -142,33 +147,20 @@
       if (!gesture.moved && Math.hypot(dx, dy) < 7) return;
       gesture.moved = true;
       zone.dataset.dragScrolling = 'true'; zone.classList.add('table-panning');
-
-      // Touch/pen should use the browser's native scrolling. It gives momentum,
-      // direction locking and much smoother phone/tablet panning than manually
-      // assigning scrollLeft/scrollTop on every pointermove.
-      if (e.pointerType === 'touch' || e.pointerType === 'pen') return;
-
       if (!zone.hasPointerCapture(e.pointerId)) zone.setPointerCapture(e.pointerId);
       zone.scrollLeft = gesture.left - dx; zone.scrollTop = gesture.top - dy;
-      e.preventDefault(); e.stopImmediatePropagation();
+      if (e.cancelable) e.preventDefault();
+      e.stopImmediatePropagation();
     }, true);
     const end = e => {
       if (!gesture || gesture.id !== e.pointerId) return;
-      const touchLike = e.pointerType === 'touch' || e.pointerType === 'pen';
       if (gesture.moved || e.type === 'pointercancel') {
         suppressedUntil = performance.now() + 400;
-        // Do not cancel a native touch/pen scroll on release: that kills momentum.
-        if (!touchLike) { e.preventDefault(); e.stopImmediatePropagation(); }
+        if (e.cancelable) e.preventDefault();
+        e.stopImmediatePropagation();
       } else if (typeof debugMode !== 'undefined' && debugMode) {
         const cell = e.target.closest('.cell');
         if (cell) toggleCell(cell, cell.dataset.zoneId);
-        e.stopImmediatePropagation();
-      } else if (touchLike) {
-        // Commit a tap only after the pan threshold was checked. Reuse the game's
-        // single placement path, including validation, rewards and undo history.
-        if (typeof handleTouchCellPlacement === 'function') handleTouchCellPlacement(e);
-        // Prevent the compatibility click from attempting the same tap again.
-        if (e.cancelable) e.preventDefault();
         e.stopImmediatePropagation();
       }
       gesture = null; zone.classList.remove('table-panning');
@@ -206,6 +198,24 @@
         pattern.style.gridTemplateRows = `repeat(${rows}, ${size}px)`;
       }
     });
+  }
+  function anchorGreenStart(zone) {
+    if (!zone) return;
+    const grid = zone.querySelector('#green-grid, .grid');
+    if (!grid) return;
+    const sx = Number(grid.dataset.startX), sy = Number(grid.dataset.startY);
+    let start = null;
+    if (Number.isFinite(sx) && Number.isFinite(sy)) {
+      start = grid.querySelector(`.cell[data-x="${sx}"][data-y="${sy}"]`);
+    }
+    if (!start) start = grid.querySelector('.cell.bold-cell:not(.void-cell), .cell.root-cell:not(.void-cell)');
+    if (!start || !zone.clientWidth || !zone.clientHeight) return;
+    const centerX = (grid.offsetLeft || 0) + start.offsetLeft + start.offsetWidth / 2;
+    const centerY = (grid.offsetTop || 0) + start.offsetTop + start.offsetHeight / 2;
+    const maxLeft = Math.max(0, zone.scrollWidth - zone.clientWidth);
+    const maxTop = Math.max(0, zone.scrollHeight - zone.clientHeight);
+    zone.scrollLeft = Math.max(0, Math.min(maxLeft, centerX - zone.clientWidth / 2));
+    zone.scrollTop = Math.max(0, Math.min(maxTop, centerY - zone.clientHeight / 2));
   }
   function anchorBlueStart(zone) {
     if (!zone) return;
@@ -283,13 +293,13 @@
     const viewport = reference.zone.clientWidth ? reference.zone : frames.get(focused).zone;
     const cols = Number(referenceGrid?.dataset.cols) || 10;
     const rows = Number(referenceGrid?.dataset.rows) || 10;
-    let worldNumber = 1;
-    try { worldNumber = Number(getWorldAndSubLevel(currentLevel)?.world || 1) || 1; } catch (_) {}
-    // World 1 has a 9x9 purple reference grid, so the generic mobile fitter made
-    // every zone noticeably larger than in Worlds 2/3 (13x13 / 14x14). Use a
-    // slightly denser virtual reference on phones so more of each map stays visible.
-    const fitCols = phone && worldNumber === 1 ? Math.max(cols, 11) : cols;
-    const fitRows = phone && worldNumber === 1 ? Math.max(rows, 11) : rows;
+    // A phone should not get larger cells merely because the current world's purple
+    // board happens to be smaller. Worlds 2/3 naturally use ~13–14 cells as their
+    // reference; use the same minimum density everywhere. This removes the World 1
+    // jump from ~28px to ~22px on a 390px-wide phone and makes orientation changes stable.
+    const mobileReference = 14;
+    const fitCols = phone ? Math.max(cols, mobileReference) : cols;
+    const fitRows = phone ? Math.max(rows, mobileReference) : rows;
     const cell = Math.floor(Math.max(14, Math.min(phone ? 44 : 34,
       (viewport.clientWidth - 28) / fitCols - 2, (viewport.clientHeight - 50) / fitRows - 2)));
     document.body.style.setProperty('--table-cell-size', `${cell}px`);
@@ -324,12 +334,7 @@
       if (generation && zone.clientWidth && item.generation !== generation) {
         item.generation = generation;
         if (key === 'green') {
-          const start = zone.querySelector('.bold-cell');
-          if (start) {
-            const rect = start.getBoundingClientRect(), view = zone.getBoundingClientRect();
-            zone.scrollLeft += rect.left - view.left - zone.clientWidth / 2;
-            zone.scrollTop += rect.top - view.top - zone.clientHeight / 2;
-          }
+          anchorGreenStart(zone);
         } else if (key === 'blue') {
           anchorBlueStart(zone);
         }

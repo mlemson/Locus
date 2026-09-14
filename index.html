@@ -22,6 +22,10 @@
 				};
 				const canScroll = (el) => {
 					if (!el || !el.closest) return false;
+					// The modern table owns its overflow. Do not run the legacy page-scroll
+					// blocker on a zone gesture: iOS/Android need the original touchmove
+					// stream untouched for direction locking + momentum scrolling.
+					if (el.closest('.table-zone-frame > .zone')) return true;
 					if (el.closest('#green-zone, #blue-zone, #card-options, #preworld-pick-grid, #deck-modal-content, #blackhole-card-grid')) return true;
 					let node = el;
 					while (node && node !== document.body) {
@@ -17922,6 +17926,10 @@ let shopLevel2Used = false;
 	}
 	let greenCenterToken = 0;
 	function scheduleGreenCenter(options = {}) {
+		// Modern table layout owns normal-mode zone anchoring. Running this legacy
+		// center routine as well causes touch scroll to snap/fight the user and can
+		// leave large World 4 root grids looking empty after a late re-center.
+		if (window.LocusTable?.enabled()) { window.LocusTable.schedule(); return; }
 		const opts = (options && typeof options === 'object') ? options : {};
 		const greenZone = document.getElementById('green-zone');
 		if (!greenZone) return;
@@ -18167,6 +18175,13 @@ let shopLevel2Used = false;
 		if (targetZoneId) {
 			const targetZone = document.getElementById(targetZoneId);
 			if (targetZone) {
+				// In the modern table, a color change is a tab/focus change, not a legacy
+				// zoom clone. Mixing both systems created duplicate zones on mobile and
+				// made a later touch gesture land on the placeholder instead of the board.
+				if (window.LocusTable?.enabled()) {
+					try { window.LocusTable.focus(targetZone); } catch (_) {}
+					return;
+				}
 				// World 4: never auto-zoom into inactive/hidden colors.
 				try {
 					const info = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(currentLevel) : null;
@@ -28249,192 +28264,243 @@ function resetWorldLayoutStyles() {
 	}
 
 	// WORLD 4: Board layout = World 3 sizing/layout, plus doors/keys gating
+	function withWorld4Seed(seed, fn) {
+		const originalRandom = Math.random;
+		const rng = world4Mulberry32((Number(seed) || 1) >>> 0);
+		try {
+			Math.random = rng;
+			return fn(rng);
+		} finally {
+			Math.random = originalRandom;
+		}
+	}
+
 	function getWorld4YellowShape(subLevel = 1) {
+		// Ten deliberately different silhouettes. World 4 should feel authored rather
+		// than like World 3 with doors stamped on top of it. These variants are also
+		// intentionally denser/larger so the yellow citadel occupies more of the board.
 		const shapes = [
-			{
-				name: 'kroon',
-				pattern: [4, 6, 8, 10, 12, 14, 14, 12, 10, 12, 14, 12, 10, 8, 6],
-				offsets: [5, 4, 3, 2, 1, 0, 0, 1, 2, 1, 0, 1, 2, 3, 4],
-				boldCells: [[6, 6], [6, 7], [7, 6], [7, 7]]
-			},
-			{
-				name: 'schild',
-				pattern: [6, 8, 10, 12, 14, 14, 14, 12, 12, 10, 8, 6, 4],
-				offsets: [4, 3, 2, 1, 0, 0, 0, 1, 1, 2, 3, 4, 5],
-				boldCells: [[5, 6], [5, 7], [6, 6], [6, 7]]
-			},
-			{
-				name: 'zandloper',
-				pattern: [4, 6, 8, 10, 12, 10, 8, 6, 8, 10, 12, 10, 8, 6, 4],
-				offsets: [5, 4, 3, 2, 1, 2, 3, 4, 3, 2, 1, 2, 3, 4, 5],
-				boldCells: [[7, 6], [7, 7], [6, 6], [8, 7]]
-			},
-			{
-				name: 'poort',
-				pattern: [6, 8, 10, 12, 12, 10, 8, 8, 10, 12, 12, 10, 8],
-				offsets: [4, 3, 2, 1, 1, 2, 3, 3, 2, 1, 1, 2, 3],
-				boldCells: [[6, 5], [6, 6], [6, 7], [7, 6]]
-			},
-			{
-				name: 'citadel',
-				pattern: [4, 6, 8, 10, 12, 14, 12, 10, 8, 10, 12, 10, 8, 6, 4],
-				offsets: [5, 4, 3, 2, 1, 0, 1, 2, 3, 2, 1, 2, 3, 4, 5],
-				boldCells: [[7, 5], [7, 6], [7, 7], [8, 6]]
-			}
+			{ name:'sleutelgat', pattern:[8,10,12,14,16,18,16,14,12,10,8,8,10,12] },
+			{ name:'schild', pattern:[8,10,12,14,16,18,18,16,16,14,12,10,8,6] },
+			{ name:'zandloper', pattern:[8,10,12,14,12,10,8,10,12,14,16,14,12,10,8] },
+			{ name:'poort', pattern:[10,12,14,16,18,18,16,14,12,10,10,12,14,12,10] },
+			{ name:'kroon', pattern:[7,11,9,13,15,17,19,17,15,13,11,13,11,9,7] },
+			{ name:'vleugels', pattern:[6,9,12,15,18,20,18,16,14,16,18,20,18,15,12,9,6], drift:[0,-1,-1,0,0,0,1,1,1,1,0,0,0,-1,-1,0,0] },
+			{ name:'bastion', pattern:[12,14,16,16,14,12,14,16,18,18,16,14,12], drift:[-1,-1,0,0,1,1,1,0,0,0,-1,-1,-1] },
+			{ name:'torens', pattern:[10,14,12,16,14,18,16,14,12,16,14,12,10,12,10] },
+			{ name:'binnenhof', pattern:[8,11,14,17,19,19,17,15,13,15,17,19,19,17,14,11,8], drift:[0,0,-1,-1,0,1,1,0,-1,-1,0,1,1,0,0,-1,0] },
+			{ name:'citadel', pattern:[10,14,18,20,18,16,14,16,18,20,18,16,14,12,10] }
 		];
-		const idx = Math.max(0, (Number(subLevel || 1) - 1) % shapes.length);
-		return shapes[idx];
+		const idx = Math.max(0, Math.min(shapes.length - 1, Number(subLevel || 1) - 1));
+		const raw = shapes[idx];
+		const maxWidth = Math.max(...raw.pattern) + 2;
+		const offsets = raw.pattern.map((len, i) => {
+			const base = Math.floor((maxWidth - len) / 2);
+			return Math.max(0, base + Number(raw.drift?.[i] || 0));
+		});
+		const midRow = Math.floor(raw.pattern.length / 2);
+		const candidateRows = [midRow, midRow - 1, midRow + 1, midRow - 2, midRow + 2].filter(r => r >= 0 && r < raw.pattern.length);
+		const boldCells = candidateRows.map((r, i) => {
+			const len = raw.pattern[r];
+			const x = offsets[r] + Math.floor(len / 2) + (i % 2 ? -1 : 0);
+			return [r, x];
+		});
+		return { ...raw, offsets, boldCells };
 	}
 
 	function applyWorld4YellowGeneration(subLevel = 1) {
 		const yellowShape = getWorld4YellowShape(subLevel);
 		if (!yellowShape) return;
 		const yellowRows = yellowShape.pattern.length;
-		const yellowCols = Math.max(
-			...yellowShape.pattern.map((len, i) => (Number(len) || 0) + (Number(yellowShape.offsets[i]) || 0))
-		);
-		const yellowPointsArray = [12, 18, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128];
-		const yellowColumnPoints = yellowShape.pattern.map((_, idx) => yellowPointsArray[idx] || (56 + (idx - 6) * 8));
+		const yellowCols = Math.max(...yellowShape.pattern.map((len, i) => (Number(len) || 0) + (Number(yellowShape.offsets[i]) || 0)));
+		const yellowPointsArray = [14,20,26,34,42,50,58,66,74,82,92,102,114,126,138,150,162,174,186,198,210,222];
+		const yellowColumnPoints = Array.from({ length: yellowCols }, (_, idx) => yellowPointsArray[idx] || (72 + idx * 8));
 		window.yellowGridConfig = {
-			rows: yellowRows,
-			cols: yellowCols,
-			rowLengths: yellowShape.pattern.slice(),
-			rowOffsets: yellowShape.offsets.slice(),
-			pointsByColumn: yellowColumnPoints.slice(),
-			columnHeights: yellowShape.pattern.map((_, i) => i),
-			pointsByRow: [],
-			pointsByWidth: {},
-			pointsPerRow: 0,
-			pointsPerColumn: 0,
-			scoreMode: 'rings',
-			ringMinPoints: 16,
-			ringMaxPoints: 84
+			rows: yellowRows, cols: yellowCols,
+			rowLengths: yellowShape.pattern.slice(), rowOffsets: yellowShape.offsets.slice(),
+			pointsByColumn: yellowColumnPoints.slice(), columnHeights: [], pointsByRow: [], pointsByWidth: {},
+			pointsPerRow:0, pointsPerColumn:0, scoreMode:'rings', ringMinPoints:16 + subLevel, ringMaxPoints:82 + subLevel * 4,
+			world4:true, generationName:yellowShape.name
 		};
-		createGrid('yellow-grid', yellowRows, yellowCols, {
-			goldCells: true,
-			symbols: true,
-			minSymbols: 11,
-			maxSymbols: 14,
-			coinChance: 0.13,
-			maxCoins: 18,
-			rowLengths: yellowShape.pattern,
-			rowOffsets: yellowShape.offsets,
-			fixedBoldCells: yellowShape.boldCells,
-			boldColumns: [],
-			pointsPerColumn: yellowColumnPoints,
-			ringShading: true,
-			trimRight: true,
-			trapChance: 0,
-			maxTraps: 0,
-			blackHoleChance: 0
-		});
-		try { bumpGridVersion(); } catch (e) {}
+		withWorld4Seed(0x4100 + subLevel * 97, () => createGrid('yellow-grid', yellowRows, yellowCols, {
+			goldCells:true, symbols:true,
+			minSymbols:14 + subLevel, maxSymbols:18 + subLevel,
+			coinChance:0.09, maxCoins:11 + Math.min(7, subLevel),
+			rowLengths:yellowShape.pattern, rowOffsets:yellowShape.offsets,
+			fixedBoldCells:yellowShape.boldCells, boldColumns:[], pointsPerColumn:yellowColumnPoints,
+			ringShading:true, trimRight:true, trapChance:0, maxTraps:0, blackHoleChance:0
+		}));
 		const yellowZone = document.getElementById('yellow-zone');
-		if (yellowZone && yellowShape.boldCells) {
-			const cleanupYellowStartCell = (cell) => {
+		if (yellowZone) {
+			yellowZone.dataset.w4Generation = yellowShape.name;
+			const cleanup = cell => {
 				if (!cell) return;
-				cell.classList.remove('gold-cell');
-				cell.querySelectorAll('.symbol').forEach(s => s.remove());
-				if (cell.classList.contains('trap-cell')) {
-					cell.classList.remove('trap-cell');
-					delete cell.dataset.trap;
-					delete cell.dataset.trapType;
-					delete cell.dataset.trapTriggered;
-					delete cell.dataset.trapInstanceId;
-					cell.querySelectorAll('.trap-symbol').forEach(s => s.remove());
-				}
+				cell.classList.remove('gold-cell','trap-cell');
+				delete cell.dataset.trap; delete cell.dataset.trapType; delete cell.dataset.trapTriggered;
+				cell.querySelectorAll('.symbol,.trap-symbol').forEach(n => n.remove());
 			};
-			yellowShape.boldCells.forEach(([row, col]) => {
-				const cell = getCell(yellowZone, col, row);
-				if (!cell) return;
-				if (!cell.classList.contains('bold-cell')) cell.classList.add('bold-cell');
-				cleanupYellowStartCell(cell);
-			});
-			yellowZone.querySelectorAll('.cell.bold-cell').forEach(cleanupYellowStartCell);
+			yellowShape.boldCells.forEach(([row,col]) => { const c=getCell(yellowZone,col,row); if(c){c.classList.add('bold-cell');cleanup(c);} });
+			yellowZone.querySelectorAll('.cell.bold-cell').forEach(cleanup);
 		}
 	}
 
-	function applyWorld4PurpleGeneration(subLevel = 1) {
-		const size = Number(subLevel || 1) >= 6 ? 15 : 14;
-		const center = Math.floor(size / 2);
-		const fixedBoldCells = [
-			[0, 0], [0, size - 1], [size - 1, 0], [size - 1, size - 1],
-			[center, center - 3], [center, center + 3], [center - 3, center], [center + 3, center],
-			[center, center], [center - 1, center], [center, center - 1], [center + 1, center]
+	function getWorld4PurpleProfile(subLevel = 1) {
+		const n = Math.max(1, Math.min(10, Number(subLevel) || 1));
+		const sizes = [16,17,16,18,17,18,18,19,20,21];
+		const size = sizes[n - 1];
+		const c = Math.floor(size / 2);
+		const motifs = [
+			[[c,c],[c-3,c],[c+3,c],[c,c-3],[c,c+3],[c-1,c-1],[c+1,c+1]],
+			[[2,2],[2,size-3],[size-3,2],[size-3,size-3],[c,c],[c-3,c],[c+3,c]],
+			[[c-4,c-4],[c-2,c-2],[c,c],[c+2,c+2],[c+4,c+4],[c-4,c+4],[c+4,c-4]],
+			[[c-4,c+4],[c-2,c+2],[c,c],[c+2,c-2],[c+4,c-4],[c-4,c-4],[c+4,c+4]],
+			[[c-4,c],[c-3,c-3],[c,c-4],[c+3,c-3],[c+4,c],[c+3,c+3],[c,c+4],[c-3,c+3],[c,c]],
+			[[2,c],[c,2],[size-3,c],[c,size-3],[c,c],[c-3,c],[c+3,c],[c,c-3],[c,c+3]],
+			[[3,3],[3,c],[3,size-4],[c,3],[c,c],[c,size-4],[size-4,3],[size-4,c],[size-4,size-4],[c-3,c],[c+3,c]],
+			[[1,c],[c,1],[size-2,c],[c,size-2],[c-4,c-4],[c+4,c+4],[c-4,c+4],[c+4,c-4],[c,c]],
+			[[2,2],[2,size-3],[size-3,2],[size-3,size-3],[c-4,c],[c+4,c],[c,c-4],[c,c+4],[c,c],[c-2,c-2],[c+2,c+2]],
+			[[1,1],[1,size-2],[size-2,1],[size-2,size-2],[c-5,c],[c+5,c],[c,c-5],[c,c+5],[c,c],[c-3,c-3],[c+3,c+3]]
 		];
+		return { size, fixedBoldCells:motifs[n-1], name:['kruis','vierposten','diagonaal','tegenddiagonaal','ring','assen','negenhof','kompas','vesting','kernplein'][n-1] };
+	}
+
+	function applyWorld4PurpleGeneration(subLevel = 1) {
+		const p = getWorld4PurpleProfile(subLevel);
 		window.purpleGridConfig = {
-			world3: true,
-			size,
-			outerRingBonusPerBold: 22 + Math.min(10, Number(subLevel || 1) * 2),
-			innerRingBonus: true,
-			innerRingBonusPerBold: 12 + Math.min(10, Number(subLevel || 1))
+			world3:true, world4:true, size:p.size, generationName:p.name,
+			outerRingBonusPerBold:22 + Math.min(16, subLevel * 2), innerRingBonus:true,
+			innerRingBonusPerBold:12 + Math.min(12, subLevel)
 		};
-		createGrid('purple-grid', size, size, {
-			goldCells: true,
-			symbols: true,
-			minSymbols: 15 + Math.min(4, Math.floor(Number(subLevel || 1) / 2)),
-			maxSymbols: 18 + Math.min(4, Math.floor(Number(subLevel || 1) / 2)),
-			coinChance: 0.08,
-			maxCoins: 10 + Math.min(6, Number(subLevel || 1)),
-			randomBoldCount: Math.min(20, 12 + Number(subLevel || 1)),
-			avoidAdjacentBold: true,
-			fixedBoldCells,
-			trapChance: 0,
-			maxTraps: 0,
-			blackHoleChance: 0
-		});
+		withWorld4Seed(0x4200 + subLevel * 131, () => createGrid('purple-grid', p.size, p.size, {
+			goldCells:true, symbols:true,
+			minSymbols:12 + subLevel, maxSymbols:15 + subLevel,
+			coinChance:0.06, maxCoins:9 + Math.min(9,subLevel),
+			randomBoldCount:Math.min(28,10 + subLevel * 2), randomBoldMinEdgeDistance:2,
+			avoidAdjacentBold:true, fixedBoldCells:p.fixedBoldCells, outerRingShade:true,
+			trapChance:0, maxTraps:0, blackHoleChance:0
+		}));
+		const zone=document.getElementById('purple-zone'); if(zone) zone.dataset.w4Generation=p.name;
+	}
+
+	function getWorld4BlueProfile(subLevel = 1) {
+		const n=Math.max(1,Math.min(10,Number(subLevel)||1));
+		const rows=[46,50,54,58,60,64,66,70,72,76][n-1];
+		const cols=[12,13,12,14,13,15,14,15,16,16][n-1];
+		return { rows, cols, splitCount:n<3?0:n<6?1:2, name:['sluiproute','boog','eerste-gracht','slangenpad','dubbele-bocht','tweede-gracht','slinger','tweesprong','binnenwater','slotgracht'][n-1] };
+	}
+
+	function buildWorld4BlueRiver(subLevel = 1) {
+		const p=getWorld4BlueProfile(subLevel), rng=world4Mulberry32(0x4300 + subLevel * 173);
+		const lengths=[], offsets=[], voidCells=new Set();
+		let width=3, offset=Math.max(0,Math.floor((p.cols-width)/2));
+		const splitWindows=[];
+		if(p.splitCount>=1) splitWindows.push([Math.floor(p.rows*.28),Math.floor(p.rows*.28)+10+subLevel]);
+		if(p.splitCount>=2) splitWindows.push([Math.floor(p.rows*.62),Math.min(p.rows-5,Math.floor(p.rows*.62)+9+Math.floor(subLevel/2))]);
+		for(let y=0;y<p.rows;y++){
+			width=2+Math.floor(rng()*3);
+			const maxOffset=Math.max(0,p.cols-width);
+			if(rng()>.28) offset += rng()>.5?1:-1;
+			offset=Math.max(0,Math.min(maxOffset,offset));
+			let rowStart=offset,rowEnd=offset+width;
+			const win=splitWindows.find(([a,b])=>y>=a&&y<=b);
+			if(win){
+				const [a,b]=win, progress=(y-a)/Math.max(1,b-a);
+				const edge=Math.min(progress,1-progress);
+				const gap=edge<.16?0:(edge<.3?1:2);
+				const branchWidth=2+(subLevel%2);
+				let branchStart=offset+width-1+gap;
+				let branchOnRight=true;
+				if(branchStart+branchWidth>p.cols){ branchOnRight=false; branchStart=offset-branchWidth+1-gap; }
+				branchStart=Math.max(0,Math.min(p.cols-branchWidth,branchStart));
+				rowStart=Math.min(offset,branchStart); rowEnd=Math.max(offset+width,branchStart+branchWidth);
+				const leftEnd=Math.min(offset+width,branchStart+branchWidth), rightStart=Math.max(offset,branchStart);
+				if(branchOnRight && offset+width<branchStart){ for(let x=offset+width;x<branchStart;x++) voidCells.add(`${x},${y}`); }
+				if(!branchOnRight && branchStart+branchWidth<offset){ for(let x=branchStart+branchWidth;x<offset;x++) voidCells.add(`${x},${y}`); }
+			}
+			lengths.push(rowEnd-rowStart); offsets.push(rowStart);
+		}
+		return { ...p, lengths, offsets, voidCells };
+	}
+
+	function applyWorld4BlueGeneration(subLevel = 1) {
+		const b=buildWorld4BlueRiver(subLevel);
+		window.blueGridConfig={ world4:true, generationName:b.name, rows:b.rows, cols:b.cols };
+		withWorld4Seed(0x4310 + subLevel * 179, () => createGrid('blue-grid', b.rows, b.cols, {
+			boldBottom:true, goldCells:true, symbols:true,
+			minSymbols:14+subLevel, maxSymbols:18+subLevel*2,
+			coinChance:.065, maxCoins:12+Math.min(10,subLevel),
+			rowLengths:b.lengths, rowOffsets:b.offsets, voidCells:b.voidCells,
+			trimLeft:true, trimRight:true, trapChance:0, maxTraps:0, blackHoleChance:0
+		}));
+		const zone=document.getElementById('blue-zone'); if(zone){zone.dataset.w4Generation=b.name; zone.dataset.needsInitialScrollBottom='true';}
+	}
+
+	function getWorld4GreenProfile(subLevel = 1) {
+		const n=Math.max(1,Math.min(10,Number(subLevel)||1));
+		return [
+			{rows:28,cols:30,growth:150,split:.24,name:'boomgaard'},
+			{rows:32,cols:26,growth:165,split:.30,name:'smalle-tuin'},
+			{rows:30,cols:34,growth:185,split:.34,name:'waaier'},
+			{rows:36,cols:28,growth:205,split:.38,name:'doolhof'},
+			{rows:32,cols:36,growth:220,split:.42,name:'kruidentuin'},
+			{rows:38,cols:30,growth:240,split:.44,name:'terrassen'},
+			{rows:34,cols:38,growth:255,split:.48,name:'ruinetuin'},
+			{rows:40,cols:32,growth:270,split:.50,name:'binnenpark'},
+			{rows:36,cols:40,growth:290,split:.53,name:'vestinggroen'},
+			{rows:42,cols:36,growth:310,split:.56,name:'citadeltuin'}
+		][n-1];
+	}
+
+	function applyWorld4GreenGeneration(subLevel = 1) {
+		const g=getWorld4GreenProfile(subLevel);
+		window.greenGridConfig={ world3:true, world4:true, generationName:g.name, minEndPoints:10+subLevel, minEndCellPoints:16, maxEndCellPoints:42, branchBonusMultiplier:2 };
+		withWorld4Seed(0x4400 + subLevel * 191, () => generateRoots('green-grid', g.rows, g.cols, g.growth, g.split, .018, 5+Math.floor(subLevel/2), 8+subLevel, 4+Math.floor(subLevel/3), false, 0, 0, 0));
+		const zone=document.getElementById('green-zone'); if(zone) zone.dataset.w4Generation=g.name;
 	}
 
 	function getWorld4RedProfiles(subLevel = 1) {
-		const t = Math.max(0, Number(subLevel || 1) - 1);
+		const n=Math.max(1,Math.min(10,Number(subLevel)||1));
+		const wobble=[0,1,1,2,2,2,3,3,4,4][n-1];
 		return [
-			{ id:'red-grid1', width:5, height:5, growth:18 + t, targetCells:10 + Math.min(2, t), targetPoints:22 + t * 2 },
-			{ id:'red-grid2', width:6, height:5, growth:20 + t, targetCells:13 + Math.min(3, t), targetPoints:30 + t * 2 },
-			{ id:'red-grid3', width:6, height:6, growth:22 + t, targetCells:15 + Math.min(4, t), targetPoints:40 + t * 2 },
-			{ id:'red-grid4', width:7, height:6, growth:24 + t, targetCells:18 + Math.min(5, t), targetPoints:52 + t * 2 },
-			{ id:'red-grid5', width:7 + (t >= 4 ? 1 : 0), height:6 + (t >= 5 ? 1 : 0), growth:26 + t, targetCells:20 + Math.min(5, t), targetPoints:64 + t * 2 },
-			{ id:'red-grid6', width:8 + (t >= 6 ? 1 : 0), height:7 + (t >= 7 ? 1 : 0), growth:29 + t, targetCells:24 + Math.min(6, t), targetPoints:78 + t * 2 }
+			{ id:'red-grid1', width:6+(n>=5?1:0), height:5+(n>=3?1:0), growth:24+n*3, targetCells:12+Math.min(5,n), targetPoints:28+n*3 },
+			{ id:'red-grid2', width:6+wobble, height:5+(n>=4?1:0), growth:28+n*3, targetCells:15+Math.min(6,n), targetPoints:36+n*4 },
+			{ id:'red-grid3', width:7+(n>=7?1:0), height:6+(n>=4?1:0), growth:32+n*3, targetCells:18+Math.min(7,n), targetPoints:46+n*4 },
+			{ id:'red-grid4', width:7+wobble, height:6+(n>=6?1:0), growth:36+n*3, targetCells:21+Math.min(8,n), targetPoints:58+n*5 },
+			{ id:'red-grid5', width:8+(n>=8?1:0), height:7+(n>=5?1:0), growth:40+n*3, targetCells:24+Math.min(9,n), targetPoints:72+n*5 },
+			{ id:'red-grid6', width:9+(n>=9?1:0), height:8+(n>=7?1:0), growth:44+n*3, targetCells:28+Math.min(10,n), targetPoints:88+n*6 }
 		];
 	}
 
 	function applyWorld4RedGeneration(subLevel = 1) {
-		const redZone = document.getElementById('red-zone');
-		if (!redZone) return;
-		const visibleCount = Number(subLevel || 1) >= 7 ? 6 : (Number(subLevel || 1) >= 4 ? 5 : 4);
-		const profiles = getWorld4RedProfiles(subLevel);
-		redZone.dataset.w4RedCount = String(visibleCount);
-		profiles.forEach((cfg, index) => {
-			const grid = document.getElementById(cfg.id);
-			if (!grid) return;
-			if (index >= visibleCount) {
-				grid.style.display = 'none';
-				grid.innerHTML = '';
-				delete grid.dataset.redTargetPoints;
-				delete grid.dataset.rows;
-				delete grid.dataset.cols;
-				return;
-			}
-			grid.style.display = '';
-			generateRoots(cfg.id, cfg.width, cfg.height, cfg.growth, 0.34, 0.03, 2 + (index % 2), 2 + Math.floor(index / 2), 2, true, 0.0, 0, 0, {
-				targetCells: cfg.targetCells,
-				targetPoints: cfg.targetPoints,
-				showPointsLabel: true
-			});
+		const redZone=document.getElementById('red-zone'); if(!redZone)return;
+		const visibleCount=subLevel>=6?6:(subLevel>=2?5:4), profiles=getWorld4RedProfiles(subLevel);
+		redZone.dataset.w4RedCount=String(visibleCount); redZone.dataset.w4Generation=`kamers-${visibleCount}-${subLevel}`;
+		profiles.forEach((cfg,index)=>{
+			const grid=document.getElementById(cfg.id); if(!grid)return;
+			if(index>=visibleCount){grid.style.display='none';grid.innerHTML='';delete grid.dataset.redTargetPoints;delete grid.dataset.rows;delete grid.dataset.cols;return;}
+			grid.style.display='';
+			withWorld4Seed(0x4500 + subLevel*211 + index*37, () => generateRoots(cfg.id,cfg.height,cfg.width,cfg.growth,.30+subLevel*.02,.026,2+(index%2),4+Math.floor(index/2),2,true,0,0,0,{targetCells:cfg.targetCells,targetPoints:cfg.targetPoints,showPointsLabel:true}));
 		});
 	}
 
 	function rebuildGameBoards_World4() {
-		// Reuse World 3 generator for consistent field layout
+		// World 3 is no longer the visible generator for World 4. It is called once to
+		// keep legacy score/config plumbing initialized, then every playable zone is
+		// replaced by a dedicated Citadel generator below.
 		rebuildGameBoards_World3();
 		try {
-			const info = (typeof getWorldAndSubLevel === 'function') ? getWorldAndSubLevel(currentLevel) : null;
-			const subLevel = Number(info?.subLevel || 1);
+			const info=(typeof getWorldAndSubLevel==='function')?getWorldAndSubLevel(currentLevel):null;
+			const subLevel=Number(info?.subLevel||1);
 			applyWorld4YellowGeneration(subLevel);
 			applyWorld4PurpleGeneration(subLevel);
+			applyWorld4BlueGeneration(subLevel);
+			applyWorld4GreenGeneration(subLevel);
 			applyWorld4RedGeneration(subLevel);
-		} catch (e) { console.warn('World 4 generation failed', e); }
-		try { applyWorld4LocksForLevel(currentLevel); } catch (e) { console.warn('World 4 locks failed', e); }
-		try { requestAnimationFrame(() => requestAnimationFrame(() => applyInitialZoneAnchorsForCurrentLevel({ force: true }))); } catch (_) {}
+			try { bumpGridVersion(); } catch (_) {}
+		} catch(e){ console.warn('World 4 generation failed',e); }
+		try { applyWorld4LocksForLevel(currentLevel); } catch(e){ console.warn('World 4 locks failed',e); }
+		try { window.LocusTable?.schedule?.(); } catch(_) {}
+		try { requestAnimationFrame(()=>requestAnimationFrame(()=>applyInitialZoneAnchorsForCurrentLevel({force:true}))); } catch(_) {}
 	}
 
 	function applyWorld4LocksForLevel(level) {
