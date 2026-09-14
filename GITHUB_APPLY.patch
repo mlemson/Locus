@@ -1,0 +1,149 @@
+--- a/js/world-table.js
++++ b/js/world-table.js
+@@ -74,6 +74,11 @@
+         };
+         frame.append(cue); cues[dir] = cue;
+       }
++      // Override legacy touch-action:none even if an older stylesheet is still cached.
++      // Native pan gestures are essential for smooth momentum scrolling on phones/tablets.
++      zone.style.setProperty('touch-action', 'pan-x pan-y', 'important');
++      zone.style.setProperty('scroll-behavior', 'auto', 'important');
++      zone.style.setProperty('-webkit-overflow-scrolling', 'touch');
+       zone.tabIndex = 0;
+       zone.setAttribute('aria-label', `${name} speelveld. Gebruik de pijltjestoetsen om te verschuiven.`);
+       zone.addEventListener('scroll', () => updateEdges(key), {passive: true});
+@@ -137,23 +142,34 @@
+       if (!gesture.moved && Math.hypot(dx, dy) < 7) return;
+       gesture.moved = true;
+       zone.dataset.dragScrolling = 'true'; zone.classList.add('table-panning');
++
++      // Touch/pen should use the browser's native scrolling. It gives momentum,
++      // direction locking and much smoother phone/tablet panning than manually
++      // assigning scrollLeft/scrollTop on every pointermove.
++      if (e.pointerType === 'touch' || e.pointerType === 'pen') return;
++
+       if (!zone.hasPointerCapture(e.pointerId)) zone.setPointerCapture(e.pointerId);
+       zone.scrollLeft = gesture.left - dx; zone.scrollTop = gesture.top - dy;
+       e.preventDefault(); e.stopImmediatePropagation();
+     }, true);
+     const end = e => {
+       if (!gesture || gesture.id !== e.pointerId) return;
++      const touchLike = e.pointerType === 'touch' || e.pointerType === 'pen';
+       if (gesture.moved || e.type === 'pointercancel') {
+         suppressedUntil = performance.now() + 400;
+-        e.preventDefault(); e.stopImmediatePropagation();
++        // Do not cancel a native touch/pen scroll on release: that kills momentum.
++        if (!touchLike) { e.preventDefault(); e.stopImmediatePropagation(); }
+       } else if (typeof debugMode !== 'undefined' && debugMode) {
+         const cell = e.target.closest('.cell');
+         if (cell) toggleCell(cell, cell.dataset.zoneId);
+         e.stopImmediatePropagation();
+-      } else if (e.pointerType === 'touch' || e.pointerType === 'pen') {
++      } else if (touchLike) {
+         // Commit a tap only after the pan threshold was checked. Reuse the game's
+         // single placement path, including validation, rewards and undo history.
+         if (typeof handleTouchCellPlacement === 'function') handleTouchCellPlacement(e);
++        // Prevent the compatibility click from attempting the same tap again.
++        if (e.cancelable) e.preventDefault();
++        e.stopImmediatePropagation();
+       }
+       gesture = null; zone.classList.remove('table-panning');
+       zone.dataset.dragScrolling = 'false';
+@@ -221,7 +237,7 @@
+     if (!enabled()) { suspend(); return; }
+     if (!app) create();
+     app.hidden = false;
+-    phone = Math.min(innerWidth, innerHeight) < 600;
++    phone = innerWidth <= 640 || Math.min(innerWidth, innerHeight) < 600;
+     document.body.classList.add('table-ui');
+     document.body.classList.toggle('table-phone', phone);
+     document.body.classList.toggle('table-landscape', phone && innerWidth > innerHeight);
+@@ -249,7 +265,16 @@
+     // Resolve visibility first: all zones share the size that fits purple, even
+     // when another color is focused on a phone and purple itself has no box.
+     for (const [key, {zone, frame, tab}] of frames) {
+-      frame.hidden = zone.style.display === 'none' || (phone && key !== focused);
++      const isHidden = zone.style.display === 'none' || (phone && key !== focused);
++      frame.hidden = isHidden;
++      frame.style.display = isHidden ? 'none' : (phone ? 'block' : '');
++      if (phone && !isHidden) {
++        frame.style.width = '100%';
++        frame.style.minWidth = '0';
++      } else {
++        frame.style.removeProperty('width');
++        frame.style.removeProperty('min-width');
++      }
+       tab.hidden = zone.style.display === 'none';
+       tab.setAttribute('aria-pressed', String(key === focused));
+     }
+@@ -258,8 +283,15 @@
+     const viewport = reference.zone.clientWidth ? reference.zone : frames.get(focused).zone;
+     const cols = Number(referenceGrid?.dataset.cols) || 10;
+     const rows = Number(referenceGrid?.dataset.rows) || 10;
++    let worldNumber = 1;
++    try { worldNumber = Number(getWorldAndSubLevel(currentLevel)?.world || 1) || 1; } catch (_) {}
++    // World 1 has a 9x9 purple reference grid, so the generic mobile fitter made
++    // every zone noticeably larger than in Worlds 2/3 (13x13 / 14x14). Use a
++    // slightly denser virtual reference on phones so more of each map stays visible.
++    const fitCols = phone && worldNumber === 1 ? Math.max(cols, 11) : cols;
++    const fitRows = phone && worldNumber === 1 ? Math.max(rows, 11) : rows;
+     const cell = Math.floor(Math.max(14, Math.min(phone ? 44 : 34,
+-      (viewport.clientWidth - 28) / cols - 2, (viewport.clientHeight - 50) / rows - 2)));
++      (viewport.clientWidth - 28) / fitCols - 2, (viewport.clientHeight - 50) / fitRows - 2)));
+     document.body.style.setProperty('--table-cell-size', `${cell}px`);
+     const menuButton = $('menu-toggle').getBoundingClientRect();
+     $('controls').style.setProperty('--table-menu-top', `${menuButton.bottom + 8}px`);
+--- a/styles/world-table.css
++++ b/styles/world-table.css
+@@ -47,7 +47,7 @@
+ body.table-ui .table-zone-frame[data-zone=green] { grid-area:green; }
+ body.table-ui .table-zone-frame[data-zone=red] { grid-area:red; }
+ body.table-ui .table-zone-frame[data-zone=blue] { grid-area:blue; }
+-body.table-ui #table-app#table-app .table-zone-frame > .zone { position:absolute !important; inset:0 !important; width:100% !important; height:100% !important; min-width:0 !important; max-width:none !important; min-height:0 !important; max-height:none !important; margin:0 !important; padding:34px 14px 16px !important; border:0 !important; border-radius:0 !important; box-shadow:inset 0 0 30px #10243112 !important; background:linear-gradient(155deg,#ffffff1f,transparent 48%,#122c3e12),var(--zone-tint) !important; overflow:auto !important; scrollbar-width:none !important; overscroll-behavior:contain; touch-action:none !important; transform:none !important; }
++body.table-ui #table-app#table-app .table-zone-frame > .zone { position:absolute !important; inset:0 !important; width:100% !important; height:100% !important; min-width:0 !important; max-width:none !important; min-height:0 !important; max-height:none !important; margin:0 !important; padding:34px 14px 16px !important; border:0 !important; border-radius:0 !important; box-shadow:inset 0 0 30px #10243112 !important; background:linear-gradient(155deg,#ffffff1f,transparent 48%,#122c3e12),var(--zone-tint) !important; overflow:auto !important; scrollbar-width:none !important; overscroll-behavior:contain; touch-action:pan-x pan-y !important; -webkit-overflow-scrolling:touch; scroll-behavior:auto !important; transform:none !important; }
+ body.table-ui #table-app#table-app .table-zone-frame > .zone::-webkit-scrollbar { display:none; }
+ body.table-ui #table-app#table-app .table-zone-frame > .zone::before, body.table-ui #table-app#table-app .table-zone-frame > .zone::after { display:none !important; }
+ body.table-ui #table-app#table-app .table-zone-frame .grid { margin:0 auto !important; padding:0 !important; max-width:none !important; max-height:none !important; flex-shrink:0 !important; transform:none !important; }
+@@ -152,20 +152,22 @@
+   body.table-ui #table-app#table-app.table-scores-open #scoreboard .score-row { display:flex !important; }
+ }
+ /* Phones use a focused, switchable map. Cards and primary actions stay in reach. */
+-body.table-ui.table-phone #table-app#table-app { grid-template-columns:minmax(0,1fr); grid-template-rows:60px minmax(0,1fr) auto auto; grid-template-areas:'header' 'world' 'hand' 'status'; gap:8px; padding:max(8px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left)); }
+-body.table-ui.table-phone #table-header { gap:6px; padding:0; border:0; }
++body.table-ui.table-phone #table-app#table-app { grid-template-columns:minmax(0,1fr); grid-template-rows:auto minmax(0,1fr) auto auto; grid-template-areas:'header' 'world' 'hand' 'status'; gap:8px; padding:max(8px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left)); }
++body.table-ui.table-phone #table-header { display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-areas:'objective tools'; align-items:start; gap:8px; padding:0; border:0; min-width:0; }
+ body.table-ui.table-phone #table-brand { display:none; }
+-body.table-ui.table-phone #table-app#table-app #objective-zone { padding:4px !important; min-height:44px !important; }
+-body.table-ui.table-phone #table-app#table-app #objective-current { font-size:12px !important; }
+-body.table-ui.table-phone #table-tools { gap:4px; }
+-body.table-ui.table-phone #table-tabs { display:flex; gap:4px; padding:0 0 6px; }
+-body.table-ui.table-phone #table-app#table-app .table-tab { flex:1; min-width:0; min-height:44px; padding:6px 2px; border:1px solid #a8d3ee20; border-radius:10px; color:var(--zone-tint); background:#18304780; font-size:11px; font-weight:600; cursor:pointer; }
++body.table-ui.table-phone #table-objective { min-width:0; }
++body.table-ui.table-phone #table-app#table-app #objective-zone { padding:4px 2px !important; min-height:44px !important; align-items:center; text-align:center; }
++body.table-ui.table-phone #table-app#table-app #objective-current { display:block !important; width:100% !important; font-size:12px !important; line-height:1.3 !important; white-space:normal !important; text-wrap:balance; }
++body.table-ui.table-phone #table-tools { justify-self:end; gap:4px; }
++body.table-ui.table-phone #table-tabs { display:flex; gap:6px; padding:0 0 8px; }
++body.table-ui.table-phone #table-app#table-app .table-tab { flex:1 1 0; min-width:0; min-height:44px; padding:6px 2px; border:1px solid #a8d3ee20; border-radius:10px; color:var(--zone-tint); background:#18304780; font-size:11px; font-weight:600; cursor:pointer; }
+ body.table-ui.table-phone #table-app#table-app .table-tab[aria-pressed=true] { background:color-mix(in srgb,var(--zone-tint),#142332 78%); border-color:var(--zone-tint); box-shadow:inset 0 -2px var(--zone-tint); }
+-body.table-ui.table-phone #table-stage { padding:6px 2px; }
++body.table-ui.table-phone #table-world { min-width:0; }
++body.table-ui.table-phone #table-stage { min-width:0; width:100%; padding:6px 2px; }
+ body.table-ui.table-phone #table-stage::before { clip-path:polygon(.75% 0,99.25% 0,100% 100%,0 100%); }
+-body.table-ui.table-phone #table-app#table-app #board { display:flex !important; }
+-body.table-ui.table-phone #table-app#table-app .table-zone-frame { flex:1; width:100%; }
+-body.table-ui.table-phone #table-app#table-app .table-zone-frame > .zone { padding-top:36px !important; }
++body.table-ui.table-phone #table-app#table-app #board { display:grid !important; grid-template-columns:minmax(0,1fr) !important; grid-template-rows:minmax(0,1fr) !important; grid-template-areas:'focused' !important; width:100% !important; min-width:0 !important; height:100% !important; }
++body.table-ui.table-phone #table-app#table-app .table-zone-frame { grid-area:focused; display:block !important; width:100% !important; min-width:0 !important; max-width:none !important; min-height:0 !important; }
++body.table-ui.table-phone #table-app#table-app .table-zone-frame > .zone { width:100% !important; min-width:0 !important; padding-top:36px !important; }
+ body.table-ui.table-phone #table-app#table-app .zone-info-btn { min-width:44px !important; min-height:44px !important; width:44px !important; height:44px !important; }
+ body.table-ui.table-phone #table-app#table-app #card-choice-zone { padding:8px !important; border-radius:14px !important; }
+ body.table-ui.table-phone #table-app#table-app #card-choice-zone h2 { display:none !important; }
+@@ -200,7 +202,7 @@
+ body.table-ui.table-landscape #table-app#table-app #card-action-buttons { grid-template-columns:repeat(4,minmax(44px,1fr)) !important; }
+ body.table-ui.table-landscape #table-app#table-app #new-cards-btn { grid-column:1 / -1 !important; }
+ @media (max-height:700px) and (orientation:portrait) {
+-  body.table-ui.table-phone #table-app#table-app { grid-template-rows:52px minmax(0,1fr) auto auto; gap:4px; }
++  body.table-ui.table-phone #table-app#table-app { gap:4px; }
+   body.table-ui.table-phone #table-app#table-app #card-options .card-option { height:64px !important; }
+ }
+ @media (prefers-reduced-motion:reduce) {

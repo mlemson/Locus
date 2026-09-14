@@ -74,6 +74,11 @@
         };
         frame.append(cue); cues[dir] = cue;
       }
+      // Override legacy touch-action:none even if an older stylesheet is still cached.
+      // Native pan gestures are essential for smooth momentum scrolling on phones/tablets.
+      zone.style.setProperty('touch-action', 'pan-x pan-y', 'important');
+      zone.style.setProperty('scroll-behavior', 'auto', 'important');
+      zone.style.setProperty('-webkit-overflow-scrolling', 'touch');
       zone.tabIndex = 0;
       zone.setAttribute('aria-label', `${name} speelveld. Gebruik de pijltjestoetsen om te verschuiven.`);
       zone.addEventListener('scroll', () => updateEdges(key), {passive: true});
@@ -137,23 +142,34 @@
       if (!gesture.moved && Math.hypot(dx, dy) < 7) return;
       gesture.moved = true;
       zone.dataset.dragScrolling = 'true'; zone.classList.add('table-panning');
+
+      // Touch/pen should use the browser's native scrolling. It gives momentum,
+      // direction locking and much smoother phone/tablet panning than manually
+      // assigning scrollLeft/scrollTop on every pointermove.
+      if (e.pointerType === 'touch' || e.pointerType === 'pen') return;
+
       if (!zone.hasPointerCapture(e.pointerId)) zone.setPointerCapture(e.pointerId);
       zone.scrollLeft = gesture.left - dx; zone.scrollTop = gesture.top - dy;
       e.preventDefault(); e.stopImmediatePropagation();
     }, true);
     const end = e => {
       if (!gesture || gesture.id !== e.pointerId) return;
+      const touchLike = e.pointerType === 'touch' || e.pointerType === 'pen';
       if (gesture.moved || e.type === 'pointercancel') {
         suppressedUntil = performance.now() + 400;
-        e.preventDefault(); e.stopImmediatePropagation();
+        // Do not cancel a native touch/pen scroll on release: that kills momentum.
+        if (!touchLike) { e.preventDefault(); e.stopImmediatePropagation(); }
       } else if (typeof debugMode !== 'undefined' && debugMode) {
         const cell = e.target.closest('.cell');
         if (cell) toggleCell(cell, cell.dataset.zoneId);
         e.stopImmediatePropagation();
-      } else if (e.pointerType === 'touch' || e.pointerType === 'pen') {
+      } else if (touchLike) {
         // Commit a tap only after the pan threshold was checked. Reuse the game's
         // single placement path, including validation, rewards and undo history.
         if (typeof handleTouchCellPlacement === 'function') handleTouchCellPlacement(e);
+        // Prevent the compatibility click from attempting the same tap again.
+        if (e.cancelable) e.preventDefault();
+        e.stopImmediatePropagation();
       }
       gesture = null; zone.classList.remove('table-panning');
       zone.dataset.dragScrolling = 'false';
@@ -267,8 +283,15 @@
     const viewport = reference.zone.clientWidth ? reference.zone : frames.get(focused).zone;
     const cols = Number(referenceGrid?.dataset.cols) || 10;
     const rows = Number(referenceGrid?.dataset.rows) || 10;
+    let worldNumber = 1;
+    try { worldNumber = Number(getWorldAndSubLevel(currentLevel)?.world || 1) || 1; } catch (_) {}
+    // World 1 has a 9x9 purple reference grid, so the generic mobile fitter made
+    // every zone noticeably larger than in Worlds 2/3 (13x13 / 14x14). Use a
+    // slightly denser virtual reference on phones so more of each map stays visible.
+    const fitCols = phone && worldNumber === 1 ? Math.max(cols, 11) : cols;
+    const fitRows = phone && worldNumber === 1 ? Math.max(rows, 11) : rows;
     const cell = Math.floor(Math.max(14, Math.min(phone ? 44 : 34,
-      (viewport.clientWidth - 28) / cols - 2, (viewport.clientHeight - 50) / rows - 2)));
+      (viewport.clientWidth - 28) / fitCols - 2, (viewport.clientHeight - 50) / fitRows - 2)));
     document.body.style.setProperty('--table-cell-size', `${cell}px`);
     const menuButton = $('menu-toggle').getBoundingClientRect();
     $('controls').style.setProperty('--table-menu-top', `${menuButton.bottom + 8}px`);
