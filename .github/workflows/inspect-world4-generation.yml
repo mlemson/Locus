@@ -6,19 +6,19 @@ on:
       - '.github/workflows/inspect-world4-generation.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   inspect:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Show exact World 4 and reset snippets
+      - name: Export exact World 4 and reset snippets
         shell: python
         run: |
           from pathlib import Path
 
-          targets = ['index.html', 'world4-citadel.js', 'world4-citadel.css', 'world4-polish.css']
+          targets = ['index.html', 'world4-citadel.js', 'world4-citadel.css', 'world4-polish.css', 'world-table.js', 'world-table.css']
           needles = [
             'function getWorld4PurpleShape',
             'function getWorld4GreenShape',
@@ -36,28 +36,42 @@ jobs:
             'key-symbol',
             'door-glyph',
             'door-cell',
-            'random bonus',
+            'bonus',
           ]
 
+          out = []
           for filename in targets:
             p = Path(filename)
             if not p.exists():
               continue
-            s = p.read_text(encoding='utf-8')
-            lines = s.splitlines()
-            print(f'\n\n######## {filename} ########')
-            printed = set()
+            lines = p.read_text(encoding='utf-8').splitlines()
+            out.append(f'\n\n######## {filename} ########')
+            ranges = []
             for needle in needles:
-              matches = [i for i,line in enumerate(lines) if needle.lower() in line.lower()]
-              if not matches:
-                continue
-              print(f'\n===== NEEDLE: {needle} =====')
-              for i in matches[:12]:
-                lo=max(0,i-28); hi=min(len(lines),i+95)
-                key=(lo,hi)
-                if key in printed:
-                  continue
-                printed.add(key)
-                print(f'\n--- lines {lo+1}-{hi} (match {i+1}) ---')
-                for n in range(lo,hi):
-                  print(f'{n+1:06d}: {lines[n]}')
+              for i, line in enumerate(lines):
+                if needle.lower() in line.lower():
+                  ranges.append((max(0,i-35), min(len(lines),i+130), needle, i))
+            ranges.sort()
+            merged=[]
+            for lo,hi,needle,i in ranges:
+              if merged and lo <= merged[-1][1] + 4:
+                merged[-1][1] = max(merged[-1][1], hi)
+                merged[-1][2].append((needle,i))
+              else:
+                merged.append([lo,hi,[(needle,i)]])
+            for lo,hi,matches in merged:
+              out.append('\n--- matches: ' + ', '.join(f'{n}@{i+1}' for n,i in matches) + f' | lines {lo+1}-{hi} ---')
+              out.extend(f'{n+1:06d}: {lines[n]}' for n in range(lo,hi))
+
+          Path('_world4_inspect.txt').write_text('\n'.join(out), encoding='utf-8')
+      - name: Commit inspection output
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add _world4_inspect.txt
+          if git diff --cached --quiet; then
+            echo "No inspection changes"
+          else
+            git commit -m "Add temporary World 4 inspection output"
+            git push
+          fi
