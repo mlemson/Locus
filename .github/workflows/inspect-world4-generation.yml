@@ -13,72 +13,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Export focused snippets
+      - name: Export focused run and bonus snippets
         shell: python
         run: |
           from pathlib import Path
+          p=Path('index.html')
+          lines=p.read_text(encoding='utf-8').splitlines()
 
-          files = ['index.html', 'world4-citadel.js', 'world4-citadel.css', 'world4-polish.css', 'world-table.js', 'world-table.css']
-          groups = {
-            '_inspect_generation.txt': [
-              'getWorld4Purple', 'getWorld4Green', 'getWorld4Yellow', 'getWorld4Blue',
-              'world4Purple', 'world4Green', 'world4Yellow', 'world4Blue',
-              '__world4GenerationVersion', 'generationVersion'
-            ],
-            '_inspect_reset.txt': [
-              'function startNewRun', 'startNewRun =', 'resetScoreState',
-              'lastRoundWasSuccess', 'latestScoreSnapshot', 'GAME OVER', 'gameOver'
-            ],
-            '_inspect_bonus.txt': [
-              'bonusInventory', 'randomBonus', 'random bonus', 'bonusColor',
-              'availableBonuses', 'bonusColors', 'allowedColors'
-            ],
-            '_inspect_icons.txt': [
-              'key-symbol', 'key.png', 'door-glyph', 'door-cell', 'door-locked',
-              'door-ready', 'door-open', 'locked-seal'
-            ],
-          }
-
-          for outfile, needles in groups.items():
+          def export(name, needles, before=35, after=170):
             out=[]
-            for filename in files:
-              p=Path(filename)
-              if not p.exists():
-                continue
-              lines=p.read_text(encoding='utf-8').splitlines()
-              hits=[]
-              for i,line in enumerate(lines):
-                low=line.lower()
-                if any(n.lower() in low for n in needles):
-                  hits.append(i)
-              if not hits:
-                continue
-              out.append(f'######## {filename} ########')
-              ranges=[]
-              for i in hits:
-                lo=max(0,i-22); hi=min(len(lines),i+55)
-                if ranges and lo <= ranges[-1][1] + 2:
-                  ranges[-1][1]=max(ranges[-1][1],hi)
-                else:
-                  ranges.append([lo,hi])
-              # Keep files small enough for connector reads.
-              budget=900
-              used=0
-              for lo,hi in ranges:
-                if used >= budget: break
-                hi=min(hi,lo+(budget-used))
-                out.append(f'--- lines {lo+1}-{hi} ---')
+            for needle in needles:
+              hits=[i for i,line in enumerate(lines) if needle.lower() in line.lower()]
+              out.append(f'===== {needle} ({len(hits)} hits) =====')
+              for i in hits[:8]:
+                lo=max(0,i-before); hi=min(len(lines),i+after)
+                out.append(f'--- index.html lines {lo+1}-{hi} ---')
                 out.extend(f'{n+1:06d}: {lines[n]}' for n in range(lo,hi))
-                used += hi-lo
-            Path(outfile).write_text('\n'.join(out), encoding='utf-8')
+            Path(name).write_text('\n'.join(out),encoding='utf-8')
+
+          export('_inspect_run.txt', ['function startNewRun', 'function resetScoreState', 'lastRoundWasSuccess = false', 'round failed', 'GAME OVER'], 45, 230)
+          export('_inspect_symbols.txt', ['__objectiveBonusColorChances', 'BONUS_COLOR_CONFIG', 'bonusColorChances', 'weighted', 'symbol.classList.add', 'random bonus'], 40, 120)
       - name: Commit focused inspection output
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add _inspect_generation.txt _inspect_reset.txt _inspect_bonus.txt _inspect_icons.txt
+          git add _inspect_run.txt _inspect_symbols.txt
           if git diff --cached --quiet; then
             echo "No inspection changes"
           else
-            git commit -m "Add focused World 4 inspection output"
+            git commit -m "Add run reset and bonus selection inspection output"
             git push
           fi
