@@ -1,4 +1,4 @@
-name: Apply World 4 polish
+name: Capture World 4 polish
 
 on:
   push:
@@ -9,27 +9,16 @@ permissions:
   contents: write
 
 jobs:
-  apply:
+  capture:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Apply patch
-        run: python3 _apply_world4_polish.py
-
-      - name: Check JavaScript syntax
+      - name: Check patched JavaScript
         run: |
           node --check world4-citadel.js
           node --check world4-polish.js
-
-      - name: Commit code changes
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html world4-citadel.js world4-citadel.css world4-polish.css world4-polish.js
-          git commit -m "Polish World 4 generation, icons, centering and reset"
-          git push
 
       - name: Install Playwright
         run: |
@@ -44,11 +33,13 @@ jobs:
       - name: Capture fresh World 4 screenshots
         run: node _capture_world4.cjs
 
-      - name: Commit screenshots and remove temporary inspection files
+      - name: Commit screenshots and clean temporary files
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           rm -f _world4_inspect.txt _inspect_generation.txt _inspect_reset.txt _inspect_bonus.txt _inspect_icons.txt _inspect_run.txt _inspect_symbols.txt
           rm -f _apply_world4_polish.py _capture_world4.cjs
           rm -f .github/workflows/inspect-world4-generation.yml .github/workflows/apply-world4-polish.yml
           git add -A
-          git commit -m "Add fresh World 4 screenshots and clean up patch helpers"
+          git commit -m "Add fresh World 4 screenshots and clean up helpers"
           git push
