@@ -13,27 +13,39 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Show generation snippets
+      - name: Show relevant gameplay snippets
         shell: python
         run: |
           from pathlib import Path
           import re
           s = Path('index.html').read_text(encoding='utf-8')
           patterns = [
-              r'function\s+[^\n\r{]*(?:World4|world4)[^\n\r{]*\{',
-              r'function\s+[^\n\r{]*(?:Purple|Green|purple|green)[^\n\r{]*\{',
-              r'world4GenerationVersion',
-              r'applyWorld4',
-              r'buildWorld4',
+              r'function\s+startNewRun\s*\(',
+              r'startNewRun\s*=\s*',
+              r'function\s+resetScoreState\s*\(',
+              r'latestScoreSnapshot',
+              r'updateBonusInventoryUI',
+              r'bonusInventory',
+              r'bonusCounts',
+              r'bonusBlocks',
+              r'bonus-badge',
+              r'Math\.random\(\)[^\n\r]{0,200}bonus',
+              r'bonus[^\n\r]{0,120}Math\.random\(\)',
+              r'random[^\n\r]{0,120}bonus',
+              r'bonus[^\n\r]{0,120}random',
           ]
           hits=[]
           for pat in patterns:
-              for m in re.finditer(pat,s):
-                  if m.start() not in hits:
-                      hits.append(m.start())
-          hits=sorted(set(hits))
-          print('HITS',len(hits))
-          for i,pos in enumerate(hits):
-              start=max(0,pos-1200); end=min(len(s),pos+6000)
-              print(f'\n--- HIT {i+1} @ {pos} ---\n')
+              for m in re.finditer(pat,s,re.I):
+                  hits.append((m.start(),pat))
+          seen=set()
+          ordered=[]
+          for pos,pat in sorted(hits):
+              bucket=pos//1500
+              if bucket in seen: continue
+              seen.add(bucket); ordered.append((pos,pat))
+          print('HITS',len(ordered))
+          for i,(pos,pat) in enumerate(ordered):
+              start=max(0,pos-1800); end=min(len(s),pos+7000)
+              print(f'\n--- HIT {i+1} @ {pos} PATTERN {pat} ---\n')
               print(s[start:end])
