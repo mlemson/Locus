@@ -13,65 +13,72 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Export exact World 4 and reset snippets
+      - name: Export focused snippets
         shell: python
         run: |
           from pathlib import Path
 
-          targets = ['index.html', 'world4-citadel.js', 'world4-citadel.css', 'world4-polish.css', 'world-table.js', 'world-table.css']
-          needles = [
-            'function getWorld4PurpleShape',
-            'function getWorld4GreenShape',
-            'function getWorld4YellowShape',
-            'function getWorld4Blue',
-            'generationVersion',
-            'function startNewRun()',
-            'function resetScoreState(',
-            'lastRoundWasSuccess',
-            'latestScoreSnapshot',
-            'bonusInventory',
-            'Math.random()',
-            'gameOver',
-            'GAME OVER',
-            'key-symbol',
-            'door-glyph',
-            'door-cell',
-            'bonus',
-          ]
+          files = ['index.html', 'world4-citadel.js', 'world4-citadel.css', 'world4-polish.css', 'world-table.js', 'world-table.css']
+          groups = {
+            '_inspect_generation.txt': [
+              'getWorld4Purple', 'getWorld4Green', 'getWorld4Yellow', 'getWorld4Blue',
+              'world4Purple', 'world4Green', 'world4Yellow', 'world4Blue',
+              '__world4GenerationVersion', 'generationVersion'
+            ],
+            '_inspect_reset.txt': [
+              'function startNewRun', 'startNewRun =', 'resetScoreState',
+              'lastRoundWasSuccess', 'latestScoreSnapshot', 'GAME OVER', 'gameOver'
+            ],
+            '_inspect_bonus.txt': [
+              'bonusInventory', 'randomBonus', 'random bonus', 'bonusColor',
+              'availableBonuses', 'bonusColors', 'allowedColors'
+            ],
+            '_inspect_icons.txt': [
+              'key-symbol', 'key.png', 'door-glyph', 'door-cell', 'door-locked',
+              'door-ready', 'door-open', 'locked-seal'
+            ],
+          }
 
-          out = []
-          for filename in targets:
-            p = Path(filename)
-            if not p.exists():
-              continue
-            lines = p.read_text(encoding='utf-8').splitlines()
-            out.append(f'\n\n######## {filename} ########')
-            ranges = []
-            for needle in needles:
-              for i, line in enumerate(lines):
-                if needle.lower() in line.lower():
-                  ranges.append((max(0,i-35), min(len(lines),i+130), needle, i))
-            ranges.sort()
-            merged=[]
-            for lo,hi,needle,i in ranges:
-              if merged and lo <= merged[-1][1] + 4:
-                merged[-1][1] = max(merged[-1][1], hi)
-                merged[-1][2].append((needle,i))
-              else:
-                merged.append([lo,hi,[(needle,i)]])
-            for lo,hi,matches in merged:
-              out.append('\n--- matches: ' + ', '.join(f'{n}@{i+1}' for n,i in matches) + f' | lines {lo+1}-{hi} ---')
-              out.extend(f'{n+1:06d}: {lines[n]}' for n in range(lo,hi))
-
-          Path('_world4_inspect.txt').write_text('\n'.join(out), encoding='utf-8')
-      - name: Commit inspection output
+          for outfile, needles in groups.items():
+            out=[]
+            for filename in files:
+              p=Path(filename)
+              if not p.exists():
+                continue
+              lines=p.read_text(encoding='utf-8').splitlines()
+              hits=[]
+              for i,line in enumerate(lines):
+                low=line.lower()
+                if any(n.lower() in low for n in needles):
+                  hits.append(i)
+              if not hits:
+                continue
+              out.append(f'######## {filename} ########')
+              ranges=[]
+              for i in hits:
+                lo=max(0,i-22); hi=min(len(lines),i+55)
+                if ranges and lo <= ranges[-1][1] + 2:
+                  ranges[-1][1]=max(ranges[-1][1],hi)
+                else:
+                  ranges.append([lo,hi])
+              # Keep files small enough for connector reads.
+              budget=900
+              used=0
+              for lo,hi in ranges:
+                if used >= budget: break
+                hi=min(hi,lo+(budget-used))
+                out.append(f'--- lines {lo+1}-{hi} ---')
+                out.extend(f'{n+1:06d}: {lines[n]}' for n in range(lo,hi))
+                used += hi-lo
+            Path(outfile).write_text('\n'.join(out), encoding='utf-8')
+      - name: Commit focused inspection output
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add _world4_inspect.txt
+          git add _inspect_generation.txt _inspect_reset.txt _inspect_bonus.txt _inspect_icons.txt
           if git diff --cached --quiet; then
             echo "No inspection changes"
           else
-            git commit -m "Add temporary World 4 inspection output"
+            git commit -m "Add focused World 4 inspection output"
             git push
           fi
