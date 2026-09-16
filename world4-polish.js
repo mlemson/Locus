@@ -3,15 +3,6 @@
   if (window.__world4PolishInstalled) return;
   window.__world4PolishInstalled = true;
 
-  function ensureStartCardPickerStyles() {
-    if (document.querySelector('link[data-start-card-picker-polish]')) return;
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'start-card-picker-polish.css?v=20260916-tune2';
-    link.setAttribute('data-start-card-picker-polish', 'true');
-    document.head.appendChild(link);
-  }
-
   function installStartCardPickerSorter() {
     const grid = document.getElementById('preworld-pick-grid');
     if (!grid || grid.dataset.costSorterInstalled === 'true') return;
@@ -78,7 +69,6 @@
     }).observe(board, { childList:true, subtree:true });
   }
 
-  ensureStartCardPickerStyles();
   window.addEventListener('resize', scheduleCentering, { passive:true });
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
