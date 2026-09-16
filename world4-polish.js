@@ -3,6 +3,55 @@
   if (window.__world4PolishInstalled) return;
   window.__world4PolishInstalled = true;
 
+  function ensureStartCardPickerStyles() {
+    if (document.querySelector('link[data-start-card-picker-polish]')) return;
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'start-card-picker-polish.css?v=20260916-tune2';
+    link.setAttribute('data-start-card-picker-polish', 'true');
+    document.head.appendChild(link);
+  }
+
+  function installStartCardPickerSorter() {
+    const grid = document.getElementById('preworld-pick-grid');
+    if (!grid || grid.dataset.costSorterInstalled === 'true') return;
+    grid.dataset.costSorterInstalled = 'true';
+
+    let sequence = 0;
+    let sorting = false;
+
+    const sortByCost = () => {
+      if (sorting) return;
+      const items = Array.from(grid.children).filter(el => el.classList && el.classList.contains('preworld-pick-item'));
+      if (items.length < 2) return;
+
+      items.forEach(item => {
+        if (!item.dataset.preworldSortSequence) {
+          item.dataset.preworldSortSequence = String(sequence++);
+        }
+      });
+
+      const sorted = items.slice().sort((a, b) => {
+        const costA = Number(a.dataset.cost || Number.POSITIVE_INFINITY);
+        const costB = Number(b.dataset.cost || Number.POSITIVE_INFINITY);
+        if (costA !== costB) return costA - costB;
+        return Number(a.dataset.preworldSortSequence || 0) - Number(b.dataset.preworldSortSequence || 0);
+      });
+
+      const changed = sorted.some((item, index) => item !== items[index]);
+      if (!changed) return;
+
+      sorting = true;
+      const fragment = document.createDocumentFragment();
+      sorted.forEach(item => fragment.appendChild(item));
+      grid.appendChild(fragment);
+      sorting = false;
+    };
+
+    new MutationObserver(sortByCost).observe(grid, { childList: true });
+    sortByCost();
+  }
+
   function isWorld4() { return document.body && document.body.classList.contains('world-4'); }
   function centerZone(id) {
     const zone = document.getElementById(id);
@@ -28,10 +77,18 @@
       timer = setTimeout(scheduleCentering, 50);
     }).observe(board, { childList:true, subtree:true });
   }
+
+  ensureStartCardPickerStyles();
   window.addEventListener('resize', scheduleCentering, { passive:true });
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => { installObserver(); scheduleCentering(); }, { once:true });
+    document.addEventListener('DOMContentLoaded', () => {
+      installObserver();
+      installStartCardPickerSorter();
+      scheduleCentering();
+    }, { once:true });
   } else {
-    installObserver(); scheduleCentering();
+    installObserver();
+    installStartCardPickerSorter();
+    scheduleCentering();
   }
 })();
