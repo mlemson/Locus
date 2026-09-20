@@ -14,7 +14,7 @@ const server = http.createServer((req, res) => {
     res.end(fs.readFileSync(filename));
   } catch { res.writeHead(404).end(); }
 });
-const sizes = [[1920,1080,false],[1440,900,false],[1024,768,true],[768,1024,true],[390,844,true],[430,932,true],[844,390,true],[320,568,true]];
+const sizes = [[1920,1080,false],[1440,900,false],[1366,1024,true],[1180,820,true],[1024,1366,true],[1024,768,true],[768,1024,true],[390,844,true],[430,932,true],[844,390,true],[320,568,true]];
 let browser;
 async function open(width, height, touch) {
   const page = await browser.newPage({viewport:{width,height}, hasTouch:touch, isMobile:touch});
@@ -57,6 +57,37 @@ async function open(width, height, touch) {
       assert.ok(a.right<=b.x+1||b.right<=a.x+1||a.bottom<=b.y+1||b.bottom<=a.y+1, `overlap ${width}: ${a.id}/${b.id}`);
     }
     assert.equal(layout.frameCount,Math.min(width,height)<600?1:5);
+
+    // Tablet regression checks: portrait HUD must not horizontally scroll, while
+    // landscape uses a narrow one-column hand rail to give the board more width.
+    if (touch && Math.min(width,height)>=600 && Math.max(width,height)<=1600) {
+      const tabletLayout=await page.evaluate(()=>{
+        const body=document.body;
+        const status=document.getElementById('table-status');
+        const bonus=document.getElementById('bonus-inventory');
+        const hand=document.getElementById('table-hand');
+        const cards=[...document.querySelectorAll('#card-options .card-option')].map(el=>el.getBoundingClientRect());
+        const style=getComputedStyle(document.getElementById('card-options'));
+        return {
+          tablet:body.classList.contains('table-tablet'),
+          statusScroll:status ? status.scrollWidth-status.clientWidth : 0,
+          bonusScroll:bonus ? bonus.scrollWidth-bonus.clientWidth : 0,
+          handX:hand?.getBoundingClientRect().x ?? 0,
+          cardCols:style.gridTemplateColumns.split(' ').filter(Boolean).length,
+          cardWidths:cards.map(r=>r.width)
+        };
+      });
+      assert.equal(tabletLayout.tablet,true,`tablet class ${width}x${height}`);
+      if (height>width && width>=700) {
+        assert.ok(tabletLayout.statusScroll<=1,`portrait status overflow ${width}: ${tabletLayout.statusScroll}`);
+        assert.ok(tabletLayout.bonusScroll<=1,`portrait bonus overflow ${width}: ${tabletLayout.bonusScroll}`);
+        assert.ok(tabletLayout.cardWidths.every(w=>w<=133),`portrait cards stay compact ${width}: ${tabletLayout.cardWidths}`);
+      }
+      if (width>height && width>=900 && height>=650) {
+        assert.equal(tabletLayout.cardCols,1,`landscape hand is one column ${width}: ${tabletLayout.cardCols}`);
+        assert.ok(tabletLayout.handX>width*.72,`landscape hand stays in right rail ${width}: ${tabletLayout.handX}`);
+      }
+    }
     const cellWidths=[];
     for (const color of ['purple','yellow','red','green','blue']) {
       await page.evaluate(color=>LocusTable.focus(document.getElementById(`${color}-zone`)),color);
