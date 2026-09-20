@@ -21206,7 +21206,14 @@ let shopLevel2Used = false;
 			);
 		}
 	  } catch (_) {}
-	  setTimeout(() => el.remove(), 1200);
+	  const cleanupScorePopup = () => {
+    if (el.isConnected) el.remove();
+  };
+  // Let Safari/iPad finish the visual animation instead of removing the node
+  // at exactly the nominal CSS duration. Keep a safety timeout for stalled events.
+  el.addEventListener('animationend', cleanupScorePopup, { once: true });
+  el.addEventListener('animationcancel', cleanupScorePopup, { once: true });
+  setTimeout(cleanupScorePopup, 1800);
 	}
 	if (typeof window !== 'undefined' && !window.triggerScoreAnimation) {
 		window.triggerScoreAnimation = function () {
@@ -21226,7 +21233,13 @@ let shopLevel2Used = false;
 		s.style.setProperty("--dx", `${Math.cos(angle) * distance}px`);
 		s.style.setProperty("--dy", `${Math.sin(angle) * distance}px`);
 		document.body.appendChild(s);
-		setTimeout(() => s.remove(), 800);
+		const cleanupSparkle = () => {
+      if (s.isConnected) s.remove();
+    };
+    // The CSS sparkle lasts 1.8s; the old 800ms timer visibly cut it in half.
+    s.addEventListener('animationend', cleanupSparkle, { once: true });
+    s.addEventListener('animationcancel', cleanupSparkle, { once: true });
+    setTimeout(cleanupSparkle, 2200);
 	  }
 	}
 	
@@ -26325,7 +26338,7 @@ function getCollectedCoinCount(scores) {
 				const dx = Math.abs(lastX - startX);
 				const dy = Math.abs(lastY - startY);
 				// Als gebruiker beweegt, start drag
-				if (!started && (dx + dy) > 8) {
+				if (!started && Math.hypot(dx, dy) > 7) {
 					ev.preventDefault();
 					startDrag();
 				}
@@ -26348,7 +26361,7 @@ function getCollectedCoinCount(scores) {
 			timer = setTimeout(() => {
 				if (started) return;
 				startDrag();
-			}, 200);
+			}, 170);
 			return;
 		}
 

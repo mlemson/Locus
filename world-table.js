@@ -8,7 +8,7 @@
   const $ = id => document.getElementById(id);
   const homes = new Map();
   const frames = new Map();
-  let app, focused = 'purple', queued = false, phone = false;
+  let app, focused = 'purple', queued = false, phone = false, tablet = false;
   let suppressedUntil = 0;
   const enabled = () => !document.body?.classList.contains('classic-mode');
   const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -33,7 +33,7 @@
     for (const {zone} of frames.values()) {
       zone.style.removeProperty('--cell-size'); zone.style.removeProperty('--board-grid-gap');
     }
-    document.body.classList.remove('table-ui', 'table-phone', 'table-landscape');
+    document.body.classList.remove('table-ui', 'table-phone', 'table-landscape', 'table-tablet', 'table-placement-touch');
     app.hidden = true;
   }
   function create() {
@@ -141,7 +141,8 @@
       suppressedUntil = 0;
       gesture = {id:e.pointerId, x:e.clientX, y:e.clientY,
         left:zone.scrollLeft, top:zone.scrollTop, moved:false,
-        native:e.pointerType === 'touch' || e.pointerType === 'pen'};
+        native:e.pointerType === 'touch' || e.pointerType === 'pen',
+        tablet:document.body.classList.contains('table-tablet')};
       // Legacy cells activate on pointerdown. Defer activation until a real tap,
       // without preventDefault: the browser must still be allowed to start a pan.
       e.stopImmediatePropagation();
@@ -149,7 +150,8 @@
     zone.addEventListener('pointermove', e => {
       if (!gesture || gesture.id !== e.pointerId) return;
       const dx = e.clientX - gesture.x, dy = e.clientY - gesture.y;
-      if (!gesture.moved && Math.hypot(dx, dy) < 7) return;
+      const threshold = gesture.native && gesture.tablet ? 12 : 7;
+      if (!gesture.moved && Math.hypot(dx, dy) < threshold) return;
       gesture.moved = true;
       zone.dataset.dragScrolling = 'true';
       if (gesture.native) return;
@@ -163,8 +165,9 @@
     const end = e => {
       if (!gesture || gesture.id !== e.pointerId) return;
       // pointercancel is the normal hand-off to the browser's native scroller.
+      const threshold = gesture.native && gesture.tablet ? 12 : 7;
       const moved = gesture.moved || e.type === 'pointercancel' ||
-        Math.hypot(e.clientX - gesture.x, e.clientY - gesture.y) >= 7;
+        Math.hypot(e.clientX - gesture.x, e.clientY - gesture.y) >= threshold;
       if (moved) {
         suppressedUntil = performance.now() + 400;
         e.stopImmediatePropagation();
@@ -290,8 +293,23 @@
     if (!app) create();
     app.hidden = false;
     phone = innerWidth <= 640 || Math.min(innerWidth, innerHeight) < 600;
+    const coarseTouch = ((typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches) ||
+      (typeof navigator !== 'undefined' && (navigator.maxTouchPoints || 0) > 1));
+    tablet = !phone && coarseTouch && Math.min(innerWidth, innerHeight) >= 600 &&
+      Math.max(innerWidth, innerHeight) <= 1600;
+    let placementTouchActive = false;
+    if (tablet) {
+      try {
+        placementTouchActive =
+          (typeof selectedCardElement !== 'undefined' && !!selectedCardElement) ||
+          (typeof activeBonusPlacement !== 'undefined' && !!activeBonusPlacement) ||
+          (typeof draggedBlock !== 'undefined' && !!draggedBlock);
+      } catch (_) {}
+    }
     document.body.classList.add('table-ui');
     document.body.classList.toggle('table-phone', phone);
+    document.body.classList.toggle('table-tablet', tablet);
+    document.body.classList.toggle('table-placement-touch', placementTouchActive);
     document.body.classList.toggle('table-landscape', phone && innerWidth > innerHeight);
     document.body.classList.remove('desktop-portrait','desktop-landscape','touch-portrait','mobile-sidebar-layout','zoomed-in','board-loading','layout-reflow');
     const destinations = {board:'table-stage', 'objective-zone':'table-objective', scoreboard:'table-status',
@@ -330,6 +348,9 @@
     // Resolve visibility first: all zones share the size that fits purple, even
     // when another color is focused on a phone and purple itself has no box.
     for (const [key, {zone, frame, tab}] of frames) {
+      // On iPad/tablet, a selected piece should own the gesture. This prevents
+      // Safari's native pan recognizer from cancelling an intended placement.
+      zone.style.setProperty('touch-action', placementTouchActive ? 'none' : 'pan-x pan-y', 'important');
       const isHidden = zone.style.display === 'none' || (phone && key !== focused);
       frame.hidden = isHidden;
       frame.style.display = isHidden ? 'none' : (phone ? 'block' : '');

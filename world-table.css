@@ -217,6 +217,47 @@ body.table-ui.table-landscape #table-app#table-app #new-cards-btn { grid-column:
   body.table-ui.table-phone #table-app#table-app { gap:4px; }
   body.table-ui.table-phone #table-app#table-app #card-options .card-option { height:64px !important; }
 }
+
+/* -------------------------------------------------------------------------- */
+/* iPad / large touch tablet landscape                                        */
+/* Keep the desktop-style board, but use a narrower one-column hand so the     */
+/* board gets more width. Phones remain on the existing table-phone layout.    */
+/* -------------------------------------------------------------------------- */
+@media (min-width:1241px) and (max-width:1600px) and (orientation:landscape) {
+  body.table-ui.table-tablet:not(.table-phone) #table-app#table-app {
+    --table-gap:12px;
+    grid-template-columns:150px minmax(0,1fr) 184px;
+    padding-left:16px;
+    padding-right:16px;
+  }
+  body.table-ui.table-tablet:not(.table-phone) #table-hand {
+    min-width:0;
+  }
+  body.table-ui.table-tablet:not(.table-phone) #table-app#table-app #card-choice-zone {
+    padding:10px !important;
+  }
+  body.table-ui.table-tablet:not(.table-phone) #table-app#table-app #card-controls {
+    gap:10px !important;
+  }
+  body.table-ui.table-tablet:not(.table-phone) #table-app#table-app #card-options,
+  body.table-ui.table-tablet:not(.table-phone) #table-app#table-app #card-options:has(> :nth-child(4)) {
+    grid-template-columns:minmax(0,1fr) !important;
+    gap:8px !important;
+    padding:2px !important;
+  }
+  body.table-ui.table-tablet:not(.table-phone) #table-app#table-app #card-options .card-option {
+    height:118px !important;
+    min-height:118px !important;
+    padding:8px !important;
+  }
+  body.table-ui.table-tablet:not(.table-phone) #table-app#table-app #card-action-buttons {
+    gap:6px !important;
+  }
+  body.table-ui.table-tablet:not(.table-phone) #table-app#table-app :is(.card-action-btn,.deck-preview) {
+    height:44px !important;
+  }
+}
+
 @media (prefers-reduced-motion:reduce) {
   body.table-ui #table-app#table-app * { animation:none !important; transition:none !important; scroll-behavior:auto !important; }
 }
