@@ -3,7 +3,7 @@
 @media screen {
 body.table-ui { display:block !important; margin:0 !important; padding:0 !important; width:100% !important; height:100dvh !important; min-height:0 !important; overflow:hidden !important; background:radial-gradient(ellipse at 48% 22%, #183249 0, #0c1926 45%, #080f19 100%) !important; color:#e5edf5; font-family:Inter, system-ui, sans-serif; }
 body.table-ui #table-app#table-app, body.table-ui #table-app#table-app * { box-sizing:border-box; }
-body.table-ui #table-app#table-app { --table-gap:clamp(10px,1.3vw,22px); display:grid; grid-template-columns:150px minmax(0,1fr) 250px; grid-template-rows:76px minmax(0,1fr); grid-template-areas:'header header header' 'status world hand'; gap:var(--table-gap); width:min(100%,1800px); height:100dvh; padding:18px 24px 30px; margin:0 auto; }
+body.table-ui #table-app#table-app { --table-gap:clamp(10px,1.3vw,22px); display:grid; grid-template-columns:clamp(120px,11vw,150px) minmax(0,1fr) clamp(160px,14vw,250px); grid-template-rows:76px minmax(0,1fr); grid-template-areas:'header header header' 'status world hand'; gap:var(--table-gap); width:min(100%,1800px); height:100dvh; padding:18px 24px 30px; margin:0 auto; }
 body.table-ui #table-app#table-app[hidden], body.table-ui #table-app#table-app [hidden] { display:none !important; }
 body.table-ui #table-header { grid-area:header; display:flex; align-items:center; gap:24px; min-width:0; border-bottom:1px solid #b6d7fa16; padding-bottom:14px; }
 body.table-ui #table-brand { display:flex; align-items:center; gap:12px; min-width:190px; letter-spacing:.28em; font-size:23px; font-weight:650; }
@@ -87,7 +87,7 @@ body.table-ui #table-app#table-app .table-scrollable { cursor:grab; }
 body.table-ui #table-app#table-app .table-panning { cursor:grabbing; user-select:none; }
 body.table-ui #table-app#table-app #card-choice-zone > br { display:none; }
 body.table-ui #table-app#table-app #card-controls { display:flex !important; flex-direction:column !important; align-items:stretch !important; gap:16px !important; width:100% !important; padding:0 !important; }
-body.table-ui #table-app#table-app #card-options { display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:10px !important; width:100% !important; min-width:0 !important; max-width:none !important; height:auto !important; padding:4px !important; margin:0 !important; overflow:visible !important; transform:none !important; }
+body.table-ui #table-app#table-app #card-options { display:grid !important; grid-template-columns:minmax(0,1fr) !important; grid-auto-flow:row !important; gap:10px !important; width:100% !important; min-width:0 !important; max-width:none !important; height:auto !important; padding:4px !important; margin:0 !important; overflow:visible !important; transform:none !important; }
 body.table-ui #table-app#table-app #card-options .card-option { display:flex !important; align-items:center !important; justify-content:center !important; flex-direction:column !important; position:relative !important; flex:none !important; width:100% !important; min-width:0 !important; max-width:none !important; height:132px !important; min-height:0 !important; max-height:none !important; padding:10px !important; margin:0 !important; border:1px solid #b5cee833 !important; border-radius:13px !important; background:linear-gradient(155deg,#294156,#142738) !important; box-shadow:inset 0 1px #ffffff0d,0 4px 8px #0002 !important; transform:none !important; }
 body.table-ui #table-app#table-app #card-options .card-option.selected { border-color:#f2d27c !important; background:linear-gradient(155deg,#514c36,#293236) !important; box-shadow:0 0 0 2px #edd28420,0 5px 15px #0003 !important; }
 body.table-ui #table-app#table-app .card-pattern { transform:none !important; margin:0 !important; gap:2px !important; }
@@ -135,10 +135,10 @@ body.table-ui #table-app#table-app :is(#rotate-card-btn,#mirror-card-btn)::after
 body.table-ui #table-app#table-app #rotate-card-btn { font-size:0 !important; }
 body.table-ui #table-app#table-app #mirror-card-btn { font-size:0 !important; }
 @media (min-width:1600px) {
-  body.table-ui #table-app#table-app { grid-template-columns:170px minmax(0,1fr) 290px; padding:24px 36px 40px; }
+  body.table-ui #table-app#table-app { grid-template-columns:170px minmax(0,1fr) 250px; padding:24px 36px 40px; }
   body.table-ui #table-app#table-app #card-options .card-option { height:156px !important; }
 }
-@media (min-width:600px) and (max-width:1240px) and (min-height:600px) {
+@media (min-width:600px) and (max-width:1240px) and (min-height:600px) and (orientation:portrait) {
   body.table-ui #table-app#table-app { grid-template-columns:minmax(0,1fr); grid-template-rows:64px minmax(0,1fr) auto; grid-template-areas:'header' 'world' 'hand'; gap:10px; padding:12px 18px 18px; }
   body.table-ui #table-brand { min-width:140px; font-size:19px; }
   body.table-ui #table-brand small { display:none; }
@@ -218,53 +218,13 @@ body.table-ui.table-landscape #table-app#table-app #new-cards-btn { grid-column:
   body.table-ui.table-phone #table-app#table-app #card-options .card-option { height:64px !important; }
 }
 
-/* -------------------------------------------------------------------------- */
-/* iPad / large touch tablet landscape                                        */
-/* Keep the desktop-style board, but use a narrower one-column hand so the     */
-/* board gets more width. Phones remain on the existing table-phone layout.    */
-/* -------------------------------------------------------------------------- */
-@media (min-width:1241px) and (max-width:1600px) and (orientation:landscape) {
-  body.table-ui.table-tablet:not(.table-phone) #table-app#table-app {
-    --table-gap:12px;
-    grid-template-columns:150px minmax(0,1fr) 184px;
-    padding-left:16px;
-    padding-right:16px;
-  }
-  body.table-ui.table-tablet:not(.table-phone) #table-hand {
-    min-width:0;
-  }
-  body.table-ui.table-tablet:not(.table-phone) #table-app#table-app #card-choice-zone {
-    padding:10px !important;
-  }
-  body.table-ui.table-tablet:not(.table-phone) #table-app#table-app #card-controls {
-    gap:10px !important;
-  }
-  body.table-ui.table-tablet:not(.table-phone) #table-app#table-app #card-options,
-  body.table-ui.table-tablet:not(.table-phone) #table-app#table-app #card-options:has(> :nth-child(4)) {
-    grid-template-columns:minmax(0,1fr) !important;
-    gap:8px !important;
-    padding:2px !important;
-  }
-  body.table-ui.table-tablet:not(.table-phone) #table-app#table-app #card-options .card-option {
-    height:118px !important;
-    min-height:118px !important;
-    padding:8px !important;
-  }
-  body.table-ui.table-tablet:not(.table-phone) #table-app#table-app #card-action-buttons {
-    gap:6px !important;
-  }
-  body.table-ui.table-tablet:not(.table-phone) #table-app#table-app :is(.card-action-btn,.deck-preview) {
-    height:44px !important;
-  }
-}
-
 @media (prefers-reduced-motion:reduce) {
   body.table-ui #table-app#table-app * { animation:none !important; transition:none !important; scroll-behavior:auto !important; }
 }
 body.table-ui.table-phone #table-app#table-app #gold-zone { grid-template-rows:44px !important; gap:3px !important; }
 body.table-ui.table-phone #table-app#table-app #gold-zone::before, body.table-ui.table-phone #table-app#table-app #buy-placement-container { grid-row:1; }
 body.table-ui.table-phone #table-app#table-app #gold-zone::before { font-size:16px; white-space:nowrap; }
-@media (min-width:600px) and (max-width:1240px) and (min-height:600px) {
+@media (min-width:600px) and (max-width:1240px) and (min-height:600px) and (orientation:portrait) {
   body.table-ui #table-app#table-app #gold-zone { grid-template-rows:44px !important; }
   body.table-ui #table-app#table-app #gold-zone::before, body.table-ui #table-app#table-app #buy-placement-container { grid-row:1; }
   body.table-ui #table-app#table-app #table-status { height:180px; max-height:none; overflow:visible; }
@@ -283,7 +243,7 @@ body.table-ui.table-phone #table-app#table-app #scoreboard .score-total { justif
 body.table-ui #table-app#table-app #rotate-card-btn::after { content:'Draaien'; }
 body.table-ui #table-app#table-app #mirror-card-btn::after { content:'Spiegelen'; }
 body.table-ui.table-phone #table-app#table-app :is(#rotate-card-btn,#mirror-card-btn,#undo-inline-btn)::after { display:none !important; }
-@media (min-width:600px) and (max-width:1240px) and (min-height:600px) {
+@media (min-width:600px) and (max-width:1240px) and (min-height:600px) and (orientation:portrait) {
   body.table-ui #table-app#table-app :is(#rotate-card-btn,#mirror-card-btn,#undo-inline-btn)::after { display:none !important; }
 }
 }
@@ -467,10 +427,9 @@ body.table-ui #table-app#table-app #green-zone .cell.end-cell.active {
 
 
 /* ========================================================================== */
-/* 2026-09-20 — iPad / compact-screen layout pass                                       */
-/* Portrait: compact bottom HUD + narrower hand cards. Viewport-driven, not touch-only.                         */
-/* Landscape: use the spare vertical rail; cards stack in one column so the   */
-/* board gets more horizontal room. Phones keep their existing layout; smaller desktop windows get the same compact treatment.         */
+/* 2026-09-20 — compact portrait tablet layout                              */
+/* Portrait keeps the bottom hand/HUD compact. Side-rail layouts use the     */
+/* normal one-column hand defined above; phones keep their own rules.         */
 /* ========================================================================== */
 
 @media (min-width:700px) and (max-width:1240px) and (min-height:700px) and (orientation:portrait) {
@@ -562,172 +521,5 @@ body.table-ui #table-app#table-app #green-zone .cell.end-cell.active {
   }
   body.table-ui:not(.table-phone) :is(.card-action-btn,.deck-preview) {
     height:44px !important;
-  }
-}
-
-/* iPad Pro/Air and similarly sized compact landscape viewports.
-   This is intentionally viewport-based (not dependent on pointer detection),
-   so iPad Safari and resized desktop browsers use the same predictable layout. */
-@media (min-width:900px) and (max-width:1400px) and (min-height:650px) and (orientation:landscape) {
-  body.table-ui:not(.table-phone) #table-app#table-app {
-    --table-gap:clamp(8px,1vw,12px);
-    grid-template-columns:clamp(118px,10vw,145px) minmax(0,1fr) clamp(158px,14vw,184px) !important;
-    grid-template-rows:64px minmax(0,1fr) !important;
-    grid-template-areas:
-      "header header header"
-      "status world hand" !important;
-    gap:var(--table-gap) !important;
-    padding:12px 14px 18px !important;
-  }
-  body.table-ui:not(.table-phone) #table-hand {
-    grid-area:hand !important;
-    position:relative !important;
-    padding:0 !important;
-    min-width:0 !important;
-    min-height:0 !important;
-    overflow:auto !important;
-  }
-  body.table-ui:not(.table-phone) #table-status {
-    grid-area:status !important;
-    position:relative !important;
-    inset:auto !important;
-    width:auto !important;
-    height:auto !important;
-    max-height:none !important;
-    display:flex !important;
-    flex-direction:column !important;
-    gap:8px !important;
-    overflow:auto !important;
-    z-index:auto !important;
-  }
-  body.table-ui:not(.table-phone) #table-status > :is(#scoreboard,#gold-zone,#bonus-zone) {
-    width:100% !important;
-    height:auto !important;
-    min-width:0 !important;
-    margin:0 !important;
-    padding:8px !important;
-  }
-  body.table-ui:not(.table-phone) #scoreboard h2,
-  body.table-ui:not(.table-phone) #gold-zone h2,
-  body.table-ui:not(.table-phone) #bonus-zone h2 {
-    display:block !important;
-  }
-  body.table-ui:not(.table-phone) #scoreboard .score-row {
-    display:flex !important;
-  }
-  body.table-ui:not(.table-phone) .table-score-details {
-    display:none !important;
-  }
-  body.table-ui:not(.table-phone) #bonus-inventory {
-    flex-wrap:wrap !important;
-    overflow:visible !important;
-    gap:4px !important;
-  }
-
-  body.table-ui:not(.table-phone) #card-choice-zone {
-    width:100% !important;
-    padding:10px !important;
-  }
-  body.table-ui:not(.table-phone) #card-controls {
-    display:flex !important;
-    flex-direction:column !important;
-    align-items:stretch !important;
-    gap:10px !important;
-  }
-  body.table-ui:not(.table-phone) #card-options,
-  body.table-ui:not(.table-phone) #card-options:has(> :nth-child(4)) {
-    display:grid !important;
-    grid-template-columns:minmax(0,1fr) !important;
-    gap:8px !important;
-    padding:2px !important;
-    overflow:visible !important;
-  }
-  body.table-ui:not(.table-phone) #card-options .card-option {
-    width:100% !important;
-    max-width:none !important;
-    height:104px !important;
-    min-height:104px !important;
-    padding:7px !important;
-  }
-  body.table-ui:not(.table-phone) #card-action-buttons {
-    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
-    gap:6px !important;
-  }
-  body.table-ui:not(.table-phone) #new-cards-btn {
-    grid-column:1 / -1 !important;
-    min-height:50px !important;
-  }
-  body.table-ui:not(.table-phone) :is(.card-action-btn,.deck-preview) {
-    height:44px !important;
-  }
-}
-
-
-/* ========================================================================== */
-/* 2026-09-20 — final compact-landscape hand rule                             */
-/*                                                                            */
-/* Do not depend on min-height or tablet pointer detection here. Safari's      */
-/* usable landscape viewport can be shorter than expected once browser chrome */
-/* is visible, which made the previous rule silently miss and fall back to the */
-/* base two-column hand. Phones remain excluded by .table-phone.               */
-/* ========================================================================== */
-@media (orientation:landscape) and (max-width:1700px) {
-  body.table-ui:not(.table-phone) #table-app#table-app {
-    --table-gap:clamp(8px,1vw,12px);
-    grid-template-columns:clamp(112px,9vw,145px) minmax(0,1fr) clamp(150px,11vw,176px) !important;
-  }
-
-  body.table-ui:not(.table-phone) #table-hand {
-    min-width:0 !important;
-    padding-left:0 !important;
-  }
-
-  body.table-ui:not(.table-phone) #table-app#table-app #card-choice-zone {
-    width:100% !important;
-    min-width:0 !important;
-    padding:10px !important;
-  }
-
-  body.table-ui:not(.table-phone) #table-app#table-app #card-controls {
-    display:flex !important;
-    flex-direction:column !important;
-    align-items:stretch !important;
-    width:100% !important;
-    min-width:0 !important;
-    gap:10px !important;
-  }
-
-  /* Hard single-column override. This intentionally outranks every earlier
-     2/3/5-column hand rule in this stylesheet. */
-  body.table-ui:not(.table-phone) #table-app#table-app #card-options,
-  body.table-ui:not(.table-phone) #table-app#table-app #card-options:has(> :nth-child(4)) {
-    display:grid !important;
-    grid-template-columns:minmax(0,1fr) !important;
-    grid-auto-flow:row !important;
-    width:100% !important;
-    min-width:0 !important;
-    max-width:none !important;
-    gap:8px !important;
-    padding:2px !important;
-    overflow:visible !important;
-  }
-
-  body.table-ui:not(.table-phone) #table-app#table-app #card-options .card-option {
-    grid-column:1 !important;
-    width:100% !important;
-    min-width:0 !important;
-    max-width:none !important;
-    height:104px !important;
-    min-height:104px !important;
-    padding:7px !important;
-  }
-
-  body.table-ui:not(.table-phone) #table-app#table-app #card-action-buttons {
-    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
-    gap:6px !important;
-  }
-
-  body.table-ui:not(.table-phone) #table-app#table-app #new-cards-btn {
-    grid-column:1 / -1 !important;
   }
 }
