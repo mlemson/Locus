@@ -14,7 +14,7 @@ const server = http.createServer((req, res) => {
     res.end(fs.readFileSync(filename));
   } catch { res.writeHead(404).end(); }
 });
-const sizes = [[1920,1080,false],[1440,900,false],[1366,1024,false],[1366,1024,true],[1180,820,true],[1024,1366,false],[1024,1366,true],[1024,768,true],[768,1024,true],[390,844,true],[430,932,true],[844,390,true],[320,568,true]];
+const sizes = [[1920,1080,false],[1440,900,false],[1366,1024,false],[1366,1024,true],[1366,620,false],[1366,620,true],[1194,600,true],[1180,820,true],[1024,1366,false],[1024,1366,true],[1024,768,true],[768,1024,true],[390,844,true],[430,932,true],[844,390,true],[320,568,true]];
 let browser;
 async function open(width, height, touch) {
   const page = await browser.newPage({viewport:{width,height}, hasTouch:touch, isMobile:touch});
@@ -60,7 +60,7 @@ async function open(width, height, touch) {
 
     // Tablet regression checks: portrait HUD must not horizontally scroll, while
     // landscape uses a narrow one-column hand rail to give the board more width.
-    if (Math.min(width,height)>=600 && Math.max(width,height)<=1400) {
+    if (Math.min(width,height)>=600 && Math.max(width,height)<=1700) {
       const tabletLayout=await page.evaluate(()=>{
         const body=document.body;
         const status=document.getElementById('table-status');
@@ -83,7 +83,7 @@ async function open(width, height, touch) {
         assert.ok(tabletLayout.bonusScroll<=1,`portrait bonus overflow ${width}: ${tabletLayout.bonusScroll}`);
         assert.ok(tabletLayout.cardWidths.every(w=>w<=133),`portrait cards stay compact ${width}: ${tabletLayout.cardWidths}`);
       }
-      if (width>height && width>=900 && height>=650) {
+      if (width>height && width<=1700 && Math.min(width,height)>=600) {
         assert.equal(tabletLayout.cardCols,1,`landscape hand is one column ${width}: ${tabletLayout.cardCols}`);
         assert.ok(tabletLayout.handX>width*.72,`landscape hand stays in right rail ${width}: ${tabletLayout.handX}`);
       }
