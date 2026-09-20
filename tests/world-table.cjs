@@ -47,7 +47,12 @@ async function open(width, height, touch) {
       const ids=['table-header','card-choice-zone','table-world','gold-zone'];
       const boxes=ids.map(id=>{const r=document.getElementById(id).getBoundingClientRect();return {id,x:r.x,y:r.y,w:r.width,h:r.height,right:r.right,bottom:r.bottom};});
       const controls=[...document.querySelectorAll('#card-action-buttons > button:not(#bonus-shop-btn),#menu-toggle,.table-tab')].filter(e=>e.getBoundingClientRect().width);
-      return {width:innerWidth,height:innerHeight,scroll:document.documentElement.scrollWidth, boxes, controls:controls.map(e=>({id:e.id||e.textContent,w:e.getBoundingClientRect().width,h:e.getBoundingClientRect().height})), frameCount:[...document.querySelectorAll('.table-zone-frame')].filter(e=>!e.hidden).length};
+      const cardOptions=document.getElementById('card-options');
+      const cardStyle=cardOptions ? getComputedStyle(cardOptions) : null;
+      return {width:innerWidth,height:innerHeight,scroll:document.documentElement.scrollWidth, boxes,
+        controls:controls.map(e=>({id:e.id||e.textContent,w:e.getBoundingClientRect().width,h:e.getBoundingClientRect().height})),
+        frameCount:[...document.querySelectorAll('.table-zone-frame')].filter(e=>!e.hidden).length,
+        cardCols:cardStyle ? cardStyle.gridTemplateColumns.split(' ').filter(Boolean).length : 0};
     });
     assert.ok(layout.scroll <= width+1, `page overflow ${width}`);
     for (const b of layout.boxes) assert.ok(b.x>=-1 && b.y>=-1 && b.right<=width+1 && b.bottom<=height+1, `clipped ${width}: ${JSON.stringify(b)}`);
@@ -57,6 +62,13 @@ async function open(width, height, touch) {
       assert.ok(a.right<=b.x+1||b.right<=a.x+1||a.bottom<=b.y+1||b.bottom<=a.y+1, `overlap ${width}: ${a.id}/${b.id}`);
     }
     assert.equal(layout.frameCount,Math.min(width,height)<600?1:5);
+
+    // Any non-phone landscape/table side rail must stack hand cards vertically.
+    // This includes wide desktop viewports too; previous tests only covered <=1700px,
+    // which let the original two-column base rule slip through unnoticed.
+    if (width > height && Math.min(width,height) >= 600 && width > 640) {
+      assert.equal(layout.cardCols,1,`side-rail hand is one column ${width}x${height}: ${layout.cardCols}`);
+    }
 
     // Tablet regression checks: portrait HUD must not horizontally scroll, while
     // landscape uses a narrow one-column hand rail to give the board more width.
@@ -84,7 +96,6 @@ async function open(width, height, touch) {
         assert.ok(tabletLayout.cardWidths.every(w=>w<=133),`portrait cards stay compact ${width}: ${tabletLayout.cardWidths}`);
       }
       if (width>height && width<=1700 && Math.min(width,height)>=600) {
-        assert.equal(tabletLayout.cardCols,1,`landscape hand is one column ${width}: ${tabletLayout.cardCols}`);
         assert.ok(tabletLayout.handX>width*.72,`landscape hand stays in right rail ${width}: ${tabletLayout.handX}`);
       }
     }
