@@ -661,3 +661,73 @@ body.table-ui #table-app#table-app #green-zone .cell.end-cell.active {
     height:44px !important;
   }
 }
+
+
+/* ========================================================================== */
+/* 2026-09-20 — final compact-landscape hand rule                             */
+/*                                                                            */
+/* Do not depend on min-height or tablet pointer detection here. Safari's      */
+/* usable landscape viewport can be shorter than expected once browser chrome */
+/* is visible, which made the previous rule silently miss and fall back to the */
+/* base two-column hand. Phones remain excluded by .table-phone.               */
+/* ========================================================================== */
+@media (orientation:landscape) and (max-width:1700px) {
+  body.table-ui:not(.table-phone) #table-app#table-app {
+    --table-gap:clamp(8px,1vw,12px);
+    grid-template-columns:clamp(112px,9vw,145px) minmax(0,1fr) clamp(150px,11vw,176px) !important;
+  }
+
+  body.table-ui:not(.table-phone) #table-hand {
+    min-width:0 !important;
+    padding-left:0 !important;
+  }
+
+  body.table-ui:not(.table-phone) #table-app#table-app #card-choice-zone {
+    width:100% !important;
+    min-width:0 !important;
+    padding:10px !important;
+  }
+
+  body.table-ui:not(.table-phone) #table-app#table-app #card-controls {
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:stretch !important;
+    width:100% !important;
+    min-width:0 !important;
+    gap:10px !important;
+  }
+
+  /* Hard single-column override. This intentionally outranks every earlier
+     2/3/5-column hand rule in this stylesheet. */
+  body.table-ui:not(.table-phone) #table-app#table-app #card-options,
+  body.table-ui:not(.table-phone) #table-app#table-app #card-options:has(> :nth-child(4)) {
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) !important;
+    grid-auto-flow:row !important;
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+    gap:8px !important;
+    padding:2px !important;
+    overflow:visible !important;
+  }
+
+  body.table-ui:not(.table-phone) #table-app#table-app #card-options .card-option {
+    grid-column:1 !important;
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+    height:104px !important;
+    min-height:104px !important;
+    padding:7px !important;
+  }
+
+  body.table-ui:not(.table-phone) #table-app#table-app #card-action-buttons {
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+    gap:6px !important;
+  }
+
+  body.table-ui:not(.table-phone) #table-app#table-app #new-cards-btn {
+    grid-column:1 / -1 !important;
+  }
+}
