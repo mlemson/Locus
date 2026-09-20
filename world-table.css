@@ -464,3 +464,200 @@ body.table-ui #table-app#table-app #green-zone .cell.end-cell.active {
     line-height:1 !important;
   }
 }
+
+
+/* ========================================================================== */
+/* 2026-09-20 — iPad/tablet layout pass                                       */
+/* Portrait: compact bottom HUD + narrower hand cards.                         */
+/* Landscape: use the spare vertical rail; cards stack in one column so the   */
+/* board gets more horizontal room. Phones keep their existing layout.         */
+/* ========================================================================== */
+
+@media (min-width:700px) and (max-width:1240px) and (min-height:700px) and (orientation:portrait) {
+  body.table-ui.table-tablet:not(.table-phone) #table-hand {
+    padding-left:232px !important;
+    min-height:164px !important;
+  }
+
+  /* Score + coins share the first row. Bonuses get the full width below:
+     no tiny horizontal scrollbar and no squeezed bonus pills. */
+  body.table-ui.table-tablet:not(.table-phone) #table-status {
+    left:18px !important;
+    bottom:18px !important;
+    width:218px !important;
+    height:164px !important;
+    max-height:none !important;
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+    grid-template-rows:52px minmax(0,1fr) !important;
+    grid-template-areas:
+      "score coins"
+      "bonus bonus" !important;
+    gap:6px !important;
+    overflow:visible !important;
+    align-content:stretch !important;
+  }
+  body.table-ui.table-tablet:not(.table-phone) #scoreboard { grid-area:score !important; }
+  body.table-ui.table-tablet:not(.table-phone) #gold-zone { grid-area:coins !important; }
+  body.table-ui.table-tablet:not(.table-phone) #bonus-zone { grid-area:bonus !important; }
+  body.table-ui.table-tablet:not(.table-phone) #table-status > :is(#scoreboard,#gold-zone,#bonus-zone) {
+    width:100% !important;
+    min-width:0 !important;
+    height:100% !important;
+    margin:0 !important;
+    padding:6px !important;
+  }
+  body.table-ui.table-tablet:not(.table-phone) #gold-zone {
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) 44px !important;
+    grid-template-rows:40px !important;
+    align-items:center !important;
+    gap:4px !important;
+  }
+  body.table-ui.table-tablet:not(.table-phone) #gold-zone::before,
+  body.table-ui.table-tablet:not(.table-phone) #buy-placement-container {
+    grid-row:1 !important;
+  }
+  body.table-ui.table-tablet:not(.table-phone) #bonus-inventory {
+    flex-wrap:wrap !important;
+    overflow:visible !important;
+    scrollbar-width:none !important;
+    gap:4px !important;
+    justify-content:flex-start !important;
+    align-content:center !important;
+  }
+  body.table-ui.table-tablet:not(.table-phone) #bonus-inventory .bonus-badge {
+    flex:0 0 44px !important;
+    width:44px !important;
+    min-width:44px !important;
+    max-width:44px !important;
+    min-height:44px !important;
+  }
+
+  /* The hand no longer stretches three cards across the entire remaining row. */
+  body.table-ui.table-tablet:not(.table-phone) #card-controls {
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) 148px !important;
+    gap:10px !important;
+    align-items:start !important;
+  }
+  body.table-ui.table-tablet:not(.table-phone) #card-options,
+  body.table-ui.table-tablet:not(.table-phone) #card-options:has(> :nth-child(4)) {
+    display:grid !important;
+    grid-template-columns:repeat(auto-fit,minmax(88px,132px)) !important;
+    justify-content:start !important;
+    align-content:start !important;
+    gap:8px !important;
+    overflow:visible !important;
+  }
+  body.table-ui.table-tablet:not(.table-phone) #card-options .card-option {
+    width:100% !important;
+    max-width:132px !important;
+    height:96px !important;
+    min-height:96px !important;
+    padding:7px !important;
+  }
+  body.table-ui.table-tablet:not(.table-phone) #card-action-buttons {
+    gap:6px !important;
+  }
+  body.table-ui.table-tablet:not(.table-phone) :is(.card-action-btn,.deck-preview) {
+    height:44px !important;
+  }
+}
+
+/* iPad Pro/Air and similarly sized coarse-pointer tablets in landscape.
+   This deliberately starts below the old 1241px breakpoint so 1024/1180px
+   landscape iPads also use the side-rail layout rather than a bottom hand. */
+@media (min-width:900px) and (max-width:1600px) and (min-height:650px) and (orientation:landscape) {
+  body.table-ui.table-tablet:not(.table-phone) #table-app#table-app {
+    --table-gap:clamp(8px,1vw,12px);
+    grid-template-columns:clamp(118px,10vw,145px) minmax(0,1fr) clamp(158px,14vw,184px) !important;
+    grid-template-rows:64px minmax(0,1fr) !important;
+    grid-template-areas:
+      "header header header"
+      "status world hand" !important;
+    gap:var(--table-gap) !important;
+    padding:12px 14px 18px !important;
+  }
+  body.table-ui.table-tablet:not(.table-phone) #table-hand {
+    grid-area:hand !important;
+    position:relative !important;
+    padding:0 !important;
+    min-width:0 !important;
+    min-height:0 !important;
+    overflow:auto !important;
+  }
+  body.table-ui.table-tablet:not(.table-phone) #table-status {
+    grid-area:status !important;
+    position:relative !important;
+    inset:auto !important;
+    width:auto !important;
+    height:auto !important;
+    max-height:none !important;
+    display:flex !important;
+    flex-direction:column !important;
+    gap:8px !important;
+    overflow:auto !important;
+    z-index:auto !important;
+  }
+  body.table-ui.table-tablet:not(.table-phone) #table-status > :is(#scoreboard,#gold-zone,#bonus-zone) {
+    width:100% !important;
+    height:auto !important;
+    min-width:0 !important;
+    margin:0 !important;
+    padding:8px !important;
+  }
+  body.table-ui.table-tablet:not(.table-phone) #scoreboard h2,
+  body.table-ui.table-tablet:not(.table-phone) #gold-zone h2,
+  body.table-ui.table-tablet:not(.table-phone) #bonus-zone h2 {
+    display:block !important;
+  }
+  body.table-ui.table-tablet:not(.table-phone) #scoreboard .score-row {
+    display:flex !important;
+  }
+  body.table-ui.table-tablet:not(.table-phone) .table-score-details {
+    display:none !important;
+  }
+  body.table-ui.table-tablet:not(.table-phone) #bonus-inventory {
+    flex-wrap:wrap !important;
+    overflow:visible !important;
+    gap:4px !important;
+  }
+
+  body.table-ui.table-tablet:not(.table-phone) #card-choice-zone {
+    width:100% !important;
+    padding:10px !important;
+  }
+  body.table-ui.table-tablet:not(.table-phone) #card-controls {
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:stretch !important;
+    gap:10px !important;
+  }
+  body.table-ui.table-tablet:not(.table-phone) #card-options,
+  body.table-ui.table-tablet:not(.table-phone) #card-options:has(> :nth-child(4)) {
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) !important;
+    gap:8px !important;
+    padding:2px !important;
+    overflow:visible !important;
+  }
+  body.table-ui.table-tablet:not(.table-phone) #card-options .card-option {
+    width:100% !important;
+    max-width:none !important;
+    height:104px !important;
+    min-height:104px !important;
+    padding:7px !important;
+  }
+  body.table-ui.table-tablet:not(.table-phone) #card-action-buttons {
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+    gap:6px !important;
+  }
+  body.table-ui.table-tablet:not(.table-phone) #new-cards-btn {
+    grid-column:1 / -1 !important;
+    min-height:50px !important;
+  }
+  body.table-ui.table-tablet:not(.table-phone) :is(.card-action-btn,.deck-preview) {
+    height:44px !important;
+  }
+}
