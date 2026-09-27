@@ -1998,3 +1998,20 @@ body.game-ui-v5:not(.classic-mode) #deck-modal-content .card-echo-tooltip {
     transform: translate(0, -50%) translateY(0) !important;
   }
 }
+/* Shop: compact overview of owned upgrades and an accessible list of other offers. */
+.shop-upgrade-group-title {
+  margin:12px 0 3px; color:#e9cc80; font-size:12px; font-weight:700;
+}
+.shop-owned-upgrades, .shop-more-upgrades {
+  width:100%; box-sizing:border-box; border:1px solid #829bb35e;
+  border-radius:10px; padding:9px 11px; color:#e7eff5;
+}
+.shop-owned-upgrades summary, .shop-more-upgrades summary {
+  cursor:pointer; font-weight:700; min-height:28px;
+}
+.shop-owned-upgrades p { line-height:1.5; margin:8px 0 0; }
+.shop-more-upgrades .shop-upgrade-card { margin-top:9px; }
+/* Only the card owns a tablet drag; the surrounding hand can still scroll. */
+@media (pointer:coarse) and (min-width:700px) {
+  #card-options .card-option { touch-action:none; }
+}

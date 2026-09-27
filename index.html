@@ -12923,7 +12923,7 @@ let shopLevel2Used = false;
 			id: 'goldenCards',
 			name: 'Gouden Kaarten',
 			description: 'Ontgrendel gouden kaarten die altijd geplaatst kunnen worden.',
-			cost: 15,
+			cost: 18,
 			icon: '✨',
 			purchased: false,
 			onPurchase: () => {
@@ -13012,7 +13012,7 @@ let shopLevel2Used = false;
 			id: 'coinMaster',
 			name: 'Muntmeester',
 			description: 'Krijg 2 extra munten aan het begin van elk level.',
-			cost: 6,
+			cost: 8,
 			icon: '🪙',
 			purchased: false,
 			onPurchase: () => {
@@ -13094,8 +13094,8 @@ let shopLevel2Used = false;
 		world4DoorSurge: {
 			id: 'world4DoorSurge',
 			name: 'Deurboost',
-			description: 'Elke geopende deur geeft 1 gratis plaatsing.',
-			cost: 14,
+			description: 'De eerste deur die je per level opent geeft 1 gratis plaatsing.',
+			cost: 10,
 			icon: '🚪',
 			purchased: false,
 			onPurchase: () => {
@@ -13131,22 +13131,22 @@ let shopLevel2Used = false;
 		// Upgrade unlocks (level waarop ze in de shop verschijnen)
 		upgrades: {
 			miniPack34: { unlockedAtLevel: 5, announcement: 'nieuwe upgrade' },
-			wildcardCards: { unlockedAtLevel: 7, announcement: 'nieuwe upgrade' },
-			coinMaster: { unlockedAtLevel: 5, announcement: 'nieuwe upgrade' },
-			goldenCards: { unlockedAtLevel: 7, announcement: 'nieuwe upgrade' },
+			wildcardCards: { unlockedAtLevel: 9, announcement: 'nieuwe upgrade' },
+			coinMaster: { unlockedAtLevel: 7, announcement: 'nieuwe upgrade' },
+			goldenCards: { unlockedAtLevel: 12, announcement: 'nieuwe upgrade' },
 			luckyDraw: { unlockedAtLevel: 5, announcement: 'nieuwe upgrade' },
 			extraHandSize: { unlockedAtWorld: 3, unlockedAtLevel: 21, announcement: 'nieuwe upgrade' },
 			multicolorBoost: { unlockedAtWorld: 3, unlockedAtLevel: 21, announcement: 'nieuwe upgrade' },
-			bonusBoost: { unlockedAtWorld: 2, unlockedAtLevel: 5, announcement: 'nieuwe upgrade' },
-			bonusEcho: { unlockedAtWorld: 2, unlockedAtLevel: 12, announcement: 'nieuwe upgrade' },
+			bonusBoost: { unlockedAtWorld: 2, unlockedAtLevel: 14, announcement: 'nieuwe upgrade' },
+			bonusEcho: { unlockedAtWorld: 2, unlockedAtLevel: 16, announcement: 'nieuwe upgrade' },
 			blackHoleAccess: { unlockedAtLevel: 11, announcement: 'nieuwe uitdaging' },
 			portals: { unlockedAtLevel: 11, announcement: 'nieuwe upgrade' },
 			betterCards: { unlockedAtWorld: 3, unlockedAtLevel: 21, announcement: 'nieuwe upgrade' },
-			xlBlocks: { unlockedAtLevel: 7, announcement: 'nieuwe upgrade' },
+			xlBlocks: { unlockedAtLevel: 12, announcement: 'nieuwe upgrade' },
 			extraLargeBlocks: { unlockedAtWorld: 3, unlockedAtLevel: 21, announcement: 'nieuwe upgrade' },
-			world4StarterKey: { unlockedAtWorld: 4, unlockedAtLevel: 31, announcement: 'nieuwe upgrade' },
-			world4DoorSurge: { unlockedAtWorld: 4, unlockedAtLevel: 33, announcement: 'nieuwe upgrade' },
-			world4KeyEcho: { unlockedAtWorld: 4, unlockedAtLevel: 35, announcement: 'nieuwe upgrade' }
+			world4StarterKey: { unlockedAtWorld: 4, unlockedAtLevel: 33, announcement: 'nieuwe upgrade' },
+			world4DoorSurge: { unlockedAtWorld: 4, unlockedAtLevel: 36, announcement: 'nieuwe upgrade' },
+			world4KeyEcho: { unlockedAtWorld: 4, unlockedAtLevel: 34, announcement: 'nieuwe upgrade' }
 		},
 		// Elk level track welke content unlocked is
 		getLevelUnlocks: function(level, world = 1) {
@@ -14821,8 +14821,8 @@ let shopLevel2Used = false;
 		// Each level has one required primary objective; optional stars are handled by LocusWorld4.
 		31: [{
 			id:'level-31-world4-primary',
-			description:'Level 31: Vind de sleutel, open de blauwe poort en scoor 120 punten.',
-			short:'De eerste sleutel',
+			description:'Level 31: Bedek de sleutel in groen en de poort in blauw. Scoor 100 punten.',
+			short:'De oefenpoort',
 			check:scores => !!window.LocusWorld4?.isPrimaryComplete?.(31, scores),
 			progress:scores => window.LocusWorld4?.primaryProgressText?.(31, scores) || ''
 		}],
@@ -22027,9 +22027,15 @@ document.addEventListener('pointermove', ev => {
 		
 		if (!draggedBlock) return;
 		if (dragPointerId !== null && ev.pointerId !== dragPointerId) return;
+		// A queued animation frame may still contain the previous finger position.
+		// Resolve the actual release point before testing a placement.
+		if (isPointerDragging && (ev.pointerType === 'touch' || ev.pointerType === 'pen')) {
+			cancelPendingDragMoveFrame();
+			processDragPointerMove(ev);
+		}
 		const bonusContext = activeBonusPlacement;
 		const isMobileLayout = window.innerWidth <= MOBILE_BREAKPOINT;
-		const isTouchDevice = ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+		const isTouchDevice = ev.pointerType === 'touch' || ev.pointerType === 'pen';
 		// Desktop hover-drag: do not drop on pointerup (click-to-drop handles placement).
 		if (desktopHoverDragActive && !isMobileLayout && !isTouchDevice && (!bonusContext || bonusContext.desktopHover)) {
 			return;
@@ -24226,7 +24232,7 @@ const XL_6_SHAPES = BASE_SHAPES.xl6;
 	// Use var to avoid temporal dead zone when referenced earlier in the file.
 	var BATTERY_SAVER_ENABLED = true;
 	var BATTERY_SUPPRESS_LOGS = false;
-	var BATTERY_THROTTLE_DRAG = true;
+	var BATTERY_THROTTLE_DRAG = false;
 	var BATTERY_REDUCE_ANIM = false;
 
 	// Layout cache for expensive getBoundingClientRect calls - invalidated on resize
@@ -26236,7 +26242,7 @@ function getCollectedCoinCount(scores) {
 	  // - Mouse: click selects (no floating block); click+drag starts drag (floating block follows cursor).
 	  card.addEventListener('pointerdown', event => {
 		const isMobileLayout = isMobileViewport();
-		const isTouchDevice = ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+		const isTouchDevice = event.pointerType === 'touch' || event.pointerType === 'pen';
 		if (event.button !== undefined && event.button !== 0) return;
 
 		// Mouse / non-touch: only start drag after actual movement.
@@ -26486,10 +26492,8 @@ function getCollectedCoinCount(scores) {
 			}, holdMs);
 			return;
 		}
-		// Allow toggling off the currently selected card even during suppression windows.
-		const clickedCardId = card?.dataset?.cardId || null;
-		const isToggleOffClick = !!clickedCardId && !!selectedCardId && clickedCardId === selectedCardId;
-		if (!isToggleOffClick && Date.now() < suppressCardSelectUntil) return;
+		// Ignore the synthetic click following a drag, including one on the selected card.
+		if (Date.now() < suppressCardSelectUntil) return;
 		if (typeof onSelect === 'function') {
 		  onSelect(cardData, card);
 		} else {
@@ -27411,6 +27415,19 @@ function getCollectedCoinCount(scores) {
 		const availableUpgrades = Object.entries(UPGRADES).filter(([id, upgrade]) => {
 			return !upgrade.purchased && UNLOCK_PROGRESSION.isUpgradeUnlocked(id, currentLevel, currentWorld);
 		});
+		// Show the player's permanent choices so the shop remains understandable later in a run.
+		const owned = Object.values(UPGRADES).filter(upgrade => upgrade.purchased);
+		if (owned.length) {
+			const ownedList = document.createElement('details');
+			ownedList.className = 'shop-owned-upgrades';
+			ownedList.open = owned.length <= 4;
+			const summary = document.createElement('summary');
+			summary.textContent = `Al in bezit (${owned.length})`;
+			const names = document.createElement('p');
+			names.textContent = owned.map(upgrade => `${upgrade.icon} ${upgrade.name}`).join(' · ');
+			ownedList.append(summary, names);
+			shopUpgradeContainer.appendChild(ownedList);
+		}
 		
 		if (availableUpgrades.length === 0 && !level2Unlocked) {
 			if (upgradesSection) upgradesSection.classList.add('shop-section--empty');
@@ -27423,7 +27440,31 @@ function getCollectedCoinCount(scores) {
 		
 		if (upgradesSection) upgradesSection.classList.remove('shop-section--empty');
 		
-		availableUpgrades.forEach(([upgradeId, upgrade]) => {
+		// Keep the first view small. The rest stay available under an explicit disclosure.
+		const priority = Number(currentWorld) === 4
+			? ['world4KeyEcho','world4StarterKey','miniPack34','bonusEcho','world4DoorSurge']
+			: ['miniPack34','bonusEcho','luckyDraw','wildcardCards','goldenCards'];
+		const ordered = availableUpgrades.slice().sort((a,b) => {
+			const rank = id => priority.includes(id) ? priority.indexOf(id) : priority.length;
+			return rank(a[0]) - rank(b[0]);
+		});
+		const recommended = ordered.slice(0,3);
+		const more = ordered.slice(3);
+		let moreList = null;
+		if (recommended.length) {
+			const heading = document.createElement('p');
+			heading.className = 'shop-upgrade-group-title';
+			heading.textContent = 'Uitgelicht';
+			shopUpgradeContainer.appendChild(heading);
+		}
+		if (more.length) {
+			moreList = document.createElement('details');
+			moreList.className = 'shop-more-upgrades';
+			const summary = document.createElement('summary');
+			summary.textContent = `Bekijk overige upgrades (${more.length})`;
+			moreList.appendChild(summary);
+		}
+		ordered.forEach(([upgradeId, upgrade], index) => {
 			const upgradeCard = document.createElement('div');
 			upgradeCard.classList.add('shop-upgrade-card');
 			const effectiveCost = getEffectiveUpgradeCost(upgradeId);
@@ -27454,10 +27495,15 @@ function getCollectedCoinCount(scores) {
 			
 			upgradeActions.appendChild(buyBtn);
 			upgradeCard.append(upgradeHeader, upgradeDesc, upgradeActions);
-			shopUpgradeContainer.appendChild(upgradeCard);
+			(index < recommended.length ? shopUpgradeContainer : moreList).appendChild(upgradeCard);
 		});
+		if (moreList) shopUpgradeContainer.appendChild(moreList);
 
 		if (level2Unlocked) {
+			const heading = document.createElement('p');
+			heading.className = 'shop-upgrade-group-title';
+			heading.textContent = 'Kaart verbeteren';
+			shopUpgradeContainer.appendChild(heading);
 			const upgradeCard = document.createElement('div');
 			upgradeCard.classList.add('shop-upgrade-card');
 			const upgradeHeader = document.createElement('div');
@@ -30845,7 +30891,9 @@ function openWorld4Door(doorId) {
 		try { showObjectiveToast('🚪 Deur geopend!'); } catch (e) {}
 		// World 4 upgrade: opening a door grants a free placement
 		try {
-			if (hasUpgrade('world4DoorSurge')) {
+			if (hasUpgrade('world4DoorSurge') &&
+				!window.LocusWorld4?.getRuntime?.()?.restoring &&
+				document.querySelectorAll('.cell.door-cell.door-open').length === 1) {
 				freePlacementsRemaining += 1;
 				updateBonusInventoryUI();
 				showObjectiveToast('⚡ Gratis plaatsing ontvangen!');
