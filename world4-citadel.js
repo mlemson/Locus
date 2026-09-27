@@ -461,7 +461,12 @@
     }
     try {
       const current = document.getElementById('objective-current');
-      if (current) current.innerHTML = `<strong>Doel:</strong> ${escapeHtml(cfg.primaryText)} <span class="w4-objective-progress">${escapeHtml(primaryProgressText(currentLevelNumber(), scores))}</span>`;
+      if (current) {
+        const compact = currentLevelNumber() === 31
+          ? `<span class="w4-mobile-objective">${runtime.phase === 0 ? 'Bedek de sleutel in groen.' : runtime.phase === 1 ? 'Bedek de poort in blauw.' : 'Scoor 100 punten.'}</span>`
+          : '';
+        current.innerHTML = `<span class="w4-full-objective"><strong>Doel:</strong> ${escapeHtml(cfg.primaryText)} <span class="w4-objective-progress">${escapeHtml(primaryProgressText(currentLevelNumber(), scores))}</span></span>${compact}`;
+      }
     } catch (_) {}
   }
 
@@ -681,6 +686,13 @@
     const cfg = getLevelConfig(level);
     try { applyZoneVisibility(allowedColors()); } catch (_) {}
     if (Number(level) === 31) {
+      // The green generator's central anchor is far from the tutorial key.
+      // Covering the key must itself be a legal first placement.
+      const key = document.querySelector('#green-zone .cell.key-cell:not(.void-cell)');
+      if (key) {
+        key.classList.add('bold-cell','w4-intro-start');
+        key.setAttribute('aria-label', 'Startcel met sleutel: leg hier eerst een groene kaart');
+      }
       try { window.LocusTable?.focus?.(document.getElementById('green-zone')); } catch (_) {}
     }
     if (cfg?.ruin) applyRuinMask();
