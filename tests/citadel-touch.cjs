@@ -45,6 +45,9 @@ const server = http.createServer((req, res) => {
     assert.match(setup.guide, /SLEUTEL/);
     assert.equal(setup.featured, 3);
     assert.ok(setup.more > 0);
+    await page.waitForFunction(() => document.querySelector('#green-zone .cell')?.getBoundingClientRect().width >= 25);
+    assert.ok(await page.evaluate(() => document.querySelector('#green-zone .cell').getBoundingClientRect().width >= 25),
+      'Citadel cells remain touchable on a tablet');
     const phase = await page.evaluate(() => {
       unlockWorld4Color('blauw');
       window.LocusWorld4.onKeyActivated('blauw');
@@ -84,7 +87,47 @@ const server = http.createServer((req, res) => {
     });
     assert.equal(doorBonus, 1, 'the door upgrade grants at most one placement per level');
     assert.deepEqual(errors, []);
-    console.log('PASS Citadel tutorial, shop and tablet touch drag');
     await page.close();
+
+    const phone = await browser.newPage({viewport:{width:390,height:844},hasTouch:true,isMobile:true});
+    const phoneErrors = [];
+    phone.on('pageerror', err => phoneErrors.push(err.message));
+    await phone.addInitScript(() => localStorage.setItem('locus_tutorial_v1_done','1'));
+    await phone.goto(`http://127.0.0.1:${server.address().port}`);
+    await phone.waitForSelector('#preworld-pick-grid .preworld-pick-item');
+    const choice = await phone.evaluate(() => {
+      const items = [...document.querySelectorAll('#preworld-pick-grid .preworld-pick-item')];
+      const outer = items[0].getBoundingClientRect();
+      const inner = items[0].querySelector('.preworld-pick-card').getBoundingClientRect();
+      return {inside:inner.bottom <= outer.bottom+1, separated:outer.bottom <= items[2].getBoundingClientRect().top+1,
+        named:!!items[0].querySelector('.preworld-choice-name')?.textContent};
+    });
+    assert.deepEqual(choice, {inside:true,separated:true,named:true}, 'starter cards remain legible and separate');
+    await phone.evaluate(() => document.getElementById('world4-demo-btn').click());
+    await phone.evaluate(() => {window.confirm=()=>true;document.getElementById('preworld-pick-confirm').click();});
+    await phone.waitForFunction(() => document.body.classList.contains('table-ui') && currentLevel === 31);
+    const mobile = await phone.evaluate(() => {
+      const zone = document.getElementById('green-zone');
+      const key = zone.querySelector('.key-cell').getBoundingClientRect();
+      const viewport = zone.getBoundingClientRect();
+      return {level:currentLevel, cell:zone.querySelector('.cell').getBoundingClientRect().width,
+        focused:document.querySelector('.table-tab[aria-pressed="true"]')?.getAttribute('aria-controls'),
+        keyVisible:key.right > viewport.left && key.left < viewport.right && key.bottom > viewport.top && key.top < viewport.bottom,
+        tabScore:document.querySelector('.table-tab[aria-controls="green-zone"] .table-tab-score')?.textContent,
+        tabName:document.querySelector('.table-tab[aria-controls="green-zone"]')?.getAttribute('aria-label'),
+        finished:document.getElementById('new-cards-btn').classList.contains('complete-round')};
+    });
+    assert.equal(mobile.level,31,'demo opens the actual first Citadel level');
+    assert.ok(mobile.cell>=27,'Citadel cells remain touchable on a phone');
+    assert.equal(mobile.focused,'green-zone');
+    assert.equal(mobile.keyVisible,true,'the first key is visible on opening');
+    assert.equal(mobile.tabScore,'0');
+    assert.equal(mobile.tabName,'Groen speelgebied');
+    assert.equal(mobile.finished,false,'an unplayed final hand must not look like the end of a round');
+    await phone.evaluate(() => {document.getElementById('green-score').textContent='14';});
+    await phone.waitForFunction(() => document.querySelector('.table-tab[aria-controls="green-zone"] .table-tab-score')?.textContent === '14');
+    assert.deepEqual(phoneErrors, []);
+    await phone.close();
+    console.log('PASS Citadel tutorial, shop, tablet drag and mobile layout');
   } finally { await browser.close(); server.close(); }
 })().catch(error => { console.error(error); server.close(); process.exitCode=1; });

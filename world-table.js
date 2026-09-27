@@ -60,7 +60,10 @@
       frame.setAttribute('aria-label', `${name} speelgebied`);
       zone.before(frame); move(zone, frame);
       const label = document.createElement('span');
-      label.className = 'table-zone-label'; label.textContent = name;
+      label.className = 'table-zone-label';
+      const labelName = document.createElement('span'); labelName.textContent = name;
+      const labelScore = document.createElement('span'); labelScore.className = 'table-zone-score'; labelScore.textContent = '0';
+      label.append(labelName, labelScore);
       label.setAttribute('aria-hidden', 'true'); frame.append(label);
       const cues = {};
       for (const [dir, symbol, word] of [['left','‹','links'],['right','›','rechts'],['top','⌃','boven'],['bottom','⌄','beneden']]) {
@@ -88,7 +91,12 @@
         if (map[e.key]) { e.preventDefault(); cues[map[e.key]].click(); }
       });
       bindPan(zone);
-      const tab = button(`${name} speelgebied`, name, 'table-tab');
+      const tab = button(`${name} speelgebied`, '', 'table-tab');
+      const tabName = document.createElement('span'); tabName.textContent = name;
+      const tabScore = document.createElement('span'); tabScore.className = 'table-tab-score'; tabScore.textContent = '0';
+      tabScore.id = `table-score-${key}`;
+      tab.setAttribute('aria-describedby', tabScore.id);
+      tab.append(tabName, tabScore);
       tab.style.setProperty('--zone-tint', color);
       tab.setAttribute('aria-controls', zone.id);
       tab.onclick = () => focus(zone);
@@ -110,7 +118,18 @@
       details.setAttribute('aria-expanded', String(open));
     };
     $('table-status').append(details);
+    new MutationObserver(updateColorScores).observe($('scoreboard'), {subtree:true, childList:true, characterData:true});
+    updateColorScores();
     new MutationObserver(schedule).observe($('card-options'), {childList:true, subtree:true, attributes:true, attributeFilter:['class']});
+  }
+  function updateColorScores() {
+    for (const [key, item] of frames) {
+      const score = $(`${key}-score`)?.textContent?.trim() || '0';
+      const zoneScore = item.frame.querySelector('.table-zone-score');
+      const tabScore = item.tab.querySelector('.table-tab-score');
+      if (zoneScore && zoneScore.textContent !== score) zoneScore.textContent = score;
+      if (tabScore && tabScore.textContent !== score) tabScore.textContent = score;
+    }
   }
   function updateEdges(key) {
     const item = frames.get(key);
@@ -226,6 +245,9 @@
     let start = null;
     if (Number.isFinite(sx) && Number.isFinite(sy)) {
       start = grid.querySelector(`.cell[data-x="${sx}"][data-y="${sy}"]`);
+    }
+    if (document.body.dataset.w4Level === '4.1' && phone) {
+      start = grid.querySelector('.cell.key-cell') || start;
     }
     if (!start) start = grid.querySelector('.cell.bold-cell:not(.void-cell), .cell.root-cell:not(.void-cell)');
     if (!start || !zone.clientWidth || !zone.clientHeight) return;
@@ -376,7 +398,8 @@
     const mobileReference = 14;
     const fitCols = phone ? Math.max(cols, mobileReference) : cols;
     const fitRows = phone ? Math.max(rows, mobileReference) : rows;
-    const cell = Math.floor(Math.max(14, Math.min(phone ? 44 : 34,
+    const minimum = citadel ? (phone ? 27 : 25) : 14;
+    const cell = Math.floor(Math.max(minimum, Math.min(phone ? 44 : 34,
       (viewport.clientWidth - 28) / fitCols - 2, (viewport.clientHeight - 50) / fitRows - 2)));
     document.body.style.setProperty('--table-cell-size', `${cell}px`);
     const menuButton = $('menu-toggle').getBoundingClientRect();
