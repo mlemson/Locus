@@ -234,6 +234,44 @@ body:not(.classic-mode) #preworld-pick-confirm:focus-visible {
   outline-offset:2px;
 }
 
+/* The outer choice must contain its preview. The old 180px inner card overflowed
+   a 55px choice, hiding all subsequent shapes beneath overlapping cards. */
+body:not(.classic-mode) #preworld-pick-modal .preworld-pick-grid .preworld-pick-item {
+  min-height:134px !important;
+  height:auto !important;
+  align-items:stretch !important;
+  justify-content:flex-start !important;
+  gap:6px !important;
+  overflow:hidden !important;
+}
+body:not(.classic-mode) #preworld-pick-modal .preworld-pick-grid .preworld-pick-card {
+  width:100% !important;
+  max-width:none !important;
+  height:94px !important;
+  min-height:94px !important;
+  max-height:94px !important;
+  flex:0 0 94px !important;
+  padding:24px 6px 4px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  --preview-cell:20px;
+}
+body:not(.classic-mode) #preworld-pick-modal .preworld-pick-card .card-pattern {
+  margin:0 !important;
+  filter:none !important;
+  opacity:1 !important;
+}
+body:not(.classic-mode) #preworld-pick-modal .preworld-choice-name {
+  display:block; flex:0 0 auto; width:100%; text-align:center;
+  color:#edf5fb; font-size:12px; font-weight:700; line-height:1.2;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+body:not(.classic-mode) #preworld-pick-modal .preworld-cost {
+  font-size:11px !important;
+  z-index:3;
+}
+
 @media (max-width:600px) {
   body:not(.classic-mode) #preworld-pick-modal {
     width:calc(100vw - 16px) !important;

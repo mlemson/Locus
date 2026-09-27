@@ -523,3 +523,33 @@ body.table-ui #table-app#table-app #green-zone .cell.end-cell.active {
     height:44px !important;
   }
 }
+
+/* A gold action means the round is finished, not merely that another hand is available. */
+@media screen {
+body.table-ui #table-app#table-app #new-cards-btn,
+body.table-ui #table-app#table-app #new-cards-btn.ready-for-next-turn {
+  background:linear-gradient(145deg,#2c4558,#162c3e) !important;
+  border-color:#a6c6dc66 !important;
+  color:#e4eff7 !important;
+}
+body.table-ui #table-app#table-app #new-cards-btn.complete-round {
+  background:linear-gradient(140deg,#aa8a3e,#6e5424) !important;
+  border-color:#eaca77a6 !important;
+  color:#fff4d4 !important;
+}
+body.table-ui #table-app#table-app .table-zone-label {
+  display:flex; align-items:center; gap:8px; color:#e8f4fc !important;
+  text-shadow:0 1px 3px #071522;
+}
+body.table-ui #table-app#table-app .table-zone-score {
+  padding:2px 6px; border-radius:7px; background:#0b1d2edc;
+  color:#f6dc90; font-size:12px; letter-spacing:0; font-variant-numeric:tabular-nums;
+}
+body.table-ui.table-phone #table-app#table-app .table-tab {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:2px; line-height:1.1;
+}
+body.table-ui.table-phone #table-app#table-app .table-tab-score {
+  color:#f5da89; font-size:13px; font-weight:800; font-variant-numeric:tabular-nums;
+}
+}

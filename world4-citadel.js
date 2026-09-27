@@ -680,6 +680,9 @@
     cleanSpecialCells();
     const cfg = getLevelConfig(level);
     try { applyZoneVisibility(allowedColors()); } catch (_) {}
+    if (Number(level) === 31) {
+      try { window.LocusTable?.focus?.(document.getElementById('green-zone')); } catch (_) {}
+    }
     if (cfg?.ruin) applyRuinMask();
     if (cfg?.core) applyCitadelCore();
     renderHud();
@@ -928,6 +931,13 @@
   }
   function startDemo(){
     if (typeof window.startLevel !== 'function') return;
+    // A first-world starter picker can still be open when the demo is chosen.
+    // Cancel that pending picker before opening the World 4 one, otherwise its
+    // old completion callback may send the player back to level 1.
+    if (document.getElementById('preworld-pick-layer')?.classList.contains('show')) {
+      try { closePreworldPickModal(); } catch (_) {}
+      try { preLevelStarterPicksInProgress = false; } catch (_) {}
+    }
     window.startLevel(DEMO_LEVEL);
     closeMenu();
   }

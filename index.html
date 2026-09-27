@@ -12612,9 +12612,9 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 			<div id="preworld-pick-modal" class="game-modal" role="dialog" aria-modal="true" aria-labelledby="preworld-pick-title">
 				<div class="preworld-pick-header">
 					<h2 id="preworld-pick-title">Kies startkaarten</h2>
-					<div class="preworld-pick-budget">Budget: <span id="preworld-pick-budget">9</span>🪙</div>
+					<div class="preworld-pick-budget">Budget: <span id="preworld-pick-budget">9</span> munten</div>
 				</div>
-				<p id="preworld-pick-subtext" class="modal-subtext">Kaarten kosten 1🪙 per blok. Kies een combinatie tot 9🪙.</p>
+				<p id="preworld-pick-subtext" class="modal-subtext">Kaarten kosten 1 munt per blok. Kies een combinatie tot 9 munten.</p>
 				<div id="preworld-pick-grid" class="preworld-pick-grid"></div>
 				<div class="modal-actions">
 					<button id="preworld-pick-confirm">Start level</button>
@@ -26669,7 +26669,7 @@ function getCollectedCoinCount(scores) {
 		return;
 	  }
 	  if (drawPile.length === 0 && currentHand.length === 0) {
-		// Voltooi ronde - tekst wijzigt naar "Einde beurt"
+		// The final hand has been played: the round can be completed.
 		newCardsButton.classList.add('complete-round');
 		newCardsButton.classList.remove('ready-for-next-turn');
 		newCardsButton.disabled = false;
@@ -26686,8 +26686,8 @@ function getCollectedCoinCount(scores) {
 			newCardsButton.setAttribute('aria-label', 'Bonusbeurt');
 			return;
 		}
-		// Voltooi ronde - tekst wijzigt naar "Einde beurt"
-		newCardsButton.classList.add('complete-round');
+		// The final hand still contains cards, so the end-of-round highlight is premature.
+		newCardsButton.classList.remove('complete-round');
 		newCardsButton.classList.remove('ready-for-next-turn');
 		// Never block progression; warnings are handled on click.
 		newCardsButton.disabled = false;
@@ -30276,11 +30276,16 @@ function resetWorldLayoutStyles() {
 				item.className = 'preworld-pick-item';
 				item.dataset.cost = String(cost);
 				item.dataset.key = `${entry.name}-${index}`;
+				item.setAttribute('aria-label', `${entry.name}, ${cost} munten`);
 				const costBadge = document.createElement('div');
 				costBadge.className = 'preworld-cost';
-				costBadge.textContent = `${cost}🪙`;
+				costBadge.textContent = `${cost} munten`;
 				item.appendChild(costBadge);
 				if (card) item.appendChild(card);
+				const name = document.createElement('span');
+				name.className = 'preworld-choice-name';
+				name.textContent = entry.name;
+				item.appendChild(name);
 				item.addEventListener('click', () => {
 					const key = item.dataset.key;
 					const isSelected = selected.has(key);
@@ -30312,7 +30317,7 @@ function resetWorldLayoutStyles() {
 				});
 				if (warningEl) {
 					if (remaining > 0) {
-						warningEl.textContent = `Je hebt nog ${remaining}🪙 over. Gebruik ze voor extra startkaarten.`;
+						warningEl.textContent = `Je hebt nog ${remaining} munten over. Gebruik ze voor extra startkaarten.`;
 						warningEl.style.display = 'block';
 					} else {
 						warningEl.textContent = '';
