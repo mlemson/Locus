@@ -11,20 +11,20 @@
 
   const LEVELS = {
     31: {
-      id:'4.1', title:'De eerste sleutel', mood:'gate', startColors:['groen','blauw','paars'], scoreTarget:120,
+      id:'4.1', title:'De oefenpoort', mood:'gate', startColors:['groen','blauw','paars'], scoreTarget:100,
       doors:[
         { id:'w4:31:gate:blue', zone:'blauw', keyColor:'blauw', keyZone:'groen', doorAnchor:[.66,.43], keyAnchor:[.22,.48], lockRegions:1 }
       ],
-      primaryText:'Vind de sleutel, open de blauwe poort en scoor 120 punten.',
+      primaryText:'Leg een kaart op de sleutel in groen, daarna op de poort in blauw. Scoor 100 punten.',
       stars:[
-        { type:'primary', label:'Hoofddoel', detail:'Open de poort + 120 punten' },
+        { type:'primary', label:'Hoofddoel', detail:'Open de poort + 100 punten' },
         { type:'noBonus', label:'Geen bonussen', detail:'Gebruik geen bonusblokken' },
         { type:'maxActive', value:38, label:'Compact', detail:'Maximaal 38 actieve cells' }
       ],
       phases:[
-        { type:'key', color:'blauw', label:'Blauwe sleutel' },
-        { type:'door', doorId:'w4:31:gate:blue', label:'Eerste poort' },
-        { type:'score', value:120, label:'120 punten' }
+        { type:'key', color:'blauw', label:'Sleutel in groen' },
+        { type:'door', doorId:'w4:31:gate:blue', label:'Poort in blauw' },
+        { type:'score', value:100, label:'100 punten' }
       ]
     },
     32: {
@@ -449,11 +449,15 @@
     if (bar) {
       const phases = cfg.phases || [];
       bar.classList.toggle('is-boss', !!cfg.boss);
+      const guide = currentLevelNumber() === 31
+        ? `<p class="w4-intro-guide">${runtime.phase === 0 ? 'SLEUTEL — Zoek de goudomrande cel in groen en bedek die met een kaart.' : runtime.phase === 1 ? 'POORT — Sleutel gevonden! Bedek nu de omrande cel in blauw.' : 'PUNTEN — Poort open! Verzamel 100 punten om door te gaan.'}</p>`
+        : '';
       bar.innerHTML = `<span class="w4-phase-kicker">${cfg.boss ? 'FASE VAN DE CITADEL' : escapeHtml(cfg.title)}</span><div class="w4-phase-track">${phases.map((p,i) => {
         const done = phaseComplete(p, scores);
         const current = i === runtime.phase && !done;
-        return `<div class="w4-phase-step ${done?'is-done':''} ${current?'is-current':''}"><span>${done?'✓':(i+1)}</span><small>${escapeHtml(p.label || '')}</small></div>`;
-      }).join('')}</div>`;
+        const icon = p.type === 'key' ? 'S' : p.type === 'door' ? 'P' : p.type === 'score' ? '★' : String(i+1);
+        return `<div class="w4-phase-step ${done?'is-done':''} ${current?'is-current':''}"><span>${done?'✓':icon}</span><small>${escapeHtml(p.label || '')}</small></div>`;
+      }).join('')}</div>${guide}`;
     }
     try {
       const current = document.getElementById('objective-current');
@@ -946,4 +950,3 @@
   else install();
   new MutationObserver(install).observe(document.documentElement,{childList:true,subtree:true});
 })();
-

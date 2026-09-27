@@ -280,12 +280,33 @@
   .w4-phase-step { flex:1; min-width:0; position:relative; display:grid; grid-template-columns:24px minmax(0,1fr); align-items:center; gap:5px; color:#758fa4; }
   .w4-phase-step:not(:last-child)::after { content:''; position:absolute; left:22px; right:-2px; top:11px; height:2px; background:#54708945; z-index:0; }
   .w4-phase-step > span { width:23px;height:23px;border-radius:50%;display:grid;place-items:center;z-index:1;border:1px solid #64829b7a;background:#102233;color:#8ea9bd;font-size:9px;font-weight:700; }
-  .w4-phase-step small { overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:8px; }
+  .w4-phase-step small { overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px; }
   .w4-phase-step.is-current { color:#e8d7a8; }
   .w4-phase-step.is-current > span { border-color:#ddb85d;background:#3c321d;color:#f3d476;box-shadow:0 0 9px #e0b65644; }
   .w4-phase-step.is-done { color:#a9d5bd; }
   .w4-phase-step.is-done > span { border-color:#62c98f;background:#153c2a;color:#90e5b3;box-shadow:0 0 8px #53c88742; }
   .w4-phase-step.is-done:not(:last-child)::after { background:#57bf875e; }
+  .w4-intro-guide {
+    grid-column:1 / -1; margin:0; color:#f6e4b8; font-size:12px;
+    line-height:1.35; text-align:center;
+  }
+  body.world-4[data-w4-level="4.1"] .cell.key-cell,
+  body.world-4[data-w4-level="4.1"] .cell.door-cell:not(.door-open) {
+    outline-width:3px !important;
+    outline-offset:1px !important;
+  }
+  body.world-4[data-w4-level="4.1"] .cell.key-cell .key-symbol,
+  body.world-4[data-w4-level="4.1"] .cell.door-cell .door-symbol {
+    background:#071521b8;
+    border-radius:3px;
+  }
+  body.world-4 .cell.key-cell .key-symbol svg,
+  body.world-4 .cell.door-cell .door-symbol svg {
+    width:clamp(16px,calc(var(--cell-size,22px) * .8),26px) !important;
+    height:clamp(16px,calc(var(--cell-size,22px) * .8),26px) !important;
+    opacity:1 !important;
+    filter:drop-shadow(0 1px 2px #000);
+  }
   #world4-phase-bar.is-boss { border-color:#d9b35242; background:linear-gradient(145deg,#182c3cfa,#0b1723f4); }
 
   #world4-citadel-core-badge {
@@ -374,7 +395,7 @@
     .w4-phase-step { grid-template-columns:20px minmax(0,1fr);gap:3px; }
     .w4-phase-step > span { width:20px;height:20px;font-size:8px; }
     .w4-phase-step:not(:last-child)::after { left:19px;top:9px; }
-    .w4-phase-step small { font-size:7px; }
+    .w4-phase-step small { font-size:9px; }
     #world4-citadel-core-badge { min-width:150px;top:4px;padding:4px 7px;grid-template-columns:24px auto; }
     #world4-citadel-core-badge > span { font-size:18px; }
     #world4-citadel-core-badge strong { font-size:8px; } #world4-citadel-core-badge small { font-size:7px; }
