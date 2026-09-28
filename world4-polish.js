@@ -55,15 +55,21 @@
     centerZone('purple-zone');
     centerZone('yellow-zone');
   }
+  let centerTimers = [];
   function scheduleCentering() {
-    [0,80,220,500,900].forEach(ms => setTimeout(() => requestAnimationFrame(centerPurpleYellow), ms));
+    centerTimers.forEach(clearTimeout);
+    centerTimers = [0,80,220,500,900].map(ms => setTimeout(() => requestAnimationFrame(centerPurpleYellow), ms));
   }
   function installObserver() {
     const board = document.getElementById('board');
     if (!board) return;
     let timer = 0;
+    let generation = board.querySelector('.cell');
     new MutationObserver(() => {
       if (!isWorld4()) return;
+      const current = board.querySelector('.cell');
+      if (current === generation) return;
+      generation = current;
       clearTimeout(timer);
       timer = setTimeout(scheduleCentering, 50);
     }).observe(board, { childList:true, subtree:true });

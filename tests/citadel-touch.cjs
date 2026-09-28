@@ -235,6 +235,30 @@ const server = http.createServer((req, res) => {
     assert.equal(unlockChain.after,false,'opening the blue gate releases the second key');
     assert.ok(unlockChain.redBefore>=10,'the red gate blocks later chambers');
     assert.equal(unlockChain.redAfter,0,'opening the red gate releases its chambers');
+    const greenScoring = await phone.evaluate(() => {
+      startLevel(31,{demoDeck:true});
+      const zone = document.getElementById('green-zone');
+      const start = zone.querySelector('.bold-cell.w4-green-start');
+      const shape = [[1],[1]];
+      const color = colors.find(item => item.name === 'groen');
+      const original = updateScore;
+      let calls = 0;
+      updateScore = function(...args) { calls++; return original(...args); };
+      try {
+        const placement = placeShape(zone,Number(start.dataset.x),Number(start.dataset.y),shape,color);
+        const plainCalls = calls;
+        const plainScore = placement?.scoreDelta;
+        calls = 0;
+        const end = zone.querySelector('.end-cell:not(.active):not(.void-cell)');
+        toggleCell(end,zone.id,color.code,true);
+        return {plainCells:placement?.cells.length,plainCalls,plainScore,endCalls:calls,endScore:latestScoreSnapshot.green};
+      } finally { updateScore = original; }
+    });
+    assert.equal(greenScoring.plainCells,2);
+    assert.equal(greenScoring.plainCalls,1,'a plain green card recalculates score once');
+    assert.equal(greenScoring.plainScore,0);
+    assert.equal(greenScoring.endCalls,1,'an end cell keeps immediate scoring');
+    assert.ok(greenScoring.endScore>0,'an end cell still awards points');
     const turnStates = await phone.evaluate(() => {
       const savedPile = drawPile;
       drawPile = [{}]; updateDrawButtonState();

@@ -109,7 +109,13 @@
       $('table-tabs').append(tab);
       frames.set(key, {frame, zone, cues, tab, generation: null});
       new ResizeObserver(schedule).observe(zone);
-      new MutationObserver(schedule).observe(zone, {childList:true, subtree:true});
+      new MutationObserver(records => {
+        if (records.some(record => [...record.addedNodes].some(node =>
+          node.nodeType === 1 && (node.matches?.('.cell') || node.querySelector?.('.cell'))))) {
+          frames.get(key).needsSizing = true;
+        }
+        schedule();
+      }).observe(zone, {childList:true, subtree:true});
     });
     const details = button('Toon scores per kleur', 'Scores per kleur', 'table-score-details');
     details.setAttribute('aria-expanded', 'false');
@@ -224,6 +230,11 @@
     if (queued) return;
     queued = true;
     requestAnimationFrame(() => { queued = false; if (enabled()) layout(); });
+  }
+  function setStyleIfChanged(style, name, value, priority = '') {
+    if (style.getPropertyValue(name) !== value || style.getPropertyPriority(name) !== priority) {
+      style.setProperty(name, value, priority);
+    }
   }
   function fitCards() {
     document.querySelectorAll('#card-options .card-option').forEach(card => {
@@ -362,15 +373,15 @@
     for (const {zone, frame} of frames.values()) if (zone.parentNode !== frame) move(zone, frame);
     const visible = [...frames.entries()].filter(([,x]) => x.zone.style.display !== 'none');
     if (!visible.some(([k]) => k === focused)) focused = visible[0]?.[0] || 'purple';
-    $('board').dataset.visibleZones = String(visible.length);
-    $('board').style.setProperty('--table-active-areas', `"${visible.map(([key]) => key).join(' ')}"`);
+    if ($('board').dataset.visibleZones !== String(visible.length)) $('board').dataset.visibleZones = String(visible.length);
+    setStyleIfChanged($('board').style, '--table-active-areas', `"${visible.map(([key]) => key).join(' ')}"`);
     const worldInfo = typeof currentLevel !== 'undefined' && typeof getWorldAndSubLevel === 'function'
       ? getWorldAndSubLevel(currentLevel) : null;
     const citadel = worldInfo?.world === 4 ? citadelLayout(visible.map(([key]) => key), worldInfo.subLevel) : null;
     $('board').toggleAttribute('data-table-citadel', !!citadel);
     if (citadel) {
-      $('board').style.setProperty('--citadel-areas', citadel.areas);
-      $('board').style.setProperty('--citadel-columns', citadel.columns);
+      setStyleIfChanged($('board').style, '--citadel-areas', citadel.areas);
+      setStyleIfChanged($('board').style, '--citadel-columns', citadel.columns);
     } else {
       $('board').style.removeProperty('--citadel-areas');
       $('board').style.removeProperty('--citadel-columns');
@@ -380,10 +391,11 @@
     for (const [key, {zone, frame, tab}] of frames) {
       // On iPad/tablet, a selected piece should own the gesture. This prevents
       // Safari's native pan recognizer from cancelling an intended placement.
-      zone.style.setProperty('touch-action', placementTouchActive ? 'none' : 'pan-x pan-y', 'important');
+      setStyleIfChanged(zone.style, 'touch-action', placementTouchActive ? 'none' : 'pan-x pan-y', 'important');
       const isHidden = zone.style.display === 'none' || (phone && key !== focused);
-      frame.hidden = isHidden;
-      frame.style.display = isHidden ? 'none' : (phone ? 'block' : '');
+      const display = isHidden ? 'none' : (phone ? 'block' : '');
+      if (frame.hidden !== isHidden) frame.hidden = isHidden;
+      if (frame.style.display !== display) frame.style.display = display;
       if (phone && !isHidden) {
         frame.style.width = '100%';
         frame.style.minWidth = '0';
@@ -391,8 +403,8 @@
         frame.style.removeProperty('width');
         frame.style.removeProperty('min-width');
       }
-      tab.hidden = zone.style.display === 'none';
-      tab.setAttribute('aria-pressed', String(key === focused));
+      if (tab.hidden !== (zone.style.display === 'none')) tab.hidden = zone.style.display === 'none';
+      if (tab.getAttribute('aria-pressed') !== String(key === focused)) tab.setAttribute('aria-pressed', String(key === focused));
     }
     const reference = frames.get('purple');
     const referenceGrid = reference.zone.querySelector('.grid');
@@ -409,35 +421,42 @@
     const minimum = citadel ? (phone ? 27 : 25) : 14;
     const cell = Math.floor(Math.max(minimum, Math.min(phone ? 44 : 34,
       (viewport.clientWidth - 28) / fitCols - 2, (viewport.clientHeight - 50) / fitRows - 2)));
-    document.body.style.setProperty('--table-cell-size', `${cell}px`);
+    setStyleIfChanged(document.body.style, '--table-cell-size', `${cell}px`);
     const menuButton = $('menu-toggle').getBoundingClientRect();
     $('controls').style.setProperty('--table-menu-top', `${menuButton.bottom + 8}px`);
     $('controls').style.setProperty('--table-menu-right', `${Math.max(8, innerWidth - menuButton.right)}px`);
     for (const [key, item] of frames) {
       const {zone} = item;
-      zone.style.setProperty('--cell-size', `${Math.floor(cell)}px`);
-      zone.style.setProperty('--board-grid-gap', '2px');
-      // Force every rendered cell to the same pixel size to avoid per-zone drift.
-      zone.querySelectorAll('.cell, .root-cell').forEach(c => {
-        c.style.width = `${Math.floor(cell)}px`;
-        c.style.height = `${Math.floor(cell)}px`;
-        c.style.minWidth = `${Math.floor(cell)}px`;
-        c.style.minHeight = `${Math.floor(cell)}px`;
-        c.style.maxWidth = `${Math.floor(cell)}px`;
-        c.style.maxHeight = `${Math.floor(cell)}px`;
-      });
-      // Root grids are absolutely positioned; preserve their original logical coordinates.
-      zone.querySelectorAll('.grid, [data-subgrid]').forEach(g => {
-        if (g.querySelector('.root-cell')) {
-          const cells = [...g.querySelectorAll('.cell')];
-          const maxX = Math.max(0, ...cells.map(c => Number(c.dataset.x) || 0));
-          const maxY = Math.max(0, ...cells.map(c => Number(c.dataset.y) || 0));
-          g.style.width = `${(maxX + 1) * Math.floor(cell)}px`;
-          g.style.height = `${(maxY + 1) * Math.floor(cell)}px`;
-        }
-      });
-      // Anchor a newly generated map once. Never recenter a user's already explored map.
+      setStyleIfChanged(zone.style, '--cell-size', `${Math.floor(cell)}px`);
+      setStyleIfChanged(zone.style, '--board-grid-gap', '2px');
       const generation = zone.querySelector('.cell');
+      const cellSize = `${Math.floor(cell)}px`;
+      // A score, card, or focus change does not alter the grid. Resize its
+      // thousands of cells only for a new board or an actual size change.
+      if (generation && (item.needsSizing || item.sizedGeneration !== generation || item.sizedCellSize !== cellSize || generation.style.width !== cellSize)) {
+        zone.querySelectorAll('.cell, .root-cell').forEach(c => {
+          c.style.width = cellSize;
+          c.style.height = cellSize;
+          c.style.minWidth = cellSize;
+          c.style.minHeight = cellSize;
+          c.style.maxWidth = cellSize;
+          c.style.maxHeight = cellSize;
+        });
+        // Root grids are absolutely positioned; preserve their original logical coordinates.
+        zone.querySelectorAll('.grid, [data-subgrid]').forEach(g => {
+          if (g.querySelector('.root-cell')) {
+            const cells = [...g.querySelectorAll('.cell')];
+            const maxX = Math.max(0, ...cells.map(c => Number(c.dataset.x) || 0));
+            const maxY = Math.max(0, ...cells.map(c => Number(c.dataset.y) || 0));
+            g.style.width = `${(maxX + 1) * Math.floor(cell)}px`;
+            g.style.height = `${(maxY + 1) * Math.floor(cell)}px`;
+          }
+        });
+        item.sizedGeneration = generation;
+        item.sizedCellSize = cellSize;
+        item.needsSizing = false;
+      }
+      // Anchor a newly generated map once. Never recenter a user's already explored map.
       if (generation && zone.clientWidth && item.generation !== generation) {
         item.generation = generation;
         if (key === 'green') {
