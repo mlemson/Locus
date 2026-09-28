@@ -12253,9 +12253,9 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	</style>
 	<link rel="stylesheet" href="responsive.css?v=20260914-final1">
 	<link rel="stylesheet" href="world-table.css?v=20260920-ipad6">
-	<link rel="stylesheet" href="world4-citadel.css?v=20260927-mobile2">
+	<link rel="stylesheet" href="world4-citadel.css?v=20260928-gates">
 	<script src="world-table.js?v=20260927-citadel3"></script>
-	<script src="world4-citadel.js?v=20260928-demo40"></script>
+	<script src="world4-citadel.js?v=20260928-gates"></script>
 	<script src="world4-polish.js?v=20260914-polish2"></script>
 	<script>
     // Simple menu toggle: toggles .open on #controls and .active on #menu-toggle
@@ -24998,9 +24998,11 @@ function getCollectedCoinCount(scores) {
 		const remainingCounts = buildCountMap(filteredDrawPile, getCardKey);
 		const handCounts = buildCountMap(currentHand, getCardKey);
 		const discardCounts = buildCountMap(discardPile, getCardKey);
+		const reservedCounts = buildCountMap(window.LocusWorld4?.getRuntime?.()?.lockedCardReserve, getCardKey);
 		const statusOrder = {
 			'available': 0,
 			'in-hand': 1,
+			'reserved': 2,
 			'used': 2,
 			'discarded': 3,
 			'inactive': 99
@@ -25033,6 +25035,9 @@ function getCollectedCoinCount(scores) {
 					status = 'discarded';
 					isDiscarded = true;
 					dec(discardCounts, key);
+				} else if ((reservedCounts.get(key) || 0) > 0) {
+					status = 'reserved';
+					dec(reservedCounts, key);
 				} else {
 					status = 'used';
 				}
@@ -25075,6 +25080,10 @@ function getCollectedCoinCount(scores) {
 				case 'used':
 					card.classList.add('deck-modal-card--depleted');
 					statusText = 'Al getrokken';
+					break;
+				case 'reserved':
+					card.classList.add('deck-modal-card--inactive');
+					statusText = 'Beschikbaar zodra deze kleur ontdekt is';
 					break;
 				case 'discarded':
 					card.classList.add('deck-modal-card--depleted');
@@ -28789,6 +28798,27 @@ function resetWorldLayoutStyles() {
 			return { x: doorX, y: doorY, regions };
 		}
 
+		function buildCampaignLockRegions(zone, doorCell, colorKey) {
+			const metrics = getZoneMetricsSafe(zone);
+			if (!metrics || !doorCell) return [];
+			const { minX, maxX, minY, maxY } = metrics;
+			const x = Number(doorCell.dataset.x);
+			const y = Number(doorCell.dataset.y);
+			if (!Number.isFinite(x) || !Number.isFinite(y)) return [];
+			// Blue is traversed from the bottom upward. Every locked tile must lie
+			// beyond the gate, leaving a free row in which a card can reach it.
+			if (colorKey === 'blauw') {
+				const end = y - 2;
+				if (end < minY) return [];
+				return [{ x0:minX, y0:minY, w:maxX-minX+1, h:end-minY+1 }];
+			}
+			// Other routes grow away from their central/left-hand start. Lock the
+			// far side, not a disconnected pocket on the approach to the gate.
+			const start = x + 2;
+			if (start > maxX) return [];
+			return [{ x0:start, y0:minY, w:maxX-start+1, h:maxY-minY+1 }];
+		}
+
 		function lockRegionBehindDoor(zone, doorId, x0, y0, w, h) {
 			if (!zone) return 0;
 			let locked = 0;
@@ -28796,7 +28826,8 @@ function resetWorldLayoutStyles() {
 				for (let x = 0; x < w; x++) {
 					const cell = getCell(zone, x0 + x, y0 + y);
 					if (!cell) continue;
-					if (cell.dataset.doorId && String(cell.dataset.doorId) === String(doorId)) continue;
+					if (cell.classList.contains('void-cell') || cell.classList.contains('door-cell') || cell.classList.contains('key-cell')) continue;
+					if (cell.dataset.lockedDoorId && cell.dataset.lockedDoorId !== String(doorId)) continue;
 					if (cell.classList.contains('bold-cell')) continue;
 					if (cell.classList.contains('active')) continue;
 					cell.dataset.lockedDoorId = String(doorId);
@@ -28957,7 +28988,19 @@ function resetWorldLayoutStyles() {
 				const keyColor = String(spec.keyColor || spec.zone || '').toLowerCase();
 				const doorCell = placeDoor(zone, placement.x, placement.y, doorId, keyColor);
 				if (!doorCell) return;
-				try { lockRegions(zone, doorId, placement.regions || [], Math.max(1, Number(spec.lockRegions || 1))); } catch (e) {}
+				try {
+					const regions = buildCampaignLockRegions(zone, doorCell, String(spec.zone).toLowerCase());
+					lockRegions(zone, doorId, regions, regions.length);
+					if (String(spec.zone).toLowerCase() === 'rood') {
+						// Red advances through successive chambers. The gate in chamber 1
+						// also guards the next chambers, rather than only a few nearby cells.
+						['red-grid2','red-grid3'].forEach(id => {
+							const chamber = document.getElementById(id);
+							const m = getZoneMetricsSafe(chamber);
+							if (m) lockRegionBehindDoor(chamber, doorId, m.minX, m.minY, m.maxX-m.minX+1, m.maxY-m.minY+1);
+						});
+					}
+				} catch (e) {}
 				placedDoors.push({ doorColor:keyColor, doorId, zone, spec });
 			});
 
@@ -30355,19 +30398,15 @@ function resetWorldLayoutStyles() {
 		entry && (entry.category === 'mini' || entry.category === 'standard') && Array.isArray(entry.matrix));
 	  const fallback = shapes.length ? [] : buildStandardDeckBlueprint();
 	  const colorNames = [
-		...Array(16).fill('groen'), ...Array(12).fill('blauw'), ...Array(12).fill('paars')
+		...Array(12).fill('groen'), ...Array(8).fill('blauw'), ...Array(8).fill('paars'),
+		...Array(6).fill('geel'), ...Array(6).fill('rood')
 	  ];
 	  const deck = shuffleArray(colorNames.map(name => {
 		const color = colors.find(item => item.name === name);
 		const shape = shapes.length ? shapes[Math.floor(Math.random() * shapes.length)] :
 			fallback[Math.floor(Math.random() * fallback.length)];
-		return instantiateBlueprint(createCardBlueprint(shape, color));
+		return createCardBlueprint(shape, color);
 	  }));
-	  // The tutorial starts in green; always offer a usable green card in hand one.
-	  if (!deck.slice(0, 3).some(card => card.color.name === 'groen')) {
-		const greenIndex = deck.findIndex(card => card.color.name === 'groen');
-		if (greenIndex >= 0) [deck[0], deck[greenIndex]] = [deck[greenIndex], deck[0]];
-	  }
 	  return deck;
 	}
 
@@ -30459,6 +30498,11 @@ function resetWorldLayoutStyles() {
 		
 	  // Rebuild shape pool zodat nieuwe card categorieën beschikbaar zijn
 	  shapePool = buildShapePool();
+	  if (world4Active && Number(level) === 31 && opts.demoDeck && !isLoadingGame) {
+		ownedDeckBlueprints = buildWorld4DemoDeck();
+		introDeckActive = false;
+		starterPicksDoneByWorld['4'] = true;
+	  }
 		
 	  // Reset alle score- en zone-tracking state voor het nieuwe level EERST
 	  // (incl. per-zone caches zoals scoredYellowColumns/Segments, blue scored rows, etc.)
@@ -30583,7 +30627,12 @@ function resetWorldLayoutStyles() {
 			const introBlueprints = ownedDeckBlueprints && ownedDeckBlueprints.length ? ownedDeckBlueprints : buildIntroTutorialDeckBlueprint();
 			drawPile = introBlueprints.map(bp => instantiateBlueprint(bp));
 		} else if (world4Active && Number(level) === 31 && opts.demoDeck) {
-			drawPile = buildWorld4DemoDeck();
+			drawPile = ownedDeckBlueprints.map(bp => instantiateBlueprint(bp));
+			// A green card in the first hand makes the demo playable immediately.
+			if (!drawPile.slice(0, 3).some(card => card.color.name === 'groen')) {
+				const greenIndex = drawPile.findIndex(card => card.color.name === 'groen');
+				if (greenIndex >= 0) [drawPile[0],drawPile[greenIndex]] = [drawPile[greenIndex],drawPile[0]];
+			}
 		} else {
 			drawPile = shuffleArray(ownedDeckBlueprints.map(bp => instantiateBlueprint(bp)));
 		}

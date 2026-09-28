@@ -690,14 +690,17 @@
       // A previously saved tutorial may still have the key marked as a start.
       const key = document.querySelector('#green-zone .cell.key-cell:not(.void-cell)');
       if (key) {
-        key.classList.remove('bold-cell','w4-intro-start');
+        key.classList.remove('bold-cell','w4-green-start','w4-intro-start');
         key.removeAttribute('aria-label');
       }
-      const start = document.querySelector('#green-grid .cell.bold-cell:not(.void-cell):not(.key-cell)');
-      if (start) {
-        start.classList.add('w4-intro-start');
-        start.setAttribute('aria-label', 'Groene startcel: leg hier eerst een kaart');
-      }
+    }
+    const start = document.querySelector('#green-grid .cell.bold-cell:not(.void-cell):not(.key-cell)');
+    if (start) {
+      start.classList.add('w4-green-start');
+      if (Number(level) === 31) start.classList.add('w4-intro-start');
+      start.setAttribute('aria-label', 'Groene startcel: leg hier eerst een kaart');
+    }
+    if (Number(level) === 31) {
       try { window.LocusTable?.focus?.(document.getElementById('green-zone')); } catch (_) {}
     }
     if (cfg?.ruin) applyRuinMask();
