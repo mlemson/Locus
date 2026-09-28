@@ -42,7 +42,7 @@ const server = http.createServer((req, res) => {
     assert.equal(setup.target, 100);
     assert.equal(setup.keyCount, 1);
     assert.equal(setup.doorCount, 1);
-    assert.match(setup.guide, /SLEUTEL/);
+    assert.match(setup.guide, /START.*sleutel/);
     assert.equal(setup.featured, 3);
     assert.ok(setup.more > 0);
     await page.waitForFunction(() => document.querySelector('#green-zone .cell')?.getBoundingClientRect().width >= 25);
@@ -106,17 +106,23 @@ const server = http.createServer((req, res) => {
     await phone.evaluate(() => document.getElementById('world4-demo-btn').click());
     await phone.evaluate(() => {window.confirm=()=>true;document.getElementById('preworld-pick-confirm').click();});
     await phone.waitForFunction(() => document.body.classList.contains('table-ui') && currentLevel === 31);
-    await phone.waitForFunction(() => document.querySelector('#green-zone .key-cell.w4-intro-start'));
+    await phone.waitForFunction(() => document.querySelector('#green-zone .bold-cell.w4-intro-start'));
     const mobile = await phone.evaluate(() => {
       const zone = document.getElementById('green-zone');
       const key = zone.querySelector('.key-cell').getBoundingClientRect();
+      const start = zone.querySelector('.w4-intro-start').getBoundingClientRect();
       const viewport = zone.getBoundingClientRect();
       return {level:currentLevel, cell:zone.querySelector('.cell').getBoundingClientRect().width,
         focused:document.querySelector('.table-tab[aria-pressed="true"]')?.getAttribute('aria-controls'),
         keyVisible:key.right > viewport.left && key.left < viewport.right && key.bottom > viewport.top && key.top < viewport.bottom,
+        startVisible:start.right > viewport.left && start.left < viewport.right && start.bottom > viewport.top && start.top < viewport.bottom,
+        startValid:validateGreenPlacement(zone,[zone.querySelector('.w4-intro-start')]),
+        field:[document.querySelector('#green-grid').dataset.rows,document.querySelector('#green-grid').dataset.cols,
+          document.querySelector('#blue-grid').dataset.rows,document.querySelector('#purple-grid').dataset.rows],
         tabScore:document.querySelector('.table-tab[aria-controls="green-zone"] .table-tab-score')?.textContent,
         tabName:document.querySelector('.table-tab[aria-controls="green-zone"]')?.getAttribute('aria-label'),
-        finished:document.getElementById('new-cards-btn').classList.contains('complete-round'),
+        endTurnGold:document.getElementById('new-cards-btn').classList.contains('complete-round'),
+        finalHand:drawPile.length === 0,
         keyIsStart:zone.querySelector('.key-cell').classList.contains('bold-cell'),
         keyAcceptsFirstCard:validateGreenPlacement(zone,[zone.querySelector('.key-cell')]),
         keyInk:getComputedStyle(zone.querySelector('.key-cell svg')).color,
@@ -129,15 +135,28 @@ const server = http.createServer((req, res) => {
     assert.ok(mobile.cell>=27,'Citadel cells remain touchable on a phone');
     assert.equal(mobile.focused,'green-zone');
     assert.equal(mobile.keyVisible,true,'the first key is visible on opening');
+    assert.equal(mobile.startVisible,true,'the separate green start is visible on opening');
+    assert.equal(mobile.startValid,true,'the green start accepts the first placement');
+    assert.deepEqual(mobile.field,['28','30','40','12'],'only the generated first-level fields shrink');
     assert.equal(mobile.tabScore,'0');
     assert.equal(mobile.tabName,'Groen speelgebied');
-    assert.equal(mobile.finished,false,'an unplayed final hand must not look like the end of a round');
-    assert.equal(mobile.keyIsStart,true,'the visible key is a legal first-placement anchor');
-    assert.equal(mobile.keyAcceptsFirstCard,true,'the key accepts the first green placement');
+    assert.equal(mobile.endTurnGold,mobile.finalHand,'the final hand has a gold end-turn action');
+    assert.equal(mobile.keyIsStart,false,'the key is separate from the start');
+    assert.equal(mobile.keyAcceptsFirstCard,false,'the key cannot start the green route');
     assert.equal(mobile.keyInk,'rgb(255, 224, 120)','the key icon is readable against its dark tile');
     assert.equal(mobile.doorInk,'rgb(217, 240, 255)','the door icon is readable against its dark tile');
     assert.ok(mobile.headerHeight < 80 && mobile.phaseHeight < 40,'the tutorial leaves room for the board on a phone');
-    assert.match(mobile.mobileInstruction,/sleutel in groen/i);
+    assert.match(mobile.mobileInstruction,/startcel.*sleutel/i);
+    const turnStates = await phone.evaluate(() => {
+      const savedPile = drawPile;
+      drawPile = [{}]; updateDrawButtonState();
+      const next = document.getElementById('new-cards-btn').classList.contains('complete-round');
+      drawPile = []; updateDrawButtonState();
+      const end = document.getElementById('new-cards-btn').classList.contains('complete-round');
+      drawPile = savedPile; updateDrawButtonState();
+      return {next,end};
+    });
+    assert.deepEqual(turnStates,{next:false,end:true},'only the end-of-round action is gold');
     await phone.evaluate(() => {document.getElementById('green-score').textContent='14';});
     await phone.waitForFunction(() => document.querySelector('.table-tab[aria-controls="green-zone"] .table-tab-score')?.textContent === '14');
     assert.deepEqual(phoneErrors, []);

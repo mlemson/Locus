@@ -15,7 +15,7 @@
       doors:[
         { id:'w4:31:gate:blue', zone:'blauw', keyColor:'blauw', keyZone:'groen', doorAnchor:[.66,.43], keyAnchor:[.22,.48], lockRegions:1 }
       ],
-      primaryText:'Leg een kaart op de sleutel in groen, daarna op de poort in blauw. Scoor 100 punten.',
+      primaryText:'Begin op de startcel in groen, bereik de sleutel en bedek daarna de poort in blauw. Scoor 100 punten.',
       stars:[
         { type:'primary', label:'Hoofddoel', detail:'Open de poort + 100 punten' },
         { type:'noBonus', label:'Geen bonussen', detail:'Gebruik geen bonusblokken' },
@@ -450,7 +450,7 @@
       const phases = cfg.phases || [];
       bar.classList.toggle('is-boss', !!cfg.boss);
       const guide = currentLevelNumber() === 31
-        ? `<p class="w4-intro-guide">${runtime.phase === 0 ? 'SLEUTEL — Zoek de goudomrande cel in groen en bedek die met een kaart.' : runtime.phase === 1 ? 'POORT — Sleutel gevonden! Bedek nu de omrande cel in blauw.' : 'PUNTEN — Poort open! Verzamel 100 punten om door te gaan.'}</p>`
+        ? `<p class="w4-intro-guide">${runtime.phase === 0 ? 'START — Leg je eerste kaart op de lichte startcel in groen en bouw door naar de sleutel.' : runtime.phase === 1 ? 'POORT — Sleutel gevonden! Bedek nu de omrande cel in blauw.' : 'PUNTEN — Poort open! Verzamel 100 punten om door te gaan.'}</p>`
         : '';
       bar.innerHTML = `<span class="w4-phase-kicker">${cfg.boss ? 'FASE VAN DE CITADEL' : escapeHtml(cfg.title)}</span><div class="w4-phase-track">${phases.map((p,i) => {
         const done = phaseComplete(p, scores);
@@ -463,7 +463,7 @@
       const current = document.getElementById('objective-current');
       if (current) {
         const compact = currentLevelNumber() === 31
-          ? `<span class="w4-mobile-objective">${runtime.phase === 0 ? 'Bedek de sleutel in groen.' : runtime.phase === 1 ? 'Bedek de poort in blauw.' : 'Scoor 100 punten.'}</span>`
+          ? `<span class="w4-mobile-objective">${runtime.phase === 0 ? 'Begin op startcel; bereik sleutel.' : runtime.phase === 1 ? 'Bedek de poort in blauw.' : 'Scoor 100 punten.'}</span>`
           : '';
         current.innerHTML = `<span class="w4-full-objective"><strong>Doel:</strong> ${escapeHtml(cfg.primaryText)} <span class="w4-objective-progress">${escapeHtml(primaryProgressText(currentLevelNumber(), scores))}</span></span>${compact}`;
       }
@@ -686,12 +686,17 @@
     const cfg = getLevelConfig(level);
     try { applyZoneVisibility(allowedColors()); } catch (_) {}
     if (Number(level) === 31) {
-      // The green generator's central anchor is far from the tutorial key.
-      // Covering the key must itself be a legal first placement.
+      // Keep the generator's real central anchor as the only green start.
+      // A previously saved tutorial may still have the key marked as a start.
       const key = document.querySelector('#green-zone .cell.key-cell:not(.void-cell)');
       if (key) {
-        key.classList.add('bold-cell','w4-intro-start');
-        key.setAttribute('aria-label', 'Startcel met sleutel: leg hier eerst een groene kaart');
+        key.classList.remove('bold-cell','w4-intro-start');
+        key.removeAttribute('aria-label');
+      }
+      const start = document.querySelector('#green-grid .cell.bold-cell:not(.void-cell):not(.key-cell)');
+      if (start) {
+        start.classList.add('w4-intro-start');
+        start.setAttribute('aria-label', 'Groene startcel: leg hier eerst een kaart');
       }
       try { window.LocusTable?.focus?.(document.getElementById('green-zone')); } catch (_) {}
     }
