@@ -132,9 +132,10 @@ const server = http.createServer((req, res) => {
         phaseHeight:document.getElementById('world4-phase-bar').getBoundingClientRect().height,
         mobileInstruction:document.querySelector('.w4-mobile-objective')?.textContent,
         pickerOpen:document.getElementById('preworld-pick-layer').classList.contains('show'),
-        deckCount:drawPile.length+currentHand.length+discardPile.length,
-        deckColors:Object.fromEntries(['groen','blauw','paars'].map(color => [color,
-          [...drawPile,...currentHand,...discardPile].filter(card => card.color.name === color).length])),
+        deckCount:ownedDeckBlueprints.length,
+        reserveCount:window.LocusWorld4.getRuntime().lockedCardReserve.length,
+        deckColors:Object.fromEntries(['groen','blauw','paars','geel','rood'].map(color => [color,
+          ownedDeckBlueprints.filter(card => card.color.name === color).length])),
         shapeVariety:new Set([...drawPile,...currentHand].map(card => card.shapeName)).size,
         firstHandGreen:currentHand.some(card => card.color.name === 'groen')};
     });
@@ -156,9 +157,84 @@ const server = http.createServer((req, res) => {
     assert.match(mobile.mobileInstruction,/startcel.*sleutel/i);
     assert.equal(mobile.pickerOpen,false,'demo bypasses the campaign starter-card picker');
     assert.equal(mobile.deckCount,40,'demo has forty test cards in total');
-    assert.deepEqual(mobile.deckColors,{groen:16,blauw:12,paars:12});
+    assert.deepEqual(mobile.deckColors,{groen:12,blauw:8,paars:8,geel:6,rood:6});
+    assert.equal(mobile.reserveCount,12,'future-color cards wait in reserve');
     assert.ok(mobile.shapeVariety>=5,'test deck includes several shapes');
     assert.equal(mobile.firstHandGreen,true,'the first demo hand can start in green');
+    const campaign = await phone.evaluate(async () => {
+      populateDeckModalContent();
+      const overview = {count:document.querySelectorAll('#deck-modal-content .deck-modal-card').length,
+        reserve:document.querySelectorAll('#deck-modal-content [data-card-status="reserved"]').length};
+      const stages = [];
+      for (const level of [31,32,34,36]) {
+        if (level !== 31) {
+          startLevel(level);
+          await new Promise(resolve => setTimeout(resolve, 420)); // green root's entry animation
+        }
+        const green = document.querySelector('#green-grid .bold-cell.w4-green-start');
+        const blueDoor = document.querySelector('#blue-zone .door-cell');
+        const blueLocked = [...document.querySelectorAll('#blue-zone .locked-behind-door')];
+        const chains = [...document.querySelectorAll('.key-cell[data-locked-door-id]')].map(cell => ({
+          key:cell.dataset.keyColor, behind:cell.dataset.lockedDoorId
+        }));
+        stages.push({level:currentLevel, total:ownedDeckBlueprints.length,
+          playable:drawPile.length+currentHand.length, reserve:window.LocusWorld4.getRuntime().lockedCardReserve.length,
+          green:!!green, greenFill:green && getComputedStyle(green).backgroundColor,
+          blueDoorY:blueDoor && Number(blueDoor.dataset.y),
+          blueLocked:blueLocked.length,
+          blueMaxY:Math.max(...blueLocked.map(cell => Number(cell.dataset.y))), chains});
+      }
+      return {overview,stages};
+    });
+    assert.deepEqual(campaign.overview,{count:40,reserve:12},'deck overview includes all forty cards and marks hidden colors');
+    for (const stage of campaign.stages) {
+      assert.equal(stage.total,40,`demo deck persists at ${stage.level}`);
+      assert.ok(stage.playable>0,`cards remain playable at ${stage.level}`);
+      assert.equal(stage.green,true,`green start remains highlighted at ${stage.level}`);
+      assert.equal(stage.greenFill,'rgb(248, 232, 165)',`green start has visible fill at ${stage.level}`);
+      assert.ok(stage.blueLocked>=10,`blue gate protects a substantial region at ${stage.level}`);
+      assert.ok(stage.blueMaxY < stage.blueDoorY,`blue locked region lies beyond the gate at ${stage.level}`);
+    }
+    assert.equal(campaign.stages[1].level,32,'demo continues to 4.2');
+    assert.ok(campaign.stages[2].chains.some(item => item.key === 'rood' && item.behind === 'w4:34:gate:blue'),
+      'the second key in 4.4 lies behind the first gate');
+    assert.ok(campaign.stages[3].chains.some(item => item.key === 'blauw' && item.behind === 'w4:36:gate:green'),
+      'the first chained key in 4.6 lies behind the green gate');
+    const gateSurvey = await phone.evaluate(() => {
+      const result = [];
+      for (let level=32; level<=40; level++) {
+        startLevel(level);
+        const config = window.LocusWorld4.getLevelConfig(level);
+        const gates = config.doors.map(spec => ({id:spec.id,zone:spec.zone,
+          door:!!document.querySelector(`.door-cell[data-door-id="${spec.id}"]`),
+          cells:document.querySelectorAll(`.locked-behind-door[data-locked-door-id="${spec.id}"]`).length,
+          key:!!document.querySelector(`.key-cell[data-key-color="${spec.keyColor}"]`),
+          chained:!spec.keyBehind || !!document.querySelector(`.key-cell[data-key-color="${spec.keyColor}"][data-locked-door-id="${spec.keyBehind}"]`)}));
+        result.push({level,gates});
+      }
+      return result;
+    });
+    for (const stage of gateSurvey) for (const gate of stage.gates) {
+      assert.equal(gate.door,true,`${gate.id} is present`);
+      assert.ok(gate.cells>=10,`${gate.id} protects a meaningful region`);
+      assert.equal(gate.key,true,`${gate.id} has a key`);
+      assert.equal(gate.chained,true,`${gate.id} respects the key order`);
+    }
+    const unlockChain = await phone.evaluate(() => {
+      startLevel(34);
+      const secondKey = document.querySelector('.key-cell[data-key-color="rood"]');
+      const before = secondKey?.classList.contains('locked-behind-door');
+      openWorld4Door('w4:34:gate:blue');
+      const after = secondKey?.classList.contains('locked-behind-door');
+      const redBefore = document.querySelectorAll('[data-locked-door-id="w4:34:gate:red"]').length;
+      openWorld4Door('w4:34:gate:red');
+      const redAfter = document.querySelectorAll('[data-locked-door-id="w4:34:gate:red"]').length;
+      return {before,after,redBefore,redAfter};
+    });
+    assert.equal(unlockChain.before,true,'the second key starts locked');
+    assert.equal(unlockChain.after,false,'opening the blue gate releases the second key');
+    assert.ok(unlockChain.redBefore>=10,'the red gate blocks later chambers');
+    assert.equal(unlockChain.redAfter,0,'opening the red gate releases its chambers');
     const turnStates = await phone.evaluate(() => {
       const savedPile = drawPile;
       drawPile = [{}]; updateDrawButtonState();
