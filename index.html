@@ -12254,9 +12254,9 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	<link rel="stylesheet" href="responsive.css?v=20260914-final1">
 	<link rel="stylesheet" href="world-table.css?v=20260920-ipad6">
 	<link rel="stylesheet" href="world4-citadel.css?v=20260928-gates">
-	<script src="world-table.js?v=20260927-citadel3"></script>
+	<script src="world-table.js?v=20260928-efficient-layout"></script>
 	<script src="world4-citadel.js?v=20260928-gates"></script>
-	<script src="world4-polish.js?v=20260914-polish2"></script>
+	<script src="world4-polish.js?v=20260928-efficient-layout"></script>
 	<script>
     // Simple menu toggle: toggles .open on #controls and .active on #menu-toggle
     document.addEventListener('DOMContentLoaded', function() {
@@ -19344,7 +19344,7 @@ let shopLevel2Used = false;
 	}
 
   // ---------- toggleCell / coins ----------
-	function toggleCell(cell, zoneId, explicitColor = null, partOfShape = false){
+	function toggleCell(cell, zoneId, explicitColor = null, partOfShape = false, deferScore = false){
 
 	if(!cell) return;
 	if(cell.classList.contains('void-cell') || cell.dataset.disabled === 'true') return;
@@ -19526,7 +19526,7 @@ let shopLevel2Used = false;
 		ensureBlackHoleState(cell, zone?.id || zoneId || '');
 	}
 
-	updateScore(cell);
+	if (!deferScore) updateScore(cell);
 	syncPlaceholderForCell(cell);
 	return bonusClaim ? { bonusClaim } : null;
 	}
@@ -20864,10 +20864,10 @@ let shopLevel2Used = false;
 	  // ---------- Blue score (per bold-row with >=1 active cell) ----------
 	// FIX: Use dataset.y for proper visual row detection instead of index-based calculation
 	function calculateBlueScore(gridId='blue-grid', cols=null, boldInterval=4, pointsPerBold=8) {
-		try { console.debug('calculateBlueScore:called', { gridId, time: Date.now() }); } catch(e) {}
+		if (window.debugScoreUpdates) console.debug('calculateBlueScore:called', { gridId, time: Date.now() });
 		const container = document.getElementById(gridId);
 		if (!container) {
-			try { console.debug('calculateBlueScore:no-container', { gridId }); } catch(e) {}
+			if (window.debugScoreUpdates) console.debug('calculateBlueScore:no-container', { gridId });
 			return 0;
 		}
 		const cells = Array.from(container.querySelectorAll('.cell:not(.void-cell)'));
@@ -20923,7 +20923,7 @@ let shopLevel2Used = false;
 		});
 
 		// Debug: report counts to help diagnose missing blue scoring
-		try {
+		if (window.debugScoreUpdates) try {
 			console.debug('calculateBlueScore:start', {
 				gridId,
 				totalCells: cells.length,
@@ -23640,6 +23640,17 @@ function optionalCellsTouchActive(zone, pendingCells) {
 	  if (!pendingCells || pendingCells.length <= 0 || !passesPlacementRules(zone, pendingCells)) {
 		return null;
 	  }
+	  // A plain green card cannot change any score until its final cell is active.
+	  // Keep the per-cell path for keys, bonuses, endpoints, ruins, and every
+	  // other color so their intermediate effects and popups retain their order.
+	  const plainGreenPlacement = zone.id === 'green-zone' && effectiveShape.every((row, y) =>
+		row.every((value, x) => {
+			if (!value) return true;
+			const target = getCell(zone, baseX + x, baseY + y);
+			if (!target || target.classList.contains('active')) return true;
+			return !target.matches('.end-cell,.key-cell,.door-cell,.gold-cell,.trap-cell,.black-hole-cell,.portal-cell,.w4-ruin-required,.w4-ruin-forbidden,.w4-citadel-core') &&
+				!target.querySelector('.symbol,.portal-symbol,.trap-symbol,.black-hole-symbol');
+		}));
 	  
 	  const placements = [];
 	  const bonuses = [];
@@ -23660,13 +23671,14 @@ function optionalCellsTouchActive(zone, pendingCells) {
 		  if (isOptionalShapeCell(cellVal) && target.classList.contains('active')) return;
 		  if (!target.classList.contains('active')) {
 			placements.push(target);
-			const toggleInfo = toggleCell(target, zone.id, colorCode, true);
+			const toggleInfo = toggleCell(target, zone.id, colorCode, true, plainGreenPlacement);
 			if (toggleInfo && toggleInfo.bonusClaim) {
 				bonuses.push(toggleInfo.bonusClaim);
 			}
 		  }
 		});
 	});
+	if (plainGreenPlacement && placements.length) updateScore();
 	
 	// Portals blijven op hun plaats staan voor het hele level
 
@@ -32761,30 +32773,8 @@ function showFloatingPreview(shape, color, options = {}) {
 			}
 		});
 
-		preview.addEventListener('pointermove', (e) => {
-			/*
-				EN:
-				- WHY: Instead of duplicating the entire drag logic here, we synthesize a `pointermove`
-				  and dispatch it on `document`, so the main drag handler runs.
-				- DUPLICATE/OVERRIDE RISK: This depends on the document-level pointermove handler being present
-				  and on event ordering. If multiple document pointermove handlers exist, behavior can change.
-			*/
-			if (!dragStarted) return;
-
-			const deltaX = Math.abs(e.clientX - startX);
-			const deltaY = Math.abs(e.clientY - startY);
-
-			// Als we genoeg bewogen hebben, behandel als drag
-			if (deltaX > 5 || deltaY > 5) {
-				// Trigger het normale drag systeem
-				const moveEvent = new PointerEvent('pointermove', {
-					clientX: e.clientX,
-					clientY: e.clientY,
-					bubbles: true
-				});
-				document.dispatchEvent(moveEvent);
-			}
-		});
+		// The native pointermove bubbles from the preview to the document drag
+		// handler. A synthetic second event loses pointerId and touch pointerType.
 
 		preview.addEventListener('pointerup', (e) => {
 			if (!dragStarted) return;
