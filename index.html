@@ -12254,8 +12254,8 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	<link rel="stylesheet" href="responsive.css?v=20260914-final1">
 	<link rel="stylesheet" href="world-table.css?v=20260920-ipad6">
 	<link rel="stylesheet" href="world4-citadel.css?v=20260927-mobile2">
-	<script src="world-table.js?v=20260920-ipad5"></script>
-	<script src="world4-citadel.js?v=20260927-mobile2"></script>
+	<script src="world-table.js?v=20260927-citadel3"></script>
+	<script src="world4-citadel.js?v=20260927-citadel3"></script>
 	<script src="world4-polish.js?v=20260914-polish2"></script>
 	<script>
     // Simple menu toggle: toggles .open on #controls and .active on #menu-toggle
@@ -14821,7 +14821,7 @@ let shopLevel2Used = false;
 		// Each level has one required primary objective; optional stars are handled by LocusWorld4.
 		31: [{
 			id:'level-31-world4-primary',
-			description:'Level 31: Bedek de sleutel in groen en de poort in blauw. Scoor 100 punten.',
+			description:'Level 31: Begin op de startcel in groen, bereik de sleutel en bedek de poort in blauw. Scoor 100 punten.',
 			short:'De oefenpoort',
 			check:scores => !!window.LocusWorld4?.isPrimaryComplete?.(31, scores),
 			progress:scores => window.LocusWorld4?.primaryProgressText?.(31, scores) || ''
@@ -26686,8 +26686,8 @@ function getCollectedCoinCount(scores) {
 			newCardsButton.setAttribute('aria-label', 'Bonusbeurt');
 			return;
 		}
-		// The final hand still contains cards, so the end-of-round highlight is premature.
-		newCardsButton.classList.remove('complete-round');
+		// The last hand is active: this action ends the round, even if cards remain.
+		newCardsButton.classList.add('complete-round');
 		newCardsButton.classList.remove('ready-for-next-turn');
 		// Never block progression; warnings are handled on click.
 		newCardsButton.disabled = false;
@@ -28433,7 +28433,7 @@ function resetWorldLayoutStyles() {
 		// World 4 purple deliberately changes aspect ratio per level. It keeps the
 		// familiar connection scoring, but no longer reads as one repeated square.
 		const dimensions = [
-			[14,19],[17,15],[15,20],[18,16],[16,21],
+			[12,16],[17,15],[15,20],[18,16],[16,21],
 			[19,17],[17,22],[20,18],[18,23],[21,19]
 		];
 		const [rows, cols] = dimensions[n - 1];
@@ -28486,8 +28486,8 @@ function resetWorldLayoutStyles() {
 
 	function getWorld4BlueProfile(subLevel = 1) {
 		const n=Math.max(1,Math.min(10,Number(subLevel)||1));
-		const rows=[46,50,54,58,60,64,66,70,72,76][n-1];
-		const cols=[12,13,12,14,13,15,14,15,16,16][n-1];
+		const rows=[40,50,54,58,60,64,66,70,72,76][n-1];
+		const cols=[11,13,12,14,13,15,14,15,16,16][n-1];
 		return { rows, cols, splitCount:n<3?0:n<6?1:2, name:['sluiproute','boog','eerste-gracht','slangenpad','dubbele-bocht','tweede-gracht','slinger','tweesprong','binnenwater','slotgracht'][n-1] };
 	}
 
@@ -28575,7 +28575,7 @@ function resetWorldLayoutStyles() {
 	function getWorld4GreenProfile(subLevel = 1) {
 		const n=Math.max(1,Math.min(10,Number(subLevel)||1));
 		return [
-			{rows:34,cols:36,growth:220,split:.24,name:'boomgaard'},
+			{rows:28,cols:30,growth:165,split:.24,name:'boomgaard'},
 			{rows:38,cols:32,growth:240,split:.30,name:'smalle-tuin'},
 			{rows:36,cols:40,growth:270,split:.34,name:'waaier'},
 			{rows:42,cols:34,growth:295,split:.38,name:'doolhof'},

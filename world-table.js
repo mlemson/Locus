@@ -246,13 +246,21 @@
     if (Number.isFinite(sx) && Number.isFinite(sy)) {
       start = grid.querySelector(`.cell[data-x="${sx}"][data-y="${sy}"]`);
     }
-    if (document.body.dataset.w4Level === '4.1' && phone) {
-      start = grid.querySelector('.cell.key-cell') || start;
-    }
     if (!start) start = grid.querySelector('.cell.bold-cell:not(.void-cell), .cell.root-cell:not(.void-cell)');
     if (!start || !zone.clientWidth || !zone.clientHeight) return;
-    const centerX = (grid.offsetLeft || 0) + start.offsetLeft + start.offsetWidth / 2;
-    const centerY = (grid.offsetTop || 0) + start.offsetTop + start.offsetHeight / 2;
+    let centerX = (grid.offsetLeft || 0) + start.offsetLeft + start.offsetWidth / 2;
+    let centerY = (grid.offsetTop || 0) + start.offsetTop + start.offsetHeight / 2;
+    if (document.body.dataset.w4Level === '4.1' && phone) {
+      const key = grid.querySelector('.cell.key-cell');
+      if (key) {
+        const keyX = (grid.offsetLeft || 0) + key.offsetLeft + key.offsetWidth / 2;
+        const keyY = (grid.offsetTop || 0) + key.offsetTop + key.offsetHeight / 2;
+        if (Math.abs(keyX-centerX) < zone.clientWidth-80 && Math.abs(keyY-centerY) < zone.clientHeight-80) {
+          centerX = (centerX+keyX)/2;
+          centerY = (centerY+keyY)/2;
+        }
+      }
+    }
     const maxLeft = Math.max(0, zone.scrollWidth - zone.clientWidth);
     const maxTop = Math.max(0, zone.scrollHeight - zone.clientHeight);
     zone.scrollLeft = Math.max(0, Math.min(maxLeft, centerX - zone.clientWidth / 2));
