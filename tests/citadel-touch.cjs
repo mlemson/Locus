@@ -36,7 +36,8 @@ const server = http.createServer((req, res) => {
         doorCount:document.querySelectorAll('.door-cell').length,
         guide:document.querySelector('.w4-intro-guide')?.textContent,
         featured:document.querySelectorAll('#shop-upgrade-container > .shop-upgrade-card').length,
-        more:document.querySelectorAll('.shop-more-upgrades .shop-upgrade-card').length
+        more:document.querySelectorAll('.shop-more-upgrades .shop-upgrade-card').length,
+        normalDeckCount:drawPile.length+currentHand.length
       };
     });
     assert.equal(setup.target, 100);
@@ -45,6 +46,7 @@ const server = http.createServer((req, res) => {
     assert.match(setup.guide, /START.*sleutel/);
     assert.equal(setup.featured, 3);
     assert.ok(setup.more > 0);
+    assert.ok(setup.normalDeckCount < 40,'campaign mode keeps the normal deck');
     await page.waitForFunction(() => document.querySelector('#green-zone .cell')?.getBoundingClientRect().width >= 25);
     assert.ok(await page.evaluate(() => document.querySelector('#green-zone .cell').getBoundingClientRect().width >= 25),
       'Citadel cells remain touchable on a tablet');
@@ -104,7 +106,6 @@ const server = http.createServer((req, res) => {
     });
     assert.deepEqual(choice, {inside:true,separated:true,named:true}, 'starter cards remain legible and separate');
     await phone.evaluate(() => document.getElementById('world4-demo-btn').click());
-    await phone.evaluate(() => {window.confirm=()=>true;document.getElementById('preworld-pick-confirm').click();});
     await phone.waitForFunction(() => document.body.classList.contains('table-ui') && currentLevel === 31);
     await phone.waitForFunction(() => document.querySelector('#green-zone .bold-cell.w4-intro-start'));
     const mobile = await phone.evaluate(() => {
@@ -129,7 +130,13 @@ const server = http.createServer((req, res) => {
         doorInk:getComputedStyle(document.querySelector('#blue-zone .door-cell svg')).color,
         headerHeight:document.getElementById('table-header').getBoundingClientRect().height,
         phaseHeight:document.getElementById('world4-phase-bar').getBoundingClientRect().height,
-        mobileInstruction:document.querySelector('.w4-mobile-objective')?.textContent};
+        mobileInstruction:document.querySelector('.w4-mobile-objective')?.textContent,
+        pickerOpen:document.getElementById('preworld-pick-layer').classList.contains('show'),
+        deckCount:drawPile.length+currentHand.length+discardPile.length,
+        deckColors:Object.fromEntries(['groen','blauw','paars'].map(color => [color,
+          [...drawPile,...currentHand,...discardPile].filter(card => card.color.name === color).length])),
+        shapeVariety:new Set([...drawPile,...currentHand].map(card => card.shapeName)).size,
+        firstHandGreen:currentHand.some(card => card.color.name === 'groen')};
     });
     assert.equal(mobile.level,31,'demo opens the actual first Citadel level');
     assert.ok(mobile.cell>=27,'Citadel cells remain touchable on a phone');
@@ -147,6 +154,11 @@ const server = http.createServer((req, res) => {
     assert.equal(mobile.doorInk,'rgb(217, 240, 255)','the door icon is readable against its dark tile');
     assert.ok(mobile.headerHeight < 80 && mobile.phaseHeight < 40,'the tutorial leaves room for the board on a phone');
     assert.match(mobile.mobileInstruction,/startcel.*sleutel/i);
+    assert.equal(mobile.pickerOpen,false,'demo bypasses the campaign starter-card picker');
+    assert.equal(mobile.deckCount,40,'demo has forty test cards in total');
+    assert.deepEqual(mobile.deckColors,{groen:16,blauw:12,paars:12});
+    assert.ok(mobile.shapeVariety>=5,'test deck includes several shapes');
+    assert.equal(mobile.firstHandGreen,true,'the first demo hand can start in green');
     const turnStates = await phone.evaluate(() => {
       const savedPile = drawPile;
       drawPile = [{}]; updateDrawButtonState();
