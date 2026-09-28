@@ -955,7 +955,7 @@
       try { closePreworldPickModal(); } catch (_) {}
       try { preLevelStarterPicksInProgress = false; } catch (_) {}
     }
-    window.startLevel(DEMO_LEVEL);
+    window.startLevel(DEMO_LEVEL, { demoDeck:true });
     closeMenu();
   }
   function install(){
@@ -966,7 +966,7 @@
     btn.id = 'world4-demo-btn';
     btn.className = 'control-btn';
     btn.setAttribute('aria-label','Start Wereld 4 demo');
-    btn.innerHTML = '<span aria-hidden="true">◇</span><strong>Wereld 4 demo</strong><small>Start direct bij wereld 4.1</small>';
+    btn.innerHTML = '<span aria-hidden="true">◇</span><strong>Wereld 4 demo</strong><small>Level 4.1 met 40 testkaarten</small>';
     btn.addEventListener('click', startDemo);
     const buttons = Array.from(controls.querySelectorAll(':scope > button'));
     const anchor = buttons.find(el => /open level/i.test(el.textContent || '')) || buttons.find(el => /nieuw spel/i.test(el.textContent || ''));

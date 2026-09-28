@@ -12255,7 +12255,7 @@ body.mobile-sidebar-layout.mobile-sidebar-layout #ml-sidebar-left #gold-zone #co
 	<link rel="stylesheet" href="world-table.css?v=20260920-ipad6">
 	<link rel="stylesheet" href="world4-citadel.css?v=20260927-mobile2">
 	<script src="world-table.js?v=20260927-citadel3"></script>
-	<script src="world4-citadel.js?v=20260927-citadel3"></script>
+	<script src="world4-citadel.js?v=20260928-demo40"></script>
 	<script src="world4-polish.js?v=20260914-polish2"></script>
 	<script>
     // Simple menu toggle: toggles .open on #controls and .active on #menu-toggle
@@ -30350,6 +30350,27 @@ function resetWorldLayoutStyles() {
 		}
 
 
+	function buildWorld4DemoDeck() {
+	  const shapes = shapePool.filter(entry =>
+		entry && (entry.category === 'mini' || entry.category === 'standard') && Array.isArray(entry.matrix));
+	  const fallback = shapes.length ? [] : buildStandardDeckBlueprint();
+	  const colorNames = [
+		...Array(16).fill('groen'), ...Array(12).fill('blauw'), ...Array(12).fill('paars')
+	  ];
+	  const deck = shuffleArray(colorNames.map(name => {
+		const color = colors.find(item => item.name === name);
+		const shape = shapes.length ? shapes[Math.floor(Math.random() * shapes.length)] :
+			fallback[Math.floor(Math.random() * fallback.length)];
+		return instantiateBlueprint(createCardBlueprint(shape, color));
+	  }));
+	  // The tutorial starts in green; always offer a usable green card in hand one.
+	  if (!deck.slice(0, 3).some(card => card.color.name === 'groen')) {
+		const greenIndex = deck.findIndex(card => card.color.name === 'groen');
+		if (greenIndex >= 0) [deck[0], deck[greenIndex]] = [deck[greenIndex], deck[0]];
+	  }
+	  return deck;
+	}
+
 	function startLevel(level, options) {
 	  const opts = (options && typeof options === 'object') ? options : {};
 	  // If a scenario is active, never regenerate boards via the normal level pipeline.
@@ -30370,7 +30391,7 @@ function resetWorldLayoutStyles() {
 		const isWorldStart = (subLevel === 1) && Number(level) !== 0;
 		const worldKey = String(world);
 		const alreadyDoneForWorld = !!(starterPicksDoneByWorld && starterPicksDoneByWorld[worldKey]);
-		if (isWorldStart && !alreadyDoneForWorld && !preLevelStarterPicksInProgress && !isLoadingGame) {
+		if (isWorldStart && !alreadyDoneForWorld && !preLevelStarterPicksInProgress && !isLoadingGame && !opts.demoDeck) {
 			// Switch off the intro deck before we start the picker, so picks land on the standard deck
 			// and won't be wiped when we restart startLevel after the picker completes.
 			if (introDeckActive) {
@@ -30561,6 +30582,8 @@ function resetWorldLayoutStyles() {
 		if (currentLevel === 0) {
 			const introBlueprints = ownedDeckBlueprints && ownedDeckBlueprints.length ? ownedDeckBlueprints : buildIntroTutorialDeckBlueprint();
 			drawPile = introBlueprints.map(bp => instantiateBlueprint(bp));
+		} else if (world4Active && Number(level) === 31 && opts.demoDeck) {
+			drawPile = buildWorld4DemoDeck();
 		} else {
 			drawPile = shuffleArray(ownedDeckBlueprints.map(bp => instantiateBlueprint(bp)));
 		}
